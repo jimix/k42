@@ -18,12 +18,14 @@
 //#include <lk/Interrupt.H>
 #include <sync/FairBLock.H>
 extern "C" {
+#define private __C__private
 #include <asm/param.h>
 #include <asm/hardirq.h>
 #include <linux/timer.h>
 #include <linux/smp.h>
 #include <linux/cpu.h>
 #include <linux/interrupt.h>
+#undef private
 }
 #include <sync/MPMsgMgr.H>
 
@@ -137,12 +139,11 @@ SyncTB()
 
 }
 
+cpumask_t cpu_online_map;
+cpumask_t cpu_possible_map;
+cpumask_t cpu_available_map;
+cpumask_t cpu_present_at_boot;
 
-
-cpumask_t cpu_online_map = CPU_MASK_NONE;
-cpumask_t cpu_possible_map = CPU_MASK_NONE;
-cpumask_t cpu_available_map = CPU_MASK_NONE;
-cpumask_t cpu_present_at_boot = CPU_MASK_NONE;
 extern cpumask_t cpu_present_map;
 
 // This is supposed to bring the cpu up, but really this is already done by
@@ -191,6 +192,12 @@ LinuxSMPInit(VPNum vp, PageAllocatorRef pa)
 {
     SysStatus rc = 0;
     if (vp==0) {
+        /* this is an evil hack, but i can't find a better way to do it */
+        memset(&cpu_online_map, sizeof(cpumask_t), 0);
+        memset(&cpu_possible_map, sizeof(cpumask_t), 0);
+        memset(&cpu_available_map, sizeof(cpumask_t), 0);
+        memset(&cpu_present_at_boot, sizeof(cpumask_t), 0);
+
 	err_printf("Linux-per-cpu data: %016lx - %016lx\n",
 		   (void*)__per_cpu_start,(void*)__per_cpu_end);
 	uval max = DREFGOBJ(TheProcessRef)->ppCount();

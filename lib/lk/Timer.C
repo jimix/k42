@@ -96,16 +96,16 @@ struct TimerAnchor* timerBase[NR_CPUS] = {NULL,};
 // the nextFree pointer, non-NULL means it's on a list.  But this also
 // implies that we need a non-null value for the last node on the
 // list, and thus we use LIST_END to mark that (instead of NULL)
-#define LIST_END ((struct tvec_t_base_s*)0xdeadbeefdeadbeefULL)
-struct tvec_t_base_s: public TimerEvent {
+#define LIST_END ((struct timer_base_s*)0xdeadbeefdeadbeefULL)
+struct timer_base_s: public TimerEvent {
     enum TimerState { Reset, Waiting, Discarded, Fired };
     uval state;
     struct timer_list* timer;
     VPNum vp;
-    tvec_t_base_s *nextFree;
+    timer_base_s *nextFree;
 
-    DEFINE_PINNEDGLOBAL_NEW(tvec_t_base_s);
-    tvec_t_base_s(VPNum v, struct timer_list *t):
+    DEFINE_PINNEDGLOBAL_NEW(timer_base_s);
+    timer_base_s(VPNum v, struct timer_list *t):
 	timer(t), state(Reset), vp(v), nextFree(NULL) {
     };
     virtual SysTime scheduleEvent(SysTime whenTime, Kind kind) {
@@ -142,14 +142,14 @@ extern "C" void RunTimer(struct softirq_action *h);
 
 struct TimerAnchor {
     FairBLock lock;
-    struct tvec_t_base_s* expired;
-    struct tvec_t_base_s* purge;
+    struct timer_base_s* expired;
+    struct timer_base_s* purge;
     struct timer_list *running_timer;
     friend void RunTimer(struct softirq_action *h);
     void runTimer();
     void cleanUp();
     int delTimer(struct timer_list* timer, uval sync);
-    void locked_discard(tvec_t_base_s *base);
+    void locked_discard(timer_base_s *base);
     DEFINE_PINNEDGLOBAL_NEW(TimerAnchor);
     TimerAnchor():expired(LIST_END), purge(LIST_END), running_timer(NULL) {
 	lock.init();
@@ -157,7 +157,7 @@ struct TimerAnchor {
 
 protected:
     struct TimerAddMsg:public MPMsgMgr::MsgSync {
-	struct tvec_t_base_s *base;
+	struct timer_base_s *base;
 	SysStatus rc;
 
 	virtual void handle() {
@@ -176,7 +176,7 @@ public:
 	MPMsgMgr::MsgSpace msgSpace;
 	TimerAddMsg *const msg =
 	    new(Scheduler::GetEnabledMsgMgr(), msgSpace) TimerAddMsg;
-	msg->base = new tvec_t_base_s(vp, timer);
+	msg->base = new timer_base_s(vp, timer);
 
 	SysStatus rc = msg->send(SysTypes::DSPID(0, vp));
 	tassertMsg(_SUCCESS(rc), "send failed\n");
@@ -247,9 +247,9 @@ ConfigureLinuxTimer(VPNum vp)
 }
 
 /* virtual */ void
-tvec_t_base_s::handleEvent()
+timer_base_s::handleEvent()
 {
-    tvec_t_base_s *popped;
+    timer_base_s *popped;
 
     if (!CompareAndStoreSynced(&state, Waiting, Fired)) {
 	/* We're not expected to fire */
@@ -289,7 +289,7 @@ tvec_t_base_s::handleEvent()
 }
 
 void
-tvec_t_base_s::Event(uval arg)
+timer_base_s::Event(uval arg)
 {
     LinuxEnv le(Interrupt);
 
@@ -370,10 +370,10 @@ TimerAnchor::delTimer(struct timer_list *timer, uval sync)
 void
 TimerAnchor::runTimer()
 {
-    tvec_t_base_s *list = (tvec_t_base_s*)SwapVolatile((uval*)&expired,
+    timer_base_s *list = (timer_base_s*)SwapVolatile((uval*)&expired,
 						       (uval)LIST_END);
 
-    tvec_t_base_s *newList = LIST_END;
+    timer_base_s *newList = LIST_END;
 
     LinuxEnvSuspend();
     lock.acquire();
@@ -383,7 +383,7 @@ TimerAnchor::runTimer()
     while (list!=LIST_END) {
 	tassertMsg(list->head()==NULL,
 		   "Timer on list %p\n",list);
-	tvec_t_base_s *n = list->nextFree;
+	timer_base_s *n = list->nextFree;
 	tassertMsg(n==LIST_END || n->head()==NULL,
 		   "Timer on list %p\n",n);
 	list->nextFree = newList;
@@ -394,12 +394,12 @@ TimerAnchor::runTimer()
     list = newList;
 
     while (list!=LIST_END) {
-	tvec_t_base_s *curr = list;
+	timer_base_s *curr = list;
 	list = list->nextFree;
 
 	curr->nextFree = NULL;
-	if (curr->state != tvec_t_base_s::Fired) {
-	    tassertMsg(curr->state == tvec_t_base_s::Discarded,
+	if (curr->state != timer_base_s::Fired) {
+	    tassertMsg(curr->state == timer_base_s::Discarded,
 		       "Only expecting a discarded state\n");
 	    delete curr;
 	    continue;
@@ -435,7 +435,7 @@ TimerAnchor::runTimer()
 }
 
 void
-TimerAnchor::locked_discard(tvec_t_base_s *base)
+TimerAnchor::locked_discard(timer_base_s *base)
 {
     tassertMsg(purge==LIST_END || purge!=base->nextFree, "list loop\n");
     base->timer = NULL;
@@ -444,12 +444,12 @@ TimerAnchor::locked_discard(tvec_t_base_s *base)
     do {
 	old = base->state;
     } while (!CompareAndStoreSynced(&base->state, old,
-				    tvec_t_base_s::Discarded));
+				    timer_base_s::Discarded));
 
 
     // If the timer was in a waiting state, it should be put on the free list.
     // If it had already expired (handleEvent()), RunTimer will do this.
-    if (old == tvec_t_base_s::Waiting) {
+    if (old == timer_base_s::Waiting) {
 	base->nextFree = purge;
 	purge = base;
     }
@@ -461,19 +461,19 @@ TimerAnchor::cleanUp() {
 
     LinuxEnvSuspend();
     lock.acquire();
-    tvec_t_base_s *list = purge;
+    timer_base_s *list = purge;
     purge = LIST_END;
     lock.release();
     LinuxEnvResume();
 
     while (list!=LIST_END) {
-	tvec_t_base_s *n = list;
+	timer_base_s *n = list;
 	tassertMsg(!list || list!=list->nextFree, "list loop\n");
 	list = list->nextFree;
 
 	n->nextFree = NULL;
 	n->scheduleEvent(uval(-1), TimerEvent::reset);
-	n->state = tvec_t_base_s::Reset;
+	n->state = timer_base_s::Reset;
 	tassertMsg(n->head() == NULL, "base still on list %p\n", n);
 	delete n;
     }
@@ -495,7 +495,6 @@ __mod_timer(struct timer_list * timer, unsigned long expires)
 
     LinuxEnvSuspend();
     uval old = preempt_count();
-    k42_lock(&timer->lock)->acquire();
 
     if (!timer->base) {
 	timer->entry.next = NULL;
@@ -532,7 +531,7 @@ __mod_timer(struct timer_list * timer, unsigned long expires)
 	ret = 1;
     }
     timer->expires = expires;
-    timer->base = new tvec_t_base_s(vp, timer);
+    timer->base = new timer_base_s(vp, timer);
 
     timer->entry.next = (struct list_head*)new_anchor;
     timer->entry.prev = timer->entry.next;
@@ -545,7 +544,6 @@ __mod_timer(struct timer_list * timer, unsigned long expires)
 	second->lock.release();
     }
     first->lock.release();
-    k42_lock(&timer->lock)->release();
 
     LinuxEnvResume();
 

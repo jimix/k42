@@ -33,9 +33,10 @@ extern "C" {
 #include <linux/interrupt.h>
 
 #define typename __C__typename
+#define new __C__new
 #include <linux/irq.h>
 #undef typename
-
+#undef new
 }
 
 extern SysStatus PrintStatusAllMsgHandler(uval x);
@@ -87,7 +88,7 @@ linuxCheckSoftIntrs(uval calledFromInterrupt)
 	vector = exceptionLocal.interrupts[bit];
 	exceptionLocal.interrupts[bit] = ~0;
 
-       	TraceOSLinuxInt(currVP, softirq_pending(currVP), pending);
+       	TraceOSLinuxInt(currVP, local_softirq_pending(), pending);
 
 	pending &= ~(1ULL<<bit);
 

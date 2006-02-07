@@ -26,7 +26,6 @@ extern "C" {
 spinlock_t kernel_flag __cacheline_aligned_in_smp = { {0ULL,}};
 
 #define gbit(val) (1ULL << uval((val)))
-extern "C" int smp_processor_id(void);
 
 struct VPInfoHolder {
     struct thread_info thr_info;
@@ -489,7 +488,7 @@ LinuxEnv::destroy()
 
     Scheduler::Enable();
 
-    invoke_softirq();
+    do_softirq();
 
     Scheduler::Disable();
 #ifdef LINUXENV_DEBUG

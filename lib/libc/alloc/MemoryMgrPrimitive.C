@@ -21,15 +21,32 @@ MemoryMgrPrimitive::checkAlign(char *name, uval value)
 {
     // no printf, since might not be safe early enough that
     // this is used
-    if (PAGE_ROUND_DOWN(value) != value) breakpoint();
+    uval round = PAGE_ROUND_DOWN(value);
+
+    if (round != value) {
+      breakpoint();
+    }
+
+    err_printf("%lx %lx", round, value);
 }
 
 void
 MemoryMgrPrimitive::recoverSpace(uval start, uval end)
 {
+    uval s = PAGE_ROUND_UP(start);
+    uval z = PAGE_SIZE;
+    uval p = s + z;
+    uval e = PAGE_ROUND_DOWN(end);
+
+#if 1
+    if (p < e) {
+	rememberChunk(s, e);
+    }
+#else
     if ((PAGE_ROUND_UP(start) + PAGE_SIZE) < PAGE_ROUND_DOWN(end)) {
 	rememberChunk(PAGE_ROUND_UP(start), PAGE_ROUND_DOWN(end));
     }
+#endif
 }
 
 void
@@ -51,6 +68,11 @@ MemoryMgrPrimitive::init(uval allocstart, uval allocend, uval minalign)
     _numSavedChunks = 0;
 
     minAlign = minalign;
+
+    for (int i = 0; i < MAX_SAVED_CHUNKS; i++) {
+        _savedChunk[i].start = 0;
+        _savedChunk[i].end = 0;
+    }
 }
 
 void
@@ -61,6 +83,27 @@ MemoryMgrPrimitive::rememberChunk(uval start, uval end)
 
     if (start > end) breakpoint();
     if (_numSavedChunks >= MAX_SAVED_CHUNKS) breakpoint();
+
+#if 0
+    if (start >= _allocStart && start <= _allocEnd) {
+      breakpoint();
+    }
+    if (end >= _allocStart && end <= _allocEnd) {
+      breakpoint();
+    }
+#endif
+
+#if 0
+    uval i;
+    for (i = 0; i < _numSavedChunks; i++) {
+      if (start >= _savedChunk[i].start && start <= _savedChunk[i].end) {
+	breakpoint();
+      }
+      if (end >= _savedChunk[i].start && end <= _savedChunk[i].end) {
+	breakpoint();
+      }
+    }
+#endif
 
     _savedChunk[_numSavedChunks].start = start;
     _savedChunk[_numSavedChunks].end = end;
@@ -120,7 +163,11 @@ MemoryMgrPrimitive::allocFromChunks(
 	if (ptr > start) {
 	    _savedChunk[n].end = ptr;
 	    // ptr+start may equal end - see recoverSpace
+#if 1
+	    recoverSpace(ptr + size, end);
+#else
 	    recoverSpace(ptr+start, end);
+#endif
 	} else {
 	    // may equal end - see retrieveChunk
 	    _savedChunk[n].start = ptr+size;

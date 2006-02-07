@@ -50,17 +50,23 @@ extern "C" {
 #undef LONG_MAX
 #undef LONG_MIN
 #undef ULONG_MAX
+#undef __attribute_used__
+#undef __attribute_pure__
+#undef likely
+#undef unlikely
 #define ffs lk_ffs
 #define eieio linux_eieio
 #include <asm/bitops.h>
 #undef eieio
 #undef ffs
 #define new __C__new
+#define private __C__private
 #include <asm/system.h>
 #include <linux/list.h>
-#undef new
 #include <linux/kobject.h>
 #include <linux/sysfs.h>
+#undef new
+#undef private
 }
 
 #include "LinuxEnv.H"
@@ -250,7 +256,7 @@ SysFSNode::init(struct kobject *obj, mode_t mode)
 
     baseToken = getID();
 
-    rc = StubFileSystemDev::_Create(kobject_name(kobj), mode, p, dirOH);
+    rc = StubFileSystemDev::_Create((char *)kobject_name(kobj), mode, p, dirOH);
 
     if (_FAILURE(rc) && _SGENCD(rc)==EEXIST) {
 	char buf[strlen(kobject_name(kobj))+20];
@@ -279,7 +285,7 @@ SysFSNode::addAttr(struct attribute *attr)
     rc = giveAccessByServer(exportOH, dirOH.pid());
     tassertRC(rc, "giveAccess failure\n");
 
-    rc = StubSysFSAttrFile::_CreateNode(attr->name, S_IFREG| attr->mode,
+    rc = StubSysFSAttrFile::_CreateNode((char *)attr->name, S_IFREG| attr->mode,
 					dirOH, exportOH, id, attrOH);
 
     if (_SUCCESS(rc)) {

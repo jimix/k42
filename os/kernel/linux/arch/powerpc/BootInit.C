@@ -60,12 +60,46 @@ scanLMBForMem(MemoryMgrPrimitiveKern *memory)
     passertMsg(sizeof(lmb)==sizeof(_BootInfo->lmb),
 	       "Mismatch between linux and k42 lmb structures");
 
+#if 0  /* Linux already filled out lmb for us.  */
     memcpy((void*)&lmb, (void*)&_BootInfo->lmb, sizeof(lmb));
+#endif
 
+    struct lmb * l = &lmb;
+
+#if 0
+l->debug = 0x0;
+l->rmo_size = 0x8000000;
+
+l->memory.cnt = 0x1;
+l->memory.size = 0x8000000;
+
+l->memory.region[0].base = 0x0;
+l->memory.region[0].physbase = 0x0;
+l->memory.region[0].size = 0x8000000;
+
+l->reserved.cnt = 0x3;
+l->reserved.size = 0x0;
+
+l->reserved.region[0].base = 0x0;
+l->reserved.region[0].physbase = 0x0;
+l->reserved.region[0].size = 0x3000;
+
+l->reserved.region[1].base = 0x1fe0000;
+l->reserved.region[1].physbase = 0x1fe0000;
+l->reserved.region[1].size = 0x3020000;
+
+l->reserved.region[2].base = 0x5f00000;
+l->reserved.region[2].physbase = 0x5f00000;
+l->reserved.region[2].size = 0x100000;
+
+l->reserved.region[3].base = 0x5f00000;
+l->reserved.region[3].physbase = 0x5f00000;
+l->reserved.region[3].size = 0x100000;
+#endif
 
     curr = 0;
     uval total = 0;
-    for (uval i = 0; i < lmb.memory.cnt; i++) {
+    for (uval i = 0; i < l->memory.cnt; i++) {
 	lmb_property *mem = &lmb.memory.region[i];
 	advance(curr, mem->base, "Mem hole ", NULL);
 	for (uval j = 0; j < lmb.reserved.cnt; j++) {
@@ -73,10 +107,21 @@ scanLMBForMem(MemoryMgrPrimitiveKern *memory)
 	    if (((res->base + res->size) > mem->base) &&
 		(res->base < (mem->base + mem->size)))
 		{
+#if 1
+		    uval s = PAGE_ROUND_UP(res->size);
+                    uval b = PAGE_ROUND_DOWN(res->base);
+		    uval n = b + s;
 
+		    if (b < curr) b = curr;
+
+		    total -= s;
+		    advance(curr, b, "Available", memory);
+		    advance(curr, n, "Reserved ", NULL);
+#else
 		    total -= res->size;
 		    advance(curr, res->base, "Available", memory);
 		    advance(curr, res->base + res->size, "Reserved ", NULL);
+#endif
 		}
 	}
 

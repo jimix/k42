@@ -17,7 +17,18 @@
 
 #include __MINC(macdefs.H)
 
+#if 0
+#ifdef __ASSEMBLY__
+  #define ASM_CONST(x) x
+#else
+  #define __ASM_CONST(x) x##UL
+  #define ASM_CONST(x) __ASM_CONST(x)
+#endif
+#endif
+
+#define LOGPAGE_SIZE	12
 #define PAGE_SIZE ((uval)1<<LOG_PAGE_SIZE)
+
 #define PAGE_MASK (PAGE_SIZE-1)
 #define MIN_PAGE_SIZE ((uval)1<<LOG_MIN_PAGE_SIZE)
 #define MIN_PAGE_MASK (MIN_PAGE_SIZE-1)

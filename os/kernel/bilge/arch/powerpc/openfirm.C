@@ -84,6 +84,7 @@ ofSetup(int *virtArgs)
     return rc;
 }
 
+#if 0
 // Called from linux kernel code, same as ofSetup, but arg is already phys addr
 extern "C" sval
 enter_rtas(int *realArgs)
@@ -120,6 +121,7 @@ enter_rtas(int *realArgs)
 
     return rc;
 }
+#endif
 
 extern "C" void call_rtas_display_status(char c);
 extern "C" sval32

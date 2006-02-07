@@ -126,7 +126,7 @@ schedule_timeout(signed long timeout)
     }
 
 
-    if (softirq_count()==0 && softirq_pending(smp_processor_id())) {
+    if (softirq_count()==0 && local_softirq_pending()) {
 	do_softirq();
     }
 
@@ -173,7 +173,7 @@ schedule(void)
 	}
     }
 
-    if (softirq_count()==0 && softirq_pending(smp_processor_id())) {
+    if (softirq_count()==0 && local_softirq_pending()) {
 	do_softirq();
     }
     Scheduler::Block();

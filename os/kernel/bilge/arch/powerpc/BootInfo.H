@@ -140,7 +140,7 @@ struct k42_rtas_t {
 
 // For the version struct
 #define SYSTEMCFG_MAJOR 1
-#define SYSTEMCFG_MINOR 0
+#define SYSTEMCFG_MINOR 1
 
 #define systemcfg BootInfo
 struct BootInfo {

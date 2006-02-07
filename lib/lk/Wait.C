@@ -107,7 +107,7 @@ finish_wait(wait_queue_head_t *q, wait_queue_t *wait)
 int
 autoremove_wake_function(wait_queue_t *wait, unsigned mode, int sync)
 {
-	int ret = default_wake_function(wait, mode, sync);
+	int ret = default_wake_function(wait, mode, sync, NULL);
 
 	if (ret)
 		list_del_init(&wait->task_list);
@@ -115,7 +115,7 @@ autoremove_wake_function(wait_queue_t *wait, unsigned mode, int sync)
 }
 
 int
-default_wake_function(wait_queue_t *curr, unsigned mode, int sync)
+default_wake_function(wait_queue_t *curr, unsigned mode, int sync, void *key)
 {
     ThreadID id = ThreadID(curr->task);
     curr->task = NULL;
@@ -144,7 +144,7 @@ static void __wake_up_common(wait_queue_head_t *q, unsigned int mode, int nr_exc
 		unsigned flags;
 		curr = list_entry(tmp, wait_queue_t, task_list);
 		flags = curr->flags;
-		if (curr->func(curr, mode, sync) &&
+		if (curr->func(curr, mode, sync, NULL) &&
 		    (flags & WQ_FLAG_EXCLUSIVE) &&
 		    !--nr_exclusive)
 			break;

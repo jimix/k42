@@ -26,6 +26,7 @@ extern "C" {
 extern "C" void udbg_printf(const char *fmt, ...);
 extern "C" int printk(const char *fmt, ...);
 
+#if 0
 void udbg_printf(const char *fmt, ...)
 {
     va_list ap;
@@ -39,6 +40,7 @@ void udbg_printf(const char *fmt, ...)
     verr_printf(fmt, ap);
     va_end(ap);
 }
+#endif
 
 int
 printk(const char *fmt, ...)

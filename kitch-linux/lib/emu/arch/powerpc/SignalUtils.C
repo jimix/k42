@@ -16,6 +16,8 @@
 #include <linux/unistd.h>
 #include <asm/sigcontext.h>
 #include <asm/ucontext.h>
+#undef asmlinkage
+#define asmlinkage
 #include <asm/ppc32.h>
 
 #include "../../SignalUtils.H"
@@ -698,7 +700,7 @@ static int restore_user_regs(VolatileState *vsp, NonvolatileState *nvsp,
 	return 0;
 }
 
-static int copy_siginfo_to_user32(compat_siginfo_t *d, siginfo_t *s)
+int copy_siginfo_to_user32(compat_siginfo_t *d, siginfo_t *s)
 {
 	int err;
 

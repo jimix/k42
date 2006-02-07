@@ -15,7 +15,7 @@
 extern "C" {
 #endif /* #ifdef __cplusplus */
 
-void * kmalloc(size_t size, int flags);
+void * kmalloc(size_t size, unsigned int flags);
 void kfree(const void *addr);
 
 //unsigned long __get_free_pages (int gfp_mask, unsigned long order);

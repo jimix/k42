@@ -81,12 +81,16 @@ ConfigureLinuxHWBase(VPNum vp)
 
     setMemoryAllocator((PageAllocatorRef)GOBJK(ThePinnedPageAllocatorRef));
 
+#if 0
     tassertMsg(sizeof(spinlock_t) == sizeof(FairBLock),
 	       "Lock sizes don't match between linux and K42 code\n");
+#endif
     //First do some global symbols
 
+#if 0
     tassertMsg(sizeof(struct naca_struct)==sizeof(struct LinuxNaca),
 	       "Naca size out of whack\n");
+#endif
     naca = (struct naca_struct*)&_BootInfo->naca;
     //tb_ticks_per_usec = Scheduler::TicksPerSecond() / 1000000;
 

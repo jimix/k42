@@ -40,7 +40,9 @@ verr_printf(const char *fmt, va_list ap)
     char buf[256];
     uval len = printfBuf(fmt, ap, buf, sizeof(buf));
 
+    if (SysConsole) {
     SysConsole->raw->write(buf, len, 1);
+    }
 }
 
 sval

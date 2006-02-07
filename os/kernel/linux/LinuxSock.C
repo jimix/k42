@@ -24,6 +24,14 @@ extern "C" {
 #undef ffs
 #include <linux/socketlinux.h>
 #include <linux/sockios.h>
+#undef __attribute_used__
+#undef __attribute_pure__
+#undef likely
+#undef unlikely
+typedef long __kernel_off_t;
+typedef __kernel_off_t off_t;
+#undef PAGE_SIZE
+#undef PAGE_MASK
 #include <linux/thread_info.h>
 #include <asm/current.h>
 }

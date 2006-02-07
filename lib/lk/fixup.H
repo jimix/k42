@@ -34,6 +34,8 @@ extern "C" {
 #define __blkcnt_t_defined
 #define __blksize_t_defined
 
+#undef __attribute_pure__
+#undef __attribute_used__
 #include <sys/cdefs.h>
 #undef __THROW
 #define __THROW

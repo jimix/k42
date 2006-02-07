@@ -29,6 +29,8 @@
 #include <lk/LinuxEnv.H>
 #include <misc/HashSimple.H>
 
+//#undef PAGE_SIZE
+//#undef PAGE_MASK
 #include "LinuxCharDev.H"
 #include <stub/StubDevFSDir.H>
 #include <stub/StubDevFSRemote.H>

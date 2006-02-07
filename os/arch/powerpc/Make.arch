@@ -25,7 +25,7 @@ kern_INPUTS =	kernel/libkern.INPUT
 BOOT_IMAGE_SCRIPT = $(MKSRCTOP)/os/arch/powerpc/boot_image.scp
 
 
-LKMOD = $(LINUXSRCROOT)/core.k42lib.o
+LKMOD = $(LINUXSRCROOT)/core.k42lib.o $(LINUXSRCROOT)/util.k42lib.o
 $(LKMOD): 
 
 

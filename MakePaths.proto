@@ -59,7 +59,7 @@ ifeq ($(PLATFORM_OS),IRIX64)
 endif
 
 ifeq ($(PLATFORM_OS),Linux)
-     export OBJDIR_OPT_TYPES=partDeb
+     export OBJDIR_OPT_TYPES=fullDeb
      export OBJDIR_ARCH_TYPES=powerpc
      export PPC64_ELF=1
      MATCH=1
@@ -629,14 +629,15 @@ export K42_SITE=watson
 endif
 
 
-export LINUXVER ?= 029
+export LINUXVER ?= 030
 export K42_PKGVER ?= 3
 export K42_USER_CONFIG:=~/k42-config
 
 ifeq "$(K42_SITE)" "watson"
 export K42_PACKAGES:=/u/kitchawa/k42-packages
 export K42_PKGROOTPATH := $(K42_PACKAGES)
-export LINUXSRCROOT = $(K42_PACKAGES)/src-cvs/linux-$(LINUXVER)
+#export LINUXSRCROOT = $(K42_PACKAGES)/src-cvs/linux-$(LINUXVER)
+export LINUXSRCROOT = $(PWD)/../linux-030
 export K42_KFS_DISKPATH= $(K42_PACKAGES)
 export K42_PKGHOST:=9.2.224.107
 export K42_CONFIG:=/u/kitchawa/k42-config

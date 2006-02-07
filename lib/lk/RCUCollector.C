@@ -26,7 +26,7 @@ extern "C" {
 struct RCUCollector;
 struct RCUCollector:public TimerEvent{
     friend void RCUCollectorInit(VPNum vp);
-    struct list_head *delList;
+    struct rcu_head *delList;
     static RCUCollector* collectors[Scheduler::VPLimit];
     DEFINE_PINNEDGLOBAL_NEW(RCUCollector);
     COSMgr::ThreadMarker marker;
@@ -72,15 +72,12 @@ RCUCollector::cleanup() {
 
     LinuxEnv le(SysCall);
     local_bh_disable();
-    struct list_head* rcu = delList;
-    while (rcu) {
-	struct rcu_head* curr;
-	curr = list_entry(rcu, struct rcu_head, list);
-	rcu = rcu->next;
-
+    struct rcu_head* curr = delList;
+    while (curr) {
 	if (curr->func) {
-	    (*curr->func)(curr->arg);
+	    (*curr->func)(curr);
 	}
+	curr = curr->next;
     }
     local_bh_enable();
     return 1;
@@ -94,8 +91,8 @@ RCUCollectorInit(VPNum vp)
 void
 RCUCollector::addItem(struct rcu_head *head)
 {
-    head->list.next = delList;
-    delList = &head->list;
+    head->next = delList;
+    delList = head;
 
     if (when==0) {
 	DREFGOBJ(TheCOSMgrRef)->setGlobalThreadMarker(marker);
@@ -106,7 +103,7 @@ RCUCollector::addItem(struct rcu_head *head)
 }
 
 void
-call_rcu(struct rcu_head* head, void (*func)(void *arg), void *arg)
+call_rcu(struct rcu_head* head, void (*func)(rcu_head *arg), void *arg)
 {
     VPNum vp = Scheduler::GetVP();
     RCUCollector* cachedNew = NULL;
@@ -117,7 +114,6 @@ call_rcu(struct rcu_head* head, void (*func)(void *arg), void *arg)
     // pre-allocating
 
     head->func = func;
-    head->arg = arg;
   retry:
     rcu = RCUCollector::collectors[vp];
     Scheduler::Disable();

@@ -46,7 +46,7 @@ FS_LKMOD =
 linux_INCPATH = 
 linux_fromBilge =
 else
-FS_LKMOD = $(LINUXSRCROOT)/fs.k42lib.o
+FS_LKMOD = $(LINUXSRCROOT)/fs.k42lib.o $(LINUXSRCROOT)/util.k42lib.o
 #linux_INCPATH = -I$(LINUXSRCROOT)/include -I$(MKSRCTOP)/os/kernel
 linux_INCPATH = -I$(LINUXSRCROOT)/include
 #Bilge = $(MKANCHOR)/$(TARGET_MACHINE)/$(OPTIMIZATION)/os/kernel/bilge

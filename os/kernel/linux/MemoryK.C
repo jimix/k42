@@ -50,7 +50,7 @@ __k42_va(unsigned long p)
     return (unsigned long) PageAllocatorKernPinned::realToVirt(p);
 }
 
-extern void * kmalloc (size_t size, int flags);
+extern void * kmalloc (size_t size, unsigned int flags);
 
 
 } // extern "C"

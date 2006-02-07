@@ -116,6 +116,7 @@ LKMOD += $(LINUXSRCROOT)/fs.k42lib.o
 else
 LKMOD = $(LINUXSRCROOT)/pty.k42lib.o
 endif
+LKMOD += $(LINUXSRCROOT)/util.k42lib.o
 
 SERV_LIBS =  $(LKMOD) \
 		-Wl,--whole-archive -lemu -Wl,--no-whole-archive \

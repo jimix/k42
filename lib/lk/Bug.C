@@ -11,6 +11,11 @@
 
 #include <sys/sysIncs.H>
 extern "C" {
+#undef unlikely
+#undef likely
+#undef __attribute_pure__
+#undef __attribute_used__
+#define ffs libc_ffs
 #include <linux/kernel.h>
 }
 extern "C" void panic(const char*, ...);
@@ -44,6 +49,7 @@ int seq_printf(struct seq_file *m, const char *fmt, ...)
     return 0;
 }
 
+#if 0
 extern "C" void udbg_ppcdbg(unsigned long debug_flags, const char *fmt, ...);
 void
 udbg_ppcdbg(unsigned long debug_flags, const char *fmt, ...)
@@ -71,3 +77,4 @@ udbg_console_write(struct console *con, const char *s, unsigned int n)
     consoleWrite(s,n);
 }
 
+#endif
