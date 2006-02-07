@@ -1,0 +1,806 @@
+# ##########################-*-makefile-*- ###################################
+# Recursive make considered harmful.
+# ############################################################################
+
+# Basic build configuration.
+D = part
+OS = $(shell uname -s)
+BUILD = x86_64
+ARCH = powerpc
+
+# Build our source and output paths from above.
+O = ..
+H = .
+S = $(O)/$(ARCH)/$(D)Deb
+B = $(S)/os/kexec
+U = /home/k42
+L = $(U)/src-cvs/linux-029
+
+# 64-bit cross-compile tools.
+CROSS_COMPILE = powerpc64-linux-
+CC = $(CROSS_COMPILE)gcc
+CXX = $(CROSS_COMPILE)g++
+AR = $(CROSS_COMPILE)ar
+LD = $(CROSS_COMPILE)ld
+STRIP = $(CROSS_COMPILE)strip
+NM = $(CROSS_COMPILE)nm
+AR = $(CROSS_COMPILE)ar
+
+# 32-bit cross-compile tools.
+CROSS32_COMPILE = powerpc-linux-
+CC32 = $(CROSS32_COMPILE)gcc
+LD32 = $(CROSS32_COMPILE)ld
+OBJCOPY32 = $(CROSS32_COMPILE)objcopy
+STRIP32 = $(CROSS32_COMPILE)strip
+
+# Build machine native-compile tools.
+HOSTCC = gcc
+HOSTCFLAGS = -g -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer
+MKDIR = mkdir
+GZIP = gzip
+
+# If V=1, we echo the commands as normal, if V=2, show out-of-date depends.
+V = 0
+ifeq "$(V)" "0"
+.SILENT:
+status = printf " %-7s %s\n" $(1) "$(subst $(O)/,,$(2))"
+else
+ifeq "$(V)" "2"
+.SILENT:
+status = printf " %-7s %s [%s]\n" $(1) \
+           "$(subst $(O)/,,$(2))" $(notdir $(firstword $?))
+endif
+endif
+
+# Our non-file targets.
+.PHONY: all dirs config clean
+
+# Pull in the configuration if it exists.
+-include .config
+
+# Default target is just the directory skeleton and our bootable kernel.
+ifeq "$(NEW)" "1"
+all: dirs $(S)/os/k42-vmlinux
+else
+all: dirs $(S)/os/mamboboot.tok $(S)/os/chrpboot.tok
+endif
+
+# Just print some debug information and exit.
+config:
+	@echo build $(D)-debug K42 on $(BUILD) $(OS) for $(ARCH) from $(OBJS)
+
+# Delete everything we built.
+clean:
+	$(call status, RM, $(wildcard $(OBJS)))
+	$(RM) $(wildcard $(OBJS))
+
+
+# The old-style kernel we boot on simulator
+OBJS += $(S)/os/mamboboot.tok
+$(S)/os/mamboboot.tok: $(S)/os/mambo_boot_image
+	$(call status, STRIP, $@)
+	$(STRIP32) -g $< -o $@
+	$(call status, ADDNOTE, $@)
+	$(O)/install/tools/$(OS)_$(BUILD)/$(ARCH)/addnote $@
+
+OBJS += $(S)/os/mambo_boot_image
+$(S)/os/mambo_boot_image: $(H)/os/arch/$(ARCH)/chrp_boot_elf.scp \
+                          $(S)/os/mambo_elf.o
+	$(call status, LD, $@)
+	$(LD32) -Ttext 0x700000 -static -e 0x700000		\
+                -defsym kernVirtStart=0xC000000002000000	\
+                --script=$< $(filter-out $<, $^) -o $@
+
+OBJS += $(S)/os/mambo_elf.o
+$(S)/os/mambo_elf.o: $(S)/os/boot_image $(S)/os/boot/boot.o
+	$(call status, OBJCOPY, $@)
+	$(OBJCOPY32) --add-section=.k42_boot_image=$(S)/os/boot_image	     \
+                --set-section-flags=.k42_boot_image=contents,alloc,load,data \
+                $(S)/os/boot/boot.o $@
+
+
+# The old-style kernel we boot on hardware.
+OBJS += $(S)/os/chrpboot.tok
+$(S)/os/chrpboot.tok: $(S)/os/chrp_boot_image
+	$(call status, STRIP, $@)
+	$(STRIP32) -g $< -o $@
+	$(call status, ADDNOTE, $@)
+	$(O)/install/tools/$(OS)_$(BUILD)/$(ARCH)/addnote $@
+
+OBJS += $(S)/os/chrp_boot_image
+$(S)/os/chrp_boot_image:  $(H)/os/arch/$(ARCH)/chrp_boot_elf.scp \
+                          $(S)/os/chrp_elf.o
+	$(call status, LD, $@)
+	$(LD32) -Ttext 0x700000 -static -e 0x700000		\
+                -defsym kernVirtStart=0xC000000002000000	\
+                --script=$< $(filter-out $<, $^) -o $@
+
+OBJS += $(S)/os/chrp_elf.o
+$(S)/os/chrp_elf.o: $(S)/os/boot_image.gz $(S)/os/boot/boot.o
+	$(call status, OBJCOPY, $@)
+	$(OBJCOPY32) --add-section=.k42_boot_image=$(S)/os/boot_image.gz     \
+                --set-section-flags=.k42_boot_image=contents,alloc,load,data \
+                $(S)/os/boot/boot.o $@
+
+OBJS += $(S)/os/boot_image.gz
+$(S)/os/boot_image.gz: $(S)/os/boot_image
+	$(call status, GZIP, $@)
+	gzip -9 -c $< > $@
+
+OBJS += $(S)/os/boot_image
+$(S)/os/boot_image: $(S)/os/boot_image.dbg
+	$(call status, STRIP, $@)
+	$(STRIP) -g $< -o $@
+
+# The old-style 64-bit K42 kernel, with debug symbols.
+OBJS += $(S)/os/boot_image.dbg
+$(S)/os/boot_image.dbg: $(H)/os/arch/powerpc/boot_image.scp		\
+			$(S)/os/kexceptobjs.o				\
+                        $(L)/core.k42lib.o				\
+			$(S)/os/ktraceobjs.o				\
+			$(S)/os/ksysobjs.o				\
+			$(S)/os/kstubobjs.o				\
+			$(S)/os/kbilgeobjs.o				\
+			$(S)/os/kinitobjs.o				\
+			$(S)/os/kmemobjs.o				\
+			$(S)/os/kprocobjs.o				\
+			$(S)/os/klinobjs.o				\
+                        $(S)/os/servers/bootServers.o			\
+                        $(O)/install/lib/powerpc/$(D)Deb/libsrv.a	\
+		        $(O)/install/lib/powerpc/$(D)Deb/liblk26.a	\
+                        $(O)/install/lib/powerpc/$(D)Deb/libk.a
+	$(call status, LD, $@)
+	$(LD) -defsym kernVirtStart=0xC000000002000000 \
+	      -Ttext 0xC000000002000000 \
+	      -T $< \
+	      -Bstatic -e start -Map $(S)/os/boot_image.map \
+	      $(filter-out $<, $^) -o $@
+
+
+# This is the 32-bit boot program that leads off both of the above kernels.
+OBJS += $(S)/os/boot/boot.o
+bobjs = $(S)/os/boot/first.o $(S)/os/boot/main.o			\
+        $(S)/os/boot/cl_in_services.o $(S)/os/boot/prom.o		\
+        $(S)/os/boot/lmb.o $(S)/os/boot/misc.o $(S)/os/boot/printf.o	\
+        $(S)/os/boot/zlib.o $(S)/os/boot/asm_utils.o
+$(S)/os/boot/boot.o: $(bobjs)
+	$(call status, LD, $@)
+	$(CC32) -Wl,-r -nostdlib $^ \
+                $(shell $(CC32) -print-libgcc-file-name) -o $@
+
+
+# The new-style kernel, wrapped by a 32-bit boot program.
+OBJS  = $(S)/os/k42-zImage
+zobjs = $(S)/os/boot2/crt0.o $(S)/os/boot2/string.o $(S)/os/boot2/prom.o \
+	$(S)/os/boot2/main.o $(S)/os/boot2/zlib.o $(S)/os/boot2/div64.o \
+	$(S)/os/boot2/imagesize.o
+OBJS += $(zobjs)
+$(S)/os/k42-zImage: $(S)/os/boot/kernel-vmlinux.strip.o	\
+		    $(L)/arch/ppc64/boot/zImage.lds	\
+		    $(zobjs)				\
+		    $(S)/os/boot2/addnote
+	$(call status, LD, $@)
+	$(LD32) -Ttext 0x00400000 -e _start \
+                -T $(L)/arch/ppc64/boot/zImage.lds \
+                $(zobjs) $(S)/os/boot/kernel-vmlinux.strip.o -o $@
+	$(call status, ADDNOTE, $@)
+	$(S)/os/boot2/addnote $@
+
+# A dummy object that we wrap the K42 kernel in.
+sflags = .kernel:vmlinux.strip=contents,alloc,load,readonly,data
+kimage = $(S)/os/k42-vmlinux
+kimagez = $(kimage).gz
+$(S)/os/boot/kernel-vmlinux.strip.o: $(S)/os/boot/kernel-vmlinux.strip.c \
+				     $(kimagez)
+	$(call status, CC, $@)
+	$(CC32) $(HOSTCFLAGS) -fno-builtin -c $< -o $@
+	$(call status, OBJCOPY, $@)
+	$(OBJCOPY32) $@ --add-section=.kernel:vmlinux.strip=$(kimagez) \
+			--set-section-flags=$(sflags)
+
+OBJS += $(S)/os/boot/kernel-vmlinux.strip.c
+$(S)/os/boot/kernel-vmlinux.strip.c:
+	$(call status, TOUCH, $@)
+	touch $@
+
+OBJS += $(S)/os/k42-vmlinux.gz
+$(S)/os/k42-vmlinux.gz: $(S)/os/k42-vmlinux.strip
+	$(call status, GZIP, $@)
+	$(GZIP) -f -9 < $^ > $@
+
+OBJS += $(S)/os/k42-vmlinux.strip
+$(S)/os/k42-vmlinux.strip: $(S)/os/k42-vmlinux
+	$(call status, STRIP, $@)
+	$(STRIP) -s $< -o $@
+
+# A tool that adds a note to the final 32-bit kernel.
+OBJS += $(S)/os/boot2/addnote
+$(S)/os/boot2/addnote: $(L)/arch/ppc64/boot/addnote.c
+	$(call status, HOSTCC, $@)
+	$(HOSTCC) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(HOSTCFLAGS) $< -o $@
+
+# A small object that will tell Linux what our kernel size is.
+$(S)/os/boot2/imagesize.o: $(S)/os/boot2/imagesize.c
+	$(call status, CC, $@)
+	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(HOSTCFLAGS) \
+                -I$(L)/include -fno-builtin -c $< -o $@
+
+# Sanity check: kimage=vmlinux kimagez=arch/ppc64/boot/kernel-vmlinux.strip.gz
+OBJS += $(S)/os/boot2/imagesize.c
+$(S)/os/boot2/imagesize.c: $(kimage)
+	$(call status, LS, $@)
+	ls -l $< | awk \
+          '{printf "unsigned long vmlinux_filesize = %d;\n", $$5}' > $@
+	$(call status, NM, $@)
+	$(NM) -n $< | tail -n 1 | awk \
+          '{printf "unsigned long vmlinux_memsize = 0x%s;\n", substr($$1,8)}' \
+            >> $@
+
+# These are the rules for the new 32-bit Linux zImage boot program.
+$(S)/os/boot2/%.o: $(L)/arch/ppc64/boot/%.S
+	$(call status, AS, $@)
+	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d \
+		-D__ASSEMBLY__ $(HOSTCFLAGS) \
+                -I$(L)/include -fno-builtin -traditional -c $< -o $@
+
+$(S)/os/boot2/%.o: $(L)/arch/ppc64/boot/%.c
+	$(call status, CC, $@)
+	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(HOSTCFLAGS) \
+                -I$(L)/include -fno-builtin -c $< -o $@
+
+# The new-style 64-bit K42 kernel proper, with debug symbols.
+OBJS += $(S)/os/k42-vmlinux
+$(S)/os/k42-vmlinux: $(B)/vmlinux.lds				\
+		     $(B)/head.o				\
+		     $(B)/entry.o				\
+		     $(B)/prom_init.o				\
+                     $(B)/pSeries_setup.o			\
+                     $(B)/maple_time.o				\
+                     $(B)/maple_pci.o				\
+                     $(B)/rtas_pci.o				\
+                     $(B)/setup.o				\
+                     $(B)/lmb.o					\
+                     $(B)/prom.o				\
+                     $(B)/hash_utils.o				\
+                     $(B)/u3_iommu.o				\
+                     $(B)/hash_low.o				\
+                     $(B)/hash_native.o				\
+                     $(B)/stab.o				\
+                     $(B)/slb.o					\
+                     $(B)/pacaData.o				\
+                     $(B)/slb_low.o				\
+                     $(B)/udbg.o				\
+		     $(B)/unimplemented.o			\
+		     $(S)/os/kexceptobjs.o			\
+		     $(L)/core.k42lib.o				\
+		     $(L)/util.k42lib.o				\
+		     $(S)/os/ktraceobjs.o			\
+		     $(S)/os/ksysobjs.o				\
+		     $(S)/os/kstubobjs.o			\
+		     $(S)/os/kbilgeobjs.o			\
+		     $(S)/os/kinitobjs.o			\
+		     $(S)/os/kmemobjs.o				\
+		     $(S)/os/kprocobjs.o			\
+		     $(S)/os/klinobjs.o				\
+		     $(S)/os/servers/bootServers.o		\
+		     $(O)/install/lib/powerpc/$(D)Deb/libsrv.a	\
+		     $(O)/install/lib/powerpc/$(D)Deb/liblk26.a	\
+		     $(O)/install/lib/powerpc/$(D)Deb/libk.a
+	$(call status, LD, $@)
+	$(LD) -m elf64ppc -T $< \
+	      -Bstatic -e 0xc000000000000000 -Ttext 0xc000000000000000 \
+	      -defsym kernVirtStart=0xC000000000000000 \
+	      $(filter-out $<, $^) -o $@
+
+OBJS += $(B)/vmlinux.lds
+$(B)/vmlinux.lds: $(L)/arch/ppc64/kernel/vmlinux.lds.S
+	$(call status, CC, $@)
+	$(CC) -m64 -E -nostdinc -D__KERNEL__ -I$(L)/include -P -C \
+	      -isystem $(shell $(CC) -print-file-name=include) \
+	      -Uppc64 -D__ASSEMBLY__ $< -o $@
+
+OBJS += $(B)/head.o $(B)/entry.o $(B)/pSeries_setup.o $(B)/rtas_pci.o \
+        $(B)/setup.o $(B)/lmb.o $(B)/prom.o $(B)/mpic.o $(B)/u3_iommu.o \
+	$(B)/udbg.o $(B)/maple_time.o $(B)/maple_pci.o
+$(B)/%.o: $(L)/arch/ppc64/kernel/%.S
+	$(call status, CC, $@)
+	$(CC) -m64 -nostdinc  -D__KERNEL__ -I$(L)/include \
+	      -gdwarf2 -D__ASSEMBLY__ \
+	      -isystem $(shell $(CC) -print-file-name=include) -c $< -o $@
+
+OBJS += $(B)/prom_init.o
+$(B)/%.o: $(L)/arch/ppc64/kernel/%.c
+	$(call status, CC, $@)
+	$(CC) -m64 -nostdinc \
+	      -isystem $(shell $(CC) -print-file-name=include) \
+	      -D__KERNEL__ -I$(L)/include -Wall -Wstrict-prototypes \
+	      -Wno-trigraphs -fno-strict-aliasing -fno-common \
+	      -ffreestanding -fomit-frame-pointer -g -msoft-float -pipe \
+	      -mminimal-toc -mtraceback=none -mcall-aixdesc \
+	      -Wdeclaration-after-statement -mno-minimal-toc -c $< -o $@
+
+OBJS += $(B)/hash_utils.o $(B)/hash_native.o $(B)/stab.o $(B)/slb.o \
+        $(B)/pacaData.o
+$(B)/%.o: $(L)/arch/ppc64/mm/%.c
+	$(call status, CC, $@)
+	$(CC) -m64 -nostdinc \
+	      -isystem $(shell $(CC) -print-file-name=include) \
+	      -D__KERNEL__ -I$(L)/include -Wall -Wstrict-prototypes \
+	      -Wno-trigraphs -fno-strict-aliasing -fno-common \
+	      -ffreestanding -fomit-frame-pointer -g -msoft-float -pipe \
+	      -mminimal-toc -mtraceback=none -mcall-aixdesc \
+	      -Wdeclaration-after-statement -mno-minimal-toc -c $< -o $@
+
+OBJS += $(B)/hash_low.o $(B)/slb_low.o
+$(B)/%.o: $(L)/arch/ppc64/mm/%.S
+	$(call status, CC, $@)
+	$(CC) -m64 -nostdinc  -D__KERNEL__ -I$(L)/include \
+	      -gdwarf2 -D__ASSEMBLY__ \
+	      -isystem $(shell $(CC) -print-file-name=include) -c $< -o $@
+
+OBJS += $(B)/unimplemented.o
+$(B)/unimplemented.o: $(H)/os/boot/arch/powerpc/unimplemented.c
+	$(call status, CC, $@)
+	$(CC) -g -nostdinc -Wall -Wstrict-prototypes \
+	      -Wno-trigraphs -fno-strict-aliasing -fno-common \
+	      -ffreestanding -fomit-frame-pointer -c $< -o $@
+
+
+# Rule for how to incrementally link our kernel objects.
+$(S)/os/k%objs.o:
+	$(call status, LD, $@)
+	$(LD) -r $^ -o $@
+
+OBJS += $(S)/os/kinitobjs.o
+kinitobjs = StubAsyncTester.o StubServerState.o StubInitServer.o	\
+            XAsyncTester.o locore.o MPinit.o KernelInit.o		\
+            AsyncTester.o SysFacts.o idt.o memoryMapKern.o kinit.o	\
+            initKernelMappings.o KernelExit.o XServerState.o		\
+            XInitServer.o ServerState.o InitServer.o
+$(S)/os/kinitobjs.o: $(addprefix $(S)/os/kernel/init/, $(kinitobjs))
+
+OBJS += $(S)/os/kexceptobjs.o
+kexceptobjs = StubCPUContainer.o lolita.o ExceptionLocalAsm.o		\
+              DispatchQueue.o IPCTargetTable.o CPUDomainAnnex.o		\
+              ProcessAnnex.o ProcessAnnexArch.o ExceptionLocal.o	\
+              ExceptionExp.o MPMsgMgrException.o HWInterrupt.o		\
+              KernelTimer.o HWIOCommon.o KernelInfoMgr.o		\
+              IPCRetryManager.o FaultNotificationMgr.o XCPUContainer.o
+$(S)/os/kexceptobjs.o: $(addprefix $(S)/os/kernel/exception/, $(kexceptobjs))
+
+OBJS += $(S)/os/kmemobjs.o
+kmemobjs = StubRegionDefault.o StubFR.o StubRegionPerProcessor.o	\
+           StubRegionRedZone.o StubFRComputation.o			\
+           StubFRKernelPinned.o StubFRPA.o StubFRVA.o			\
+           StubRegionFSComm.o StubRegionReplicated.o StubFRCRW.o	\
+           StubFRLTransTable.o StubKernelPagingTransport.o		\
+           StubKernelPagingTransportPA.o StubKernelPagingTransportVA.o	\
+           StubPagingService.o XFR.o InvertedPageTable.o CopyPage.o	\
+           PageAllocatorKernPinned.o PageAllocatorKernUnpinned.o	\
+           RegionDefault.o RegionReplicated.o RegionPerProcessor.o	\
+           PageFaultTest.o FR.o FRPlaceHolder.o FCMStartup.o FCM.o	\
+           FCMDefault.o FCMFile.o FCMDefaultRoot.o FCMReal.o		\
+           FCMComputation.o FCMPrimitiveKernel.o FCMFixed.o		\
+           FCMPrimitive.o FCMSharedTrivial.o FCMPartitionedTrivial.o	\
+           FCMCommon.o FCMCommonMultiRep.o FCMCommonMultiRepRoot.o	\
+           FCMDefaultMultiRep.o FCMDefaultMultiRepRoot.o		\
+           FCMPrimitiveKernelMultiRep.o	FCMPartitioned.o		\
+           FCMPrimitiveKernelMultiRepRoot.o PageDescData.o PageList.o	\
+           SegmentTable.o PageSet.o PageSetDense.o SegmentHATPrivate.o	\
+           HATDefault.o HATKernel.o FRVA.o FRPA.o FRPANonPageable.o	\
+           FRPANonPageableRamOnly.o FRCRW.o RegionRedZone.o		\
+           PageFaultNotification.o FRComputation.o FRCommon.o		\
+           FRKernelPinned.o PMRoot.o FreeFrameList.o PMLeaf.o PMKern.o	\
+           RegionFSComm.o VAllocServicesKern.o MemDescKern.o		\
+           AllocRegionManagerKern.o PMallocKern.o PageCopy.o Pin.o	\
+           FRLTransTable.o FCMLTransTable.o RegionList.o		\
+           SharedBufferProducerKernel.o SharedBufferConsumerKernel.o	\
+           KernelPagingTransport.o KernelPagingTransportPA.o		\
+           KernelPagingTransportVA.o PMLeafExp.o PMLeafChunk.o		\
+           FreeFrameListChunk.o PagingService.o XRegionDefault.o	\
+           XRegionPerProcessor.o XRegionRedZone.o XFRComputation.o	\
+           XFRComputationDefault.o XFRComputationPart.o \
+           FRComputationDefault.o FRComputationPart.o \
+           XFRKernelPinned.o XFRPA.o XFRVA.o XRegionFSComm.o		\
+           XRegionReplicated.o XFRCRW.o XFRLTransTable.o		\
+           XKernelPagingTransport.o XKernelPagingTransportPA.o		\
+           XKernelPagingTransportVA.o XPagingService.o
+$(S)/os/kmemobjs.o: $(addprefix $(S)/os/kernel/mem/, $(kmemobjs))
+
+OBJS += $(S)/os/kprocobjs.o
+kprocobjs = StubProcessSetKern.o StubProcessServer.o			\
+            ProcessReplicated.o ProcessShared.o Process.o		\
+            kernRunProcess.o ProgExec.o ProcessDefaultKern.o		\
+            ProcessVPList.o ProcessVPListArch.o ProcessSetKern.o	\
+            ProcessServer.o SysCallInitKern.o XProcessSetKern.o		\
+            XProcessServer.o
+$(S)/os/kprocobjs.o: $(addprefix $(S)/os/kernel/proc/, $(kprocobjs))
+
+OBJS += $(S)/os/kstubobjs.o
+kstubobjs = StubBonnie.o client.o Bonnie.o XBonnie.o
+$(S)/os/kstubobjs.o: $(addprefix $(S)/os/kernel/stubtest/, $(kstubobjs))
+
+OBJS += $(S)/os/kbilgeobjs.o
+kbilgeobjs = StubWire.o StubTestSwitch.o StubTestScheduler.o		\
+             StubKernSimDisk.o StubKernToyDisk.o StubKernBogusDisk.o	\
+             StubNetDev.o StubPrivilegedService.o StubSystemMisc.o	\
+             StubFSFRSwap.o StubDiskSwap.o StubIPSock.o			\
+             StubKBootParms.o StubBuildDate.o openfirm.o		\
+             openfirmnote.o simos.o thinwireArch.o PerfMon.o		\
+             SocketCreate.o HWPerfMon.o HWPerfMonPulsar.o		\
+             HWPerfMon630.o HWPerfMonGPUL.o libksup.o thinwire.o	\
+             Wire.o ThinIP.o resourcePrint.o ThinWireMgr.o		\
+             SocketWire.o FSRamSwap.o FSSwap.o FSFRSwap.o DiskSwap.o	\
+             TestSwitch.o TestScheduler.o KernToyDisk.o			\
+             KernBogusDisk.o ToyBlockDev.o SystemMisc.o			\
+             PrivilegedService.o LocalConsole.o StreamServerConsole.o	\
+             NetDev.o BlockDevBase.o COSMgrObjectKernObject.o		\
+             LazyState.o SystemControl.o MIPKernelMethods.o KParms.o	\
+             KBootParms.o BuildDate.o SysEnviron.o ZilogPort.o		\
+             UARTPort.o HVChan.o XWire.o XTestSwitch.o			\
+             XTestScheduler.o XKernSimDisk.o XKernToyDisk.o		\
+             XKernBogusDisk.o XNetDev.o XPrivilegedService.o		\
+             XSystemMisc.o XFSFRSwap.o XDiskSwap.o XIPSock.o		\
+             XKBootParms.o XBuildDate.o
+$(S)/os/kbilgeobjs.o: $(addprefix $(S)/os/kernel/bilge/, $(kbilgeobjs))
+
+OBJS += $(S)/os/ktraceobjs.o
+ktraceobjs = trace.o tracePrint.o traceUtils.o
+$(S)/os/ktraceobjs.o: $(addprefix $(S)/os/kernel/trace/, $(ktraceobjs))
+
+OBJS += $(S)/os/ksysobjs.o
+ksysobjs = KernelInfo.o hcall.o
+$(S)/os/ksysobjs.o: $(addprefix $(S)/os/kernel/sys/, $(ksysobjs))
+
+OBJS += $(S)/os/klinobjs.o
+klinobjs = BootInit.o MemoryArch.o ConfigureArch.o LinuxPIC.o		\
+           StdIOKern.o MemoryK.o Configure.o Interrupt.o LinuxSock.o	\
+           LinuxBlockDev.o LinuxCharDev.o
+$(S)/os/klinobjs.o: $(addprefix $(S)/os/kernel/linux/, $(klinobjs))
+
+
+
+libkobjs = $(S)/lib/libc/alloc/AllocCell.o $(S)/lib/libc/alloc/AllocPool.o \
+           $(S)/lib/libc/alloc/AllocRegionManager.o			   \
+           $(S)/lib/libc/alloc/AllocStats.o				   \
+           $(S)/lib/libc/alloc/DataChunk.o				   \
+           $(S)/lib/libc/alloc/GMalloc.o $(S)/lib/libc/alloc/LMalloc.o	   \
+           $(S)/lib/libc/alloc/LMallocOpt.o				   \
+           $(S)/lib/libc/alloc/LeakProof.o				   \
+           $(S)/lib/libc/alloc/MemDesc.o				   \
+           $(S)/lib/libc/alloc/MemoryMgrPrimitive.o			   \
+           $(S)/lib/libc/alloc/ObjCache.o				   \
+           $(S)/lib/libc/alloc/PMalloc.o				   \
+           $(S)/lib/libc/alloc/PageAllocatorDefault.o			   \
+           $(S)/lib/libc/alloc/PageAllocatorUser.o			   \
+           $(S)/lib/libc/alloc/VAllocServices.o				   \
+           $(S)/lib/libc/alloc/alloctst.o $(S)/lib/libc/cobj/BaseObj.o	   \
+           $(S)/lib/libc/cobj/COList.o					   \
+           $(S)/lib/libc/cobj/COListServer.o				   \
+           $(S)/lib/libc/cobj/CObjRep.o					   \
+           $(S)/lib/libc/cobj/CObjRepArbiter.o				   \
+           $(S)/lib/libc/cobj/CObjRepArbiterCallCounter.o		   \
+           $(S)/lib/libc/cobj/CObjRepArbiterTarget.o			   \
+           $(S)/lib/libc/cobj/CObjRepMediator.o				   \
+           $(S)/lib/libc/cobj/CObjRoot.o				   \
+           $(S)/lib/libc/cobj/CObjRootArbiter.o				   \
+           $(S)/lib/libc/cobj/CObjRootMediator.o			   \
+           $(S)/lib/libc/cobj/CObjRootMultiRep.o			   \
+           $(S)/lib/libc/cobj/CObjRootSingleRep.o			   \
+           $(S)/lib/libc/cobj/DataTransfer.o				   \
+           $(S)/lib/libc/cobj/Factory.o					   \
+           $(S)/lib/libc/cobj/MediatedThreadTable.o			   \
+           $(S)/lib/libc/cobj/Obj.o $(S)/lib/libc/cobj/ObjectHandle.o	   \
+           $(S)/lib/libc/cobj/StubCOListServer.o			   \
+           $(S)/lib/libc/cobj/StubObj.o					   \
+           $(S)/lib/libc/cobj/StubTypeMgrServer.o			   \
+           $(S)/lib/libc/cobj/TypeMgr.o					   \
+           $(S)/lib/libc/cobj/TypeMgrServer.o				   \
+           $(S)/lib/libc/cobj/XCOListServer.o				   \
+           $(S)/lib/libc/cobj/XHandleTrans.o $(S)/lib/libc/cobj/XObj.o	   \
+           $(S)/lib/libc/cobj/XObjectList.o				   \
+           $(S)/lib/libc/cobj/XTypeMgrServer.o				   \
+           $(S)/lib/libc/cobj/arbiterMethods.o				   \
+           $(S)/lib/libc/cobj/missHandlingtest.o			   \
+           $(S)/lib/libc/cobj/sys/ActiveThrdCnt.o			   \
+           $(S)/lib/libc/cobj/sys/COSDefaultObject.o			   \
+           $(S)/lib/libc/cobj/sys/COSMgrObject.o			   \
+           $(S)/lib/libc/cobj/sys/TransPageDesc.o			   \
+           $(S)/lib/libc/cobj/sys/TransPageDescHash.o			   \
+           $(S)/lib/libc/cobj/sys/TransPageDescList.o			   \
+           $(S)/lib/libc/cobj/sys/defaultFuncs.o			   \
+           $(S)/lib/libc/cobj/sys/mediateMethods.o			   \
+           $(S)/lib/libc/fslib/FSNode.o					   \
+           $(S)/lib/libc/fslib/StubFSNode.o				   \
+           $(S)/lib/libc/fslib/XFSNode.o $(S)/lib/libc/io/DirBuf.o	   \
+           $(S)/lib/libc/io/IO.o $(S)/lib/libc/io/IOForkManager.o	   \
+           $(S)/lib/libc/io/IORingBuffer.o $(S)/lib/libc/io/MemTrans.o	   \
+           $(S)/lib/libc/io/PathName.o $(S)/lib/libc/io/StubBlockDev.o	   \
+           $(S)/lib/libc/io/StubCallBackObj.o				   \
+           $(S)/lib/libc/io/StubFileLinuxClientStream.o			   \
+           $(S)/lib/libc/io/StubFileLinuxServer.o			   \
+           $(S)/lib/libc/io/StubMemTrans.o				   \
+           $(S)/lib/libc/io/StubNameTreeLinux.o				   \
+           $(S)/lib/libc/io/StubPAPageServer.o				   \
+           $(S)/lib/libc/io/StubPacketServer.o				   \
+           $(S)/lib/libc/io/StubSocketServer.o				   \
+           $(S)/lib/libc/io/StubStreamServer.o				   \
+           $(S)/lib/libc/io/StubStreamServerTTY.o			   \
+           $(S)/lib/libc/io/StubSysVMessagesClient.o			   \
+           $(S)/lib/libc/io/StubVAPageServer.o				   \
+           $(S)/lib/libc/io/StubVirtFile.o				   \
+           $(S)/lib/libc/io/XBlockDev.o					   \
+           $(S)/lib/libc/io/XCallBackObj.o				   \
+           $(S)/lib/libc/io/XFileLinuxClientStream.o			   \
+           $(S)/lib/libc/io/XFileLinuxServer.o				   \
+           $(S)/lib/libc/io/XMemTrans.o					   \
+           $(S)/lib/libc/io/XNameTreeLinux.o				   \
+           $(S)/lib/libc/io/XPAPageServer.o				   \
+           $(S)/lib/libc/io/XStreamServer.o				   \
+           $(S)/lib/libc/io/XStreamServerTTY.o				   \
+           $(S)/lib/libc/io/XSysVMessagesClient.o			   \
+           $(S)/lib/libc/io/XVAPageServer.o				   \
+           $(S)/lib/libc/io/XVirtFile.o $(S)/lib/libc/io/cprintf.o	   \
+           $(S)/lib/libc/io/printfBuf.o					   \
+           $(S)/lib/libc/misc/BaseRandom.o				   \
+           $(S)/lib/libc/misc/BlockSet.o				   \
+           $(S)/lib/libc/misc/DiskMountInfoList.o			   \
+           $(S)/lib/libc/misc/HashSimple.o				   \
+           $(S)/lib/libc/misc/ListSimple.o				   \
+           $(S)/lib/libc/misc/ListSimpleKey.o				   \
+           $(S)/lib/libc/misc/SharedBufferConsumer.o			   \
+           $(S)/lib/libc/misc/SharedBufferProducer.o			   \
+           $(S)/lib/libc/misc/SharedBufferProducerUser.o		   \
+           $(S)/lib/libc/misc/expedient.o				   \
+           $(S)/lib/libc/misc/fpr_save_restore.o			   \
+           $(S)/lib/libc/misc/hardware.o $(S)/lib/libc/misc/linkage.o	   \
+           $(S)/lib/libc/misc/simSupport.o				   \
+           $(S)/lib/libc/misc/testSupport.o				   \
+           $(S)/lib/libc/misc/volatileFrame.o				   \
+           $(S)/lib/libc/scheduler/DispatcherDefault.o			   \
+           $(S)/lib/libc/scheduler/DispatcherDefaultAsm.o		   \
+           $(S)/lib/libc/scheduler/DispatcherDefaultExp.o		   \
+           $(S)/lib/libc/scheduler/DispatcherMgr.o			   \
+           $(S)/lib/libc/scheduler/Scheduler.o				   \
+           $(S)/lib/libc/scheduler/SchedulerService.o			   \
+           $(S)/lib/libc/scheduler/SchedulerTimer.o			   \
+           $(S)/lib/libc/scheduler/StubSchedulerService.o		   \
+           $(S)/lib/libc/scheduler/Thread.o				   \
+           $(S)/lib/libc/scheduler/TimerEvent.o				   \
+           $(S)/lib/libc/scheduler/TimerRequest.o			   \
+           $(S)/lib/libc/scheduler/XSchedulerService.o			   \
+           $(S)/lib/libc/stdlib/baseAtoi.o				   \
+           $(S)/lib/libc/stdlib/baseFgets.o				   \
+           $(S)/lib/libc/stdlib/baseSprintf.o				   \
+           $(S)/lib/libc/stdlib/baseStrtol.o				   \
+           $(S)/lib/libc/stdlib/isctype.o				   \
+           $(S)/lib/libc/stdlib/memccpy.o				   \
+           $(S)/lib/libc/stdlib/memcmp.o $(S)/lib/libc/stdlib/string.o	   \
+           $(S)/lib/libc/sync/BLockAsm.o				   \
+           $(S)/lib/libc/sync/BLockGeneric.o				   \
+           $(S)/lib/libc/sync/BLockImp.o $(S)/lib/libc/sync/Barrier.o	   \
+           $(S)/lib/libc/sync/BlockedThreadQueues.o			   \
+           $(S)/lib/libc/sync/FairBLock.o				   \
+           $(S)/lib/libc/sync/MPMsgMgr.o				   \
+           $(S)/lib/libc/sync/MPMsgMgrDisabled.o			   \
+           $(S)/lib/libc/sync/MPMsgMgrEnabled.o				   \
+           $(S)/lib/libc/sync/RequestCount.o				   \
+           $(S)/lib/libc/sync/SLock.o $(S)/lib/libc/sync/atomic.o	   \
+           $(S)/lib/libc/sys/InitStep.o $(S)/lib/libc/sys/LinuxCreds.o	   \
+           $(S)/lib/libc/sys/ProcessClient.o				   \
+           $(S)/lib/libc/sys/ProcessSet.o				   \
+           $(S)/lib/libc/sys/ResMgrWrapper.o				   \
+           $(S)/lib/libc/sys/SMTMgr.o $(S)/lib/libc/sys/StubInitStep.o	   \
+           $(S)/lib/libc/sys/StubProcessClient.o			   \
+           $(S)/lib/libc/sys/StubProcessLinuxClient.o			   \
+           $(S)/lib/libc/sys/StubShMemBuf.o				   \
+           $(S)/lib/libc/sys/SystemMiscWrapper.o			   \
+           $(S)/lib/libc/sys/TAssert.o $(S)/lib/libc/sys/XInitStep.o	   \
+           $(S)/lib/libc/sys/XProcessClient.o				   \
+           $(S)/lib/libc/sys/XProcessLinuxClient.o			   \
+           $(S)/lib/libc/sys/XShMemBuf.o $(S)/lib/libc/sys/g++sup.o	   \
+           $(S)/lib/libc/sys/ppccore.o $(S)/lib/libc/trace/traceLib.o	   \
+           $(S)/lib/libc/usr/GDBIOKern.o				   \
+           $(S)/lib/libc/usr/ProgExecArch.o				   \
+           $(S)/lib/libc/usr/ProgExecCommon.o				   \
+           $(S)/lib/libc/usr/align.o $(S)/lib/libc/usr/gdb-stub.o	   \
+           $(S)/lib/libc/usr/memoryMap.o				   \
+           $(S)/lib/libc/usr/runProcessCommon.o				   \
+           $(S)/os/kernel/bilge/StubBuildDate.o				   \
+           $(S)/os/kernel/bilge/StubDiskSwap.o				   \
+           $(S)/os/kernel/bilge/StubFSFRSwap.o				   \
+           $(S)/os/kernel/bilge/StubIPSock.o				   \
+           $(S)/os/kernel/bilge/StubKBootParms.o			   \
+           $(S)/os/kernel/bilge/StubKernBogusDisk.o			   \
+           $(S)/os/kernel/bilge/StubKernSimDisk.o			   \
+           $(S)/os/kernel/bilge/StubKernToyDisk.o			   \
+           $(S)/os/kernel/bilge/StubNetDev.o				   \
+           $(S)/os/kernel/bilge/StubPrivilegedService.o			   \
+           $(S)/os/kernel/bilge/StubSystemMisc.o			   \
+           $(S)/os/kernel/bilge/StubTestScheduler.o			   \
+           $(S)/os/kernel/bilge/StubTestSwitch.o			   \
+           $(S)/os/kernel/bilge/StubWire.o				   \
+           $(S)/os/kernel/exception/StubCPUContainer.o			   \
+           $(S)/os/kernel/init/StubAsyncTester.o			   \
+           $(S)/os/kernel/init/StubInitServer.o				   \
+           $(S)/os/kernel/init/StubServerState.o			   \
+           $(S)/os/kernel/init/XAsyncTester.o				   \
+           $(S)/os/kernel/mem/StubFR.o $(S)/os/kernel/mem/StubFRCRW.o	   \
+           $(S)/os/kernel/mem/StubFRComputation.o			   \
+           $(S)/os/kernel/mem/StubFRKernelPinned.o			   \
+           $(S)/os/kernel/mem/StubFRLTransTable.o			   \
+           $(S)/os/kernel/mem/StubFRPA.o $(S)/os/kernel/mem/StubFRVA.o	   \
+           $(S)/os/kernel/mem/StubKernelPagingTransport.o		   \
+           $(S)/os/kernel/mem/StubKernelPagingTransportPA.o		   \
+           $(S)/os/kernel/mem/StubKernelPagingTransportVA.o		   \
+           $(S)/os/kernel/mem/StubRegionDefault.o			   \
+           $(S)/os/kernel/mem/StubRegionFSComm.o			   \
+           $(S)/os/kernel/mem/StubRegionPerProcessor.o			   \
+           $(S)/os/kernel/mem/StubRegionRedZone.o			   \
+           $(S)/os/kernel/mem/StubRegionReplicated.o			   \
+           $(S)/os/kernel/mem/StubPagingService.o			   \
+           $(S)/os/kernel/mem/XFR.o					   \
+           $(S)/os/kernel/proc/StubProcessServer.o			   \
+           $(S)/os/kernel/proc/StubProcessSetKern.o			   \
+           $(S)/os/kernel/stubtest/StubBonnie.o				   \
+           $(S)/os/kernel/sys/symdefsKern.o				   \
+           $(S)/os/servers/baseServers/StubBaseServers.o		   \
+           $(S)/os/servers/baseServers/StubDevFSBlk.o			   \
+           $(S)/os/servers/baseServers/StubDevFSDir.o			   \
+           $(S)/os/servers/baseServers/StubDevFSRemote.o		   \
+           $(S)/os/servers/baseServers/StubDevOpener.o			   \
+           $(S)/os/servers/baseServers/StubFRProvider.o			   \
+           $(S)/os/servers/baseServers/StubFileSystemDev.o		   \
+           $(S)/os/servers/baseServers/StubProcessLinuxServer.o		   \
+           $(S)/os/servers/baseServers/StubResMgr.o			   \
+           $(S)/os/servers/baseServers/StubStreamServerSocket.o		   \
+           $(S)/os/servers/baseServers/StubSysFSAttrFile.o		   \
+           $(S)/os/servers/baseServers/XBaseServers.o			   \
+           $(S)/os/servers/baseServers/XDevOpener.o			   \
+           $(S)/os/servers/baseServers/XFRProvider.o			   \
+           $(S)/os/servers/k42Ramfs/StubFileSystemK42RamFS.o		   \
+           $(S)/os/servers/kfs/StubFileSystemKFS.o			   \
+           $(S)/os/servers/mountPoint/StubMountPointMgr.o		   \
+           $(S)/os/servers/nfs/StubFileSystemNFS.o			   \
+           $(S)/os/servers/pipe/StubStreamServerPipe.o			   \
+           $(S)/os/servers/pty/StubLogin.o				   \
+           $(S)/os/servers/pty/StubSysVMessages.o			   \
+           $(S)/os/servers/pty/StubSysVSharedMem.o			   \
+           $(S)/os/servers/sample/StubSampleService.o			   \
+           $(S)/os/servers/unionfs/StubFileSystemUnion.o		   \
+           $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o		   \
+           $(S)/usr/XUsrTst.o
+
+OBJS += $(O)/install/lib/$(ARCH)/$(D)Deb/libk.a
+$(O)/install/lib/$(ARCH)/$(D)Deb/libk.a: $(libkobjs)
+	$(call status, AR, $@)
+	$(AR) crs $@ $?
+
+
+OBJS += $(S)/os/kernel/bilge/simos.o $(S)/os/kernel/bilge/openfirm.o
+$(S)/os/kernel/bilge/%.o: $(H)/os/kernel/bilge/arch/powerpc/%.C
+	$(call status, CXX, $@)
+	$(CXX) -c -fno-rtti -nostdinc++ -fno-exceptions \
+               -DTARGET_MACHINE="powerpc" -D__GNU_AS__ -Upowerpc -DGCC3 \
+               -MD -Wa,-strip-local-absolute -fPIC -mminimal-toc  -DKERNEL \
+               -Wall -Werror -O1 -g -DKFS_ENABLED -DK42 -D_REENTRANT \
+               -D__BIG_ENDIAN__ -nostdinc -I. \
+               -I$(H)/os/kernel/bilge \
+               -I$(O)/install/include \
+               -I$(U)/$(D)Deb.Img.4/usr/powerpc64-linux/include \
+               -I$(L)/include \
+               -I$(O)/install/gcc-include/arch/powerpc \
+               -I$(O)/install/include/stubgen/arch/powerpc  \
+               -I$(H)/os/kernel $< -o $@
+
+$(S)/os/kernel/init/%.o: $(H)/os/kernel/init/arch/powerpc/%.C
+	$(call status, CXX, $@)
+	$(CXX) -c -fno-rtti -nostdinc++ -fno-exceptions \
+               -DTARGET_MACHINE="powerpc" -D__GNU_AS__ -Upowerpc -DGCC3 \
+               -MD -Wa,-strip-local-absolute -fPIC -mminimal-toc  -DKERNEL \
+               -Wall -Werror -O0 -g -DKFS_ENABLED -DK42 -D_REENTRANT \
+               -D__BIG_ENDIAN__ -nostdinc -I. \
+               -I$(H)/os/kernel/init \
+               -I$(O)/install/include \
+               -I$(U)/$(D)Deb.Img.4/usr/powerpc64-linux/include \
+               -I$(L)/include \
+               -I$(O)/install/gcc-include/arch/powerpc \
+               -I$(O)/install/include/stubgen/arch/powerpc  \
+               -I$(H)/os/kernel $< -o $@
+
+# flags for libraries
+lflags = -fno-rtti -nostdinc++ -fno-exceptions -DTARGET_MACHINE="powerpc" \
+        -D__GNU_AS__ -Upowerpc -DGCC3 -MD -Wa,-strip-local-absolute	  \
+        -fPIC -mminimal-toc -Wall -Werror -O0 -g			  \
+        -DKFS_ENABLED -DK42 -D_REENTRANT -D__BIG_ENDIAN__ -nostdinc
+
+# flags for kernel builds
+kflags = -I$(O)/install/include $(lflags) -DKERNEL
+
+# user-space include flags
+iflags = -I$(L)/include						\
+         -I$(O)/install/include					\
+         -I$(O)/install/gcc-include/arch/powerpc		\
+         -I$(O)/install/include/stubgen/arch/powerpc		\
+         -I$(U)/$(D)Deb.Img.4/usr/powerpc64-linux/include
+
+# ask marc.
+jflags = -I$(L)/arch/k42/include $(iflags)
+
+# standard flags for everything in os/kernel
+$(S)/os/kernel/%.o: CPPFLAGS += -DTARGET_MACHINE="$(ARCH)"		\
+        -D__GNU_AS__ -DGCC3 -MD -DKFS_ENABLED -DK42 -D_REENTRANT 	\
+	-D__BIG_ENDIAN__ -DKERNEL -nostdinc++				\
+	-I$(H)/os/kernel -I$(O)/install/include				\
+	-I$(O)/install/include/stubgen/arch/$(ARCH)			\
+	-I$(subst $(S)/,$(H)/,$(@D))
+
+$(S)/os/kernel/%.o: CXXFLAGS += -fno-rtti -fno-exceptions -U$(ARCH) -g	\
+	-Wa,-strip-local-absolute -fPIC -mminimal-toc -Wall -Werror -O0
+
+$(S)/os/kernel/%.o: ASFLAGS += 
+
+# standard rules for os/kernel
+$(S)/os/kernel/%.o: $(H)/os/kernel/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c $<
+
+# stub-generated objects are found in $(S)
+$(S)/os/kernel/%.o: $(S)/os/kernel/%.C
+	$(call status, STUBCXX, $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c $<
+
+# architecture-specific code. This can't be done with a single rule, as
+# it requires two wildcards:
+#   os/kernel/%/arch/$(ARCH)/%.C
+$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(ARCH)/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c $<
+
+$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(ARCH)/%.S
+	$(call status, AS, $@)
+	$(CC) $(CPPFLAGS) $(ASFLAGS) -o $@ -c $<
+
+#os_kernel_linux_flags = -I$(H)/os/kernel \
+#                        -I$(H)/os/kernel/linux
+#$(S)/os/kernel/linux/%.o: $(H)/os/kernel/linux/arch/powerpc/%.C
+#	$(call status, CXX, $@)
+#	$(CXX) -c $(kflags) $(jflags) $(os_kernel_linux_flags) $< -o $@
+#
+#os_kernel_mem_flags = -I$(H)/os/kernel -I$(H)/os/kernel/mem
+#$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/%.C
+#	$(call status, CXX, $@)
+#	$(CXX) -c $(kflags) $(jflags) $(os_kernel_mem_flags) $< -o $@
+#$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(ARCH)/%.C
+#	$(call status, CXX, $@)
+#	$(CXX) -c $(kflags) $(jflags) $(os_kernel_mem_flags) $< -o $@
+#$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(ARCH)/%.S
+#	$(call status, AS, $@)
+#	$(AS) -c $(kflags) $(jflags) $(os_kernel_mem_flags) $< -o $@
+#
+#os_kernel_exception_flags = -I$(H)/os/kernel
+#$(S)/os/kernel/exception/%.o: $(H)/os/kernel/exception/%.C
+#	$(call status, CXX, $@)
+#	$(CXX) -c $(kflags) $(jflags) $(os_kernel_exception_flags) $< -o $@
+#
+#lib_libc_alloc_flags = -I$(S)/lib/libc/alloc	\
+#                       -I$(H)/lib/libc		\
+#                       -I$(H)/lib/libc/alloc
+#$(S)/lib/libc/alloc/%.o: $(H)/lib/libc/alloc/%.C
+#	$(call status, CXX, $@)
+#	$(CXX) -c $(lflags) $(iflags) $(lib_libc_alloc_flags) $< -o $@
+
+# rules for generating stub components
+	
+
+
+
+# Now that OBJS is totally expanded, generate our directory list from it.
+DIRS = $(sort $(foreach obj, $(OBJS), $(dir $(obj))))
+dirs: $(DIRS)
+
+# This is always the last rule: it needs OBJS to be totally expanded.
+$(DIRS):
+	$(call status, MKDIR, $@)
+	$(MKDIR) -p $@
+
