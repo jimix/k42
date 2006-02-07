@@ -3,18 +3,18 @@
 # ############################################################################
 
 # Basic build configuration.
-D = part
+D = full
 OS = $(shell uname -s)
-BUILD = x86_64
-ARCH = powerpc
+BUILD = i686
+HOST = powerpc
 
 # Build our source and output paths from above.
 O = ..
 H = .
-S = $(O)/$(ARCH)/$(D)Deb
+S = $(O)/$(HOST)/$(D)Deb
 B = $(S)/os/kexec
-U = /home/k42
-L = $(U)/src-cvs/linux-029
+U = /u/kitchawa/k42-packages
+L = ../linux-030
 
 # 64-bit cross-compile tools.
 CROSS_COMPILE = powerpc64-linux-
@@ -55,19 +55,12 @@ endif
 # Our non-file targets.
 .PHONY: all dirs config clean
 
-# Pull in the configuration if it exists.
--include .config
-
 # Default target is just the directory skeleton and our bootable kernel.
-ifeq "$(NEW)" "1"
 all: dirs $(S)/os/k42-vmlinux
-else
-all: dirs $(S)/os/mamboboot.tok $(S)/os/chrpboot.tok
-endif
 
 # Just print some debug information and exit.
 config:
-	@echo build $(D)-debug K42 on $(BUILD) $(OS) for $(ARCH) from $(OBJS)
+	@echo build $(D)-debug K42 on $(BUILD) $(OS) for $(HOST) from $(OBJS)
 
 # Delete everything we built.
 clean:
@@ -75,101 +68,7 @@ clean:
 	$(RM) $(wildcard $(OBJS))
 
 
-# The old-style kernel we boot on simulator
-OBJS += $(S)/os/mamboboot.tok
-$(S)/os/mamboboot.tok: $(S)/os/mambo_boot_image
-	$(call status, STRIP, $@)
-	$(STRIP32) -g $< -o $@
-	$(call status, ADDNOTE, $@)
-	$(O)/install/tools/$(OS)_$(BUILD)/$(ARCH)/addnote $@
-
-OBJS += $(S)/os/mambo_boot_image
-$(S)/os/mambo_boot_image: $(H)/os/arch/$(ARCH)/chrp_boot_elf.scp \
-                          $(S)/os/mambo_elf.o
-	$(call status, LD, $@)
-	$(LD32) -Ttext 0x700000 -static -e 0x700000		\
-                -defsym kernVirtStart=0xC000000002000000	\
-                --script=$< $(filter-out $<, $^) -o $@
-
-OBJS += $(S)/os/mambo_elf.o
-$(S)/os/mambo_elf.o: $(S)/os/boot_image $(S)/os/boot/boot.o
-	$(call status, OBJCOPY, $@)
-	$(OBJCOPY32) --add-section=.k42_boot_image=$(S)/os/boot_image	     \
-                --set-section-flags=.k42_boot_image=contents,alloc,load,data \
-                $(S)/os/boot/boot.o $@
-
-
-# The old-style kernel we boot on hardware.
-OBJS += $(S)/os/chrpboot.tok
-$(S)/os/chrpboot.tok: $(S)/os/chrp_boot_image
-	$(call status, STRIP, $@)
-	$(STRIP32) -g $< -o $@
-	$(call status, ADDNOTE, $@)
-	$(O)/install/tools/$(OS)_$(BUILD)/$(ARCH)/addnote $@
-
-OBJS += $(S)/os/chrp_boot_image
-$(S)/os/chrp_boot_image:  $(H)/os/arch/$(ARCH)/chrp_boot_elf.scp \
-                          $(S)/os/chrp_elf.o
-	$(call status, LD, $@)
-	$(LD32) -Ttext 0x700000 -static -e 0x700000		\
-                -defsym kernVirtStart=0xC000000002000000	\
-                --script=$< $(filter-out $<, $^) -o $@
-
-OBJS += $(S)/os/chrp_elf.o
-$(S)/os/chrp_elf.o: $(S)/os/boot_image.gz $(S)/os/boot/boot.o
-	$(call status, OBJCOPY, $@)
-	$(OBJCOPY32) --add-section=.k42_boot_image=$(S)/os/boot_image.gz     \
-                --set-section-flags=.k42_boot_image=contents,alloc,load,data \
-                $(S)/os/boot/boot.o $@
-
-OBJS += $(S)/os/boot_image.gz
-$(S)/os/boot_image.gz: $(S)/os/boot_image
-	$(call status, GZIP, $@)
-	gzip -9 -c $< > $@
-
-OBJS += $(S)/os/boot_image
-$(S)/os/boot_image: $(S)/os/boot_image.dbg
-	$(call status, STRIP, $@)
-	$(STRIP) -g $< -o $@
-
-# The old-style 64-bit K42 kernel, with debug symbols.
-OBJS += $(S)/os/boot_image.dbg
-$(S)/os/boot_image.dbg: $(H)/os/arch/powerpc/boot_image.scp		\
-			$(S)/os/kexceptobjs.o				\
-                        $(L)/core.k42lib.o				\
-			$(S)/os/ktraceobjs.o				\
-			$(S)/os/ksysobjs.o				\
-			$(S)/os/kstubobjs.o				\
-			$(S)/os/kbilgeobjs.o				\
-			$(S)/os/kinitobjs.o				\
-			$(S)/os/kmemobjs.o				\
-			$(S)/os/kprocobjs.o				\
-			$(S)/os/klinobjs.o				\
-                        $(S)/os/servers/bootServers.o			\
-                        $(O)/install/lib/powerpc/$(D)Deb/libsrv.a	\
-		        $(O)/install/lib/powerpc/$(D)Deb/liblk26.a	\
-                        $(O)/install/lib/powerpc/$(D)Deb/libk.a
-	$(call status, LD, $@)
-	$(LD) -defsym kernVirtStart=0xC000000002000000 \
-	      -Ttext 0xC000000002000000 \
-	      -T $< \
-	      -Bstatic -e start -Map $(S)/os/boot_image.map \
-	      $(filter-out $<, $^) -o $@
-
-
-# This is the 32-bit boot program that leads off both of the above kernels.
-OBJS += $(S)/os/boot/boot.o
-bobjs = $(S)/os/boot/first.o $(S)/os/boot/main.o			\
-        $(S)/os/boot/cl_in_services.o $(S)/os/boot/prom.o		\
-        $(S)/os/boot/lmb.o $(S)/os/boot/misc.o $(S)/os/boot/printf.o	\
-        $(S)/os/boot/zlib.o $(S)/os/boot/asm_utils.o
-$(S)/os/boot/boot.o: $(bobjs)
-	$(call status, LD, $@)
-	$(CC32) -Wl,-r -nostdlib $^ \
-                $(shell $(CC32) -print-libgcc-file-name) -o $@
-
-
-# The new-style kernel, wrapped by a 32-bit boot program.
+# The final kernel, wrapped by a 32-bit boot program.
 OBJS  = $(S)/os/k42-zImage
 zobjs = $(S)/os/boot2/crt0.o $(S)/os/boot2/string.o $(S)/os/boot2/prom.o \
 	$(S)/os/boot2/main.o $(S)/os/boot2/zlib.o $(S)/os/boot2/div64.o \
@@ -196,7 +95,7 @@ $(S)/os/boot/kernel-vmlinux.strip.o: $(S)/os/boot/kernel-vmlinux.strip.c \
 	$(CC32) $(HOSTCFLAGS) -fno-builtin -c $< -o $@
 	$(call status, OBJCOPY, $@)
 	$(OBJCOPY32) $@ --add-section=.kernel:vmlinux.strip=$(kimagez) \
-			--set-section-flags=$(sflags)
+		 	--set-section-flags=$(sflags)
 
 OBJS += $(S)/os/boot/kernel-vmlinux.strip.c
 $(S)/os/boot/kernel-vmlinux.strip.c:
@@ -248,28 +147,23 @@ $(S)/os/boot2/%.o: $(L)/arch/ppc64/boot/%.c
 	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(HOSTCFLAGS) \
                 -I$(L)/include -fno-builtin -c $< -o $@
 
-# The new-style 64-bit K42 kernel proper, with debug symbols.
+# The 64-bit K42 kernel proper, with debug symbols.
 OBJS += $(S)/os/k42-vmlinux
 $(S)/os/k42-vmlinux: $(B)/vmlinux.lds				\
 		     $(B)/head.o				\
 		     $(B)/entry.o				\
 		     $(B)/prom_init.o				\
-                     $(B)/pSeries_setup.o			\
-                     $(B)/maple_time.o				\
-                     $(B)/maple_pci.o				\
-                     $(B)/rtas_pci.o				\
-                     $(B)/setup.o				\
-                     $(B)/lmb.o					\
-                     $(B)/prom.o				\
-                     $(B)/hash_utils.o				\
-                     $(B)/u3_iommu.o				\
-                     $(B)/hash_low.o				\
-                     $(B)/hash_native.o				\
-                     $(B)/stab.o				\
-                     $(B)/slb.o					\
-                     $(B)/pacaData.o				\
-                     $(B)/slb_low.o				\
-                     $(B)/udbg.o				\
+$(B)/pSeries_setup.o \
+$(B)/maple_time.o \
+$(B)/maple_pci.o \
+$(B)/rtas_pci.o \
+$(B)/setup.o \
+$(B)/lmb.o \
+$(B)/prom.o \
+ $(B)/hash_utils.o $(B)/u3_iommu.o $(B)/hash_low.o $(B)/hash_native.o $(B)/stab.o $(B)/slb.o \
+        $(B)/pacaData.o \
+$(B)/slb_low.o \
+	$(B)/udbg.o \
 		     $(B)/unimplemented.o			\
 		     $(S)/os/kexceptobjs.o			\
 		     $(L)/core.k42lib.o				\
@@ -375,7 +269,7 @@ kmemobjs = StubRegionDefault.o StubFR.o StubRegionPerProcessor.o	\
            StubRegionFSComm.o StubRegionReplicated.o StubFRCRW.o	\
            StubFRLTransTable.o StubKernelPagingTransport.o		\
            StubKernelPagingTransportPA.o StubKernelPagingTransportVA.o	\
-           StubPagingService.o XFR.o InvertedPageTable.o CopyPage.o	\
+           XFR.o InvertedPageTable.o CopyPage.o	\
            PageAllocatorKernPinned.o PageAllocatorKernUnpinned.o	\
            RegionDefault.o RegionReplicated.o RegionPerProcessor.o	\
            PageFaultTest.o FR.o FRPlaceHolder.o FCMStartup.o FCM.o	\
@@ -384,7 +278,7 @@ kmemobjs = StubRegionDefault.o StubFR.o StubRegionPerProcessor.o	\
            FCMPrimitive.o FCMSharedTrivial.o FCMPartitionedTrivial.o	\
            FCMCommon.o FCMCommonMultiRep.o FCMCommonMultiRepRoot.o	\
            FCMDefaultMultiRep.o FCMDefaultMultiRepRoot.o		\
-           FCMPrimitiveKernelMultiRep.o	FCMPartitioned.o		\
+           FCMPrimitiveKernelMultiRep.o					\
            FCMPrimitiveKernelMultiRepRoot.o PageDescData.o PageList.o	\
            SegmentTable.o PageSet.o PageSetDense.o SegmentHATPrivate.o	\
            HATDefault.o HATKernel.o FRVA.o FRPA.o FRPANonPageable.o	\
@@ -397,14 +291,12 @@ kmemobjs = StubRegionDefault.o StubFR.o StubRegionPerProcessor.o	\
            SharedBufferProducerKernel.o SharedBufferConsumerKernel.o	\
            KernelPagingTransport.o KernelPagingTransportPA.o		\
            KernelPagingTransportVA.o PMLeafExp.o PMLeafChunk.o		\
-           FreeFrameListChunk.o PagingService.o XRegionDefault.o	\
+           FreeFrameListChunk.o SyncService.o XRegionDefault.o		\
            XRegionPerProcessor.o XRegionRedZone.o XFRComputation.o	\
-           XFRComputationDefault.o XFRComputationPart.o \
-           FRComputationDefault.o FRComputationPart.o \
            XFRKernelPinned.o XFRPA.o XFRVA.o XRegionFSComm.o		\
            XRegionReplicated.o XFRCRW.o XFRLTransTable.o		\
            XKernelPagingTransport.o XKernelPagingTransportPA.o		\
-           XKernelPagingTransportVA.o XPagingService.o
+           XKernelPagingTransportVA.o
 $(S)/os/kmemobjs.o: $(addprefix $(S)/os/kernel/mem/, $(kmemobjs))
 
 OBJS += $(S)/os/kprocobjs.o
@@ -638,7 +530,6 @@ libkobjs = $(S)/lib/libc/alloc/AllocCell.o $(S)/lib/libc/alloc/AllocPool.o \
            $(S)/os/kernel/mem/StubRegionPerProcessor.o			   \
            $(S)/os/kernel/mem/StubRegionRedZone.o			   \
            $(S)/os/kernel/mem/StubRegionReplicated.o			   \
-           $(S)/os/kernel/mem/StubPagingService.o			   \
            $(S)/os/kernel/mem/XFR.o					   \
            $(S)/os/kernel/proc/StubProcessServer.o			   \
            $(S)/os/kernel/proc/StubProcessSetKern.o			   \
@@ -665,14 +556,15 @@ libkobjs = $(S)/lib/libc/alloc/AllocCell.o $(S)/lib/libc/alloc/AllocPool.o \
            $(S)/os/servers/pipe/StubStreamServerPipe.o			   \
            $(S)/os/servers/pty/StubLogin.o				   \
            $(S)/os/servers/pty/StubSysVMessages.o			   \
+           $(S)/os/servers/pty/StubSysVSemaphores.o			   \
            $(S)/os/servers/pty/StubSysVSharedMem.o			   \
            $(S)/os/servers/sample/StubSampleService.o			   \
            $(S)/os/servers/unionfs/StubFileSystemUnion.o		   \
            $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o		   \
            $(S)/usr/XUsrTst.o
 
-OBJS += $(O)/install/lib/$(ARCH)/$(D)Deb/libk.a
-$(O)/install/lib/$(ARCH)/$(D)Deb/libk.a: $(libkobjs)
+OBJS += $(O)/install/lib/$(HOST)/$(D)Deb/libk.a
+$(O)/install/lib/$(HOST)/$(D)Deb/libk.a: $(libkobjs)
 	$(call status, AR, $@)
 	$(AR) crs $@ $?
 
@@ -708,91 +600,31 @@ $(S)/os/kernel/init/%.o: $(H)/os/kernel/init/arch/powerpc/%.C
                -I$(O)/install/include/stubgen/arch/powerpc  \
                -I$(H)/os/kernel $< -o $@
 
-# flags for libraries
 lflags = -fno-rtti -nostdinc++ -fno-exceptions -DTARGET_MACHINE="powerpc" \
         -D__GNU_AS__ -Upowerpc -DGCC3 -MD -Wa,-strip-local-absolute	  \
         -fPIC -mminimal-toc -Wall -Werror -O0 -g			  \
         -DKFS_ENABLED -DK42 -D_REENTRANT -D__BIG_ENDIAN__ -nostdinc
-
-# flags for kernel builds
-kflags = -I$(O)/install/include $(lflags) -DKERNEL
-
-# user-space include flags
+kflags = $(lflags) -DKERNEL
 iflags = -I$(L)/include						\
          -I$(O)/install/include					\
          -I$(O)/install/gcc-include/arch/powerpc		\
          -I$(O)/install/include/stubgen/arch/powerpc		\
          -I$(U)/$(D)Deb.Img.4/usr/powerpc64-linux/include
-
-# ask marc.
 jflags = -I$(L)/arch/k42/include $(iflags)
 
-# standard flags for everything in os/kernel
-$(S)/os/kernel/%.o: CPPFLAGS += -DTARGET_MACHINE="$(ARCH)"		\
-        -D__GNU_AS__ -DGCC3 -MD -DKFS_ENABLED -DK42 -D_REENTRANT 	\
-	-D__BIG_ENDIAN__ -DKERNEL -nostdinc++				\
-	-I$(H)/os/kernel -I$(O)/install/include				\
-	-I$(O)/install/include/stubgen/arch/$(ARCH)			\
-	-I$(subst $(S)/,$(H)/,$(@D))
 
-$(S)/os/kernel/%.o: CXXFLAGS += -fno-rtti -fno-exceptions -U$(ARCH) -g	\
-	-Wa,-strip-local-absolute -fPIC -mminimal-toc -Wall -Werror -O0
-
-$(S)/os/kernel/%.o: ASFLAGS += 
-
-# standard rules for os/kernel
-$(S)/os/kernel/%.o: $(H)/os/kernel/%.C
+os_kernel_linux_flags = -I$(H)/os/kernel \
+                        -I$(H)/os/kernel/linux
+$(S)/os/kernel/linux/%.o: $(H)/os/kernel/linux/arch/powerpc/%.C
 	$(call status, CXX, $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c $<
+	$(CXX) -c $(kflags) $(jflags) $(os_kernel_linux_flags) $< -o $@
 
-# stub-generated objects are found in $(S)
-$(S)/os/kernel/%.o: $(S)/os/kernel/%.C
-	$(call status, STUBCXX, $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c $<
-
-# architecture-specific code. This can't be done with a single rule, as
-# it requires two wildcards:
-#   os/kernel/%/arch/$(ARCH)/%.C
-$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(ARCH)/%.C
+lib_libc_alloc_flags = -I$(S)/lib/libc/alloc	\
+                       -I$(H)/lib/libc		\
+                       -I$(H)/lib/libc/alloc
+$(S)/lib/libc/alloc/%.o: $(H)/lib/libc/alloc/%.C
 	$(call status, CXX, $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c $<
-
-$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(ARCH)/%.S
-	$(call status, AS, $@)
-	$(CC) $(CPPFLAGS) $(ASFLAGS) -o $@ -c $<
-
-#os_kernel_linux_flags = -I$(H)/os/kernel \
-#                        -I$(H)/os/kernel/linux
-#$(S)/os/kernel/linux/%.o: $(H)/os/kernel/linux/arch/powerpc/%.C
-#	$(call status, CXX, $@)
-#	$(CXX) -c $(kflags) $(jflags) $(os_kernel_linux_flags) $< -o $@
-#
-#os_kernel_mem_flags = -I$(H)/os/kernel -I$(H)/os/kernel/mem
-#$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/%.C
-#	$(call status, CXX, $@)
-#	$(CXX) -c $(kflags) $(jflags) $(os_kernel_mem_flags) $< -o $@
-#$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(ARCH)/%.C
-#	$(call status, CXX, $@)
-#	$(CXX) -c $(kflags) $(jflags) $(os_kernel_mem_flags) $< -o $@
-#$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(ARCH)/%.S
-#	$(call status, AS, $@)
-#	$(AS) -c $(kflags) $(jflags) $(os_kernel_mem_flags) $< -o $@
-#
-#os_kernel_exception_flags = -I$(H)/os/kernel
-#$(S)/os/kernel/exception/%.o: $(H)/os/kernel/exception/%.C
-#	$(call status, CXX, $@)
-#	$(CXX) -c $(kflags) $(jflags) $(os_kernel_exception_flags) $< -o $@
-#
-#lib_libc_alloc_flags = -I$(S)/lib/libc/alloc	\
-#                       -I$(H)/lib/libc		\
-#                       -I$(H)/lib/libc/alloc
-#$(S)/lib/libc/alloc/%.o: $(H)/lib/libc/alloc/%.C
-#	$(call status, CXX, $@)
-#	$(CXX) -c $(lflags) $(iflags) $(lib_libc_alloc_flags) $< -o $@
-
-# rules for generating stub components
-	
-
+	$(CXX) -c $(lflags) $(iflags) $(lib_libc_alloc_flags) $< -o $@
 
 
 # Now that OBJS is totally expanded, generate our directory list from it.
@@ -802,5 +634,4 @@ dirs: $(DIRS)
 # This is always the last rule: it needs OBJS to be totally expanded.
 $(DIRS):
 	$(call status, MKDIR, $@)
-	$(MKDIR) -p $@
-
+	$(MKDIR) $@
