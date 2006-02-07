@@ -1,0 +1,35 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.11 2002/01/31 19:35:32 peterson Exp $
+# ############################################################################
+
+default:: libobjs
+
+TARGET_CFLAGS += -D__KERNEL__
+
+# LIBLOWSRCS are those files that need to be loaded and run in
+# low memory, before everything starts.
+
+# LIBKERNSRCS is the list of all files that are loaded and run in
+# high (virtual) memory
+
+LIBLOWSRCS += part2.S
+LIBKERNSRCS += idtasm.S head64.c cwrapper.C early_printk.c
+
+# MP and I/O support
+
+LIBKERNSRCS += MPinit.C APIC.C
+
+#early_printk.o: MEMORY_MODEL=-fPIC -fpic
+#KernelInit.o: MEMORY_MODEL=-fPIC -fpic
+
+#
+#  be sure that we compile any low core sources
+#
+install_libobjs:: $(addsuffix .o,$(basename $(LIBLOWSRCS)))

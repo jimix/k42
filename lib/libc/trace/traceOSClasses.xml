@@ -1,0 +1,54 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceOSClasses.xml,v 1.11 2005/05/17 15:10:30 cascaval Exp $
+-->
+
+<PEM_Events>
+<classList layerId='OS'>
+	<class id='Default'   value='0'  mask='0x0000000000000001' />
+	<class id='Test'      value='1'  mask='0x0000000000000002' />
+	<class id='Mem'       value='2'  mask='0x0000000000000004' />
+	<class id='Lock'      value='3'  mask='0x0000000000000008' />
+	<class id='User'      value='4'  mask='0x0000000000000010' />
+	<class id='IO'        value='5'  mask='0x0000000000000020' />
+	<class id='Alloc'     value='6'  mask='0x0000000000000040' />
+	<class id='Misc'      value='7'  mask='0x0000000000000080' />
+	<class id='Proc'      value='8'  mask='0x0000000000000100' />
+	<class id='MiscKern'  value='9'  mask='0x0000000000000200' />
+	<class id='ClustObj'  value='10' mask='0x0000000000000400' />
+	<class id='Exception' value='11' mask='0x0000000000000800' />
+	<class id='Scheduler' value='12' mask='0x0000000000001000' />
+	<class id='Dbg'       value='13' mask='0x0000000000002000' />
+	<class id='FS'        value='14' mask='0x0000000000004000' />
+	<class id='Linux'     value='15' mask='0x0000000000008000' />
+	<class id='Control'   value='16' mask='0x0000000000010000' />
+	<class id='Swap'      value='18' mask='0x0000000000040000' />
+	<class id='ResMgr'    value='19' mask='0x0000000000080000' />
+	<class id='Info'      value='22' mask='0x0000000000400000' />
+<!-- FIXME if you add another major beyond 24 modify hack in pemGenPEMAPI.py -->
+</classList>
+
+<classList layerId='HW'>
+	<class id='HWPerfMon' value='17' mask='0x0000000000020000' />
+<!-- FIXME if you add another major beyond 24 modify hack in pemGenPEMAPI.py -->
+</classList>
+
+<classList layerId='APP'>
+	<class id='App'       value='20' mask='0x0000000000100000' />
+	<class id='OMP'       value='21' mask='0x0000000000200000' />
+<!-- FIXME if you add another major beyond 24 modify hack in pemGenPEMAPI.py -->
+</classList>
+
+<classList layerId='LIB'>
+	<class id='LibC'       value='23' mask='0x0000000000800000' />
+	<class id='MPI'        value='24' mask='0x0000000001000000' />
+<!-- FIXME if you add another major beyond 24 modify hack in pemGenPEMAPI.py -->
+</classList>
+
+</PEM_Events>

@@ -1,0 +1,292 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: sysPrgG.sgml,v 1.3 2001/10/18 15:08:06 bob Exp $
+-->
+<title>Linux Process Model Implementation</title>
+  <section>
+  <title>The Problem</title>
+
+  <para>
+    We need to associate Linux (i.e. Unix) process state with the K42
+    process that implements the Linux process.  This state includes the
+    process id (pid), the Linux process parent child relationships, the
+    process credentials and limits, the job control session and process
+    group relationships, exit status, and other Linux specifics.
+  </para>
+
+  <para>
+    One approach would be to extend the K42 process implementation to
+    include this information and the services to manipulate it.  We do not
+    do this for two reasons.
+  </para>
+
+  <para>
+    To extend the K42 process by subclassing would not allow for multiple
+    K42 process implementations, while adding the Linux state to the base
+    K42 process both offends our sensibilities and leads to multiple
+    implementations.  This problem shows a weakness in the C++ subclassing
+    language, particularly in the K42 use which forbids multiple
+    inheritance.
+  </para>
+
+  <para>
+    The K42 implementation of Linux exec is a user mode implementation, in
+    which the execing process creates a new process to hold the exec image.
+    It would be very difficult for the process to rebuild itself in place
+    rather than doing this.  Thus, the association of a Linux process with
+    its K42 implementation is not fixed, but changes at exec.
+  </para>
+
+  <para>
+    We have thus taken the alternative approach of a Linux Process server
+    (ProcessLinux) which manages the Linux process state.  This server is
+    currently in the kernel, but that is not necessary.
+  </para>
+
+  </section>
+
+  <section>
+  <title>ProcessLinux Implementation</title>
+
+  <para>
+    ProcessLinux is implemented by a single clustered object used by all
+    Linux client processes.  We judge that performance does not require a
+    clustered object per Linux process, and in fact reducing the cost of
+    creating, destroying, and representing a Linux process may be the best
+    optimization.
+  </para>
+
+  <para>
+    The ProcessLinux server object maintains a record of Linux processes in
+    the form of task_structs, one per process.  The content of a
+    task_struct follows the standard Linux implementation.  If a K42
+    process is associated with the Linux process, the task_struct contains
+    a ref for the Process.  Note that "zombie" processes will not have a
+    K42 process associated.
+  </para>
+  
+  <para>
+    When a K42 process is implementing a Linux process, it must have an
+    XObject to the ProcessLinux server.  This invariant is enforced.  The
+    task_struct is created as part of creating the XObject, and if the
+    XObject is removed, the linux_task is taken to have terminated
+    abnormally.  Because of this invariant, there is no need to use count
+    the ref's in the task_structs.  Note that if the K42 process is
+    destroyed, its object cleanup will remove the ProcessLinux XObject.
+  </para>
+
+  <para>
+    The ProcessLinuxClient object creates an async callback XObject and
+    registers it with the ProcessLinuxServer.  This callback is used to
+    deliver signal like information to the client.  The client converts
+    this information into Linux signals.
+  </para>
+
+  <para>
+    The ProcessLinux object is found by using the well known ref
+    TheProcessLinuxRef.  Note that this dirties the separation of K42 and
+    Linux, but seems an acceptable transgression.  Other well know objects
+    needed by Linux could be recorded by ProcessLinux to avoid a
+    proliferation of well know refs.  Alternately, we could use static
+    storage to find these objects.
+  </para>
+
+  <para>
+    The ProcessLinux XObject used by a process is created for it and passed
+    to it.  We do NOT use the TypeServer to get access.  This is necessary
+    so that the associated linux process has the right relationship to the
+    creating linux process, and so that no k42 process can bypass linux
+    credentials by fabricating its on XObject.
+  </para>
+
+  </section>
+
+
+  <section>
+  <title>ProcessLinux Interface</title>
+
+  <para>
+    The client services of ProcessLinux are:
+
+    <itemizedlist spacing="compact">
+      <listitem>
+	<simpara>
+	  preFork - called with the K42 process id of the child process,
+	  before the child is started, and before the memory is fork
+	  copied.  Uses the server interface _createChild to make the child
+	  a linux process if the parent is a linux process. In any event,
+	  returns an object handle for the server to be used by the child.
+	  The object handle is saved in the ProcessLinuxClient object.
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  postFork - called during startup of the fork child.  The
+	  previously saved object handle is installed into the stub.
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  becomeInit - in Linux, process 1 is special.  It is created
+	  first, and serves as the parent of all orphaned processes.  A K42
+	  process can become init with this call, which creates an XObject,
+	  and a task_struct with pid 1.  This all will fail if the caller
+	  is already a Linux process, or if a Linux process with pid 1
+	  already exists.  We do not do any special authentication of this
+	  call.  Rather we assume that boot will create an init process
+	  before any use code can be launched.  Once init is created, all
+	  other Linux processes must be ancestors of init, since the only
+	  way to create a new Linux process is createChild.
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  createExecProcess - used by the implementation of exec.  The
+	  pre-exec K42 process creates a new K42 process which will execute
+	  the exec image.  createExecProcess creates a new XObject for the
+	  new K42 process, associates the existing (caller's) task_stuct
+	  with the new process, and removes the caller's XObject.  The
+	  caller is thus no longer a Linux process, and the post exec
+	  process is.
+	</simpara>
+      </listitem>
+    </itemizedlist>
+  </para>
+  </section>
+
+
+  <section>
+  <title>The Server Interfaces are</title>
+  <para>
+    <itemizedlist spacing="compact">
+      <listitem>
+	<simpara>
+	  _createExecProcess and _becomeInit - direct implementations of
+	  the client calls.
+	</simpara>
+      </listitem>
+    <listitem>
+	<simpara>
+	  _createChild - used by the implementation of preFork.  When the
+	  K42 fork child has been created, but not yet started, createChild
+	  is used to create an XObject for the child and an associated
+	  Linux task_struct.  At this point, the child process exists for
+	  Linux.  The Object Handle is returned to the parent, which passes
+	  it to the child.
+	</simpara>
+      </listitem>
+    </itemizedlist>
+  </para>
+
+  </section>
+
+  <section>
+  <title>List of stuff to be dealt with</title>
+  <para>
+    <itemizedlist spacing="compact">
+      <listitem>
+	<simpara>
+	  Interruptible/Restartable syscalls
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Fork/Exec
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Exit
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  wait/SIGCHILD
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Sessions
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Process Groups
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Signal Delivery
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Start/Stop signals
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Foreground Process Group and TTY/PTY
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Parent Process
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  LOGNAME
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  creds
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  FS creds
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Kerberos
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  PS
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  kill
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Loader
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Accounting
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Auditing
+	</simpara>
+      </listitem>
+    </itemizedlist>
+  </para>
+
+  </section>
+

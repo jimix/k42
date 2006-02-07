@@ -1,0 +1,467 @@
+# -*-Makefile-*-
+# K42: (C) Copyright IBM Corp. 2003.
+# All Rights Reserved
+# Makefile for building a complete powerpc64-linux toolchain
+#
+# Author: mostrows@watson.ibm.com
+#
+# Contributors: dwitte@stanford.edu
+#
+
+
+
+#
+# Choose a prefix 
+#
+# We will assume that this file is placed in the prefix directory,
+# and that your PATH includes $(PREFIX)/bin
+#
+PREFIX=/home/kitchawa/k42
+#PREFIX=/usr/linux
+
+#
+# Choose a build platform (set build to the appropriate string 
+# for your platform)
+#BUILD=powerpc-apple-darwin6.7.5
+#BUILD=powerpc-ibm-aix5.1.0.0
+BUILD=powerpc-linux
+#BUILD=i686-linux-gnu
+
+
+ifeq ($(BUILD),powerpc-linux)
+NATIVE=yes
+endif
+
+#
+# This should be enough now.  Build the "all" target.
+#
+
+# To work around a glibc/make bug
+# If a failure occurs in glibc_32_1 or glibc_64_1:
+# make -C build/glibc_32_1 build-shared=yes gnu/lib-names.h
+#
+# or
+#
+# make -C build/glibc_64_1 build-shared=yes gnu/lib-names.h
+#
+# Then restart the build as before
+
+
+
+#
+# GCC version number
+#
+# This build procedure depends on knowing the gcc version number in advance.
+# For the checkout procedure currently encoded this setting is correct.
+#
+GCCVER=3.3.3-hammer
+
+#
+# What to check out of cvs for gcc, glibc
+#
+GCCCVSARGS=-P -ko -rhammer-3_3-branch 
+#-D'20040404'
+GLIBCCVSARGS=-D'20040418'
+BINUTILSCVSARGS=-D'20040418'
+
+#
+# Kernel patches
+#
+PPC64_KERNEL_PATCH=linuxppc64-2.4.21.patch.gz
+PPC64_KERNEL_PATCH_URL=ftp://ftp.linuxppc64.org/pub/people/engebret/$(PPC64_KERNEL_PATCH)
+
+
+#DEBUG=echo "Remake: $@ due to $?" >>/tmp/build.dbg
+
+GLIBC_CVS=:pserver:anoncvs:anoncvs@sources.redhat.com:2401/cvs/glibc
+GCC_CVS=:ext:anoncvs@savannah.gnu.org:/cvsroot/gcc
+SSH=ssh
+
+SRCDIR=$(PREFIX)/src
+
+BUILDDIR= $(PREFIX)/build
+
+GCCSRC=$(SRCDIR)/gcc
+GLIBCSRC=$(SRCDIR)/glibc
+BINUTILSSRC=$(SRCDIR)/binutils
+HEADERS64=$(PREFIX)/powerpc64-linux/include
+HEADERS32=$(PREFIX)/powerpc-linux/include
+KERNHEADERS32=$(SRCDIR)/linux-2.4.21-ppc32/include
+KERNHEADERS64=$(SRCDIR)/linux-2.4.21/include
+BASH:=$(shell which bash)
+
+BINUTILS_CVS=:pserver:anoncvs:anoncvs@sources.redhat.com:2401/cvs/src
+
+PREBIN= $(PREFIX)/bin/powerpc-linux-
+PREBIN64= $(PREFIX)/bin/powerpc64-linux-
+
+
+#
+# Define stamp files for the 6 glibc builds
+#
+
+#
+# We rely on stamp files a lot here because it works.  Depending on
+# build products is at times a bit dicey, especially when trying to
+# test this thing on multiple platforms and when full builds take
+# several hours....
+#
+GLIBC_32_1= $(BUILDDIR)/glibc_32_1.stamp
+GLIBC_32_2= $(BUILDDIR)/glibc_32_2.stamp
+GLIBC_32_3= $(BUILDDIR)/glibc_32_3.stamp
+GLIBC_64_1= $(BUILDDIR)/glibc_64_1.stamp
+GLIBC_64_2= $(BUILDDIR)/glibc_64_2.stamp
+GLIBC_64_3= $(BUILDDIR)/glibc_64_3.stamp
+
+$(GLIBC_32_1)_BUILDFLAGS=force-install=no
+$(GLIBC_64_1)_BUILDFLAGS=force-install=no
+
+
+#
+# If we produce a 64-bit g++, we've done eveything for gcc
+# 
+all: $(PREBIN64)g++ $(GLIBC_64_3) $(GLIBC_32_3) $(BINUTILS64)
+	$(DEBUG)
+
+source: $(GCCSRCSTAMP) $(BINUTILSSRC) $(GLIBCSRCSTAMP) kernelsrc
+	$(DEBUG)
+
+kernelsrc: $(KERNHEADERS64)/linux/version.h $(KERNHEADERS32)/linux/version.h
+	$(DEBUG)
+
+
+$(BUILDDIR)/dirs.stamp:
+	$(DEBUG)
+	-mkdir -p $(SRCDIR)
+	-mkdir -p $(BUILDDIR)
+	-mkdir -p $(PREFIX)/powerpc64-linux
+	-mkdir -p $(PREFIX)/powerpc64-linux/bin
+	-mkdir -p $(PREFIX)/powerpc64-linux/include
+	-mkdir -p $(PREFIX)/powerpc64-linux/lib
+	-mkdir -p $(PREFIX)/powerpc64-linux/lib/nof
+	-mkdir -p $(PREFIX)/powerpc-linux/include
+	-test "$(NATIVE)" = "yes"  && ln -s powerpc-linux/lib $(PREFIX)/lib
+	-test "$(NATIVE)" = "yes"  && ln -s powerpc64-linux/lib $(PREFIX)/lib64
+	-ln -s powerpc64-linux/lib $(PREFIX)/lib64
+	-ln -s ../powerpc64-linux/lib $(PREFIX)/powerpc-linux/lib64
+	-ln -s lib $(PREFIX)/powerpc64-linux/lib64
+	touch -m $@
+
+# Generic rule to build and install
+# Existence of Makefile means package is configured
+%.stamp: %/Makefile $(BUILDDIR)/dirs.stamp
+	$(DEBUG)
+	$(MAKE) -C $(<D)  $(BUILDFLAGS) $($@_BUILDFLAGS)
+	$(MAKE) -C $(<D)  $(BUILDFLAGS) $($@_INSTALLFLAGS) install
+	$($@_POST_INSTALL)
+	touch -m $@
+
+
+
+#
+# Get binutils src
+#
+$(BINUTILSSRC): 
+	$(DEBUG)
+	(cd $(SRCDIR);	cvs -z 9 -d $(BINUTILS_CVS) login)
+	(cd $(SRCDIR);	cvs -z 9 -d $(BINUTILS_CVS) \
+				co $(BINUTILSCVSARGS) binutils )
+	mv $(SRCDIR)/src $(SRCDIR)/binutils
+
+$(GLIBCSRC): 
+	$(DEBUG)
+	cvs -z 9 -d $(GLIBC_CVS) login
+	cd $(SRCDIR); cvs -z 9 -d $(GLIBC_CVS) co $(GLIBCCVSARGS) -d glibc libc
+
+#
+# Get gcc source and patch it
+#
+
+# This is for ppc64 sys
+#RUNTIME_LD_DIR=/lib64
+RUNTIME_LD_DIR=$(PREFIX)/powerpc64-linux/lib64
+FILE=$(GCCSRC)/gcc/config/rs6000/linux64.h
+SUB="s,-dynamic-linker /lib64,-dynamic-linker $(RUNTIME_LD_DIR),"
+#PATCH_LD_DIR=sed -e $(SUB) < $(FILE) > tmp.$$$$ && \
+#	     mv -f tmp.$$$$ $(FILE) || exit 1
+
+PATCH_LD_DIR=
+
+GCCSRCSTAMP=$(BUILDDIR)/gcc.src.stamp
+
+$(GCCSRCSTAMP): 
+	$(DEBUG)
+	cd $(SRCDIR); \
+		CVS_RSH=$(SSH) cvs -z 9 -d $(GCC_CVS) co $(GCCCVSARGS) gcc
+	$(PATCH_LD_DIR)
+	touch $@
+
+#
+# Configuration step creates Makefile
+#
+$(BUILDDIR)/binutils/Makefile: $(BINUTILSSRC)
+	$(DEBUG)
+	-mkdir -p $(@D);
+	(cd $(@D) ; \
+	$(BINUTILSSRC)/configure \
+	--prefix=$(PREFIX) --target=powerpc-linux \
+	--build=$(BUILD) --host=$(BUILD) \
+	--enable-targets=powerpc64-linux --disable-nls \
+	--disable-shared )
+
+
+BINUTILS = ar as nm ld objdump strip addr2line \
+	c++filt objcopy ranlib readelf size strings
+
+BINUTILS_LINK = ar nm objdump strip addr2line \
+	c++filt objcopy ranlib readelf size strings
+
+
+
+# Stamp file identifying binutils build is complete
+BINUTILS32=$(PREFIX)/build/binutils.stamp
+
+#
+# Binutils wants to make some directories which we may want as symlinks.
+# So, force our way through it.
+$(BINUTILS32)_INSTALLFLAGS=-k
+
+# State that things in bin depend on the binutils build
+$(foreach i, $(BINUTILS), $(PREBIN)$(i)): $(BINUTILS32)
+
+
+$(BINUTILS32)_POST_INSTALL= \
+	for i in $(BINUTILS) ; do \
+		test -e $(PREBIN)$$i || \
+		ln -sf $(PREFIX)/bin/$$i $(PREFIX)/bin/powerpc-linux-$$i ;\
+	done
+
+#
+# the following steps are required to:
+# 1)	fix up broken links caused by a transitional binutils package -
+#	cvs head binutils is undergoing an autoconf/automake change, which
+#	affects the names of the generated binaries on powerpc-linux hosts.
+#	this makes them consistent, and then generates appropriate links.
+# 2)	generate symlinks for the bin/ directory
+# 3)	generate symlinks for the powerpc64-linux/bin/ directory
+# 4)	generate powerpc64-linux wrapper & link for ld
+# 5)	generate powerpc64-linux wrapper & link for as
+#
+
+
+# symlink all powerpc64-linux- binutils binaries to  powerpc-linux versions
+# except for as, ld
+$(foreach i,$(filter-out as ld,$(BINUTILS)),$(PREBIN64)$(i)):\
+	$(PREBIN64)%: $(PREBIN)%
+	$(DEBUG)
+	(cd $(dir $@) ; ln -sf $< $@ )
+	ln -sf $@ $(PREFIX)/powerpc64-linux/bin/$(@F:powerpc64-linux-%=%)
+
+
+# Create wrappers to invoke as, ld in 64-bit mode
+$(PREBIN64)as: $(PREBIN)as
+	$(DEBUG)
+	-rm -f $@
+	echo "#!$(BASH)" > $@
+	echo "exec $< -a64 \"\$$@\"" >> $@ 
+	chmod +x $@;
+	ln -sf $@ $(PREFIX)/powerpc64-linux/bin/$(@F:powerpc64-linux-%=%)
+
+
+$(PREBIN64)ld: $(PREBIN)ld
+	$(DEBUG)
+	-rm -f $@
+	echo "#!$(BASH)" > $@
+	echo "exec $< -m elf64ppc \"\$$@\"" >> $@ 
+	chmod +x $@;
+	ln -sf $@ $(PREFIX)/powerpc64-linux/bin/$(@F:powerpc64-linux-%=%)
+
+# Identify all the 64-bit binutils binaries
+BINUTILS64:=$(foreach i, $(BINUTILS), $(PREBIN64)$(i))
+
+
+# Configure gcc, c-only, sufficient for kernel, glibc builds
+$(BUILDDIR)/gcc1/Makefile: $(GCCSRCSTAMP) $(BINUTILS32)
+	$(DEBUG)
+	-mkdir -p $(@D)
+	(cd $(@D) ; \
+	$(GCCSRC)/configure \
+	--build=$(BUILD) --host=$(BUILD) \
+	--prefix=$(PREFIX) --enable-__cxa_atexit \
+	--target=powerpc-linux --enable-biarch --disable-nls \
+	--disable-threads --disable-shared --enable-languages=c)
+
+#
+# Stamp for first gcc build
+#
+GCC1=$(BUILDDIR)/gcc1.stamp
+
+#
+# Stamp for second gcc build
+#
+GCC2=$(BUILDDIR)/gcc2.stamp
+
+#$(GCC2): BUILDFLAGS="GCC_FOR_TARGET=powerpc-linux-gcc"
+
+#
+# Temporary symlinks needed to buld glibc
+#
+$(GCC1)_POST_INSTALL= \
+	test -e $(PREFIX)/lib/gcc-lib/powerpc-linux/$(GCCVER)/64/libgcc_eh.a || \
+	ln -sf libgcc.a $(PREFIX)/lib/gcc-lib/powerpc-linux/$(GCCVER)/64/libgcc_eh.a ; \
+	test -e $(PREFIX)/lib/gcc-lib/powerpc-linux/$(GCCVER)/libgcc_eh.a || \
+	ln -sf libgcc.a $(PREFIX)/lib/gcc-lib/powerpc-linux/$(GCCVER)/libgcc_eh.a
+
+
+GLIBCSRCSTAMP=$(BUILDDIR)/glibc.src.stamp
+
+CD=cd $(SRCDIR);
+
+$(SRCDIR)/linux-2.4.21.tar.bz2:
+	$(DEBUG)
+	cd $(SRCDIR); \
+	wget ftp://ftp.kernel.org/pub/linux/kernel/v2.4/linux-2.4.21.tar.bz2
+
+$(KERNHEADERS64)/linux/version.h: $(SRCDIR)/linux-2.4.21.tar.bz2
+	$(DEBUG)
+	bzip2 -dc $< | tar -xf - 
+	cd linux-2.4.21 ; wget $(PPC64_KERNEL_PATCH_URL)
+	cd linux-2.4.21 ; gzip -dc $(PPC64_KERNEL_PATCH) |patch -p1
+	mv linux-2.4.21 $(SRCDIR)/linux-2.4.21
+	cd $(KERNHEADERS64) ; ln -sf asm-ppc64 asm
+	$(MAKE) -C $(SRCDIR)/linux-2.4.21 ARCH=ppc64 include/linux/version.h 
+
+$(KERNHEADERS32)/linux/version.h: $(SRCDIR)/linux-2.4.21.tar.bz2
+	$(DEBUG)
+	bzip2 -dc $< | tar -xf - 
+	mv linux-2.4.21 $(SRCDIR)/linux-2.4.21-ppc32
+	cd $(KERNHEADERS32) ; ln -sf asm-ppc asm
+	$(MAKE) -C $(SRCDIR)/linux-2.4.21-ppc32 ARCH=ppc include/linux/version.h 
+
+
+
+# Refers to 64-bit compiler executables, c, cpp only
+GCC64=$(BUILDDIR)/gcc64.stamp
+
+$(GCC64): $(foreach i, gcc cpp, $(PREBIN64)$(i))
+	$(DEBUG)
+	touch $(GCC64)
+
+$(foreach i, gcc cpp g++ c++, $(PREBIN64)$(i)): $(PREBIN64)%: $(GCC1)
+	$(DEBUG)
+	-rm -f $@
+	echo '#!$(BASH)' > $@
+	echo "exec powerpc-linux-$(@:$(PREBIN64)%=%) -m64 \\" >> $@
+	echo "-isystem $(PREFIX)/lib/gcc-lib/powerpc-linux/$(GCCVER)/include\\"
+	echo " -isystem $(PREFIX)/powerpc64-linux/include  \"\$$@\"" >> $@
+	chmod 0755 $@
+
+
+#
+# Things we need to do to have glibc source in place and ready to configure
+#
+# The dependencies force creation of several symlinks, downloading, patching
+# and setup of linux source trees.
+#
+$(GLIBCSRCSTAMP): kernelsrc $(GLIBCSRC)
+	$(DEBUG)
+	test -d $(HEADERS64) || mkdir -p $(HEADERS64)
+	cd $(HEADERS64); \
+	test -d asm         ||ln -sf $(KERNHEADERS64)/asm-ppc64 asm; \
+	test -d asm-generic ||ln -sf $(KERNHEADERS64)/asm-generic asm-generic; \
+	test -d linux       ||ln -sf $(KERNHEADERS64)/linux linux
+	test -d $(HEADERS32) || mkdir $(HEADERS32)
+	cd $(HEADERS32); \
+	test -d asm         ||ln -sf $(KERNHEADERS32)/asm-ppc asm; \
+	test -d asm-generic ||ln -sf $(KERNHEADERS32)/asm-generic asm-generic; \
+	test -d linux       ||ln -sf $(KERNHEADERS32)/linux linux
+	touch -m $@
+
+
+#
+# Common features for 32-bit glibc builds
+#
+GLIBC32_FEATURES= --prefix=$(PREFIX)/powerpc-linux  --build=$(BUILD) \
+	--disable-nls \
+	--host=powerpc-linux --without-cvs \
+	--with-tls --with-__thread \
+	--with-headers=$(KERNHEADERS32) \
+	--enable-add-ons=linuxthreads
+
+#
+# Common features for 64-bit glibc builds
+#
+GLIBC64_FEATURES= --prefix=$(PREFIX)/powerpc64-linux --host=powerpc64-linux \
+	--build=$(BUILD) --disable-nls --target=powerpc64-linux \
+	--without-cvs --with-tls --with-__thread \
+	--enable-add-ons=linuxthreads --with-headers=$(KERNHEADERS64)
+
+
+
+$(BUILDDIR)/glibc_32_1/Makefile: $(GCC1) $(GLIBCSRCSTAMP)
+	$(DEBUG)
+	-mkdir $(@D);
+	(cd $(@D) ; $(GLIBCSRC)/configure $(GLIBC32_FEATURES) --disable-shared)
+
+$(BUILDDIR)/glibc_32_2/Makefile: $(GLIBC_32_1) 
+	$(DEBUG)
+	-mkdir $(@D);
+	(cd $(@D) ; $(GLIBCSRC)/configure $(GLIBC32_FEATURES) --enable-shared)
+
+$(BUILDDIR)/glibc_32_3/Makefile: $(GCC2) 
+	$(DEBUG)
+	-mkdir $(@D);
+	(cd $(@D) ; $(GLIBCSRC)/configure $(GLIBC32_FEATURES) --enable-shared)
+
+$(BUILDDIR)/glibc_64_1/Makefile: $(GCC64) $(GLIBCSRCSTAMP)
+	$(DEBUG)
+	-mkdir $(@D);
+	(cd $(@D) ; $(GLIBCSRC)/configure $(GLIBC64_FEATURES) --disable-shared)
+
+$(BUILDDIR)/glibc_64_2/Makefile: $(GCC64) $(GLIBC_64_1) 
+	$(DEBUG)
+	-mkdir $(@D);
+	(cd $(@D) ; $(GLIBCSRC)/configure $(GLIBC64_FEATURES) --enable-shared)
+
+$(BUILDDIR)/glibc_64_3/Makefile: $(GCC2)
+	$(DEBUG)
+	-mkdir $(@D);
+	(cd $(@D) ; $(GLIBCSRC)/configure $(GLIBC64_FEATURES) --enable-shared)
+
+
+#
+# Option for cross-compiler (non powerpc-linux host)
+#
+#X_GCC_OPTS=--with-headers=$(PREFIX)/powerpc-linux/include
+
+#
+# Configure gcc with c++, requires all glibc build to be complete
+#
+$(BUILDDIR)/gcc2/Makefile: $(GCCSRCSTAMP) $(GLIBC_32_2) $(GLIBC_64_2)
+	$(DEBUG)
+	-mkdir $(@D);
+	-mkdir $(PREFIX)/powerpc64-linux/lib/nof
+	-rm -f $(PREFIX)/powerpc64-linux/lib/nof/*
+	-(cd $(PREFIX)/powerpc64-linux/lib/nof ; ln -s ../* .) 
+	(cd $(@D) ; \
+	$(GCCSRC)/configure \
+	--build=$(BUILD) --host=$(BUILD) \
+	--prefix=$(PREFIX) --enable-__cxa_atexit \
+	--target=powerpc-linux --enable-biarch --disable-nls \
+	--enable-threads --enable-shared --enable-languages=c,c++ \
+	$(X_GCC_OPTS))
+
+
+#
+# gcc and cpp are produced by the first gcc build
+#
+$(foreach i, gcc cpp, $(PREBIN)$(i)): $(GCC1)
+	$(DEBUG)
+
+#
+# 64-bit g++ depends on 32-bit g++
+$(PREBIN64)g++: $(PREBIN)g++
+
+#
+# 32-bit g++ is produced by 2nd gcc build
+$(PREBIN)g++: $(GCC2)

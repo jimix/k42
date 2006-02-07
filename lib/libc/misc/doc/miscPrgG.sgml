@@ -1,0 +1,289 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: miscPrgG.sgml,v 1.4 2001/10/30 17:17:04 peterson Exp $
+-->
+<title>Miscellaneous support</title>
+<section>
+  <title>Miscellaneous support</title>
+  <section>
+    <title>Files</title>
+    <itemizedlist spacing="compact">
+      <listitem>
+	<simpara>
+	  
+	  <ulink
+	  url="&topsrc/lib/libc/misc/BitStructure.H<filename"><filename>
+	  BitStructure.H</filename></ulink>: Machinery for defining
+	  and manipulating 64-bit bit-field structures, used
+	  extensively in locks.
+
+	</simpara>
+      </listitem>
+      <listitem>
+	<para>
+	  
+	  List Routines:
+	  
+	</para>
+	<itemizedlist>
+	  <listitem>
+	    <simpara>
+
+	      <ulink
+	      url="&topsrc/lib/libc/misc/ListSimple.H"><filename>
+	      ListSimple [.H]</filename></ulink><ulink
+	      url="&topsrc/lib/libc/misc/ListSimple.C"><filename>[.C]</filename></ulink>:
+	      Very simple linked list implementation supporting a
+	      single pointer-sized datum.  A base class is provided
+	      that is &lt;typeless&gt; of which one can derive
+	      &lt;typed&gt; list classes very efficiently. The list
+	      itself, consisting of just a head pointer to the first
+	      node objects of this class can not be defined.
+
+
+	    </simpara>
+	  </listitem>
+	  <listitem>
+	    <simpara>
+
+	      <ulink url="&topsrc/lib/libc/misc/ListSimpleLocked.H"><filename>
+	      ListSimpleLocked.H</filename></ulink>: Locked version of
+	      simplelist.
+	      
+
+	    </simpara>
+	  </listitem>
+	  <listitem>
+	    <simpara>
+
+	      <ulink
+	      url="&topsrc/lib/libc/misc/ListSimpleKey.H"><filename>
+	      ListSimpleKey [.H]</filename></ulink><ulink
+	      url="&topsrc/lib/libc/misc/ListSimpleKey.C"><filename>[.C]</filename></ulink>:
+	      Simple list with key and value pair.
+
+
+	    </simpara>
+	  </listitem>
+	  <listitem>
+	    <simpara>
+
+	      <ulink
+	      url="&topsrc/lib/libc/misc/ListSimpleKeyLocked.H"><filename>
+	      ListSimpleKeyLocked.H</filename></ulink>: Simple list
+	      with key and value pair, with locking.
+
+	    </simpara>
+	  </listitem>
+	</itemizedlist>
+      </listitem>
+      <listitem>
+	<para>
+
+	  Fancy routines for distributed hash funtion???
+
+	</para>
+	<itemizedlist>
+	  <listitem>
+	    <simpara>
+	      
+	      <ulink url="&topsrc/lib/libc/misc/SSAC.H"><filename>
+	      SSAC.H</filename></ulink>: Sofware Set Associative
+	      Cache.
+	    
+	    </simpara>
+	  </listitem>
+	  <listitem>
+	    <simpara>
+	      
+	      <ulink
+	      url="&topsrc/lib/libc/misc/SSACSimplePartitionedArray.H"><filename>
+	      SSACSimplePartitionedArray [.H]</filename></ulink><ulink
+	      url="&topsrc/lib/libc/misc/SSACSimplePartitionedArray.C"><filename>[.C]</filename>
+	      </ulink>: Jonathan's fancy hash table.
+
+	    </simpara>
+	  </listitem>
+	
+	</itemizedlist>
+      </listitem>
+      <listitem>
+	<simpara>
+
+	  <ulink url="&topsrc/lib/libc/misc/StringShort.H"><filename>
+	  StringShort.H</filename></ulink>: Simple 7 char plus null
+	  byte string class.
+
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+
+	  <ulink url="&topsrc/lib/libc/misc/StringTable.H"><filename>
+	  StringTable.H</filename></ulink>, <ulink
+	  url="&topsrc/lib/libc/misc/StringTableImp.H"><filename>
+	  StringTableImp.H</filename></ulink>: Classes for managing
+	  storage of structures containing strings.
+
+
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+
+	  <ulink url="&topsrc/lib/libc/misc/alloca.H"><filename>
+	  alloca.H</filename></ulink>: machine-specific definitions of
+	  ALLOCA.
+
+	</simpara>
+      </listitem>
+      <listitem>
+	<para>
+
+	  Assembly language support routines:
+
+	</para>
+	<itemizedlist>
+	  <listitem>
+	    <simpara>
+	      
+	      <ulink url="&topsrc/lib/libc/misc/asm.h"><filename>
+	      asm.h</filename></ulink>: Support routines for
+	      hand-written assembler.
+	      
+	    </simpara>
+	  </listitem>
+	  <listitem>
+	    <simpara>
+	      
+	      <ulink url="&topsrc/lib/libc/misc/asmdef.h"><filename>
+	      asmdef.h</filename></ulink>:
+	      
+	    </simpara>
+	  </listitem>
+	  <listitem>
+	    <simpara>
+
+	      <ulink url="&topsrc/lib/libc/misc/volatileFrame.H"><filename>
+	      volatileFrame.H</filename></ulink>: Assembler machinery
+	      for creating a stack frame that preserves all the
+	      volatile gpr's and fpr's.
+	      
+	    </simpara>
+	  </listitem>
+	</itemizedlist>
+      </listitem>
+      <listitem>
+	<simpara>
+	  
+	  <ulink url="&topsrc/lib/libc/misc/baseStdio.H"><filename>
+	  baseStdio.H</filename></ulink>: Bunch of routines derived
+	  from stdio, TO BE DELETED!!
+
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  
+	  <ulink url="&topsrc/lib/libc/misc/execute.H"><filename>
+	  execute.H</filename></ulink>: Machinery involved in loading
+	  and executing a program.
+	  
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+
+	  <ulink url="&topsrc/lib/libc/misc/expedient.H"><filename>
+	  expedient.H</filename></ulink>: Machinery for implementing
+	  assembler functionality cleanly, if inefficiently, in C.
+
+
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+
+	  <ulink url="&topsrc/lib/libc/misc/hardware.H"><filename>
+	  hardware.H</filename></ulink>: Defines a serious of machine
+	  specific routines that each platform should support, e.g.,
+	  enableInterrupts...
+
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+
+	  <ulink url="&topsrc/lib/libc/misc/linkage.H"><filename>
+	  linkage.H</filename></ulink>: Definitions and services
+	  related to linkage conventions
+
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+
+	  <ulink url="&topsrc/lib/libc/misc/macros.H"><filename>
+	  macros.H</filename></ulink>: Defines a bunch of generally
+	  useful macros.
+
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+
+	  <ulink url="&topsrc/lib/libc/misc/random.c"><filename>
+	  random.c</filename></ulink>: Kludged netbsd random
+	  functions, DELETE THIS.
+
+
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+
+	  <ulink url="&topsrc/lib/libc/misc/randomKludge.C"><filename>
+	  randomKludge.C</filename></ulink>: Kludge to make above
+	  random functions thread safe. DELETE THIS
+
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+
+	  <ulink url="&topsrc/lib/libc/misc/simpleThread.H"><filename>
+	  simpleThread.H</filename></ulink>: Simple thread management
+	  code.
+
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+
+	  <ulink url="&topsrc/lib/libc/misc/testSupport.H"><filename>
+	  testSupport [.H]</filename></ulink><ulink
+	  url="&topsrc/lib/libc/misc/testSupport.C"><filename>[.C]</filename></ulink>:
+	  Support for starting and joinging threads for testing.
+
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  
+	  <ulink url="&topsrc/lib/libc/misc/utilities.H"><filename>
+	  utilities.H</filename></ulink>: assorted utilities used by
+	  kernel and base libs must NOT name collide with unix or
+	  windows for not (shared libraries/name spaces will
+	  eventually untangle the names)
+
+	</simpara>
+      </listitem>
+    </itemizedlist>
+  </section>
+</section>

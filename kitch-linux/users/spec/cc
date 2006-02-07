@@ -1,0 +1,7 @@
+#!/bin/bash
+test "$1" = "-c" && shift
+test "$1" = "-lm" && shift
+
+f=$1
+exec echo $* > ${f%.c}.o
+

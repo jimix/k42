@@ -1,0 +1,105 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: ptyPrgG.sgml,v 1.1 2001/09/23 18:24:11 bob Exp $
+-->
+<title>Pty and Rlogind</title>
+<section>
+  <title>Rlogind Environment Variable</title>
+  <para>
+
+    Rlogind uses an environment variable to multiplex the ports when K42 is
+    run using SimOS.  On hardware or simether, the instance of K42 already
+    has a unique IP address, so it can listen for rlogin connections on the
+    normal, privileged port.  
+  </para>
+
+  <para>
+    K42_LOGIN_PORT = K42_SIMULATOR_PORT+13
+  </para>
+  
+  <para>
+    This environment variable is based on K42_SIMULATOR_PORT set by
+    kuservalues.  K42 <command>rlogind</command> discovers the value via
+    ThinIP and prints the value during <command>rlogind</command>
+    initialization.  The user must set the environment variable manually
+    before running the <command>k42login</command> client because
+    <command>k42login</command> does not necessarily run in a Shell in
+    which the K42 user environment variables have been set.
+  </para>
+
+  <para>
+    When running under SimOS, one must use the <command>k42login</command>
+    replacement for standard <command>rlogin</command> to login remotely.
+    On hardware or using simether, one can use either client program.
+    <command>k42login</command> defaults to the privileged
+    <command>login</command> port (513/tcp) if the environment variable is
+    not defined.
+  </para>
+</section>
+
+<section>
+  <title>Overview</title>
+
+  <para>
+    For the time being, Rlogind currently includes the Pty server inside its
+    own address space instead of separating the two servers.
+  </para>
+
+  <para>
+    Rlogind::ClassInit obtains the value of K42_LOGIN_PORT from the
+    environment via ThinIP.  It uses that value if available or defaults to
+    the standard tcp/login 513 if not.  Rlogind then uses the K42 IOSocket
+    infrastructure to begin listening on that port and blocks in accept().
+  </para>
+
+  <para>
+    Upon accepting a connection on the port, Rlogind spawns a thread.  On the
+    thread, Rlogind wraps the socket in a Pty IORef through the IOStreamServerPty
+    "server".  The thread proceeds to perform the normal tcp/login
+    protocol handshaking and startup, including authentication.
+  </para>
+
+  <para>
+    Once authenticated, the Rlogind thread spawns the shellServer with I/O
+    connected to the Pty IORef.
+  </para>
+
+  <para>
+    IOStreamServerPty currently is limited to wrapping an IOSocketRef in an
+    IORef, not connecting any pair of file descriptors.  The server buffers the
+    I/O between the user IORef and the socket.  It also provides basic
+    translation of special characters.  No out-of-band signalling or job control
+    signals are implemented.
+  </para>
+
+</section>
+
+<section>
+  <title>Future Directions</title>
+  <para>
+    Provide alternate line modes (e.g.; raw).  The current implementation
+    provides a canonical cooked mode: StreamServerPty buffers input until a
+    newline/CR is received and handles all backspace characters within the
+    current line.
+  </para>
+  <para>
+    Provide support for ioctls to change line discipline behaviour.
+    However, it is important to distinguish between different line
+    disciplines and options for those line disciplines. If an entirely new
+    line discipline is desired, the underlying StreamServerPty object
+    should be switched using the dynamic switching mechanism.
+  </para>
+</section>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./pty.sgml" "chapter" "title")
+End:
+-->

@@ -1,0 +1,27 @@
+#!/bin/sh
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2004.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+# ############################################################################
+#
+# Example: zemit /bin/ls
+#
+# This script emits two magic strings on the console, one before and one
+# after the execution of its argument.  When run on hardware, there is no
+# effect.  When run on Mambo, a trigger will fire when the first string is
+# seen, which will result in the memory access emitter being turned on
+# and a ztrace consumer being started.  When the second string is seen,
+# the emitter is turned off and the ztrace consumer is terminated.
+
+zemit-start
+zval start
+
+eval $@
+
+zval stop
+zemit-stop

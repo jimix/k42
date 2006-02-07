@@ -1,0 +1,139 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceLinux.xml,v 1.5 2005/05/27 18:43:12 rosnbrg Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::Linux::Timer">
+	<layerId value="OS" />
+	<classId value="Linux" />
+	<specifier value="Timer" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='function %0[%llx], data %1[%llx]' />
+</event>
+
+
+<event name="OS::Linux::Int">
+	<layerId value="OS" />
+	<classId value="Linux" />
+	<specifier value="Int" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='lcpu: %0[%lld] bh:%1[%llx] pending:%2[%llx]' />
+</event>
+
+
+<event name="OS::Linux::End">
+	<layerId value="OS" />
+	<classId value="Linux" />
+	<specifier value="End" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='lcpu: %0[%lld] bh:%1[%llx] mask:%2[%llx]' />
+</event>
+
+
+<event name="OS::Linux::BH">
+	<layerId value="OS" />
+	<classId value="Linux" />
+	<specifier value="BH" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='lcpu: %0[%lld] bh:%1[%llx] mask:%2[%llx]' />
+</event>
+
+
+<event name="OS::Linux::DataReady">
+	<layerId value="OS" />
+	<classId value="Linux" />
+	<specifier value="DataReady" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='dataSocket: %0[%llx]' />
+</event>
+
+
+<event name="OS::Linux::Accept">
+	<layerId value="OS" />
+	<classId value="Linux" />
+	<specifier value="Accept" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='dataSocket: %0[%llx] xh: %1[%llx] new: %2[%llx]' />
+</event>
+
+
+<event name="OS::Linux::Socket">
+	<layerId value="OS" />
+	<classId value="Linux" />
+	<specifier value="Socket" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='dataSocket: %0[%llx] xh: %1[%llx]' />
+</event>
+
+
+<event name="OS::Linux::Recv">
+	<layerId value="OS" />
+	<classId value="Linux" />
+	<specifier value="Recv" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='dataSocket: %0[%llx] ret: %1[%lld] avail: %2[%llx]' />
+</event>
+
+
+<event name="OS::Linux::Send">
+	<layerId value="OS" />
+	<classId value="Linux" />
+	<specifier value="Send" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='dataSocket: %0[%llx] ret: %1[%lld] avail: %2[%llx]' />
+</event>
+
+
+<event name="OS::Linux::Close">
+	<layerId value="OS" />
+	<classId value="Linux" />
+	<specifier value="Close" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='dataSocket: %0[%llx]' />
+</event>
+
+</PEM_Events>

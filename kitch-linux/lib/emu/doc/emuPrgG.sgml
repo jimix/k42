@@ -1,0 +1,1712 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: emuPrgG.sgml,v 1.4 2004/06/14 20:51:06 apw Exp $
+-->
+<title>emu directory</title>
+<section>
+  <title>Introduction</title>
+  <para>
+    This directory builds the libemu.a library. The library provides an
+    emulation layer for the GNU C Library which we depend on for our
+    GNU/Linux application source compatibility.
+  </para>
+  <para>
+    NOTE: Libemu.a exists solely to ease development of the necessary
+    interfaces that glibc requires. Once completed the source here should
+    become part of the glibc distribution.
+  </para>
+</section>
+
+<section>
+  <title>Porting Strategy</title>
+  <para>
+	  Glibc has been changed so that instead of system calls into the
+	  Linux kernel, it simply branches to <function>__k42_linux_system
+	  call name</function>. Libemul "accurately" performs these
+	  services by using K42 services.
+  </para>
+</section>
+
+<section>
+  <title>Development</title>
+  <para>
+    The build strategy for libemu.a is to eventually be able to drop the
+    contents of this directory into the glibc source tree.
+  </para>
+
+  <para>
+    This requires that every interface that is defined here exist in its
+    own source file. Some interfaces, such as <function> write()
+    </function>, that are fully or partially complete have been implemented
+    in this way. Other partially complete file operations exist in
+    <filename> linuxFileIO.C </filename>.
+  </para>
+
+  <para>
+    Interfaces that have had no work done exist in <filename> linuxEmul.C
+    </filename>. Most of these interfaces ignore their arguments and emit a
+    warning that they are being used. They are also designed to return
+    whatever failure value that is expected by the caller, in most cases
+    the value -1.
+  </para>
+
+  <para>
+    Interfaces which work with linuxthreads are contained in the
+    subdirectory <filename> pthread </filename>.
+  </para>
+
+  <section>
+  <title>System Call Function Interfaces</title>
+    <para>
+      There are about 190 function interfaces, most represent Linux Kernel
+      system calls and are required by glibc as of this writing.
+    </para>
+
+    <para>
+      Below is a incomplete list of Systems Calls.  First is the system
+      call followed by a link to the Linux documentation followed by a link
+      to he Posix documentation.  NOTE: Posix documentation may not be
+      available for all.
+
+      <itemizedlist spacing="compact">
+
+	<listitem>
+	  <simpara>
+	    <function>_llseek(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=_llseek&amp sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/_llseek.html">
+		Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function>_newselect(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=_newselect&amp sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/_newselect.html">
+		Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> _sysctl(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=_sysctl&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/_sysctl.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> acct(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=acct&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/acct.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> accept(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=accept&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/accept.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> adjtimex(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=adjtimex&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/adjtimex.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> alarm(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=alarm&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/alarm.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> bdflush(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=bdflush&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/bdflush.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> capget(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=capget&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/capget.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> capset(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=capset&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/capset.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> create_module(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=create_module&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/create_module.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> delete_module(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=delete_module&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/delete_module.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> chmod(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=chmod&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/chmod.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> chown(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=chown&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/chown.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> chroot(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=chroot&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/chroot.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> fchdir(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=fchdir&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/fchdir.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> fchmod(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=fchmod&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/fchmod.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> fchown(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=fchown&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/fchown.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> fcntl(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=fcntl&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/fcntl.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> fdatasync(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=fdatasync&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/fdatasync.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> flock(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=flock&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/flock.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> fsync(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=fsync&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/fsync.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> fstatfs(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=fstatfs&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/fstatfs.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> ftruncate(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=ftruncate&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/ftruncate.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> get_kernel_syms(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=get_kernel_syms&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/get_kernel_syms.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getegid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getegid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getegid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> geteuid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=geteuid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/geteuid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getgid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getgid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getgid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getgroups(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getgroups&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getgroups.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getitimer(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getitimer&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getitimer.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getpgid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getpgid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getpgid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getpgrp(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getpgrp&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getpgrp.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getpid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getpid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getpid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getppid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getppid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getppid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getpriority(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getpriority&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getpriority.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getresgid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getresgid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getresgid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getresuid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getresuid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getresuid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getrlimit(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getrlimit&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getrlimit.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getrusage(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getrusage&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getrusage.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getsid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getsid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getsid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> gettimeofday(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=gettimeofday&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/gettimeofday.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> getuid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=getuid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/getuid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> ioctl(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=ioctl&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/ioctl.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> init_module(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=init_module&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/init_module.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> ipc(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=ipc&amp sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/ipc.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> kill(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=kill&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/kill.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> lseek(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=lseek&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/lseek.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> lchown(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=lchown&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/lchown.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> mkdir(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=mkdir&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/mkdir.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> mknod(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=mknod&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/mknod.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> mlock(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=mlock&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/mlock.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> mlockall(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=mlockall&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/mlockall.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> mmap(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=mmap&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/mmap.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> mount(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=mount&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/mount.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> mprotect(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=mprotect&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/mprotect.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> mremap(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=mremap&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/mremap.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> msgctl(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=msgctl&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/msgctl.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> msgget(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=msgget&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/msgget.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> msgrcv(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=msgrcv&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/msgrcv.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> msgsnd(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=msgsnd&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/msgsnd.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> msync(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=msync&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/msync.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> munlock(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=munlock&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/munlock.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> munlockall(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=munlockall&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/munlockall.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> munmap(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=munmap&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/munmap.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> nfsservctl(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=nfsservctl&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/nfsservctl.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> nanosleep(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=nanosleep&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/nanosleep.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> nice(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=nice&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/nice.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> pause(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=pause&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/pause.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> pipe(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=pipe&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/pipe.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> poll(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=poll&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/poll.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> prctl(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=prctl&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/prctl.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> pread(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=pread&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/pread.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> ptrace(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=ptrace&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/ptrace.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> pwrite(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=pwrite&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/pwrite.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> query_module(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=query_module&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/query_module.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> quotactl(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=quotactl&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/quotactl.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> readlink(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=readlink&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/readlink.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> recv(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=recv&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/recv.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> rename(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=rename&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/rename.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> rmdir(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=rmdir&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/rmdir.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> rt_sigaction(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=rt_sigaction&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/rt_sigaction.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> rt_sigpending(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=rt_sigpending&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/rt_sigpending.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> rt_sigprocmask(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=rt_sigprocmask&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/rt_sigprocmask.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> rt_sigqueueinfo(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=rt_sigqueueinfo&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/rt_sigqueueinfo.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> rt_sigsuspend(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=rt_sigsuspend&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/rt_sigsuspend.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> rt_sigtimedwait(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=rt_sigtimedwait&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/rt_sigtimedwait.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sched_get_priority_max(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sched_get_priority_max&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sched_get_priority_max.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sched_get_priority_min(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sched_get_priority_min&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sched_get_priority_min.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sched_getparam(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sched_getparam&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sched_getparam.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sched_getscheduler(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sched_getscheduler&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sched_getscheduler.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sched_rr_get_interval(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sched_rr_get_interval&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sched_rr_get_interval.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sched_setparam(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sched_setparam&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sched_setparam.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sched_setscheduler(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sched_setscheduler&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sched_setscheduler.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sched_yield(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sched_yield&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sched_yield.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> semctl(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=semctl&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/semctl.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> semget(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=semget&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/semget.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> semop(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=semop&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/semop.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sendfile(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sendfile&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sendfile.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setdomainname(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setdomainname&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setdomainname.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setfsgid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setfsgid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setfsgid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setfsuid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setfsuid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setfsuid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setgid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setgid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setgid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setgroups(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setgroups&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setgroups.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sethostname(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sethostname&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sethostname.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setitimer(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setitimer&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setitimer.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setpgid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setpgid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setpgid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setpriority(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setpriority&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setpriority.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setregid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setregid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setregid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setresgid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setresgid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setresgid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setresuid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setresuid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setresuid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setreuid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setreuid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setreuid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setrlimit(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setrlimit&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setrlimit.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setsid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setsid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setsid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> settimeofday(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=settimeofday&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/settimeofday.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> setuid(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=setuid&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/setuid.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> shmat(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=shmat&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/shmat.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> shmctl(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=shmctl&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/shmctl.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> shmdt(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=shmdt&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/shmdt.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> shmget(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=shmget&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/shmget.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sigaction(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sigaction&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sigaction.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sigaltstack(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sigaltstack&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sigaltstack.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sigpending(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sigpending&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sigpending.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sigprocmask(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sigprocmask&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sigprocmask.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sigsuspend(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sigsuspend&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sigsuspend.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> statfs(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=statfs&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/statfs.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> stime(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=stime&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/stime.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> swapoff(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=swapoff&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/swapoff.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> swapon(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=swapon&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/swapon.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> symlink(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=symlink&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/symlink.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sync(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sync&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sync.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> syscall_nosup(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=syscall_nosup&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/syscall_nosup.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> sysinfo(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=sysinfo&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/sysinfo.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> syslog(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=syslog&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/syslog.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> time(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=time&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/time.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> times(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=times&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/times.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> truncate(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=truncate&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/truncate.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> umount(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=umount&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/umount.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> umount2(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=umount2&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/umount2.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> uname(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=uname&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/uname.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> unlink(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=unlink&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/unlink.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> uselib(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=uselib&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/uselib.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> ustat(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=ustat&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/ustat.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> utime(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=utime&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/utime.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> vhangup(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=vhangup&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/vhangup.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    <function> wait4(2) </function> <ulink
+	      url="http://linux.wiw.org/doc/man/man.cgi?man=wait4&amp
+	      sec=2">
+	      Linux </ulink> .  .  <ulink
+	      url="http://www.opengroup.org/onlinepubs/007908799/xsh/wait4.html">
+	      Posix </ulink>
+	  </simpara>
+	</listitem>
+
+      </itemizedlist>
+
+    </para>
+  </section>
+
+  <section>
+  <title>Data Interfaces</title>
+    <para>
+      Possibly the most problematic of all interfaces are the data
+      interfaces that glibc expects from the Linux kernel.  It is our goal
+      to reproduce these exactly to not only allow source compatibility but
+      binary compatibility as well.
+    </para>
+
+    <para>
+      To further complicate the matter, there seems to be no cross
+      architecture consistency of data interfaces for the Linux kernel.
+    </para>
+
+    <para>
+      Support for the GNU/Linux file name space has yet to be done.
+    </para>
+  </section>
+</section>
+
+<section>
+  <title>Links</title>
+  <para>
+    See <ulink url="&topsrc/lib/libc/io/doc/io.html"> Blocking in
+    application </ulink> IO documentation: see here for a discussion of
+    locking strategy between FD and IO objects for setting select bits in
+    section on blocking in application.
+  </para>
+</section>
+
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./emu.sgml" "chapter" "title")
+End:
+-->

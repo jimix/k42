@@ -1,0 +1,161 @@
+
+        K42 File System in the Linux kernel
+
+    Livio B. Soares <livio@ime.usp.br> - 26-Feb-2003
+
+                      
+ 0. Intro
+    =====
+
+  This  short text describes  how to  configure and  run the  K42 File
+System (KFS)  in the Linux kernel. Note  that KFS is still  not a very
+stable system in K42-proper, so you  might expect that it is even less
+stable on the Linux kernel. I have started working full-time on KFS in
+January/2003,  and I hope  that these  will improve  in the  months to
+come. 
+
+  In the  section 1 I introduce  some of the  code architecture chosen
+for the Linux  port, which were mainly influenced  by C++ versus Linux
+incompatibilities.  In   section  2,  I   describe  some  step-by-step
+instructions on how to get KFS up and running.
+
+ 1. C++ vs Linux woes
+    =================
+
+  As we all know, C++ code has been shunned by the Linux community and
+every  suggestion of C++  module support  on the  linux-kernel mailing
+list turns into an epic/religious  flame-war. So, I have implemented a
+minimal support for  C++ (KFS, in K42, is entirely  written in C++) in
+Linux. After reading and experimenting  some, I have adopted a similar
+tactic as the User Mode Linux (UML) code (user-mode-linux.sf.net).
+
+  In UML,  the code is logically  separated into two  parts: one which
+"speaks" glibc  and another which  "speaks" Linux. I have  spoken with
+Jeff Dike and he claims  that before this separation it was impossible
+to make  some files  include headers from  both glibc and  the kernel.
+(He   also  pointed   me  to   this  summary   from   Kernel  Traffic:
+http://kt.zork.net/kernel-traffic/kt19991004_37.html#2).    Some  data
+types, structures and  prototypes simply do not match.   To make these
+two parts  communicate, some private types, structs  and functions are
+used - since they are private, both parts can agree upon them.
+
+  I then thought  of trying something similar with  KFS (after reading
+the above link); it is separated into two parts: one in C, and another
+in C++. The C part of  the code can easily include any kernel headers,
+and, in special, register all the needed operations with the Linux VFS
+code. The  C++ part is the  KFS implementation per-se,  and some stuff
+included from the K42 OS, which KFS depends on.
+
+  To illustrate this tactic, see how I've "wrapped" memory allocation,
+disk I/O, and semaphores.
+
+  WARNING:  Is  it not  clear  how  this  architecture will  hold  out
+performance wise. Every VFS operation must traverse a "redirection" in
+a  C++  wrapper  function.   Every  allocation,  lock  operation,  I/O
+operation, etc,  must traverse a C  wrapper function. Since  this is a
+file-system I'll  assume that this  overhead is negligible.   But this
+needs to be definitely studied in a near future.
+
+  Besides code  separation there is  a problem with respect  to global
+constructors/destructors.  Before  one  of Orran's  KFS  re-restructure
+where he  removed all global variables,  it was necessary  to link all
+C++ objects  with the g++ crtbegin.o and  crtend.o (see Makefile.linux
+for more information).  But this technique only works  if you load KFS
+as a _module_. Including KFS in the core kernel would involve fiddling
+with the  link script (vmlinux.lds)  to correct constructor/destructor
+sections in the vmlinux to support C++ global variables. 
+
+  Now that there are no  global variables, the crtbegin.o and crtend.o
+are not needed  anymore. Humm... now that I think  about it, maybe KFS
+can build inside the kernel... wait a sec... <15 minutes later>
+Ohhhh  yeesss!!!  :-) It's  working  in UML!   I  had  to rename  some
+functions inside kfs/os-linux/LinuxFileSystemKFS.C, so that their name
+would  not  clash  with  other  Linux  functions,  but  besides  that,
+everything seems to run just fine.  Cool! (I still have to try this in
+Bochs, though, to make sure the linkage on a real vmlinux works ok).
+
+
+  2. Instructions for getting KFS running in Linux
+     =============================================
+
+*CAVEAT  EMPTOR*: I  have only  tried this  procedure from  inside UML
+(user-modelinux.sf.net)     and     the     Bochs     x86     Emulator
+(bochs.sf.net).  Besides, KFS is very unstable, please be careful with
+sensitive data! 
+
+  2.1  Linux version
+       =============
+
+  KFS  in  Linux has  only  been tried  on  Linux  kernels 2.4.19  and
+2.4.20. As soon as it is more or  less stable, I would like to port to
+a current 2.5 kernel, mainly to take advantage of libfs and sysfs. The
+latter will probably  be the backbone of our  user interface, that is,
+how applications should communicate with KFS to specify which LSOs and
+PSOs it wishes to use (the building block composition).
+
+  2.2 Inserting KFS in the Linux kernel tree
+      ======================================
+
+  There are only 3 steps that you need to do:
+
+  * Include  KFS as  an  option in  the linux/fs/Config.in.  Something
+    like:
+
+    dep_tristate 'K42s File System - KFS (EXPERIMENTAL)' CONFIG_KFS_FS $CONFIG_EXPERIMENTAL
+
+    Should work fine, but make  sure you select "Experimental Code" in
+    Linux's configuration!, and, of  course, KFS in the "File Systems"
+    menu. I prefer building it as  a module, for testing the code (you
+    can remove/insert a new version), but my latest tests indicates it
+    works as built-in too.
+
+  * Include KFS directory in the linux/fs/Makefile. Something like:
+
+    subdir-$(CONFIG_KFS_FS)         += kfs
+
+    Should work fine. 
+
+  * Copy  the  'kfs' directory  (actually  I use  a  link  to my  main
+    repository, but it doesn't matter) in linux/fs/kfs
+
+  Then you should be all set. make XXXconfig; make dep; etc, etc.
+
+  2.3 Creating a disk
+      ===============
+
+  Firstly, you'll  have to format a  disk for playing with  the KFS. I
+still haven't tried  formatting a partition on a real  disk (I will as
+soon as  I have a test disk).  What I'm currently doing  is creating a
+file  in the  KFS  format and  mounting  that file  with Linux's  loop
+device. 
+
+  So go  into kfs/os-linux/tools, and  type `make`. If all  goes well,
+you should get a "mkfs" binary. You can use it to make an empty disk. 
+(type  `mkfs` to  see the  usage, and  how to  specify  different disk
+sizes).
+
+  2.4 Insmod'ing and mounting the disk
+      ================================
+
+  If you have built KFS as  a module (which is what I recommend!), you
+first have to:
+
+# insmod kfs.o
+
+  Ok, now your Linux has KFS support. You have to now mount the disk.
+
+  If you're in UML and your UML-disk-image is small, you can use UML's
+hostfs to use files which are in  the host OS. So what I generally do,
+inside UML is (assuming your host  file system is mounted in /host/ in
+the UML OS):
+
+# mount -t kfs -o loop /host/tmp/big-kfs-root /mnt
+
+  And, *presto*!  Everything should be working. If  you have KFS_DEBUG
+set in kfs/KFSDebug.H, you'll already see lots of interesting messages
+in  your /var/log/syslog  (or  wherever you  have  set the  KERN_DEBUG
+messages do go to). 
+
+
+  Any  corrections, questions or  comments, _please_  send to  me, and
+I'll be more then happy to here them.

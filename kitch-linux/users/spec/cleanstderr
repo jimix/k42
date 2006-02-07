@@ -1,0 +1,41 @@
+#! /bin/sh
+##################################################################
+##								##
+##		     Copyright (c) 1991 AT&T			##
+##	               All Rights Reserved 			##
+##								##
+##   This is AT&T's unpublished software for SPEC authorized    ##
+##                  and licensed users only                     ##
+##								##
+##################################################################
+
+# Clean prompt stuff from standard error output in multi-user test.
+# Called from $HOME/bin/errckr
+
+PS1=`/bin/sh -ic "" 2>&1`
+sed \
+    -e "/^Initializing terminal processes.*/d" \
+    -e "\$d" \
+    -e "s/Blocks/blocks/" \
+    -e "s/^[Rr]eal.*/real/" \
+    -e "s/^[Ss]ys.*/sys/" \
+    -e "s/^[Uu]ser.*/user/" \
+    -e "/^OS.*.c$/d" \
+    -e "/^timer.c$/d" \
+    -e "/^read_ones.c$/d" \
+    -e "/^xl.*.c$/d" \
+    -e '/^.*[ ]0 [Ee]rrors.*$/d' \
+    -e '/^0 [Ee]rrors.*$/d' \
+    -e '/^.*IN80.*86.*$/d' \
+    -e '/^.*[Ww]arning.*$/d' \
+    -e '/^.*[Nn]otice.*$/d' \
+    -e '/^.*[Cc]ompiler.*$/d' \
+    -e '/^.*linking.*$/d' \
+    -e '/^.*Copyright.*$/d' \
+    -e '/^.*could not get process.*$/d' | \
+sed \
+    -e "1d" \
+    -e "s/[0123456789][0123456789]*//g" \
+    -e "s/^ *//g" \
+    -e "s/	//" \
+    -e "s/cc  /cc /"

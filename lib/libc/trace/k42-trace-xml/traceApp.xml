@@ -1,0 +1,79 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceApp.xml,v 1.12 2004/07/14 22:42:37 cascaval Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="APP::App::Test">
+	<layerId value="APP" />
+	<classId value="App" />
+	<specifier value="Test" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='test %0[%lld]' />
+</event>
+
+<event name="APP::App::Phase" description="OBSOLETE phase mark event">
+	<layerId value="APP" />
+	<classId value="App" />
+	<specifier value="Phase" />
+	<fields>
+          <field name="phaseId" type="uint64" description="phase marker"/>
+	  <field name="lineNo" type="uint64" description="source line number"/>
+	  <field name="file" type="string" description="source file"/>
+	</fields>
+	<k42Format value='phase marker %0[%lld] %2[%s]:%1[%d]' />
+</event>
+
+<event name="APP::App::PhaseStart" description="start of application phase">
+	<layerId value="APP" />
+	<classId value="App" />
+	<specifier value="PhaseStart" />
+	<fields>
+          <field name="phaseId" type="uint64" description="phase marker"/>
+	  <field name="lineNo" type="uint64" description="source line number"/>
+	  <field name="file" type="string" description="source file"/>
+	</fields>
+	<k42Format value='phase start marker %0[%lld] %2[%s]:%1[%d]' />
+        <interval type='START' name='PhaseInterval' pair='APP::App::PhaseEnd'
+                  match='phaseId' />
+</event>
+
+<event name="APP::App::PhaseEnd" description="end of application phase">
+	<layerId value="APP" />
+	<classId value="App" />
+	<specifier value="PhaseEnd" />
+	<fields>
+          <field name="phaseId" type="uint64" description="phase marker"/>
+	  <field name="lineNo" type="uint64" description="source line number"/>
+	  <field name="file" type="string" description="source file"/>
+	</fields>
+	<k42Format value='phase end marker %0[%lld] %2[%s]:%1[%d]' />
+        <interval type='END' name='PhaseInterval' pair='APP::App::PhaseStart'
+                  match='phaseId' />
+</event>
+
+
+<event name="APP::App::Allocation" description="call to dynamic allocation">
+	<layerId value="APP" />
+	<classId value="App" />
+	<specifier value="Allocation" />
+	<fields>
+          <field name="address" type="uint64" description="returned address"/>
+	  <field name="size" type="uint32" description="size of allocated chunk"/>
+          <field name="allocType" type='uint32' description='large or small page allocation' /> 
+	</fields>
+	<k42Format value='allocate (type %2[%d]) %1[%d] bytes @ 0x%0[%llx]' />
+</event>
+
+</PEM_Events>

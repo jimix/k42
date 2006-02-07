@@ -1,0 +1,27 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000, 2003.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.files,v 1.42 2005/06/28 19:47:54 rosnbrg Exp $
+# ############################################################################
+
+SRCS_KFS =  KFSDebug.C KFSDisk.C SuperBlock.C PSOBasicRW.C RecordMap.C \
+	    LSOBasic.C LSOBasicFile.C LSOBasicDir.C LSOBasicSymlink.C \
+	    ObjToken.C PSODiskBlock.C ServerObject.C FileSystemKFS.C \
+	    XFileSystemKFS.C FileSystemKFSK42.C ServerFileBlockKFS.C \
+	    FSFileKFS.C FSFileKFSK42.C KFSGlobals.C PSOPreallocExtent.C \
+            PSOSmall.C PSOSmallMeta.C \
+	    BlockCache.C BlockCacheK42.C \
+	    KFSDHash.C TimerEventBC.C
+
+ifdef KFS_PRIVATE
+include $(MKSRCTOP)/os/servers/kfs-unstable/private/Make.files
+endif
+
+SRVSRCS += $(SRCS_KFS)
+
+CPPFLAGS += -DK42_OS 

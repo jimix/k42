@@ -1,0 +1,12 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: mem.ent,v 1.1 2001/07/26 16:28:27 mike Exp $
+-->
+<!entity memOver SYSTEM "memOver.sgml">
+<!entity memPrgG SYSTEM "memPrgG.sgml">

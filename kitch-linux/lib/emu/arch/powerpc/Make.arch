@@ -1,0 +1,41 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.10 2005/08/31 13:56:05 dgurley Exp $
+# ############################################################################
+LIBEMUSRCS+= SysCallInit.C ppc32.C SignalUtils.C
+COMMINCS += arch/powerpc/SysCallTableMacros.H
+
+LINUX_INCPATH := -I$(LINUXSRCROOT)/arch/k42/include -I$(LINUXSRCROOT)/include \
+		-I. -I$(INC_TOP) -I$(INC_GCC) -I$(INC_STBG) $(KITCH_GINC)
+
+LINUX_TARGET_CXXFLAGS := $(TARGET_CXXFLAGS) -D__KERNEL__
+
+ifdef IN_OBJ_DIR
+
+GENHDRS += SysCallTable.H 
+
+
+SysCallTable.H: SysCallTable genSysCallTable.pl
+	$(PERL) $(SRC_DIR_PATH)/arch/$(TARGET_MACHINE)/genSysCallTable.pl \
+	$< $@  || rm $@
+
+#FIXME MAA ? should/can SysCallInit be built purely in the linux kernel
+#            header environment?
+#SysCallInit just reaches into linux for one header, to get the SysCall
+#number definitions for an error check.  So we put linux kernel at the
+#back of the path to avoid accidents.
+SysCallInit.o: INCPATH += -I$(LINUXSRCROOT)/arch/k42/include -I$(LINUXSRCROOT)/include
+
+SignalUtils.o: INCPATH := $(LINUX_INCPATH)
+SignalUtils.o: TARGET_CXXFLAGS := $(LINUX_TARGET_CXXFLAGS)
+
+ppc32.o: INCPATH := $(LINUX_INCPATH)
+ppc32.o: TARGET_CXXFLAGS := $(LINUX_TARGET_CXXFLAGS)
+
+endif

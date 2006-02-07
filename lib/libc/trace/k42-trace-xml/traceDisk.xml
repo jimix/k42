@@ -1,0 +1,258 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceDisk.xml,v 1.5 2005/08/30 19:08:08 dilma Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::Disk::Test">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="Test" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<printFormat value='Disk test object 0x%0[%llx]' />
+</event>
+
+<event name="OS::Disk::SyncRequest">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="SyncRequest" />
+	<fields>
+		<field name="thisptr" type="uint64" format='%llx'/>
+		<field name="type" type="uint64" />
+		<field name="addr" type="uint64" format='%llx'/>
+		<field name="size" type="uint64" format='%llx'/>
+		<field name="offset" type="uint64" format='%llx'/>
+	</fields>
+	<printFormat value='thisptr 0x%0 type %1 addr 0x%2 size 0x%3 offset 0x%4' />
+</event>
+
+<event name="OS::Disk::Block">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="Block" />
+	<fields>
+		<field name="thisptr" type="uint64" format='%llx'/>
+		<field name="offset" type="uint64" format='%llx'/>
+		<field name="thr" type="uint64" format='%llx'/>
+	</fields>
+	<printFormat value='thisptr 0x%0 offset 0x%1 thr 0x%2' />
+</event>
+
+<event name="OS::Disk::ProcessCallBacks">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="ProcessCallBacks" />
+	<fields>
+		<field name="thisptr" type="uint64" format='%llx'/>
+		<field name="arg" type="uint64" />
+	</fields>
+	<printFormat value='thisptr 0x%0 arg %1' />
+</event>
+
+<event name="OS::Disk::AsyncCB">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="AsyncCB" />
+	<fields>
+		<field name="thisptr" type="uint64" format='%llx'/>
+		<field name="err" type="uint64" />
+		<field name="token" type="uint64" format='%llx' />
+	</fields>
+	<printFormat value='thisptr 0x%0 err %1 token 0x%2' />
+</event>
+
+<event name="OS::Disk::AsyncProcessCallBacks">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="AsyncProcessCallBacks" />
+	<fields>
+		<field name="thisptr" type="uint64" format='%llx'/>
+		<field name="arg" type="uint64" />
+	</fields>
+	<printFormat value='thisptr 0x%0 arg %1' />
+</event>
+
+<event name="OS::Disk::Unblock">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="Unblock" />
+	<fields>
+		<field name="thisptr" type="uint64" format='%llx'/>
+		<field name="thr" type="uint64" format='%llx'/>
+	</fields>
+	<printFormat value='thisptr 0x%0 thr 0x%1' />
+</event>
+
+<event name="OS::Disk::Init">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="Init" />
+	<fields>
+		<field name="thisptr" type="uint64" format='%llx'/>
+		<field name="needPhysAddr" type="uint64"/>
+		<field name="blockDev" type="string"/>
+	</fields>
+	<printFormat value='thisptr 0x%0 needPhysAddr %1 blockDev %2' />
+</event>
+
+<event name="OS::Disk::AsyncRead">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="AsyncRead" />
+	<fields>
+		<field name="thisptr" type="uint64" format='%llx'/>
+		<field name="blkno" type="uint64"/>
+		<field name="continuation" type="uint64" format='%llx'/>
+	</fields>
+	<printFormat value='thisptr 0x%0 blkno %1 cont 0x%2' />
+</event>
+
+<event name="OS::Disk::AsyncReadPhys">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="AsyncReadPhys" />
+	<fields>
+		<field name="thisptr" type="uint64" format='%llx'/>
+		<field name="blkno" type="uint64"/>
+		<field name="paddr" type="uint64" format='%llx' />
+		<field name="continuation" type="uint64" format='%llx' />
+	</fields>
+	<printFormat value='thisptr 0x%0 blkno %1 paddr 0x%2 cont 0x%3' />
+</event>
+
+<event name="OS::Disk::AsyncWrite">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="AsyncWrite" />
+	<fields>
+		<field name="thisptr" type="uint64" format='%llx'/>
+		<field name="blkno" type="uint64"/>
+		<field name="continuation" type="uint64" format='%llx'/>
+	</fields>
+	<printFormat value='thisptr 0x%0 blkno %1 cont 0x%2' />
+</event>
+
+<event name="OS::Disk::AsyncWritePhys">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="AsyncWritePhys" />
+	<fields>
+		<field name="thisptr" type="uint64" format='%llx'/>
+		<field name="blkno" type="uint64"/>
+		<field name="paddr" type="uint64" format='%llx' />
+		<field name="continuation" type="uint64" format='%llx' />
+	</fields>
+	<printFormat value='thisptr 0x%0 blkno %1 paddr 0x%2 cont 0x%3' />
+</event>
+
+<event name="OS::Disk::TryAsyncWriteFail">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="TryAsyncWriteFail" />
+	<fields>
+		<field name="thisptr" type="uint64" format='%llx'/>
+		<field name="blkno" type="uint64"/>
+		<field name="continuation" type="uint64" format='%llx' />
+	</fields>
+	<printFormat value='thisptr 0x%0 blkno %1 cont 0x%2' />
+</event>
+
+<event name="OS::Disk::AsyncSendReqToKernelDelay">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="AsyncSendReqToKernelDelay" />
+	<fields>
+		<field name="delay" type="uint64" />
+	</fields>
+	<printFormat value='delay %0' />
+</event>
+
+<event name="OS::Disk::AsyncSendCBDelay">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="AsyncSendCBDelay" />
+	<fields>
+		<field name="delay" type="uint64" />
+	</fields>
+	<printFormat value='delay %0' />
+</event>
+
+<event name="OS::Disk::IORequest">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="IORequest" />
+	<fields>
+		<field name="addr" type="uint64" format='%llx'/>
+		<field name="offset" type="uint64" format='%llx'/>
+	</fields>
+	<printFormat value='addr 0x%0 offset 0x%1' />
+</event>
+
+<event name="OS::Disk::DirtyCounter">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="DirtyCounter" />
+	<fields>
+		<field name="fcm" type="uint64" format='%llx'/>
+		<field name="counter" type="uint64"/>
+	</fields>
+	<printFormat value='fcm 0x%0 cntr %1 ' />
+</event>
+
+<event name="OS::Disk::KFSMetaDataDirty">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="KFSMetaDataDirty" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='blkno 0x%0[%llx] disk obj 0x%1[%llx]' />
+</event>
+
+<event name="OS::Disk::KFSMetaDataClean">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="KFSMetaDataClean" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='blkno 0x%0[%llx] disk obj 0x%1[%llx]' />
+</event>
+
+<event name="OS::Disk::KFSMetaDataFlush">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="KFSMetaDataFlush" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='blkno 0x%0[%llx] SuperBlock 0x%1[%llx]' />
+</event>
+
+<event name="OS::Disk::KFSSyncBlockCache">
+	<layerId value="OS" />
+	<classId value="Disk" />
+	<specifier value="KFSSyncBlockCache" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SuperBlock 0x%0[%llx]' />
+</event>
+
+
+
+</PEM_Events>

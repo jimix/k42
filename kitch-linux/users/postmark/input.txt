@@ -1,0 +1,6 @@
+set number 20000
+set transactions 100000
+set buffering false
+show
+run
+quit

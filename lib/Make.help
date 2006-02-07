@@ -1,0 +1,69 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.help,v 1.16 2001/06/26 14:44:30 jimix Exp $
+# ############################################################################
+
+# makefile rules to be included at the end of makefiles
+
+help:
+	@$(ECHO) -e "\
+        To get something to compile sequentially, say SEQ=1 \n\
+	\t e.g., make SEQ=1 install_libobjs \n\
+	Meaning of standard variables:\n\
+	    \tKERNEL              - use kernel compile options\n\
+	    \tIN_OBJ_DIR          - in directory where objects are built\n\
+	    \tCFLAGS              - flags passed to C compiler\n\
+	    \tCXXFLAGS            - flags passed to C++ compiler\n\
+	    \tASFLAGS             - flags passed to assembler\n\
+	    \tOBJDIRS             - directories to build objects in\n\
+	    \tHOME                - Make.paths taken from '$(HOME)/.kitchawan'\n\
+	    \tMKKITCHTOP          - top of install area\n\
+	    \tMKINSTALLEDTOP      - as MKKITCHTOP but for official version\n\
+	\n\
+	Values of standard variables:\n\
+	    \tKERNEL          = '$(KERNEL)'\n\
+	    \tHAVE_OBJDIRS    = '$(HAVE_OBJDIRS)'\n\
+	    \tINOBJDIR        = '$(INOBJDIR)'\n\
+	    \tFULLDEBUG       = '$(FULLDEBUG)'\n\
+	    \tNDEBUG          = '$(NDEBUG)'\n\
+	    \tCFLAGS          = '$(CFLAGS)'\n\
+	    \tCXXFLAGS        = '$(CXXFLAGS)'\n\
+	    \tASFLAGS         = '$(ASFLAGS)'\n\
+	    \tOBJDIRS         = '$(OBJDIRS)'\n\
+	    \tOBJDIR_TYPES    = '$(OBJDIR_TYPES)'\n\
+	    \tMAKEFLAGS       = '$(MAKEFLAGS)'\n\
+	    \tHOME            = '$(HOME)'\n\
+	    \tMKKITCHTOP      = '$(MKKITCHTOP)'\n\
+	    \tMKINSTALLEDTOP  = '$(MKINSTALLEDTOP)'\n\
+	\n\
+	Meaning of user-supplied variables:\n\
+	    \tSRCS                - list of sources\n\
+	    \tLIBCSRCS            - list of sources installed in libbase.a\n\
+	    \tLIBKSRCS            - list of sources installed in libk.a\n\
+	    \tLIBKERNSRCS         - list of sources included in kernobjs.o\n\
+	    \tCLASSES             - list of classes to be exported\n\
+	    \tSERVERS             - list of servers built in this directory\n\
+	    \tSUBDIRS             - subdirectories to recursively make\n\
+	\n\
+	Makerules in: $(MKKITCHTOP)/lib\n\
+	\n\
+	Default targets (in order for snapshot):\n\
+	    \t'install_includes'  - copy static includes to install area\n\
+	    \t'genhdrs'           - make generated header files\n\
+	    \t'install_genhdrs'   - copy generated headers to install area\n\
+	    \t'libobjs'           - make library objects\n\
+	    \t'install_libobjs'   - install library objects in .a file\n\
+	    \t'targets'           - make programs\n\
+	    \t'install_targets'   - copy progams to install area\n\
+	\n\
+	other rules:\n\
+	    \t'configure_sesame'  - create object directories...\n\
+	    \t'clean'             - delete .o files, programs...\n\
+	    \t'rm_targets'        - delete programs...\n\
+	"

@@ -1,0 +1,30 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: bash_profile,v 1.2 2003/05/01 15:05:45 mostrows Exp $
+# ############################################################################
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+
+#
+# added for simulator
+#
+
+test -d /nfs && HOME=/nfs/$HOME
+
+# User specific environment and startup programs
+
+PATH=$PATH:$HOME/bin
+ENV=$HOME/.bashrc
+USERNAME="root"
+
+export USERNAME ENV PATH

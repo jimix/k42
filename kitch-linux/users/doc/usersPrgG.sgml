@@ -1,0 +1,24 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: usersPrgG.sgml,v 1.1 2001/09/30 21:09:29 bob Exp $
+-->
+<title>users directory</title>
+<section>
+  <title>users directory</title>
+  <para>
+    Put in text here.
+  </para>
+</section>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./users.sgml" "chapter" "title")
+End:
+-->

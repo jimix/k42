@@ -1,0 +1,22 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: serversOver.sgml,v 1.2 2004/10/13 22:16:11 apw Exp $
+-->
+<title>Servers Overview</title>
+
+<para>
+Here we describe the basic startup sequence of the servers.
+</para>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./servers.sgml" "chapter" "title")
+End:
+-->

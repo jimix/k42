@@ -1,0 +1,594 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: runningK42.sgml,v 1.24 2004/12/27 13:39:48 dilma Exp $
+-->
+<!doctype article PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
+<article id="DocBook">
+  <title>Running K42</title>
+  <para>
+    This document describes how to run K42 on various platforms.
+  </para>
+
+  <section id="var">
+    <title>Environment</title>
+    <programlisting>
+      The sections below describe various means of running K42.  All
+      of the commands below are configurable and default settings can
+      be overriden through the use of environment variables.  Unless
+      specified, these variables have their values set to site-wide
+      defaults (defined in the "kvictim" script, "ksitevalues" script
+      and Make.paths) or have a default procedure by which they are
+      calculated when necessary.
+
+      K42_PKGHOST	Host to mount "/" from (numbers-dots format)
+
+      K42_PKGROOT	Path on K42_PKGHOST to mount via NFS as "/"
+
+      K42_PACKAGES	Location of directory mounted as "/" during build time.
+
+      K42_PKGVER	Version of K42_PACKAGES, K42_PKGROOT, K42_KFS_PKGDISK
+			to use. Used only when K42_PACKAGES, K42_PKGROOT or
+			K42_KFS_PKGDISK are not defined and must be computed.
+
+      LINUXSRCROOT	Location of built k42.linux tree to link against
+
+      K42_KFS_PKGDISK	KFS disk image to use on simulator
+      
+      K42_KFS_DISKPATH	Directory where K42_KFS_PKGDISK resides.  Used in 
+			computing default value for $K42_KFS_PKGDISK.
+
+      K42_NFS_HOST	Host to mount /knfs from (numbers-dots format)
+
+      K42_NFS_ROOT	Path to mount /knfs from $K42_NFS_HOST (format
+			number-dots-host:full-path-name).
+
+      K42_TOOLSDIR	Path to location of "ksitevalues"
+
+      K42_HWCFG		Location of powerpc-hw.cfg config file
+
+      K42_IMGLOC	Location where chrpboot images are stored for tftp.
+
+
+
+    </programlisting>
+  </section>
+  <section id="pow">
+    <title>Running K42 on PowerPC SimOS</title>
+    <programlisting>
+      <![CDATA[
+
+Setup:
+    Add [anchor]/install/tools/AIX to PATH.
+
+Run:
+    ALL commands are run in your [anchor]/powerpc/[deb]/os directory.
+
+    k42console -m mambo -- MAMBO_DIR=path_to_mambo_dir
+
+    The script will print usage information if you use the "--help" argument.
+
+Debug:
+    Kernel debugging:
+        cd [anchor]/powerpc/[deb]/os
+        kgdbsimos boot_image.dbg
+    
+    User program debugging targeting simos directly:
+        cd [anchor]/powerpc/[deb]/[user-program-directory]
+        kgdbsimos [user-program].dbg
+    
+    User program debugging using remote gdb stub:
+        First, the program will prompt:
+            User program connecting to GDB via thinwire channel
+            enter port for gdb connection:
+        Enter a port number, such as 1234.  Then (in another window) type:
+            cd [anchor]/mips64/[deb]/[user-program-directory]
+            gdb64 [user-program].dbg
+            target remote localhost:1234
+    
+    The kgdbsimos script passes all command line arguments through
+    to gdb.
+
+    To run ziggy (lists state of all threads) get to kernel debugger
+    prompt. Type set startziggy=1 then type continue (expect to see message
+    about needing to start up new a console program).  Start that
+    console program (may need to look at thinwire window to discover the port
+    the console needs to talk to, also you may choose to give the -noraw option
+    to console program for cleaner output).  In the console window a ziggy
+    prompt should appear.  Type P at the prompt to dump state of all
+    processes and threads.  Each processors state is dumped to its own
+    console (processor 0 on simos, processor n on sconsole n).  On
+    hardware, you may not see processors other than 0.
+
+    You can debug user apps by:
+      Mechanism:
+        There is a variable called GDBIO::DebugMeValue associated with
+        the global GDBIO object. there is code in the crt exec and
+        fork code that looks at this value and executed a breakpoint
+        instruction.  You can tickle this variable in the debugger as
+        well.
+
+        NOTE: this follows all children, and in k42 exec is a
+              new child.
+
+      shellServer (builtin):
+        $ debug [usn]
+          u = User level debugger (GDBIO::DebugMeValue = 2)
+          s = Simos debugger (GDBIO::DebugMeValue = 1)
+          n = turn it off (GDBIO::DebugMeValue = 0)
+      NOTE: on hardware 's' is the same as 'u'
+
+      any shell:
+        /test/linux/runprog [-UD]
+          -U user level debugger
+          -D simos level debugger
+
+      Mechanism:
+        Same as above but we actually have wired the prctace syscalls
+        to tick the GDBIO::DebugMeValue.
+
+    you can detach from a process anytime. gdb will report:
+      "Watchdog has expired.  Target detached."
+    if the process dies while the gdb is attached.
+
+    Processes may be dynamically linked, with K42 libraries included
+    in /lib64/ld64.so.1.  To debug such applications:
+
+    1. Locate ld64.so.1 and run:
+       powerpc64-linux-readelf -S /path/to/ld64.so.1.dbg |grep text
+
+       This may give something like:
+
+        [ 8] .text             PROGBITS         00000000a011b760  0011b760
+      
+    2. The second-last column gives the location of text of ld64.so.1
+       (here it is 0xa011b760).  Use this as an argument to add-symbol-file
+       in gdb:
+
+       add-symbol-file /path/to/ld64.so.1.dbg 0xa011b760
+
+       This tells gdb where to find K42 symbols.
+
+    There's a hook that lets you unblock an arbitrary thread from within the
+    debugger.  You can set a breakpoint that the target thread will hit, and
+    then get the thread unblocked in order to examine its state with the
+    debugger.  The hook is implemented in the breakpoint() routine, so it is
+    only invoked when the program hits an explicit breakpoint (an assertion,
+    for example).  When the program is stopped in breakpoint(), you can set
+    the global variable "UserThreadToUnblock" (for a user program) or
+    "KernelThreadToUnblock" (for the kernel) to the ThreadID (not the thread
+    pointer) of the thread you want unblocked when the program is continued.
+
+      ]]>
+    </programlisting>
+  </section>
+
+  <section id="prep-har">
+    <title>Preparing PowerPC hardware for K42</title>
+    <programlisting>
+      <![CDATA[
+
+1.  Connect a serial cable from the victim machine (the PowerPC
+    hardware on which K42 will run) to an AIX or Linux machine (to be
+    referred to as the console host).
+
+2.  Configure the victim's firmware so that default firmware input/output
+    goes out the serial port to the console host.
+
+3.  Configure the victim's OpenFirmware to load a boot image via tftp.
+
+3a. For Apple machines, the victim should load yaboot 1.3.12 via tftp.
+    yaboot will then load a yaboot.conf file (via tftp) which can contain 
+    something like:
+      timeout=10
+      default=k42
+
+      image=chrpboot.tok
+          label=k42
+
+    This will result in the k42 kernel image "chrpboot.tok" being loaded.
+
+4.  At this stage you should be able to boot the victim, capture it's OF
+    output on the console host, have the victim load a K42 kernel image,
+    and see k42's initial boot output.
+
+5.  Edit ksitevlues.sh so that the script returns a site identifier for your
+    site in the K42_SITE environment variable.
+
+6.  Using kernel_install.sh as a template (or even extending this script),
+    define a shell script that given a filename and a victim name, will place
+    the named file in a location such that the given victim will load this
+    file when booted. (For Apple HW, this should be the kernel image that
+    is eventually loaded by yaboot.)  The resulting script is your 
+    "kernel installation script".
+
+7.  Edit the kvictim.pl script which contains victim-specific configuration
+    data to include information about your victim machine. kvictim.pl includes
+    documentation about what needs to be done here.
+
+    Ensure that kvictim.pl defines site-wide setting for your site.
+    (e.g. Define K42_PKGHOST, K42_PACKAGES, K42_PKGVER, and HW_IMGLOC
+    variables.)
+
+8.  Run a full_snapshot build of the k42 tree.
+
+9.  Under the "install" directory you will find files named kvictim,
+    ktwd, thinwire.  Install these on your console host (and make a
+    copy of thinwire called "thinwire2").  Create a "lock" directory
+    and edit the installed ktwd file so that "$basedir" points to the
+    lock directory and if necessary kvictim's location is included in
+    $ENV{PATH}.
+
+10. Configure the console host's xinetd or inetd so that the ktwd script
+    is bound to port "4242".
+
+11. On the machine containing your build tree, ensure that the
+    directory containing "ksitevalues" is in your path.
+
+12. cd to "kitchsrc/../powerpc/???Deb/os" and run "hwconsole -s"
+    If all is well, you should see your victim identified in the output.
+
+13. Run "hwconsole -m <victimname>" 
+
+14. Power-cycle the victim.  It should fully boot K42 now.
+
+Optionally "kvictim" can define a "reboot" property for a victim which
+defined a script to be invoked (with the name of the victim as an
+argument) to power-cycle the victim machine.  If this is done, the
+"-R" option on hwconole can the be used to reboot the victim.
+
+ktwd manages "locks" on victims, to ensure that two people don't use
+the same victim machine.  These locks can be managed via options to
+hwconsole.  See "hwconsole --help" for specifics.
+
+ktwd invokes the "thinwire2" program, which captures output from the
+serial port to which the victim is connected to and multiplexes
+several logical streams in conjunction with the k42 kernel over the
+serial line.  thinwire2 then associates each stream with a TCP/IP
+port.  One of these streams of output is initial OF output and K42
+console output.  The hwconsole script invokes a "console" binary which
+connects to the thinwire2 process on the console hosts and
+communicates console data to and from the victim.
+
+     ]]>
+    </programlisting>
+  </section>
+  <section id="run-har">
+    <title>Running K42 on PowerPC hardware</title>
+    <programlisting>
+      <![CDATA[
+
+There are 5 things needed to run on hardware:
+  1) setup symlink                       (ln -s)
+  2) power up the machine                (telnet kpower)
+  3) connect to service processor        (kmc k1)
+  4) start thinwire on kserial           (ktw k1)
+  5) start kthinwire-hw on host mahcine  (kthinwire-hw k1)
+  6) problem checklist
+  7) debugging
+
+
+1) First, make sure the symlink in /u/kitchawa/tftpboot is correct 
+   for the machine you wish to use. 
+
+   The standard method used to link machine to boot images is: 
+
+   chrpboot.[machine name] to the boot image in your space 
+
+   ex: ln -s /u/okrieg/current/powerpc/fullDeb/os/chrpboot.tok chrpboot.k1
+   
+   if you home directory is not on kitch0 it's best not to use the automounter
+   ex: ln -s /homes/kitch0/bob/k42/powerpc/fullDeb/os/chrpboot.tok chrpboot.k1
+   
+
+
+2) Power up (or power cycle) the machine 
+  
+   All machines but kitch13 (i.e., k1 - k9) are controlled remotely by kpower.
+
+   telnet kpower 
+    choose 1) ...Outlet Control
+    you can then issue: reboot  on  off
+    ex: reboot 1 will issue an off 1 and on 1 for k1
+
+
+   k0:
+      Log in to kserial.
+
+      panelctl /dev/ttyS0 SAMIPowerOff   --- powers machine down
+				     (wait for a minute before power on)
+
+      panelctl /dev/ttyS0 SAMIPowerOn    --- powers machine up
+      
+   kitch13: 
+     a) Press white button to power on. 
+     b) For quick boot press up or down to get 03, press enter (blue button). 
+
+     Rebooting 
+      a) k42 reboot - at the command prompt type: 
+        i)  0
+        ii) B
+
+      b) hard reboot - For quick boot press up or down to get 03, 
+         press enter (blue button). 
+
+      If the machine has crashed, it will want to do extra checks on 
+      reboot.  We don't want this, since it probably wasn't a hardware 
+      failure that caused the crash. To force a quick reboot: 
+      a) Power down by hitting white button twice (wait until power off). 
+      b) Press up or down to get 02 hit enter (blue button) twice 
+         (should display O2_A after the first enter press, then 02_V). 
+      c) Press up to down get 02_F, and hit enter (blue button) 
+         (F is for Fast don't hit enter when S is up) 
+      d) Press white button to power on 
+  
+
+3) Connect to Service Processor 
+
+   When powered on, the machine will wait in the Service Processor. 
+   Start minicom on kserial. 
+
+   telnet kserial (thinwire:[rootl passwd]) 
+   kmc machine name ex: kmc k1
+
+   This will start the minicom terminal program. Hit enter and 
+   the Service Processor menu will be displayed. 
+
+   To start the machine type choose in sequence: 2    4     y
+
+   This will display the entire boot process in the termial window
+   One can wait in the firmware until a kernel is ready. 
+
+   When minicom displays "keyboard" type: 1
+   Ex:
+   memory     keyboard [type 1]     network     scsi     speaker 
+
+   When the kernel is ready type: x
+   to boot. 
+
+   The machine will use bootp (bubba) to find out where to load the kernel
+   from. Then, the machine will use tftp to load the chrpboot.tok file.
+
+
+4) Start hwconsole
+
+
+   Run the hwconsole command. (See "hwconsole --help" for info about options.)
+
+   If in the os build directory (e.g. /u/bob/k42/powerpc/partDeb/os), the
+   D,o,k,A options are not necessary.  The correct settings will be deduced.
+
+   Use the -R option to reboot the specified victim machine.
+
+   K42 will boot on 1 processor the first time.  It can then be
+   fast-rebooted to multiple processors:  At the test> prompt type "0"
+   and <carriage return> to get to the cmd> prompt.  Then type "X<n>" and
+   <carriage return>, where <n> is the number of processors you want to
+   boot.  "0<cr>X<cr>" (without a number) will reboot to the same number
+   of processors as are currently running.
+  
+  
+5) problem checklist
+
+   Verify that your using a NULL modem cable
+
+   verify the following stty settings:
+     speed 9600 baud; rows 0; columns 0; line = 0;
+     intr = ^C; quit = ^\; erase = ^?; kill = ^U; eof = ^D; eol = ^-;
+     eol2 = ^-; start = ^Q; stop = ^S; susp = ^Z; rprnt = ^R; werase = ^W;
+     lnext = ^V; flush = ^O; min = 1; time = 0;
+     -parenb -parodd cs8 hupcl -cstopb cread clocal -crtscts
+     -ignbrk -brkint -ignpar -parmrk -inpck -istrip -inlcr -igncr icrnl
+     ixon -ixoff -iuclc -ixany -imaxbel
+     opost -olcuc -ocrnl onlcr -onocr -onlret -ofill -ofdel nl0 cr0 tab0
+     bs0 vt0 ff0 isig icanon iexten echo echoe echok -echonl -noflsh -xcase
+     -tostop -echoprt echoctl echoke
+
+     Or use:  
+     stty -F /dev/<ktw-tty> 500:5:cbd:8a3b:3:1c:7f:15:4:0:1:0:11:13:
+     1a:0:12:f:17:16:0:0:2f:0:0:0:0:0:0:0:0:0:0:0:0:0
+
+     stty -F /dev/<kmc-tty> 1:0:800008bd:0:3:1c:7f:15:4:5:1:0:11:13:\
+     1a:0:12:f:17:16:0:0:2f:0:0:0:0:0:0:0:0:0:0:0:0:0
+
+
+6) debugging
+ 
+   Two possibilities 
+     Kernel Connecting to GDB via thinwire channel
+       in directory with boot image run gdb64 boot_image.dgb
+       make sure set remotetimeout 1
+       on kserial(kserial 2) check last message from thinwire it will say:
+         thinwire: awaiting connection on channel 1 (port 2203).
+       back in the gdb window type (where 2203 is the matching port)
+         target remote kserial:2203
+
+      typing kill from the debugger will reset the hardware
+        (similar to 0-X from the test prompt)
+
+     User Process Connecting to GDB on port 2223 (?)  (FIXME needs work)
+       go to directory with executable
+       run gdb64 against that executable.dbg
+       make sure set remotetimeout 1
+       target remote machine:port
+        ex: target remote k1:2223       
+
+
+0) Understanding the RS/6000 error codes: 
+   The documentation for our RS/6000 machines is available on the web, at the url: 
+
+   http://www.rs6000.ibm.com/resource/hardware_docs/index.html 
+
+   In particular, for k1, you want the 7044 Model 270 RS/6000 
+   System Installation and Service Guide, chapter 3. 
+
+      ]]>
+    </programlisting>
+  </section>
+
+  <section id="env">
+    <title>Environment Variables</title>
+    <programlisting>
+      <![CDATA[
+
+  Everything is controlled by environment variables.  The shell scripts set
+  all the variables to reasonable defaults but will not override any variable
+  that is already defined in the environment.  The following variables are
+  meaningful in various contexts:
+
+    K42_SIMOS_CPUS (1)      - number of cpus
+    K42_SIMOS_MEM (2)       - megabytes of memory
+    K42_SIMOS_ETHER (3)     - use ethernet (yes or no)?
+    K42_SIMOS_DEBUG_PORT    - port gdb should use to talk to simos
+    K42_SIMOS_CONSOLE_PORT  - starting port for auxiliary consoles
+    K42_SIMOS_ETHER_ADDR    - MAC address for simulated ethernet
+    K42_SIMOS_ETHERTAP_HOST - host where ethertap is running
+    K42_SIMOS_ETHERTAP_PORT - port on which ethertap is listening
+    K42_SIMULATOR_HOST      - host where simos runs
+    K42_SIMULATOR_PORT      - base port for thinwire connections
+    K42_INITSCR		    - if == "yes" then run /bin/sysinit on startup
+    K42_IP_INTERFACE        - network interface k42 should use
+    K42_IP_NETMASK          - netmask k42 should use
+    K42_IP_ADDRESS          - IP address k42 should use
+    K42_IP_ROUTER           - default route k42 should use
+    K42_IP_HOSTNAME         - hostname k42 should use
+    K42_IOSOCKET_TYPE (4)   - 0 (for thinwire) or 1 (for ethernet)
+    K42_NFS_HOST            - host where nfs server is running
+    SIMOS_DIR               - directory where simos executable lives
+    TCL_LIBRARY             - directory where init.tcl lives
+
+  Notes:
+    (1) K42_SIMOS_CPUS can be set via a "-cpus [N]" argument to
+        krunsimos or ksconsoles.
+    
+    (2) K42_SIMOS_MEM can be set via a "-mem [megabytes]" argument
+        to krunsimos.
+
+    (3) K42_SIMOS_ETHER can be set via a "-ether [yes|no]" argument
+        to krunsimos.  K42_SIMOS_ETHER must be set in the environment 
+        for kthinwire and the environment for krunsimos.
+
+    (4) K42_IOSOCKET_TYPE can be set via a "-wire|-ether" argument
+        to kthinwire or kthinwire-hw.
+
+      ]]>
+    </programlisting>
+  </section>
+
+  <section id="k0">
+    <title>Using K0</title>
+    <warning>
+      <programlisting>
+	<![CDATA[
+
+ K0 is a precious resource.  If you plan on using it then please edit
+ the k0.sched file, located in the thinwire home directory, and add an
+ entry stating the time you are using it, what you are doing with it
+ and any contact information.
+
+ This file is under RCS (not CVS) control, so:
+   $ co -l k0.sched   # locks the file
+   $ vi k0.sched      # edit file
+   $ ci -u k0.sched   # check it in and retrieve a read-only copy
+
+  If you use [X]Emacs then you can use xemacs (with vc) to do all this
+  for you.
+	]]>
+      </programlisting>
+    </warning>
+    <programlisting>
+      <![CDATA[
+
+  k0 requires special procedure for power-cycling.  Power-cycling of
+  k0 is performed via a special utility that resided on kserial.
+    
+  To power-down k0, run the following command (included is the
+  expected output):
+
+    [thinwire@kserial thinwire]$ panelctl /dev/ttyS0 SAMIPowerOff
+    Sending msg: SAMIPowerOff 04200000
+    Raw reply: 0002ff17
+    Got SP Busy msg, wait for free msg
+    Raw reply: 0002ff180002ff17
+    Got SP Free msg
+
+  To check that k0 is in fact powered down:
+
+    [thinwire@kserial thinwire]$ panelctl /dev/ttyS0 StatusRequest
+    Sending msg: StatusRequest 02000000
+    Raw reply: f2020501
+    Status response [keylock manual] [IPL Reset 2:B]
+
+  To power-up k0:
+
+    [thinwire@kserial thinwire]$ panelctl /dev/ttyS0 SAMIPowerOn
+    Sending msg: SAMIPowerOn 04400000
+    Raw reply: 00800000
+
+  Once k0 has powered up a "StatusRequest" will look like:
+
+    [thinwire@kserial thinwire]$ panelctl /dev/ttyS0 StatusRequest
+    Sending msg: StatusRequest 02000000
+    Raw reply: f2020548
+    Status response [keylock manual] [IPL Reset 2:B] [Subfunction mode enabled]
+      
+  The sequence of the 4 commands listed above will power-cycle k0.
+  The procedure is still a bit of an art; in order for the output of
+  these commands to turn out exactly as above, it is best to pause for
+  5-10 seconds before issuing the next command.
+
+  There is enough potential for variability in this procedure as to
+  make scripting of this infeasible at this time. (It is best to do it
+  manually and identify and deviations.)
+
+  Once k0 has been power-cycled run "mc-k0" to attach the SP console.
+  (mc-k0 is required instead of kmc to deal with a timing dependency.)
+
+  Before starting kthinwire when using k0, make sure that the environment
+  variable K42_IP_INTERFACE=eth6 is set.
+
+      ]]>
+    </programlisting>
+  </section>
+  <section id="log">
+    <title>Logging into K42</title>
+    <programlisting>
+      <![CDATA[
+
+  To log into K42 the prefered approach today is rlogin. On hardware you can
+  use standard rlogin and the K42 hostname. On SimOS, since the rlogin port
+  is used by the host running SimOS, you must use k42login. To do this, look
+  for the line when running the simulator:
+
+        getenv K42_LOGIN_PORT returns PORT
+
+  and to log into K42 type: 
+
+        export K42_LOGIN_PORT=PORT
+        k42login [-l username] HOSTNAME
+
+  Where PORT is the value printed out by K42 running on the simulator, and
+  HOSTNAME is the name of the host on which you are running the
+  simulator. When using the simulated ethernet driver (K42_SIMOS_ETHER=yes), 
+  the HOSTNAME is assigned on a per-user basis.  Check the krunsimos output
+  for the assigned IP address.
+
+  If your username does not exist you will be logged in as the root user. 
+  Other users are available depending on the Linux runtime user configuration
+  that is available.
+
+  Note, today you can still log into the system by typing "E" at the system
+  prompt, this will start a simple shell, but input/output will go to
+  different consoles randomly when running MP.
+
+      ]]>
+    </programlisting>
+  </section>
+
+
+</article>

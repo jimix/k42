@@ -1,0 +1,27 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: kmonPrgG.sgml,v 1.1 2001/09/27 15:27:34 bob Exp $
+-->
+<title>kmon directory</title>
+<section>
+  <title>kmon directory</title>
+  <para>
+    There are two tools in this directory.  <command> traceTool </command>
+    is used to take a binary trace file and turn it into asci readable
+    format.  <command> kmon </command> is a graphical tool that allows a
+    binary trace file to be displayed and analyzed.
+  </para>
+</section>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./kmon.sgml" "chapter" "title")
+End:
+-->

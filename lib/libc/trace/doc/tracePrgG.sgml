@@ -1,0 +1,91 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: tracePrgG.sgml,v 1.7 2001/07/31 20:52:53 mike Exp $
+-->
+<title>Tracing directory in libc</title>
+<section>
+  <title>Tracing directory in libc</title>
+  <para>
+
+    The are two sets of files in this directory.  The first set is a
+    series of .H files that define the major classes that are used in
+    user space.  These files contain the definition of the events in
+    each major class and the inline functions used for logging events
+    of that major.  The specifiction for the contents of these files
+    can be found in <Ulink
+    url="../../../../os/kernel/trace/trace.H">trace.H</Ulink>.
+ 
+  </para>
+  <para>
+
+    The files are as follows:
+
+  </para>
+  <ItemizedList spacing="compact">
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="../traceAlloc.H">traceAlloc.H</ulink>
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="../traceClustObj.H">traceClustObj.H</ulink>
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="../traceIO.H">traceIO.H</ulink>
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="../traceLock.H">traceLock.H</ulink>
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="../traceMisc.H">traceMisc.H</ulink>
+
+      </simpara>
+    </listitem>
+    <listitem>
+    
+      <para><ulink url="../traceUser.H">traceUser.H</ulink>
+
+      </para>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="../traceLib.C">traceLib.C</ulink>
+
+      </simpara>
+    </listitem>
+    <listitem>
+     
+      <simpara><ulink url="../traceReserve.H">traceReserve.H</ulink>
+
+      </simpara>
+    </listitem>
+  </ItemizedList>
+</section>
+
+
+
+

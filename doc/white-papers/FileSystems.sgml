@@ -1,0 +1,55 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001, 2004.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+-->
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+
+<!-- To disable review comments replace INCLUDE with IGNORE -->
+<!ENTITY % review "INCLUDE" >
+
+<!-- CVS gives us these -->
+<!ENTITY user "$Author: dilma $">
+<!ENTITY date "$Date: 2004/02/03 18:30:26 $">
+<!ENTITY revision "$Revision: 1.9 $">
+
+<!-- define and read in entities from this file -->
+<!ENTITY % wp.ent SYSTEM "wp.ent">
+%wp.ent;
+
+<!entity FileSystemsDesc SYSTEM "FileSystemsDesc.sgml">
+]>
+
+
+<article class="whitepaper" status="draft" lang="en">
+  <title>File Systems in K42</title>
+  &K42ArtHeader;
+
+  <abstract>
+      
+    <para>
+    This document describes how file systems are structured in K42.
+    </para>
+
+  </abstract>
+
+  &FileSystemsDesc;
+  &bib.sgml;
+
+</article>
+
+
+
+<!--
+Local Variables:
+sgml-validate-command: "nsgmls -s %s %s"
+sgml-indent-data: t
+sgml-insert-missing-element-comment: t
+End:
+-->
+<!--  LocalWords:  reviewer's
+ -->

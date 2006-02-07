@@ -1,0 +1,212 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: usrPrgG.sgml,v 1.3 2003/11/24 12:33:38 mostrows Exp $
+-->
+<title>Implementation Notes on fork</title>
+<para>
+  Process Start
+
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+	Pass region ranges and FR object handles in xferInfo.
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	Initialize RegionForkManager with descriptions of initial regions
+	from xferInfo.
+      </simpara>
+    </listitem>
+  </itemizedlist>
+
+</para>
+
+<para>
+Fork
+</para>
+
+<para>
+  Set Up Parent
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+	Turn off migration until after fork.
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	Block thread calling fork and start forkWorker thread.
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	Create Child Process.
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	Prepare objects to fork.
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	Record fork thread info in xferInfo.
+      </simpara>
+    </listitem>
+    <listitem>
+      <para>
+	Map Child Memory
+	<itemizedlist spacing="compact">
+	  <listitem>
+	    <simpara>
+	      Fork Copies of workspace, data, and perprocessor memory.
+	      Thus, the well known objects are immediately available in the
+	      child.
+	    </simpara>
+	  </listitem>
+	  <listitem>
+	    <simpara>
+	      New CRW copy of the text file.  This will change once we
+	      solve the debugging problem of writing text while normally
+	      sharing it.
+	    </simpara>
+	  </listitem>
+	  <listitem>
+	    <simpara>
+	      RegionForkManager actually does all mappings in child,
+	      including above and any other regions registered with it.
+	    </simpara>
+	  </listitem>
+	</itemizedlist>
+      </para>
+    </listitem>
+    <listitem>
+      <simpara>
+	Start Child Process at startFork.  For now, block till child ends.
+	This will go when we have process termination support.
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	Unblock thread calling fork.  ProcessRef of the child is available
+	to the parent.
+      </simpara>
+    </listitem>
+  </itemizedlist>
+
+</para>
+
+
+<para>
+  Initalize Child
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+	Run on boot stack.
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	Read message to get access to xfer info.
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	Do postFork() on Process to fix its object handle so dispatcher
+	can initialize its entryies.
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	Reinitialize Dispatcher, providing address of fork Thread and TID
+	and launching forkChildPhase2.
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	Don't reinit ThreadManager - all allocated threads will stay around
+	even though they don't run, since there stacks may be pointed to.
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	Rest done on phase2 thread.
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	Fix Objects by calling postFork entries.
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	Unblock thread that called fork. Set child ProcessRef to 0 so
+	thread "knows" it is the child.
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	Terminate phase2 thread.
+      </simpara>
+    </listitem>
+  </itemizedlist>
+</para>
+
+
+
+<para>
+  Memory Layout of Workspace Region:
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+	ProgExec::XferInfo - structure containing values passed to child.
+      </simpara>
+    </listitem>
+  <listitem>
+      <simpara>
+	Environment and Args - variable length.
+      </simpara>
+    </listitem>
+  <listitem>
+      <simpara>
+	Dispatcher Start on a page boundary.  First page provided by
+	kernel.
+      </simpara>
+    </listitem>
+  <listitem>
+      <simpara>
+	Page Boundary.
+      </simpara>
+    </listitem>
+  <listitem>
+      <simpara>
+	crtInfo - small structure used by crtInit.
+      </simpara>
+    </listitem>
+  <listitem>
+      <simpara>
+	boot stack - stack used by crtInit until it can launch a thread.
+	We to not return this storage to the allocator since we use it
+	again in the fork child.  We could avoid this, but its not worth
+	the complexity.  Since we are keeping the storage around, we use
+	crtInfo to pass some values.  We could avoid that as well.
+      </simpara>
+    </listitem>
+  <listitem>
+      <simpara>
+	Memory used by process, including the PageAllocator.
+      </simpara>
+    </listitem>
+  </itemizedlist>
+</para>
+
+
+
+

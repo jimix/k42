@@ -1,0 +1,65 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: specResults.sgml,v 1.1 2002/03/24 14:52:25 jimix Exp $
+-->
+<title>Results of the SPEC SDET benchmark</title>
+<section>
+  <title>Experiment</title>
+  <para>
+    Running the following sdet test:
+    
+    <screen>
+      <prompt>$ </prompt><userinput>make -f M.<replaceable>OS</replaceable> RUNSERIES="<replaceable>sequence</replaceable>"</userinput>
+    </screen>
+    where <userinput><replaceable>OS</replaceable></userinput> is one
+    of <userinput>k42</userinput>, <userinput>linux</userinput> or
+    <userinput>aix</userinput> and
+    <userinput><replaceable>sequence</replaceable></userinput> is the
+    numbers 1 thru 32 separated by spaces.  If your operating system
+    has the <command>seq</command> command you can use
+    <userinput>$(seq 32)</userinput> instead of manually typing all
+    the numbers.
+  </para>
+  <para>
+    All experiments run on k0 XXX add details about k0 XXX.  We boot
+    k0 having a specific number of processors configured then run the
+    above test logging results.
+  </para>
+</section>
+<section>
+  <title>K42 results</title>
+  <para>
+    none yet
+  </para>
+</section>
+<section>
+  <title>Linux results</title>
+  <para>
+    none yet
+  </para>
+</section>
+<section>
+  <title>AIX results</title>
+  <para>
+    none yet
+  </para>
+</section>
+<section>
+  <title>Summary</title>
+  <para>
+    non yet
+  </para>
+</section>
+
+<!--
+Local variables:
+mode: sgml
+sgml-parent-document: ("./spec.sgml" "chapter" "title")
+End:
+-->

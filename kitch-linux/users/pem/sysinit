@@ -1,0 +1,23 @@
+#!/bin/bash
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# ****************************************************************************/
+#/****************************************************************************
+# * Module Description: System initialization script
+# * **************************************************************************/
+
+
+echo "our little cpo test";
+
+# Delay before rebooting to give completion message a chance to get out
+/kbin/sysinit
+sleep 5
+echo "T|I" > /ksys/console
+sleep 5
+echo "0|XX" > /ksys/console

@@ -1,0 +1,45 @@
+#!/usr/bin/env perl
+# K42: (C) Copyright IBM Corp. 2004.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the license along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+
+K42_ARCH Architecture K42 is to be run on.
+K42_FS_DISK If set, tells K42 to use disk filesystems.
+K42_INITSCR Script to run upon booting.
+K42_LOGIN_PORT Port K42 will listen on for rlogin connections.
+K42_NFS_HOST Host to NFS mount /home, /klib/, ...
+K42_NFS_ID User and group id's to use in NFS mounts.
+K42_NFS_ROOT Directory to NFS mount to provide /home, /klib/,...
+K42_PKGHOST Host to NFS mount /.
+K42_PKGROOT Directory to NFS mount / from.
+K42_SESSION_ID Unique id of this "run" of K42.
+MAMBO_CONSOLE_PORT Usage of this variable is not known (deprecated?).
+MAMBO_DEBUG_PORT Port Mambo is to offer for GDB connections.
+MAMBO_DIR Directory that contains Mambo directory tree.
+MAMBO_KFS_DISK_EXTRA Name of disk file for extra KFS filesystem.
+MAMBO_KFS_DISK_KITCHROOT Name of disk file for KFS /home,/klib...
+MAMBO_KFS_DISK_LOC Location of KFS disk files in build tree.
+MAMBO_KFS_DISK_ROOT Name of disk file for KFS / fs.
+MAMBO_KFS_PKGDISK Mambo disk image to use for /.
+MAMBO_PERCS_TCL Extra Mambo TCL file to use for PERCS.
+MAMBO_SIMULATOR_PORT Port Mambo is to use to talk to thinwire.
+MAMBO_TYPE Type of Mambo to use (e.g. gpul).
+MKANCHOR Location of K42 source, build and install dirs.
+OPTIMIZATION Build optimization level.
+TW_BASE_PORT Port number for channel 0 coming out of thinwire.
+TW_COMMAND_LINE Thinwire command line to use (used for Mambo).
+TW_SIMIP_CMD SimIP command line to use (used for Mambo).
+TW_SIMULATOR_HOST Host on which Mambo is running.
+K42_SITE Identifier of which site we're running at.
+K42_TOOLSDIR Location of tools executables (e.g. hwconsole, kvictim).
+K42_IP_ADDRESS IP Address for K42 system to use.
+K42_IP_HOSTNAME Hostname for K42 system to use.
+K42_IP_INTERFACE Ethernet interface for k42 system to use.
+K42_IP_NETMASK IP Netmask for K42 system to use.
+K42_IP_ROUTER Default gateway for K42 system.
+K42_PACKAGES Directory where *Deb.Img.* packages reside.
+K42_PKGVER Version of packages to use.

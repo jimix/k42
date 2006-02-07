@@ -1,0 +1,127 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Makefile.tools,v 1.25 2004/08/20 17:30:43 mostrows Exp $
+# ############################################################################
+
+include $(MKSRCTOP)/Make.paths
+INSTALL_INC=$(MKTOOLBIN)/kinstall
+
+IN_OBJ_DIR=1
+
+MAKEFLAGS += -Wall --no-builtin-rules
+
+# parallel make breaks windows 95
+ifneq ($(findstring _95, $(PLATFORM_OS)),)
+SEQ=1
+endif
+
+# parallel install_libobjs tries to do multiple archive updates
+# to same archiveno
+
+ifneq ($(findstring install_libobjs,$(MAKECMDGOALS)),)
+SEQ=1
+endif
+
+ifdef SEQ
+  MAKEFLAGS += -j 1
+else
+  MAKEFLAGS += -j -l 4
+endif
+
+
+# define all the phoney rules for performance
+.PHONY: default install_includes targets install_targets clean
+.PHONY: subdirs_install_includes
+.PHONY: subdirs_targets
+.PHONY: subdirs_install_targets
+.PHONY: subdirs_clean
+
+# file that included this Makefile should define:
+#    SRC_DIR_PATH - absolute path to source directory
+#    TARGET_MACHINE - target machine of compilation
+#    OPTIMIZATION =<noDeb, fullDeb, partDeb>
+
+# get sources from source directory and machine specific source dir
+VPATH = $(SRC_DIR_PATH):$(SRC_DIR_PATH)/arch/$(TARGET_MACHINE)
+
+# implicit rules for kitchawan
+%.o : %.S
+	$(HOST_CC)  -c $(HOST_CFLAGS) $(CPPFLAGS) $(ASONLY_FLAGS) $< -o $@
+%.o : %.c
+	$(HOST_CC)  -c $(HOST_CFLAGS) $(CPPFLAGS)   $< -o $@
+%.o : %.C
+	$(HOST_CXX) -c $(HOST_CXXFLAGS) $(CPPFLAGS) $< -o $@
+# put the rest of them here
+
+
+##################################################################
+#
+# dummy first target
+default::
+
+
+
+# conditionally include machine specific Makefiles
+-include $(SRC_DIR_PATH)/arch/$(TARGET_MACHINE)/Make.arch
+
+#include the source directory makefile
+include $(SRC_DIR_PATH)/Makefile
+
+INCPATH  += -I. -I$(SRC_DIR_PATH)
+
+# define standard flags (added to user defined)
+HOST_CFLAGS   += $(INCPATH) $(WARN_FLAGS)
+HOST_CXXFLAGS += $(INCPATH) $(WARN_FLAGS)
+
+install_targets:: subdirs_install_targets
+targets:: subdirs_targets
+clean:: subdirs_clean
+
+ifdef SUBDIRS
+
+SUBDIRS_INSTALL_INCLUDES = $(SUBDIRS:%=%_install_includes)
+.PHONY: $(SUBDIRS_INSTALL_INCLUDES)
+$(SUBDIRS_INSTALL_INCLUDES) :
+	cd $(@:%_install_includes=%)/ && $(MAKE) install_includes
+subdirs_install_includes: $(SUBDIRS_INSTALL_INCLUDES)
+
+SUBDIRS_TARGETS = $(SUBDIRS:%=%_targets)
+.PHONY: $(SUBDIRS_TARGETS)
+$(SUBDIRS_TARGETS) :
+	cd $(@:%_targets=%)/ && $(MAKE) targets
+subdirs_targets: $(SUBDIRS_TARGETS)
+
+SUBDIRS_INSTALL_TARGETS = $(SUBDIRS:%=%_install_targets)
+.PHONY: $(SUBDIRS_INSTALL_TARGETS)
+$(SUBDIRS_INSTALL_TARGETS) :
+	cd $(@:%_install_targets=%)/ && $(MAKE) install_targets
+subdirs_install_targets: $(SUBDIRS_INSTALL_TARGETS)
+
+SUBDIRS_CLEAN = $(SUBDIRS:%=%_clean)
+.PHONY: $(SUBDIRS_CLEAN)
+$(SUBDIRS_CLEAN) :
+	cd $(@:%_clean=%)/ && $(MAKE) clean
+subdirs_clean: $(SUBDIRS_CLEAN)
+
+else #SUBDIRS
+
+subdirs_install_includes:
+subdirs_targets:
+subdirs_install_targets:
+subdirs_clean:
+
+endif #SUBDIRS
+
+targets :: $(TARGETS)
+install_targets :: $(TARGETS)
+
+clean ::
+	-$(RM) $(TARGETS)
+
+-include $(MKKITCHTOP)/lib/Make.help

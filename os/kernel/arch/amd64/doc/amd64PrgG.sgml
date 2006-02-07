@@ -1,0 +1,61 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: amd64PrgG.sgml,v 1.1 2001/07/25 17:02:52 mike Exp $
+-->
+<title>amd64</title>
+<section>
+  <title>amd64</title>
+
+  <para>
+
+    // XXX remove 
+
+  </para>
+  <para>
+
+    There are a couple of variables that determine where the kernel
+    file gets loaded into memory and the addresses (virtual and
+    physical) at which it gets placed.  The real_base, virt_base, and
+    load_base in the kernel.scr affect where the file get loaded.  We
+    have empircally determined it is best to let the loader/open
+    firmware have free reign on where to put the file.  This is done
+    by setting these to -1 (oxffffffff).  We then just need to place
+    place the kernel high enough in physical memory so the file does
+    not conflict with it.  The RELOC variable in the Make.PwrPC
+    determines the virtual address the kernel will placed at, and the
+    explicit segment statements in the kernel.scr file:
+
+    <programlisting>
+      <![CDATA[ 
+      text PT_LOAD AT (0x110000);
+      data PT_LOAD AT (0x130000);
+      ]]>
+    </programlisting>
+    
+    determine the physical address the kernel is placed at.  We have
+    also found we needed to align the text and data segments to page
+    boundaries:
+    
+    <programlisting>
+      <![CDATA[
+      .text  ALIGN(0x1000) :
+      ]]>
+    </programlisting>
+
+to get the debugger to work correctly.
+
+Some of those comments specially the last one may apply to amd64...
+
+  </para>
+
+</section>
+
+
+
+

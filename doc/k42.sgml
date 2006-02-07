@@ -1,0 +1,362 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: k42.sgml,v 1.12 2004/12/27 13:39:48 dilma Exp $
+-->
+<!doctype book PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!entity topsrc "..">
+<!entity % k42.ent SYSTEM "k42.ent">
+%k42.ent;
+]>
+
+<book id="K42">
+  <chapter id="Over">
+    &K42Over;
+    <section>
+      &osOver;
+      <section>
+	&kernelOver;
+        <section>
+          <!-- start os/servers over -->
+          <title>Subsections of kernel overview guide</title>
+          <section>
+            &archOver;
+            <section>
+	      &amd64Over;
+            </section>
+            <section>
+	      &generic64Over;
+            </section>
+            <section>
+              &powerpcOver;
+            </section>
+          </section>
+          <section>
+            &bilgeOver;
+          </section>
+          <section>
+            &definesOver;
+          </section>
+          <section>
+            &exceptionOver;
+          </section>
+          <section>
+            &initOver;
+          </section>
+          <section>
+            &memOver;
+          </section>
+          <section>
+            &procOver;
+          </section>
+          <section>
+            &traceOver;
+          </section>
+          <section>
+            &stubtestOver;
+          </section>
+        </section>
+      </section>
+
+      <section>
+	&serversOver;
+        <section>
+	  &kfsOver
+        </section>
+        <section>
+	  &nfsOver
+        </section>
+        <section>
+	  &ptyOver
+        </section>
+      </section>
+  <!-- end os/servers over -->
+
+      <section>
+        &bootOver;
+      </section>
+
+    </section>
+<!-- end os over -->
+
+    <section>
+      &libcOver;
+      <section>
+        &syncOver;
+      </section>
+      <section>
+        &libTraceOver;
+      </section>
+      <section>
+        &ioOver;
+      </section>
+      <section>
+        &usrOver;
+      </section>
+      <section>
+        &allocOver;
+      </section>
+      <section>
+        &cobjOver;
+      </section>
+      <section>
+        &fslibOver;
+      </section>
+      <section>
+        &miscOver;
+      </section>
+      <section>
+        &schedulerOver;
+      </section>
+      <section>
+        &stdlibOver;
+      </section>
+      <section>
+        &sysOver;
+      </section>
+
+    </section>
+<!-- end libc over -->
+
+    <section>
+      &toolsOver;
+      <section>
+        &toolsMiscOver;
+        <section>
+	  &kmonOver;
+        </section>
+      </section>
+      <section>
+        &buildOver;
+        <section>
+	  &sharedOver;
+          <section>
+	    &thinwireOver;
+  	  </section>
+        </section>
+      </section>
+    </section>
+<!-- end tools over -->
+
+    <section>
+      &kitchlinuxOver;
+      <section>
+	&binOver;
+	<section>
+	  &shOver;
+	  <section>
+	    &debianOver;
+	  </section>
+	</section>
+      </section>
+      <section>
+	&etcOver;
+      </section>
+      <section>
+	&klibOver;
+	<section>
+	  &emuOver;
+	</section>
+	<section>
+	  &pthreadOver;
+	</section>
+      </section>
+      <section>
+	&pkgsOver;
+      </section>
+      <section>
+	&testsOver;
+      </section>
+      <section>
+	&usersOver;
+        <section>
+	  &specOver;
+        </section>
+      </section>
+    </section>
+<!-- end kitchlinux over -->
+
+  </chapter>
+  <chapter id="PrgG">
+    &K42PrgG;
+    <section>
+      &osPrgG;
+      <section>
+        &kernelPrgG;
+        <section>
+          <title>Subsections of kernel programming guide</title>
+          <section>
+            &archPrgG;    
+            <section>
+              &amd64PrgG;
+            </section>
+            <section>
+              &generic64PrgG;
+            </section>
+            <section>
+              &powerpcPrgG;
+            </section>
+          </section>
+          <section>
+            &bilgePrgG;
+          </section>
+          <section>
+            &definesPrgG;
+          </section>
+          <section>
+            &exceptionPrgG;
+          </section>
+          <section>
+            &initPrgG;
+          </section>
+          <section>
+            &memPrgG;
+          </section>
+          <section>
+            &procPrgG;
+          </section>
+          <section>
+            &tracePrgG;
+          </section>
+          <section>
+            &stubtestPrgG;
+          </section>
+        </section>
+      </section>
+
+
+      <section>
+        &serversPrgG;
+        <section>
+	  &kfsPrgG
+        </section>
+        <section>
+	  &nfsPrgG
+        </section>
+        <section>
+	  &ptyPrgG
+        </section>
+      </section>
+
+      <section>
+        &bootPrgG;
+      </section>
+
+    </section>
+<!-- end os PrgG -->
+
+    <section>
+
+    &libcPrgG;
+      <section>
+        &syncPrgG;
+      </section>
+      <section>
+        &libTracePrgG;
+      </section>
+      <section>
+        &ioPrgG;
+      </section>
+      <section>
+        &usrPrgG;
+      </section>
+      <section>
+        &allocPrgG;
+      </section>
+      <section>
+        &cobjPrgG;
+      </section>
+      <section>
+        &fslibPrgG;
+      </section>
+      <section>
+        &miscPrgG;
+      </section>
+      <section>
+        &schedulerPrgG;
+      </section>
+      <section>
+        &stdlibPrgG;
+      </section>
+      <section>
+        &sysPrgG;
+      </section>
+
+    </section>
+<!-- end libc PrgG -->
+
+    <section>
+      &toolsPrgG;
+      <section>
+        &toolsMiscPrgG;
+        <section>
+	  &kmonPrgG;
+        </section>
+      </section>
+      <section>
+        &buildPrgG;
+        <section>
+	  &sharedPrgG;
+          <section>
+	    &thinwirePrgG;
+  	  </section>
+        </section>
+      </section>
+    </section>
+<!-- end tools PrgG -->
+
+
+    <section>
+      &kitchlinuxPrgG;
+      <section>
+	&binPrgG;
+	<section>
+	  &shPrgG;
+	  <section>
+	    &debianPrgG;
+	  </section>
+	</section>
+      </section>
+      <section>
+	&etcPrgG;
+      </section>
+      <section>
+	&klibPrgG;
+	<section>
+	  &emuPrgG;
+	</section>
+	<section>
+	  &pthreadPrgG;
+	</section>
+      </section>
+      <section>
+	&pkgsPrgG;
+      </section>
+      <section>
+	&testsPrgG;
+      </section>
+      <section>
+	&usersPrgG;
+        <section>
+	  &specPrgG;
+        </section>
+      </section>
+    </section>
+<!-- end kitchlinux PrgG -->
+
+  </chapter>
+</book>
+
+
+<!--
+Local Variables:
+sgml-validate-command: "nsgmls -s %s %s"
+sgml-indent-data: t
+sgml-insert-missing-element-comment: t
+End:
+-->

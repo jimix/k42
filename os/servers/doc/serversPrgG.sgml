@@ -1,0 +1,87 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: serversPrgG.sgml,v 1.1 2001/09/23 18:24:08 bob Exp $
+-->
+<title>Servers</title>
+<section>
+  <title>Servers</title>
+  <para>
+    These servers are currently dowloaded automatically as part of the
+    kernel image:
+
+    <itemizedlist spacing="compact">
+
+      <listitem>
+	<simpara>
+	  shell - A simple shell, will be replaced soon by ash.
+	</simpara>
+      </listitem>
+
+      <listitem>
+	<simpara>
+	  userProc - Parallel microbenchmark experiments, used in
+	  regression test of system.
+	</simpara>
+      </listitem>
+
+      <listitem>
+	<simpara>
+	  sample - An example server, used for testing basic server
+	  functionality, in conjunction with userProc
+	</simpara>
+      </listitem>
+
+      <listitem>
+	<simpara>
+	  <ulink url="&topsrc/os/serves/pty/ptyPrgG.html"> rlogind (and
+	  pty) - </ulink> A remote login server with a preliminary pty
+	  server implemented within the object
+	</simpara>
+      </listitem>
+
+      <listitem>
+	<simpara>
+	  <ulink url="&topsrc/os/serves/nfs/nfsPrgG.html"> nfs - </ulink> 
+	  NFS client file system.
+	</simpara>
+      </listitem>
+
+      <listitem>
+	<simpara>
+	  <ulink url="&topsrc/os/serves/hfs/hfsPrgG.html"> hfs and </ulink> 
+	  <ulink url="&topsrc/os/serves/kfs/kfsPrgG.html"> kfs - </ulink> 
+	  Hurricane file system.
+	</simpara>
+      </listitem>
+
+      <listitem>
+	<simpara>
+	  baseServers - This is a single server that links together some of
+	  the above servers, and is started automatically by the kernel.
+	</simpara>
+      </listitem>
+    </itemizedlist>
+  </para>
+
+  <para>
+    Actually, the shell, userProc, and sample servers are not really
+    servers, but are programs that are automatically downloaded with the
+    kernel image, so that they can be started up cheaply.  The only real
+    server here, is baseServer, which incorporates all the servers needed
+    to boot the system, and which is automatically started by the kernel.
+  </para>
+
+</section>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./servers.sgml" "chapter" "title")
+End:
+-->

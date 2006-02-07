@@ -1,0 +1,12 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: bilge.ent,v 1.1 2001/07/25 18:05:04 mike Exp $
+-->
+<!entity bilgeOver SYSTEM "bilgeOver.sgml">
+<!entity bilgePrgG SYSTEM "bilgePrgG.sgml">

@@ -1,0 +1,173 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: specPrgG.sgml,v 1.4 2002/04/10 11:48:00 mostrows Exp $
+-->
+<title>How to run the SPEC SDET benchmark</title>
+<section>
+  <title>K42 Instructions</title>
+  <para>
+    <orderedlist spacing="compact">
+      <listitem>
+	<para>
+	  Login to a running K42 machine, or localhost
+	  if running on simulator: 
+	  <screen> 
+	    <prompt>$ </prompt><userinput>klogin -l spec localhost</userinput>
+	  </screen>
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  At the shell prompt run:
+	  <screen>
+	    <prompt>$ </prompt><userinput>make -f M.k42</userinput>
+	  </screen>
+	</para>
+      </listitem>
+    </orderedlist>
+  </para>
+
+  <para>
+    This will run a single run sequence. Basically the first time you run
+    it it will clone a directory per virtual user, this takes the longest
+    amount of time. The it will run the benchmark. Subsequent runs will
+    reuse the directory skipping th cloning part altogether.
+  </para>
+
+  <para>
+    <itemizedlist spacing="compact">
+      <listitem>
+	<para>
+	  The following will run the sequence as <option>n</option>
+	  users:
+	  <screen>
+	    <prompt>$ </prompt><userinput>make -f M.k42 RUNSERIES=<option>n</option></userinput>
+	  </screen>
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  You may also have the benchmark run many times with a various
+	  amount of users:
+	  <screen>
+	    <prompt>$ </prompt><userinput>make -f M.k42 RUNSERIES="1 4 16 32 64 128"</userinput>
+	  </screen>
+	  This will run the benchmark 6 times with 1, 4, 16, 32, 64,
+	  128 simultaneous users, respectively.
+	</para>
+      </listitem>
+    </itemizedlist>
+  </para>
+  <para>
+    <itemizedlist spacing="compact">
+      <listitem>
+	<para>
+	  The following will run a series of SDET benchmarks, after
+	  configuring the system to run from ramfs, and optimizing
+	  run-time kernel parameters.
+	</para>
+	<para>
+	  Run the following from the build host:
+	  <screen>
+	    <prompt>$ </prompt><userinput>sdetPrep <option>kitchroot-path</option> <option>image-name</option></userinput>
+	  </screen>
+	  kitchroot-path is the path to the kitchroot that you are
+	  running with.  This will create an archive of the selected
+	  kitchroot called "image-name" (which will reside in the
+	  kitchroot directory).
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  From the login shell run /nfs/home/spec/bin/runSDET (use the
+	  -h option to see usage information.  Defaults for all
+	  options can be specified through environment variables.
+
+	  This will prepare ramfs (populating it with the files from
+	  the archive created in the step above), bind
+	  ramfs to / hide the nfs mount (it can only be accessed via
+	  /nfs afterwards), then run the SDET benchmark with the
+	  specified RUNSERIES arguments.
+	</para>
+	
+	<para>
+	  During each of these runs the kernel will be automatically
+	  tuned for optimal performance, however tracing parameters
+	  are by default not affected.
+	</para>
+
+	<para>
+	  If the environment variable SDETTRACE is set in the login
+	  shell (or via the -t option), the trace mask will be set to
+	  that value for the duration of the benchmark.  If this is
+	  the case, upon completion of the benchmark the trace mask
+	  will be set to 0x10000.  The SDETTRACE variable should be
+	  set to the hex value of the desired trace mask (e.g.,
+	  0x30808 -- for hwperf tracing).  (Note, if you don't want
+	  tracing, disable it manually.  SDETTRACE is for collecting
+	  trace events only during the SDET run, that is it is meant
+	  to turn tracing on, rather than to turn it off, since it
+	  can't actually turn tracing on/off without side-effects.)
+	</para>
+	<para>
+	  The runSDET script can be run repeatedly (until the system
+	  dies), on the second and subsequent runs it will skip the
+	  ramfs preparation step.
+	</para>
+      </listitem>
+    </itemizedlist>
+  </para>
+
+  <warning>
+    <title>Compiler</title>
+    <simpara>
+      We currently do not have a compiler that runs on k42. The
+      benchmark requires an executable binary to drive it. This is
+      cross-linked when you build k42 in the this directory.
+    </simpara>
+  </warning>
+  <important>
+    <title>Reinstalling</title>
+    <para>
+      If the benchmark files become corrupt for some reason simply run
+      the following commands in the <filename
+      class="directory">kitchsrc/kitch-linux/users/spec</filename>
+      directory:
+      <screen>
+	<prompt>$ </prompt><userinput>make clobber</userinput>
+	<prompt>$ </prompt><userinput>make install_targets</userinput>
+      </screen>
+    </para>
+  </important>
+</section>
+<section>
+  <title>Relevant Links</title>
+    <itemizedlist spacing="compact">
+      <listitem>
+	<simpara>
+	  <ulink url="http://www.spec.org/osg/sdm91/sdet/">
+	    Information on SDET </ulink>
+	</simpara>
+      </listitem>
+
+      <listitem>
+	<simpara>
+	  <ulink url="http://www.spec.org/osg/sdm91/results/res9509/">
+	    Interesting results </ulink>
+	</simpara>
+      </listitem>
+    </itemizedlist>
+</section>
+
+<!--
+Local variables:
+mode: sgml
+sgml-parent-document: ("./spec.sgml" "chapter" "title")
+End:
+-->

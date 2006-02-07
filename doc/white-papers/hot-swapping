@@ -1,0 +1,200 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: hot-swapping,v 1.1 2001/08/17 18:30:26 bob Exp $
+-->
+
+<Intro>
+
+Object hot-swapping is the act of replacing an object instantiation
+(instance) that is in use within the system with a new instance of an
+object.  This new instance exports the same interface but may have a
+different implementation and behavior.  An example of this might be
+changing a file-system's cache management scheme, or upgrading an
+implementation of IP which has a known security hole.
+
+Although originally used only for clustered objects, object swapping
+in k42 is now a generic mechanism for swapping any kernel object
+instance in use in the system.
+
+Object hot-swapping of an instance in k42 consists of three main
+phases.  The first phase is achieving instance quiescence.  The second
+phase is to do a state transfer between the old and new instance.  The
+third phase is to update all access points to the old instance to
+point at the new instance.
+
+<<Motivation>>
+
+There are several motivating factors to having a generic object
+swapping interface in k42.  One immediate advantage is that object
+hot-swapping allows security and performance improvements to be
+immediatly utilized by a running system.
+
+Another advantage is the ability to utilize performance enhanced
+objects without sacrificing complexity or correctness.  An example of
+this is shared vs. non-shared access.  In general access to an object
+does not need to be shared, however conventional systems are forced to
+constantly utilize a shared mechanism for correctness.  With object
+swapping it is possible to swap in a shared implementation only when
+necessary, allowing the higher performance non-shared case to be used
+in general.
+
+With object swapping cache management policies can be changed during
+operation.  This allows a system that is experiencing poor performance
+to change to a new policy without adding complex code paths.
+
+In addition to these advantages, introducing generic object swapping
+also allows easy interposition of objects.  This could allow tracing,
+performance monitorying, and debugging objects to be inserted into a
+running system.  This would allow fine-grained measurements to be made
+in the system without introducing complex hooks into various parts of
+the system.
+
+<Instance Swapping>
+
+<<Quiescence>>
+
+We will define "quiescence" as the state of time at which an object
+can be safely swapped.  This involves the blocking of all threads
+which access the object across all virtual processors.  Once all
+currently running threads have completed and the new threads have been
+blocked, we consider the state to be quiescent and swapping can begin
+at this point.
+
+In order to achieve quiescence of an instance we make use of an
+interposer object.  This interposer acts to ensure that all threads
+currently accessing the object are allowed to complete, while all new
+threads which attempt to access the object are blocked.  This is done
+using k42's generation count mechanism.
+
+[ picture of interposer ]
+
+The interposer allows all threads which have a generation older than
+its own to be forwarded, while all threads which have a generation
+equal to or greater than its own are blocked.  Once all threads older
+than its generation have completed, the object is said to be in a
+quiescent state.
+
+In order to reduce overhead during normal operation, the interposer
+object is only in place during a swap.  The mechanism for how this is
+done uses the object translation table, which is described below.
+
+<<State Transfer>>
+
+State transfer is the manner in which an instance's internal state is
+transfered and transformed into the internal state of the new
+instance.  This is currently negotiated by the two object's being
+swapped, although it may be convenient to later formalize the transfer
+mechanism in order to reduce the complexity as new object types are
+created.
+
+State transfer is an area that has not been explored in significant
+detail, and future versions of this document will hopefully hold more
+information and ideas about this topic.  For more information on
+potential ideas see Kevin Hui's thesis work, section 4.4.4.
+
+<<Object Translation Table>>
+
+Each process in k42 contains an object translation table (OTT) which
+can be used as a level of indirection between an object pointer and
+its instance.  This was originally developed for use with k42's
+clustered objects.  Instantiations of these objects can be replicated
+across processors for increased MP performance.  In order to choose
+the appropriate instantiation, all accesses to it go through the
+object translation table.  Since there is a separate OTT for each
+process, it can be set to point to the appropriate instance for that
+process.
+
+This functionality is extremely helpful for doing object swapping.
+By having all accesses to an instance go through the OTT, the actual
+instance can be changed by updating the table to point to a new
+instance.
+
+The OTT is employed in two ways by the object swapping system.  First,
+the interposer can easily be implemented by updating the OTT entry to
+point to the interposer and have it forward requests to the proper
+instance.  Second, the actual swapping can be done by updating the OTT
+to point to the new instance, which removes the interposer at the same
+time.
+
+<Instance Management>
+
+In order to facilitate object swapping within k42, we need a mechanism
+to specify how an instance is related to an object interface.  We also
+need to separate the interface and creation mechanisms from the
+implementation.  Without this separation, swapping an object
+introduces additional dependencies within the client applications.
+
+Another aspect of managing the different implementations is the
+mechanism used to load new implementations into a running application.
+To do this we make use of shared libraries.
+
+<<Type Manager>>
+
+In order to properly separate an object's interface from its
+implementation we make use of the k42 type manager.  The type manager
+manages interfaces, and makes use of factories to separate the
+implementation details from the interfaces.
+
+Each available object interface (type) is registered with the type
+manager.  Each type that is registered has an associated factory and a
+pointer to the type from which it was derived (if any such derivation
+exists).  Any type's factory has the ability to call the creation
+method of any of the types which implement the requested interface,
+generally either a particular implementation which it knows about, or
+any children of the type.
+
+[ picture of the type manager ]
+
+This gives us several benefits.  Since all instances for a particular
+interface are created by the factory for the interface, we use the
+factory for a specific implementation to track each instance of that
+implementation.
+
+Also, since the requester knows only the requested interface of the
+object being instantiated, the specific implementation being created
+is not known.  This layer of abstraction allows us to easily change to
+different implementations for each object instantiation.  This would
+be especially important when doing an upgrade to a particular
+implementation.
+
+<<Shared Library Management>>
+
+In order to introduce new object implementations into a running k42
+system, we make use of shared libraries.  When a new implementation is
+registered with the type system, the shared library which implements
+it must be specified.  This allows the code for the new implementation
+to be lazily loaded into the system upon invocation.
+
+Each implementation must contain both the new object which implements
+the given interface, but also a factory to handle creation and
+tracking of the object.  These must exist within the same shared
+library, and are located by a name specified during type registration.
+
+Once the shared library is registered with the type system, the system
+will load the library into the appropriate application when an
+instance of the given type is requested.  This loading is no different
+from standard shared library implementations.
+
+<Global Update>
+
+To handle updates to a large number of instances simultaneously we
+make use of the fact that the type manager is replicated in each
+application's address space.  This gives us the ability to handle the
+tracking of each application's object instances completely within the
+application itself.
+
+Since each of the factories within an application track the objects
+that are created by the factory in that application, we need only to
+ask each application's factory to swap the instances that it knows
+about.  This significantly simplifies the problem of global object
+tracking, and allows us to use the same mechanisms for both global and
+individual instance swapping.
+
+[ picture of a global update ]
+

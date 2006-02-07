@@ -1,0 +1,24 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: kitchlinux.ent,v 1.1 2001/09/30 21:09:24 bob Exp $
+-->
+<!entity kitchlinuxOver SYSTEM "kitchlinuxOver.sgml">
+<!entity kitchlinuxPrgG SYSTEM "kitchlinuxPrgG.sgml">
+<!entity % bin SYSTEM "../bin/doc/bin.ent">
+%bin;
+<!entity % etc SYSTEM "../etc/doc/etc.ent">
+%etc;
+<!entity % klib SYSTEM "../lib/doc/lib.ent">
+%klib;
+<!entity % pkgs SYSTEM "../pkgs/doc/pkgs.ent">
+%pkgs;
+<!entity % tests SYSTEM "../tests/doc/tests.ent">
+%tests;
+<!entity % users SYSTEM "../users/doc/users.ent">
+%users;

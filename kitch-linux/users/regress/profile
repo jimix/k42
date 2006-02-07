@@ -1,0 +1,68 @@
+# -*- mode: shell-script;-*-
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: profile,v 1.17 2004/09/29 21:36:37 dilma Exp $
+# ############################################################################
+#
+# regress profile
+#
+
+PATH=${PATH}:${HOME}/bin:/kbin
+
+export HOME
+
+# start up trace daemon and set trace mask to none
+#/traceControl --mask NONE
+#/traceControl --start
+
+cd /
+for i in 1 2 3 4 5; do
+  echo
+  echo "====================================================================="
+  echo "Running K42 regress pass $i of 5"
+  DATE=`date`
+  echo "time $DATE"
+  echo "====================================================================="
+
+  touch /tmp/regress-k42-pass-$i
+
+  # A hang == failure.. right?
+  /kbin/shellServer regress
+done
+
+cd /tmp
+for i in 1 2 3 4 5; do
+  echo
+  echo "====================================================================="
+  echo "Running linux regress pass $i of 5"
+  DATE=`date`
+  echo "time $DATE"
+  echo "====================================================================="
+
+  touch regress-linux-pass-$i
+
+  # be verbose 
+  if ! /tests/linux/regress.sh -vd ; then
+    echo "*** Linux regress failed on pass $i ***"
+    # knightly recognizes failure by this script not executing
+ 
+  fi
+
+  sync
+done
+
+touch regress-out
+
+# stops the trace control daemon and writes down the rest of the file
+#/traceControl --stop
+
+exit
+
+
+

@@ -1,0 +1,28 @@
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# ****************************************************************************/
+#/****************************************************************************
+# * Module Description: Please see associated experimental.CommandFile.tmpl
+#                       The only line you should have to change here is the
+#                       value of EXPERIMETDIR.  Place a copy of this file 
+#                       (renamed to sysinit) and a copy of
+#                       experimental.CommandFile.tmpl (rename to CommandFile)
+#                       into directory specified as EXPERIMETDIR.
+#                       Then use hwconsole -m machine -E <experiment directory>
+# * **************************************************************************/
+
+# FORMAT OF A LINE : where command is a string passed to bash -c "command"
+# numCpus ctrlFlgs nameOfTest command
+
+# Base experiments but with All Objects distributed (eg control flags 0x8000000fff)
+
+#basic test
+1 0x0 TEST1-cpus1  echo "This is the Beginning of  my test EXP1";/tests/native/hello;echo "This is the End of my test EXP"
+1 0x0 TEST2-cpus1  echo "This is the Beginning of  my test EXP2";/tests/native/hello;echo "This is the End of my test EXP"
+2 0x0 TEST2-cpus2  echo "This is the Beginning of  my test EXP3";/tests/native/hello;echo "This is the End of my test EXP"

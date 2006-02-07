@@ -1,0 +1,748 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: schedulerPrgG.sgml,v 1.3 2001/08/23 22:22:10 mike Exp $
+-->
+<title>Scheduling library</title>
+<section>
+  <title>Scheduling library</title>
+  <section>
+    <title>Files</title>
+    <itemizedlist>
+      <listitem>
+	<para>
+	  
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/Scheduler.H"><filename>
+	  Scheduler [.H]</filename></ulink> <ulink
+	  url="&topsrc/lib/libc/scheduler/Scheduler.C"><filename>
+	  [.C]</filename></ulink> : Defines the basic interfaces
+	  provided by the user-level scheduler.  For the most part
+	  facilities are provided as static functions.  Each function
+	  makes some assertions about its calling environment and then
+	  invokes a corresponding method on the current dispatcher
+	  (obtained from kernelInfoLocal and cast to the appropriate
+	  dispatcher subclass, currently DispatcherDefault).
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/DispatcherDefault.H"><filename>
+	  DispatcherDefault [.H]</filename></ulink> <ulink
+	  url="&topsrc/lib/libc/scheduler/DispatcherDefault.C"><filename>
+	  [.C]</filename></ulink> : Implements the machine-independent
+	  portion of the user-level scheduler.  Class
+	  DispatcherDefault is an extension of class Dispatcher, which
+	  is exported by the kernel and which defines the interface
+	  between the kernel- and user-level schedulers.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/arch/powerpc/DispatcherDefault.H"><filename>
+	  &lt;arch&gt;/DispatcherDefault.H
+	  [powerpc]</filename></ulink> <ulink
+	  url="&topsrc/lib/libc/scheduler/arch/mips64/DispatcherDefault.H"><filename>
+	  [mips64]</filename></ulink> : Defines machine-dependent
+	  extensions to class DispatcherDefault.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/arch/powerpc/DispatcherDefaultAsm.S"><filename>
+	  &lt;arch&gt;/DispatcherDefaultAsm.S
+	  [powerpc]</filename></ulink> <ulink
+	  url="&topsrc/lib/libc/scheduler/arch/mips64/DispatcherDefaultAsm.S"><filename>
+	  [mips64]</filename></ulink> : Implements the lowest-level,
+	  machine-dependent portion of the user-level scheduler.  May
+	  also contain hand-optimized versions of code paths that have
+	  expedient implementations in DispatcherDefaultExp.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/DispatcherDefaultExp.H"><filename>
+	  DispatcherDefaultExp [.H]</filename></ulink> <ulink
+	  url="&topsrc/lib/libc/scheduler/DispatcherDefaultExp.C"><filename>
+	  [.C]</filename></ulink> : Contains &quot;expedient&quot;,
+	  machine-independent implementations of low-level code paths
+	  that should ultimately be re-implemented in assembler.  The
+	  expedient code manipulates a shadow in-memory copy of the
+	  machine register set using machine-independent logical names
+	  for the various registers.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/arch/powerpc/DispatcherDefaultExp.H"><filename>
+	  &lt;arch&gt;/DispatcherDefaultExp.H
+	  [powerpc]</filename></ulink> <ulink
+	  url="&topsrc/lib/libc/scheduler/arch/mips64/DispatcherDefaultExp.H"><filename>
+	  [mips64]</filename></ulink> : Defines the structure of the
+	  shadow copy of the machine register set used by
+	  DispatcherDefaultExp, and assigns the logical names used by
+	  the expedient code to particular registers.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink url="&topsrc/lib/libc/scheduler/Thread.H"><filename>
+	  Thread [.H]</filename></ulink> <ulink
+	  url="&topsrc/lib/libc/scheduler/Thread.C"><filename>
+	  [.C]</filename></ulink> : Defines and implements the base
+	  thread object.  For the most part, DispatcherDefault
+	  manipulates the fields of thread objects directly, but
+	  methods are provided for those operations that are performed
+	  on threads without going through the dispatcher.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+
+
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/ThreadManager.H"><filename>
+	  ThreadManager.H</filename></ulink>: Defines the interface
+	  for the object that allocates storage for new threads and
+	  initia lizes it.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/ThreadManagerMinimal.H"><filename>
+	  ThreadManagerMinimal [.H]</filename></ulink> <ulink
+	  url="&topsrc/lib/libc/scheduler/ThreadManagerMinimal.C"><filename>
+	  [.C]</filename></ulink> : Default ThreadManager
+	  implementation.  Used by the kernel and by non-glibc user
+	  programs.  Glibc provides a ThreadManagerPThreads to layer a
+	  posix-threads implementation on top of K42's basic thread
+	  machinery.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/IOCPUMigrationManager.H"><filename>
+	  IOCPUMigrationManager [.H]</filename></ulink> <ulink
+	  url="&topsrc/lib/libc/scheduler/IOCPUMigrationManager.C"><filename>
+	  [.C]</filename></ulink> : Definition and implementation of a
+	  mechanism for supporting a mixture of IO-intensive and
+	  CPU-intensive threads in a single process.  The basic
+	  strategy is to use a pair of dispatchers per physical
+	  processor and to migrate threads between them.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/IOCPUMigrationManagerKern.C"><filename>
+	  IOCPUMigrationManagerKern.C</filename></ulink> : Stubbed-out
+	  IOCPUMigrationManager for use in the kernel (which doesn't
+	  need or want the IO/CPU migration stuff).
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink url="&topsrc/lib/libc/scheduler/VPSet.H"><filename>
+	  VPSet.H</filename></ulink> : Utility class for tracking sets
+	  of virtual processors.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/SchedulerStatus.H"><filename>
+	  SchedulerStatus [.H]</filename></ulink> <ulink
+	  url="&topsrc/lib/libc/scheduler/SchedulerStatus.C"><filename>
+	  [.C]</filename></ulink> : Class that exports an interface
+	  for obtaining the status of all the threads managed by a
+	  dispatcher.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/SchedulerTimer.H"><filename>
+	  SchedulerTimer [.H]</filename></ulink> <ulink
+	  url="&topsrc/lib/libc/scheduler/SchedulerTimer.C"><filename>
+	  [.C]</filename></ulink> : Definition and implementation of
+	  user-level timing services.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/TimerEvent.H"><filename>
+	  TimerEvent [.H]</filename></ulink> <ulink
+	  url="&topsrc/lib/libc/scheduler/TimerEvent.C"><filename>
+	  [.C]</filename></ulink> : Definition and implementation of
+	  base class used in requesting and handling timeouts.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/arch/powerpc/TimerRequest.S"><filename>
+	  &lt;arch&gt;/TimerRequest.S [powerpc]</filename></ulink>
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/arch/mips64/TimerRequest.S"><filename>
+	  [mips64]</filename></ulink> : Machine-dependent glue code
+	  for the TimerRequest system call.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  <ulink
+	  url="&topsrc/lib/libc/scheduler/AdmCtrlClient.H"><filename>
+	  AdmCtrlClient [.H]</filename></ulink> <ulink
+	  url="&topsrc/lib/libc/scheduler/AdmCtrlClient.C"><filename>
+	  [.C]</filename></ulink> : First attempt at an
+	  admission-control service -- not used yet.
+
+	</para>
+      </listitem>
+    </itemizedlist>
+  </section>
+  <section>
+    <title>Overview</title> 
+    <variablelist>
+      <title>
+
+	K42 has a two-level scheduling architecture.  The kernel
+	schedules processes, and the process schedules threads.
+	Critical abstractions in K42 are:
+
+      </title>
+      <varlistentry>
+	<term>
+
+	  process:
+
+	</term>
+	<listitem>
+	  <simpara>
+
+	    An entity that owns an address space and a set of privileges.
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+
+	  dispatcher:
+
+	</term>
+	<listitem>
+	  <simpara>
+
+	    An entity, belonging to a process, that is scheduled by
+	    the kernel and that in turn schedules threads.
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+
+	  resource domain:
+
+	</term>
+	<listitem>
+	  <simpara>
+
+	    A collection of rights to the use of certain resources,
+	    currently just CPU resources.
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+
+	  virtual processor (VP):
+	  
+	</term>
+	<listitem>
+	  <simpara>
+
+	    A collection of dispatchers all bound to the same physical
+	    processor and having identical views of their process's
+	    address space.  Some parts of a process address space are
+	    VP-specific.  A VP-specific region of the virtual address
+	    space can have different content when viewed from
+	    different virtual processors.
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+
+      In K42, the kernel schedules &quot;dispatchers&quot;.  A
+      dispatcher is a self-contained abstract machine having features
+      somewhat analogous to those of real machines: an array of entry
+      points, a disable-interrupts bit, a pending-interrupt bit
+      vector, and a variety of special purpose registers used to
+      convey information about interrupts or other exceptions.  A
+      process (or address space) has at least one dispatcher on each
+      of its virtual processors.  It may have more than one.
+
+    </para>
+    <para>
+
+      At its core, a dispatcher is an instance of some class derived
+      from the Dispatcher base class.  This object is shared
+      read-write between the process and the kernel.  Our prototypical
+      dispatcher implementation is encapsulated in class
+      DispatcherDefault, which is derived from class Dispatcher.  The
+      K42 kernel depends only on the base-class functionality of the
+      shared object.  Extensions to the base class are accessed only
+      at user level.
+
+    </para>
+    <para>
+      
+      A dispatcher registers &quot;entry points&quot; with the kernel.
+      An entry point is just a code address at which the dispatcher
+      expects to be entered when an event of a certain type occurs.
+      There is a separate entry point for each of a small, fixed set
+      of event types (CPU available, message arrived, page fault
+      occurred, etc.).
+
+    </para>
+
+    <variablelist>
+      <title>
+
+	The entry points are:
+
+      </title>
+      <varlistentry>
+	<term>
+
+	  RUN:	
+
+	</term>
+	<listitem>
+	  <simpara>
+
+	    The kernel launches a dispatcher at its RUN entry point
+	    when the dispatcher was not already running and when the
+	    kernel has decided to give it some time on the processor.
+	    The contents of all registers (including the stack
+	    pointer) are undefined when a dispatcher is entered at its
+	    RUN entry point.  In our DispatcherDefault implementation,
+	    the RUN entry code removes a thread from the ready queue
+	    (which is located in the DispatcherDefault extension to
+	    the Dispatcher base class), loads the thread's register
+	    values (including the stack pointer) into the registers,
+	    and runs the thread.
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+
+	  INTERRUPT:
+
+	</term>
+	<listitem>
+	  <simpara>
+
+	    A dispatcher is entered at its INTERRUPT entry point when
+	    it is already running and something has occurred that the
+	    dispatcher should notice in a timely manner.  The types of
+	    notifications that cause such interrupts are listed below.
+	    On entry, the original content of the registers that are
+	    &quot;volatile&quot; according to standard C calling
+	    conventions is stored in the user-state area of the
+	    dispatcher structure.  The original content of the
+	    non-volatile registers is still in the non-volatile
+	    registers.  A bit vector in the dispatcher structure
+	    indicates what types of interrupts need attention.
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term>
+
+	  TRAP:
+
+	</term>
+	<listitem>
+	  <simpara>
+
+	    A dispatcher is entered at its TRAP entry point when the
+	    code it's running does something that raises an exception.
+	    Breakpoint, illegal instruction, divide-by-zero, memory
+	    reference to an undefined region, etc. all cause traps.
+	    On entry, the original content of the registers that are
+	    &quot;volatile&quot; according to standard C calling
+	    conventions is stored in the trap-state area of the
+	    dispatcher structure.  The original content of the
+	    non-volatile registers is still in the non-volatile
+	    registers.  A few of the volatile registers carry
+	    information about what type of trap occurred.
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+
+	  PGFLT:
+	</term>
+	<listitem>
+	  <simpara>
+
+	    A dispatcher is entered at its PGFLT entry point when the
+	    code it's running references an address that is in a valid
+	    region of the address space but that cannot be
+	    instantiated immediately (usually because instantiating it
+	    requires I/O).  On entry, the original content of the
+	    registers that are &quot;volatile&quot; according to
+	    standard C calling conventions is stored in the user-state
+	    area of the dispatcher structure.  The original content of
+	    the non-volatile registers is still in the non-volatile
+	    registers.  The dispatcher is expected to save the state
+	    of the thread that faulted and find something else to run.
+	    The kernel assigns to the fault one of a small number of
+	    pgflt-completion-notification bits and passes the bit
+	    number to the PGFLT entry point code in one of the
+	    volatile registers.  A pgflt-completion-notification
+	    interrupt will inform the dispatcher when a previously
+	    reported page fault has been satisfied.
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+
+	  IPC CALL:
+
+	</term>
+	<listitem>
+	  <simpara>
+
+	    A dispatcher is entered at its IPC CALL entry point when
+	    some other process sends this process a
+	    protected-procedure-call (PPC).  Almost all registers are
+	    passed intact from the sender.  One register unforgeably
+	    identifies the sender.
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+
+	  IPC RETURN:
+
+	</term>
+	<listitem>
+	  <simpara>
+
+	    A dispatcher is entered at its IPC RETURN entry point when
+	    some other process sends a return for a PPC generated by
+	    this process.  Almost all registers are passed intact from
+	    the sender.  One register unforgeably identifies the
+	    sender.
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+
+	  IPC FAULT:
+
+	</term>
+	<listitem>
+	  <simpara>
+
+	    A dispatcher is entered at its IPC FAULT entry point when
+	    an outgoing IPC (either a call or a return) cannot be
+	    delivered for some reason.  The reason may be temporary
+	    (the target process is currently disabled) or it may be
+	    permanent (the target process doesn't exist).  If it's
+	    temporary, it's appropriate to retry at a later time.  A
+	    now's-a-good-time retry notification mechanism is planned
+	    but doesn't exist yet.  Almost all registers have their
+	    values as of the point of send.
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+    <variablelist>
+      <title>
+
+	The current software interrupt types are:
+
+      </title>
+      <varlistentry>
+	<term>
+
+	  preempt:
+
+	</term>
+	<listitem>
+	  <simpara>
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+
+	  timeout:
+
+	</term>
+	<listitem>
+	  <simpara>
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+
+	  asynchronous IPC arrival:
+
+	</term>
+	<listitem>
+	  <simpara>
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+
+	  interprocessor message arrival:
+
+	</term>
+	<listitem>
+	  <simpara>
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>
+
+	  page-fault completion notification:
+
+	</term>
+	<listitem>
+	  <simpara>
+
+	  </simpara>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+    <section>
+      <title>Flow Control</title>
+      
+      <para>
+
+	Flow control boils down to gracefully handling situations
+	where a new thread is needed and none are available.  New
+	threads are needed at the following points:
+
+      </para>
+      <itemizedlist spacing="compact">
+        
+	<listitem>
+	  <simpara>
+	    
+	    Incoming PPCs
+	    
+	  </simpara>
+        </listitem>
+	<listitem>
+	  <simpara>
+
+	    Incoming async IPCs
+	    
+	  </simpara>
+        </listitem>
+	<listitem>
+	  <simpara>
+
+	    Incoming enabled MP messages
+	    
+	  </simpara>
+        </listitem>
+	<listitem>
+	  <simpara>
+
+	    Certain timer events
+	    
+	  </simpara>
+        </listitem>
+	<listitem>
+	  <simpara>
+
+	    Outgoing PPC replies that are refused
+	    
+	  </simpara>
+        </listitem>
+	<listitem>
+	  <simpara>
+
+	    Client thread creation requests
+	  </simpara>
+	</listitem>
+      </itemizedlist>
+
+      <para>
+
+	New threads are not needed at other points:
+
+      </para>
+
+      <itemizedlist spacing="compact">
+	<listitem>
+	  <simpara>
+
+	    Incoming disabled MP messages
+	    
+	  </simpara>
+        </listitem>
+	<listitem>
+	  <simpara>
+	    
+	    Certain timer events
+	    
+	  </simpara>
+        </listitem>
+	<listitem>
+	  <simpara>
+	    
+	    Outgoing PPCs that are refused
+	    
+	  </simpara>
+        </listitem>
+	<listitem>
+	  <simpara>
+
+	    Page fault reflections
+	    
+	  </simpara>
+        </listitem>
+	<listitem>
+	  <simpara>
+
+	    Page fault completion notification
+	    
+	  </simpara>
+        </listitem>
+	<listitem>
+	  <simpara>
+
+	    IPC retry notification
+
+	  </simpara>
+	</listitem>
+      </itemizedlist>
+
+
+    </section>
+    <section>
+      <title>Synchronization Rules</title>
+
+      <itemizedlist>
+	<listitem>
+	  <simpara>
+
+	    Local threads are maintained in a local array, protected
+	    by the disabled flag.
+
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    
+	    All writing to a thread object are protected by some lock,
+	    currently we only write to thread on the thread's own vp,
+	    and the lock is the disabled flag.
+
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    
+	    Threads can be read from remote processors, if nothing
+	    else to find out the &quot;vp&quot; to which to direct a
+	    request to.
+
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    
+	    The scheduler is not to be called unless the calling
+	    thread is either disabled, or it is not migratable.  The
+	    exception to this rule are the interfaces which are
+	    specifically marked &quot;migration safe&quot;.
+
+	  </simpara>
+	</listitem>
+      </itemizedlist>
+    </section>
+  </section>
+</section>
+
+
+
+

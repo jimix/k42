@@ -1,0 +1,188 @@
+# -*-Makefile-*-##############################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Makerules.kitch,v 1.67 2004/08/20 17:30:43 mostrows Exp $
+# ############################################################################
+
+# Rules for compiling programs to run on kitchawan in source directory
+#
+# $Id: Makerules.kitch,v 1.67 2004/08/20 17:30:43 mostrows Exp $
+
+# the home directory seen on Kitchawan, it is now target specific
+export MKKITCHROOT:=$(MKANCHOR)/install/$(TARGET_MACHINE)/$(OPTIMIZATION)/kitchroot
+
+ifndef TOP_DIR_HACK
+include $(MKSRCTOP)/Make.paths
+endif
+
+# if on AIX, then use the gnu version of install
+ifeq ($(PLATFORM_OS),AIX)
+INSTALL=gnuinstall
+PWD=/bin/pwd
+else
+INSTALL=install
+PWD=pwd
+endif
+
+ifeq ($(PLATFORM_OS),IRIX64)
+INSTALL=ginstall
+PWD=/bin/pwd
+endif
+
+ifeq ($(PLATFORM_OS),Linux)
+INSTALL=/usr/bin/install
+PWD=pwd
+endif
+
+ifndef IN_OBJ_DIR
+-include Make.config
+endif #IN_OBJ_DIR
+
+#include only once
+ifndef MAKERULES.KITCH
+MAKERULES.KITCH=1
+
+KNEWEST=$(TOOLBIN_PRE)knewest
+INSTALL_INC=$(TOOLBIN_PRE)kinstall
+
+ifdef IN_OBJ_DIR
+# couple of things have to be defined here, because depend
+# on state from source Makefile
+ifdef KERNEL
+else
+endif
+else
+# dummy first target
+default::
+
+
+
+
+##############################################################################
+#
+# Define parallel build options.
+#
+
+# This must be done in Makefile.kitch and Makerules.kitch.
+# We try to determine if a parent has been invoked with parallel
+# build options.  If so, then we don't pass -j, -l to children --
+# MAKE is smart enough to figure out what is going on.
+
+ifneq ($(PAR_OPTIONS),1)
+ifndef LOAD_LIMIT
+export LOAD_LIMIT=16
+export PROCS=4
+endif
+
+PAR_OPTIONS:=1
+SEQUENTIAL=-j 1 SEQ=1
+
+ifneq ($(PAR),1)
+  export PAR=1
+  export PARALLEL=-j $(PROCS) -l $(LOAD_LIMIT) PAR=1
+else
+  export PARALLEL=
+endif
+
+ifeq ($(SEQ),1)
+ export SEQ=1
+ export PARALLEL=$(SEQUENTIAL)
+ export PAR=0
+endif
+endif
+
+# define all the phony rules for performance
+.PHONY : default all genhdrs install_genhdrs libobjs install_libobjs
+.PHONY : targets  install_targets rm_targets clean tst_targets
+.PHONY : install_includes
+
+KCALLER="kitch"
+ifndef TOP_DIR_HACK
+include $(MKKITCHTOP)/lib/Make.configure
+else
+include lib/Make.configure
+endif
+
+# translate standard targets to depend on config, and
+# actually do the work in the object directories
+all				\
+genhdrs				\
+install_images			\
+install_genhdrs			\
+libobjs				\
+install_libobjs			\
+targets				\
+tst_targets			\
+install_targets			\
+rm_targets		        \
+clean:: test_configure
+ifeq ($(SEQ),1)
+	@for i in $(OBJDIRS); do 					\
+	         $(ECHO) "doing cd to " $$i ;				\
+	         cd $$i && $(MAKE) $(SEQUENTIAL) $@	;		\
+	done
+else
+	@for i in $(OBJDIRS); do 					\
+	         $(ECHO) "doing cd to " $$i  ;				\
+	         cd $$i && $(MAKE) $(PARALLEL) $@ 	;		\
+	done
+endif
+
+install_targets::
+ifneq ($(findstring tools,$(shell pwd)),)
+	ifndef SEQ
+		@$(ECHO) 'cannot run install_libobjs in parallel'
+	else
+		$(TRUE)
+	endif
+else
+	$(TRUE)
+endif
+
+clean_configure:
+	$(FIND) . -type f -name "Make.config" -exec $(RM) '{}' \;
+
+INCDIR = $(MKKITCHTOP)/include
+
+.PHONY: subdirs_install_includes
+
+install_includes:: subdirs_install_includes
+
+ifdef SUBDIRS
+SUBDIRS_SRC += $(SUBDIRS)
+SUBDIRS_INSTALL_INCLUDES = $(SUBDIRS_SRC:%=%_install_includes)
+.PHONY: $(SUBDIRS_INSTALL_INCLUDES)
+$(SUBDIRS_INSTALL_INCLUDES) :
+	cd $(@:%_install_includes=%)/ && $(MAKE) install_includes
+subdirs_install_includes: $(SUBDIRS_INSTALL_INCLUDES)
+else #SUBDIRS
+
+subdirs_install_includes:
+
+endif #SUBDIRS
+
+_snapshot::
+	$(MAKE) install_includes
+	$(MAKE) install_genhdrs
+	$(MAKE) x= $(PARALLEL) y= install_libobjs
+	$(MAKE) install_targets
+
+snapshot::
+	$(MAKE) _snapshot
+
+
+# include all machine specific makefiles
+ARCH_MAKE = $(strip $(wildcard arch/$(TARGET_MACHINE)/Make.arch))
+ifneq ($(ARCH_MAKE),)
+-include $(ARCH_MAKE)
+endif
+
+-include $(MKKITCHTOP)/lib/Make.help
+endif #!IN_OBJ_DIR
+
+endif # MAKERULES.KITCH

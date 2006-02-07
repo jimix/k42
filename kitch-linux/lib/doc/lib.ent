@@ -1,0 +1,16 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: lib.ent,v 1.1 2001/09/30 21:09:25 bob Exp $
+-->
+<!entity klibOver SYSTEM "libOver.sgml">
+<!entity klibPrgG SYSTEM "libPrgG.sgml">
+<!entity % emu SYSTEM "../emu/doc/emu.ent">
+%emu;
+<!entity % pthread SYSTEM "../pthread/doc/pthread.ent">
+%pthread;

@@ -1,0 +1,221 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: cobjPrgG.sgml,v 1.5 2002/01/09 18:42:52 dilma Exp $
+-->
+<title>Object Services</title>
+
+<para>
+  The white paper <ulink url="&topsrc/doc/white-papers/ClusteredObject.html">
+    Clustered Objects in K42</ulink> provides information on Clustered Objects.
+</para>
+
+<section>
+  <title>A short discussion on how XObjects work</title>
+
+  <para>
+      An XObject in the XObject array represents the result of a
+      giveAccessByServer call.  An XHandle "names" the XObject.  An
+      Object Handle contains the XHandle and the CommId for the Server
+      it's on.
+  </para>
+
+  <para>
+      Each active XObject is associated with the clustered object
+      which made it, and with the process which "owns" it.  For now,
+      the process which owns an XObject is the one which has matched
+      rights access to the XObject.  Meta objects are "owned" by the
+      server process itself.  They are also on the server process
+      match list.
+  </para>
+
+  <para>
+      This relationship is represented by two double linked list in
+      the XObject, (see <ulink
+      url="&topsrc/lib/libc/cobj/XObjectList.H">
+      <filename>XObjectList.H</filename></ulink>)
+      one for the process, one for the object.  We use 32 bit indexes
+      here to conserve space.  The process list is called the
+      XHandleListProc, and the object list is called the
+      XHandleListObj. The lists are manipulated while holding both
+      list locks.  They are acquired in the order object, then
+      process.
+  </para>
+</section>
+
+<section>
+  <title>Freeing XObjects</title>
+  <para>
+	An XObject cannot be freed until all possible in flight
+	requests have been completed.  Thus, it is another "garbage
+	collection" object.  But it's NOT a clustered object.  Since
+	the XObject is global, it must persist until the token has
+	circulated all the processors which have representatives of
+	the object.
+  </para>
+  <para>
+	A possible mechanism for driving XObject free is to have a
+	service with records XObjects and frees them at a threshold by
+	creating a clustered object which frees them in its
+	destructor, and scheduling the clustered object for
+	destruction.  Another possibility is to support registering
+	callbacks for other token processing.  A third is to put an
+	XObject free mechanism into the base token garbage collector.
+  </para>
+  <para>
+	The XObject free mechanism also supports callbacks to free per
+	client data associated with the XObject.
+  </para>
+</section>
+
+<section>
+  <title>Object Desctruction and XObjects</title>
+
+  <para>
+    A clustered object must not be destroyed until the XObjects
+    on its exported list are removed.  The standard idiom for
+    this is:
+  </para>
+	
+  <programlisting>
+    <![CDATA[
+    {   // remove all ObjRefs to this object
+    SysStatus rc=closeExportedXObj();
+    // most likely cause is that another destroy is in progress
+    // in which case we return success
+    if(_FAILURE(rc)) return _SCLSCD(rc)==1?0:rc;
+    }
+    ]]>
+  </programlisting>
+
+  <para>
+    Note that this call also serves as a destroy lock,
+    preventing all but one destroy call from proceeding.
+    Because of error checks in the destroyUnchecked call which
+    normally finishes clustered object destroy,
+    closeExportedXObj must be done even if no XObjects can exist
+    for this object.  (We will revisit this requirement if a
+    performance problem is caused by the redundant work).
+  </para>
+
+  <para>
+    The actual management of XObjects is done by the
+    <ulink url="&topsrc/lib/libc/cobj/XHandleTrans.H">XHandleTrans</ulink>
+    class.  This class is called by Meta objects to allocate
+    XObjects, in the automatically generated functions
+    "createXHandle".  This function, in turn, is called by a
+    call to "giveAccessByServer" on an object, which is
+    typically provided via the DEFINE_ACCESS_SERVER macro
+    defined in <ulink
+		      url="&topsrc/lib/libc/cobj/BaseObj.H">BaseObj.H</ulink>.
+    
+  </para>
+
+  <para>
+    As described in <xref linkend="per-client">, a
+    programmer can maintain per-client state in the XObject.
+  </para>
+
+  <section>
+    <title>Other process destruction and server XObjects</title>
+    
+    <para>
+      Servers create Process Wrappers for clients that communicate
+      with them.  Associated with these wrappers are state and
+      XObjects associated with the clients that have made
+      connections.  When one of these clients is destroyed, the
+      servers that that client has used (and thus established
+      state on behalf of the client) need to be notified of the
+      client's destruction.  This is accomplished as follows.
+    </para>
+
+    <para>
+      When a client first contacts a server, the server performs a
+      lookup on the set of clients it is aware of and it will
+      discover it is not aware of this client.  The server creates
+      a Process Wrapper object to hold state regarding the new
+      client and gives the kernel access to the newly created
+      Process Wrapper object.  This Process Wrapper contains a
+      destruction callback the kernel will call when the client
+      process is destroyed.  The Object Handle (generated by the
+      above giveAccessByServer call) to the server's Process
+      Wrapper is stored in the clientData of the XObject the
+      kernel uses it to communicate with the server's Process
+      Wrapper representing the new client.  When the client is
+      being destroyed and the kernel is walking the list of
+      XObjects associated with the client and comes across the one
+      for the Process Wrapper, it will retrieve the Object Handle
+      from the clientData and make a call to the server's Process
+      Wrapper associated with the client under destruction.  This
+      triggers the destruction code in the Process Wrapper object.
+      The code removes the XObjects associated with this Process
+      Wrapper and then destroys the wrapper.
+    </para>
+
+  </section>
+</section>
+
+<section>	
+  <title>Synchronizing XObject Access</title>
+  <para>
+    XObjects exist in a global array.  They are created and
+    destroyed as needed.  XObjects are accessed by the ppc code
+    which implements method invocation, and by methods which
+    return facts about the XObject such as permissions.
+  </para>	
+
+  <para>
+    It would be impossibly inefficient to acquire a global lock
+    to protect these accesses.  An alternative, which we reject,
+    is to maintain a shadow of the XObject table in each virtual
+    processor.  We could then use the processor disable lock to
+    efficiently synchronize access.  But the cost of this
+    mechanism is too high for the problem it solves.
+  </para>
+
+  <para>
+    We choose instead to do non blocking synchronization of
+    accesses to XObjects.  One of the XObject fields will be
+    used as a valid marker.  All fetches will first fetch the
+    valid marker and proceed only if it is true.  Subsequent
+    fetches must be synchronized to occur only after the valid
+    value has been fetched. Valid entries will be established by
+    first setting all other values, then syncing if needed, and
+    finally setting the valid value.  Invalid entries will be
+    established by setting the valid marker invalid.  The rest
+    of the XObject will remain unchanged until a token
+    circulation guarantees that no fetches of the XObject values
+    can still be in progress.
+  </para>
+
+  <para>
+    This strategy requires that all access to the XObject be
+    stylized, and occur while on an active thread (or while
+    simulating the existence of an active thread).  This is a
+    constraint on the implementation of ppc which encourages
+    doing ppc object processing after launching the server
+    thread.
+  </para>
+</section>
+
+<!--
+Local Variables:
+sgml-parent-document:("cobj.sgml" "chapter" "title")
+sgml-omittag:t
+sgml-shorttag:t
+sgml-namecase-general:t
+sgml-general-insert-case:lower
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->

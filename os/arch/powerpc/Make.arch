@@ -1,0 +1,183 @@
+# #-*-Makefile-*-#############################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.83 2005/07/21 19:07:48 neamtiu Exp $
+# ############################################################################
+
+ifdef IN_OBJ_DIR
+# ############################################################################
+#  rules to be made in object directory
+# ############################################################################
+
+TARGETS += boot_image simos_boot_image
+
+RELOCT=0xC000000002000000
+
+ENTRY=start
+
+REAL_MODE_ASM = lolita.S locore.S
+kern_INPUTS =	kernel/libkern.INPUT
+BOOT_IMAGE_SCRIPT = $(MKSRCTOP)/os/arch/powerpc/boot_image.scp
+
+
+LKMOD = $(LINUXSRCROOT)/core.k42lib.o
+$(LKMOD): 
+
+
+
+sed_command = $(SED) -ne 's,INPUT(\([^)]*\)),\1,p'
+pwd_regexp = $(subst /,\/,$(CURDIR))
+sed_make_relative_path = $(SED) 's/$(pwd_regexp)\///g'
+kern_INPUTS_OBJS := $(shell $(sed_command) $(kern_INPUTS))
+
+# Iulian : sed_make_relative_path converts absolute paths to object files into relative paths
+# Reason is, they get expanded into the cmd line when linking the boot_image,
+# hence the cmd line might exceed 24576 chars
+# Since the cmd line is limited to 24576 on AIX, make will fail
+
+kern_OBJS += 	$$($(sed_command) $(kern_INPUTS)| $(sed_make_relative_path))	\
+		$(LIB_SRV)
+
+kern_DEPS =	$(kern_INPUTS_OBJS)	\
+		$(LIB_SRV)		\
+		$(LIB_KERN)		\
+		$(BOOT_IMAGE_SCRIPT)
+
+
+# Avoid descending to make install_targets, unless target
+# is install_targets
+ifeq ($(MAKECMDGOALS),install_targets)
+
+$(kern_INPUTS_OBJS): kernel_install_targets
+	@true
+
+servers/bootServers.o: servers_install_targets
+	@true
+
+boot/boot.o: boot_install_targets
+	@true
+
+boot/simos-boot.o: boot_install_targets
+	@true
+
+endif
+
+
+#
+# ELF
+#
+kern_OBJS2= $(kern_OBJS) $(LIB_SRV) $(LIB_LK) $(LIB_KERN)
+
+KLD_FLAGS=	-defsym kernVirtStart=$(RELOCT)	\
+		-Ttext $(RELOCT)		\
+		-T $(BOOT_IMAGE_SCRIPT)		\
+		-Bstatic			\
+		-Map $@.map
+
+FIX_SYMTAB=
+
+
+simos_elf.o: boot/simos-boot.o boot_image
+	$(TARGET_OBJCOPY) $(OC_SEC) $(OC_FLGS) $< $@
+
+
+boot_image.gz: boot_image
+	gzip -9 -c $< > $@
+
+chrp_elf.o: boot/boot.o boot_image.gz
+	$(TARGET32_OBJCOPY) --add-section=.k42_boot_image=boot_image.gz \
+	--set-section-flags=.k42_boot_image=contents,alloc,load,data  $< $@
+
+mambo_elf.o: boot/boot.o boot_image
+	$(TARGET32_OBJCOPY) --add-section=.k42_boot_image=boot_image \
+	--set-section-flags=.k42_boot_image=contents,alloc,load,data  $< $@
+
+simos_boot_image: TLD_FLAGS=-Ttext 0x10000  -static -e 0x10000 \
+		-defsym kernVirtStart=$(RELOCT)	
+
+TLD_FLAGS=-Ttext 0x700000  -static -e 0x700000  -defsym kernVirtStart=$(RELOCT)
+
+simos_boot_image:  simos_boot_elf.scp simos_elf.o
+	$(TARGET_LD) $(TLD_FLAGS) -e _boot --script=$^ -o $@
+
+chrp_boot_image::  chrp_boot_elf.scp chrp_elf.o
+	$(TARGET32_LD) $(TLD_FLAGS)  --script=$^  -o $@
+
+mambo_boot_image::  chrp_boot_elf.scp mambo_elf.o
+	$(TARGET32_LD) $(TLD_FLAGS)  --script=$^  -o $@
+
+chrpboot.tok: chrp_boot_image
+	$(DD) ibs=1b obs=64b of=$@ if=$^
+	$(TARGET32_STRIP) -g chrpboot.tok
+	cp chrpboot.tok chrpboot.mac
+	$(TOOLBIN_PRE)addnote $@
+
+mamboboot.tok: mambo_boot_image
+	$(DD) ibs=1b obs=64b of=$@ if=$^
+	$(TARGET32_STRIP) -g mamboboot.tok
+	$(TOOLBIN_PRE)addnote $@
+
+chrpboot_install: chrpboot.tok
+ifdef BOOT_INSTALL
+	$(BOOT_INSTALL)
+endif
+
+
+KLD_FLAGS +=	-e $(ENTRY)
+
+ifdef DOUBLE_LINK
+boot_prelink.o: $(kern_DEPS) $(LIB_LK)
+	$(TARGET_LD) $(KLD_FLAGS) $(kern_OBJS2) -r -o $@
+
+boot_image: boot_prelink.o servers/bootServers.o
+	$(TARGET_LD) $(KLD_FLAGS) $^ -o $@.dbg
+	$(CP) $@.dbg $@
+	$(TARGET_STRIP) $@
+	$(FIX_SYMTAB)
+
+else
+
+boot_prelink.o: $(kern_DEPS) $(LIB_LK)
+	$(TARGET_LD) $(KLD_FLAGS) $(kern_OBJS2) -r -o $@
+
+boot_image: $(kern_DEPS) $(LIB_LK) $(LKMOD) servers/bootServers.o 
+	$(TARGET_LD) $(KLD_FLAGS) $(LKMOD) $(kern_OBJS2) servers/bootServers.o -o $@.dbg
+	$(CP) $@.dbg $@
+	$(TARGET_STRIP) $@
+	$(FIX_SYMTAB)
+
+
+endif
+
+#boot_image: $(kern_DEPS) $(LIB_LK) servers/bootServers.o
+#	$(TARGET_LD) $(KLD_FLAGS) $(kern_OBJS2) servers/bootServers.o -o $@.dbg
+#	$(CP) $@.dbg $@
+#	$(TARGET_STRIP) $@
+#	$(FIX_SYMTAB)
+
+config.tcl mambo.tcl k42.tcl utils.tcl init.simos: %: %.src
+	$(INSTALL) --mode 0644 $< $@
+
+INST_IMAGE = $(MKKITCHROOT)/boot/boot_image
+
+$(MKKITCHROOT)/boot:
+	$(INSTALL) -d --mode 0775 $@
+
+$(INST_IMAGE): $(MKKITCHROOT)/boot boot_image
+	$(INSTALL) --mode 0755 boot_image $@
+
+install_targets::  kernel_assembly
+
+kernel_assembly: chrpboot_install simos_boot_image mamboboot.tok $(INST_IMAGE)
+
+images: chrpboot_install simos_boot_image mamboboot.tok $(INST_IMAGE)
+
+# ############################################################################
+#  end of object directory rules
+# ############################################################################
+endif

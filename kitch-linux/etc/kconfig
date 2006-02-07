@@ -1,0 +1,84 @@
+#! /bin/sh
+set -x
+
+pkgdir=/u/kitchawa/k42-packages
+src=${pkgdir}/src/setup-2.1.8
+
+# copy everything but the Makefile, the spec, passwd and group.
+file_list=`(cd $src; /bin/ls | sed -e '/Makefile/d;/setup.spec/d')`
+
+for file in $file_list; do
+  test \! -f $file -o $src/$file -nt $file && cp $src/$file $file
+done
+
+# Always get a new copy of passwd and group
+cp $src/passwd $src/group .
+
+users_in_groups () {
+    # exit if empty
+    test -z "$*" && exit 1
+    while [ -n "$1" ]; do
+	grp_ent=$1
+	echo "$grp_ent" | sed -e 's/^[^:]*:[^:]*:[^:]*:\(.*\)$/\1/;s/,/ /g'
+	shift
+    done
+}
+
+passwd_entries () {
+    test -z "$*" && exit 1
+    test -z "$passwd_ref" && passwd_ref=/etc/passwd
+    # pattern for passwd entries
+    pepat='^\([^:]*\):[^:]*:\([^:]*\):\([^:]*\):\([^:]*\):\([^:]*\):\([^:]*\)$'
+    # replacement to override passwd shell and home
+    perep='\1::\2:\3:\4:/:/bin/sh'
+
+    # append passwd entries
+    while [ -n "$1" ]; do
+	user=$1
+	sed -ne "/^${user}:/s,${pepat},${perep},p" $passwd_ref
+	shift
+    done
+}
+
+append_watson () {
+
+    # get the kitchawa group entry
+    add_group=`sed -ne '/^kitchawa/p' /etc/group`
+
+    # append this group entry to the local copy
+    echo $add_group >> ./group
+
+    # get the list of users from the group entry
+    userlist=`users_in_groups $add_group`
+
+    passwd_entries $userlist >> ./passwd
+}
+
+append_spec () {
+    # check if there is already a user or group of id 500
+    gr=`egrep -e '^[^:]*:[^:]*:500:' ./group`
+    if [ -n "$gr" ]; then
+	grs=`echo "$gr" | grep -e ':spec:'`
+	if [ -z "$grs" ]; then
+	    echo "a gid 500 already exists:"
+	    echo "	$gr"
+	    exit 1
+	fi
+    fi
+    echo "spec::500:" >> ./group
+
+    pw=`egrep -e '^[^:]*:[^:]*:500:' ./passwd`
+    if [ -n "$pw" ]; then
+	pws=`echo "$pw" | grep -e ':spec:'`
+	if [ -z "$pws" ]; then
+	    echo "a uid 500 already exists:"
+	    echo "	$pw"
+	    exit 1
+	fi
+    fi
+    echo "spec::500:500:Spec Benchmark User:/specbench:/bin/sh" >> ./passwd
+}
+	     
+append_watson
+append_spec
+

@@ -1,0 +1,218 @@
+LTT events consist of a type (major ID only, minor ID), time delta,
+size, and (if detail logging is on for that event) parameters. LTT
+supports custom events declared at runtime, but they are not used in
+the standard patch.
+
+In the new format, an LTT event consists of one 64-bit header word,
+followed by an event-specific data struct, optionally followed by variable
+length data.
+
+header event:
+    bits    field
+    ----    -----
+    32      time stamp
+     8      event ID
+     8      event sub ID
+    16      event size (in bytes, including header)
+
+event type      parameters
+(:sub types)
+------------    ----------
+
+start           (special event inserted at start of trace)
+                32  magic number
+                32  arch type
+                32  arch variant
+                32  system type
+                32  buffer size
+                 8  major version
+                 8  minor version
+                 8  TSC in use (flag)
+                 8  CPU ID
+                 8  flight recorder in use (flag)
+                64  event mask
+                64  details mask
+
+
+syscall_entry    8  syscall ID
+                32  address in app from which call was made
+
+
+syscall_exit    (none)
+
+
+trap_entry      16  trap number (except on S390, where this is a 64-bit field!)
+                32  address
+
+
+trap_exit       (none)
+
+
+irq_entry        8  irq number
+                 8  in kernel (flag)
+
+
+irq_exit        (none)
+
+
+schedchange     32  outgoing process
+                32  incoming process
+                32  outgoing process' state
+
+
+kernel_timer    (none)
+
+
+soft_irq
+:bottom half    64  (unused)
+:soft IRQ       64  soft IRQ number
+:tasklet action 64  function pointer
+:tasklet hi act 64  function pointer
+
+
+process
+:kthread create 32  pid
+                64  function pointer
+
+:fork           32  pid
+                64  (unused)
+
+:exit           32  (unused)
+                64  (unused)
+
+:wait           32  pid
+                64  (unused)
+
+:signal         32  signal no
+                64  pid
+
+:wakeup         32  pid
+                64  state
+
+
+file_system
+:buf wait start 32  (unused)
+                32  (unused)
+
+:buf wait end   32  (unused)
+                32  (unused)
+
+:exec           32  0
+                32  name length
+                (followed by variable data of file name string)
+
+:open           32  fd
+                32  name length
+                (followed by variable data of file name string)
+
+:close          32  fd
+                32  (unused)
+
+:read           32  fd
+                32  len
+
+:write          32  fd
+                32  len
+
+:seek           32  fd
+                32  offset
+
+:ioctl          32  fd
+                32  cmd
+
+:select         32  fd
+                32  timeout
+
+:poll           32  fd
+                32  (unused)
+
+timer
+:expired         8  (unused)
+                32  (unused)
+                32  (unused)
+
+:setitimer       8  which
+                32  interval
+                32  value (in jiffies)
+
+:settimeout      8  (unused)
+                32  (unused)
+                32  (unused)
+
+
+memory
+:page alloc     64  order
+
+:page free      64  order
+
+:swap in        64  address
+
+:swap out       64  page
+
+:pagewait start 64  (unused)
+
+:pagewait end   64  (unused)
+
+
+socket
+:call           32  call type (SOCKET/BIND/...)
+                64  arg0
+
+:create         32  retval
+                64  socket type
+
+:send           32  socket type
+                64  size
+
+:receive        32  socket type
+                64  size
+
+
+ipc
+:call           32  call type (SEMOP/SEMTIMEDOP/...)
+                64  arg0
+
+:msg create     32  retval
+                64  msgflag
+
+:sem create     32  retval
+                64  semflag
+
+:shm create     32  retval
+                64  shmflag
+
+
+network
+:packet in      32  protocol
+
+:packet out     32  protocol
+
+
+buffer_start    (special event inserted at start of new trace buffer)
+                64  time stamp of buffer
+                32  TSC (if applicable)
+                32  unique buffer ID
+
+
+buffer_end      (special event inserted at end of trace buffer)
+                64  time stamp of buffer
+                32  TSC (if applicable)
+
+
+new_event       (special event describing a new custom event type)
+                                           32   event ID
+                CUSTOM_EVENT_TYPE_STR_LEN * 8   event type description
+                CUSTOM_EVENT_DESC_STR_LEN * 8   detailed event description
+                                           32   format type
+                CUSTOM_EVENT_FORM_STR_LEN * 8   data specific to format
+
+
+custom          32  event ID
+                32  data size
+               8*n  event data
+
+
+change_mask     64  new event mask
+
+
+heartbeat       (none)

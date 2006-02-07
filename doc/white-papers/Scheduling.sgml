@@ -1,0 +1,1733 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: Scheduling.sgml,v 1.16 2004/06/14 18:28:38 rosnbrg Exp $
+-->
+  <section id="Sched.intro">
+    <title>Introduction and Motivation</title>
+
+    <para>
+      In k42 we partition the scheduler between the kernel and
+      application-level libraries.  The K42 kernel schedules entities
+      called <emphasis>dispatchers</emphasis>, and dispatchers schedule
+      threads.  A process consists of an address space and one or more
+      dispatchers.  Within an address space, all threads that should be
+      indistinguishable as far as kernel scheduling is concerned are
+      grouped under one dispatcher.
+    </para>
+
+    <para>
+      A process might use multiple dispatchers for two reasons: to attain real
+      parallelism on a multiprocessor, or to establish differing scheduling
+      characteristics (priorities or qualities-of-service) for different sets
+      of threads.
+    </para>
+
+    <para>
+      A process does not need multiple dispatchers simply to cover page-fault,
+      I/O, or system-service latencies, or to provide threads for programming
+      convenience.
+      These requirements can be met using multiple user-level threads running
+      on a single dispatcher.
+      The dispatcher abstraction allows individual threads to block for page
+      faults or system services without the dispatcher losing control of the
+      processor.
+    </para>
+
+    <para>
+      Dispatchers tie up kernel resources (pinned memory); threads do not.
+      A process that creates thousands of threads for programming convenience
+      has no more impact on the kernel than a single-threaded process.
+    </para>
+
+    <para>
+      In designing the scheduling system, we had the following objectives:
+
+      <itemizedlist>
+
+	<listitem>
+	  <para>
+	    Performance, especially for critical operations such as in-core
+	    page faults and interprocess communication (IPC), should be as
+	    good as that of operating systems in which the kernel schedules
+	    everything.
+	  </para>
+	</listitem>
+
+	<listitem>
+	  <para>
+	    While the system must constrain the physical resources granted to
+	    an application (i.e., memory and CPU cycles), it should impose no
+	    limit on virtual resources, such as threads, that use those
+	    physical resources.
+	    Application threads, for example, should consume no kernel or
+	    server resources.
+	  </para>
+	</listitem>
+
+	<listitem>
+	  <para>
+	    To support the abstractions that existing research and commercial
+	    systems have provided, the fundamental system primitives must
+	    provide for: quality-of-service guarantees, background work, and
+	    real-time work.
+	    Standard threading interfaces such as
+	    Posix Threads<citation><xref linkend="PThreads"></citation> must
+	    be supported efficiently.
+	  </para>
+	</listitem>
+
+	<listitem>
+	  <para>
+	    The scheduling system should enforce fairness across entities
+	    larger than processes.
+	    A user should not be able to gain an unfair advantage merely by
+	    creating many processes or threads.
+	  </para>
+	</listitem>
+
+	<listitem>
+	  <para>
+	    To support large-scale NUMA multiprocessors, the scheduling
+	    infrastructure must allow scheduling operations to proceed
+	    independently on different processors.
+	  </para>
+	</listitem>
+
+	<listitem>
+	  <para>
+	    To support large-scale parallel applications, the fundamental
+	    system primitives must give the application scheduler the ability
+	    to manage how work is distributed across the multiprocessor and
+	    allow for  specialized policies such as gang scheduling.
+	  </para>
+	</listitem>
+
+	<listitem>
+	  <para>
+	    Finally, applications with special needs should be able to
+	    customize scheduling to support different priority or
+	    quality-of-service models, or even to implement concurrency models
+	    other than threads (e.g.,
+	    work crews<citation><xref linkend="Roberts89a"></citation>).
+	  </para>
+	</listitem>
+
+      </itemizedlist>
+
+      Our two-level scheduling scheme satisfies these objectives.  K42 has
+      been designed from the beginning to both support and exploit this
+      scheduling model.
+    </para>
+
+    <para>
+      The rest of this paper is organized as follows.  <xref
+      linkend="Sched.kern-sched"> describes the kernel scheduler.  <xref
+      linkend="Sched.dsp-interface"> describes the interface the kernel provides
+      to dispatchers and the interactions between kernel and dispatcher.
+      <xref linkend="Sched.user-sched"> describes the default user-level thread
+      library provided with K42.  <xref linkend="Sched.resmgr"> describes the
+      Resource Manager and how it interacts with the kernel.
+    </para>
+
+<!--
+   and <xref linkend="related"> relates K42's scheduling work
+      to other multi-level scheduling research.
+-->
+
+  </section>
+
+  <section id="Sched.kern-sched">
+    <title>Kernel Scheduler</title>
+
+    <section id="Sched.resource-domains">
+      <title>Resource Domains</title>
+
+      <para>
+	Each dispatcher belongs to a resource domain, and it's the resource
+	domain, not the dispatcher, that owns the rights to a share of the
+	machine's CPU resources.
+	We expect that separate resource domains will be associated with each
+	user, so that users will receive fair shares of the machine no matter
+	how few or how many processes they create.
+      </para>
+
+      <para>
+	On a multiprocessor, a resource domain owns rights to each CPU
+	independently.
+	A resource domain might, for example, own rights to half of each of
+	four CPUs and to no part of any others.
+	Each dispatcher is bound to a particular CPU and uses the CPU
+	resources of its resource domain on its CPU.
+	The kernel may move a dispatcher from one CPU to another for
+	load-balancing purposes, but such migrations are expected to occur
+	only on a fairly coarse time scale.
+      </para>
+
+    </section>
+
+    <section id="Sched.sched-algorithms">
+      <title>Scheduling Algorithms</title>
+
+      <para>
+	The kernel scheduler runs independently on each processor.
+	At each decision point it chooses a runnable resource domain and then
+	chooses a runnable dispatcher from that domain.
+      </para>
+
+      <para>
+	The runnable dispatchers in a given domain are linked in a ring, and
+	every time the scheduler chooses to run the domain, it moves to the
+	next dispatcher in the ring.
+	The scheduler makes no attempt to give equal time to the different
+	dispatchers.
+	If some sort of fairness among dispatchers is needed, they should
+	belong to different resource domains.
+      </para>
+
+      <figure float="1">
+	<title>Processes, Resource Domains, and Dispatchers</title>
+	<mediaobject>
+	  <imageobject>
+	    <imagedata fileref="KernSched.eps"
+		       format="eps" align="center" scale="80">
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="KernSched.jpg"
+		       format="jpg" align="center">
+	  </imageobject>
+	  <textobject>
+	    <simpara>Picture not available.</simpara>
+	  </textobject>
+	</mediaobject>
+      </figure>
+
+      <para>
+	The kernel's scheduling policies apply to resource domains.  A
+	resource domain is said to be runnable if at least one of the
+	dispatchers that belong to it is runnable, and
+	<quote>running</quote> a resource domain means running one of its
+	dispatchers.  
+
+	The kernel implements a small set of fixed priority classes.  Any
+	runnable domain in a lower-numbered class will have precedence over
+	domains in higher-numbered classes.  The interpretation of these
+	classes is up to the user-level scheduler (except that the kernel
+	itself always uses the lowest-numbered/highest-priority class).
+	For reasons discussed in greater detail later, the default
+	scheduler we provide with K42 uses 5 priority classes, which it
+	uses for the following purposes: 1. system and hard-real-time
+	2. gang-scheduled 3. soft-real-time 4. general-purpose
+	5. background.  On each processor, a runnable resource domain
+	belonging to a given level will run to the exclusion of all domains
+	belonging to higher-numbered levels.
+      </para>
+
+      <para>
+	Proportional-share scheduling is used within each priority class.
+	Each resource domain is assigned a weight (independently on each CPU
+	to which it has rights), and at each priority level, whatever portion
+	of a CPU is not consumed by higher-priority domains is apportioned
+	among domains at the given level according to their weights.
+	Exponential decay is used to ensure that no domain can accumulate an
+	excessive claim on a CPU by remaining unrunnable for a long period.
+      </para>
+
+      <para>
+	In K42, many <quote>system</quote> services (e.g. file systems,
+	pseudo-terminals, etc.) are implemented as user-level processes.
+	We expect such processes to reside in the general-purpose priority
+	class but with weight sufficient to ensure that they never get
+	squeezed out by ordinary applications.
+	The only services that must run in the system priority class are those
+	that are directly involved in kernel scheduling.
+      </para>
+
+      <para>
+	A higher-level resource manager is in charge of assigning
+	dispatchers to resource domains and of setting the priority levels
+	and weights of those domains.  By limiting admission to the
+	gang-scheduled and real-time priority classes, the resource manager
+	can guarantee CPU resources to privileged processes, while allowing
+	whatever is left over to be shared fairly by a general-purpose
+	workload.  We include gang-scheduled applications in the real-time
+	discussion because we expect to schedule such applications using
+	localized algorithms based on hardware- or software-synchronized
+	clocks.  But for that to work, the application must have a very
+	high priority during the intervals it's supposed to run, see <xref
+	linkend="Sched.real-time-and-gang-scheduling-policies">
+      </para>
+
+      <para>
+	All CPU time-accounting (which drives scheduling decisions) is done at
+	the clock resolution of the machine.
+	We use the term <emphasis>quantum</emphasis> only to refer to the
+	maximum amount of time the kernel will allow a process to run before
+	making a new scheduling evaluation.
+	Along with the priority class and weight, the quantum size is a
+	parameter of a resource domain that can be set by the resource
+	manager.
+      </para>
+
+      <para>
+	See <xref linkend="Sched.qos-changes"> for an example of how resource
+	domains are used to implement a particular policy, in this case a
+	policy that tries to provide low latency for I/O-bound threads and
+	high throughput for CPU-bound threads.
+      </para>
+
+    </section>
+
+    <section id="Sched.preemption">
+      <title>Hard- and Soft-Preemption</title>
+
+      <para>
+	When the kernel scheduler determines that the currently running
+	dispatcher should be suspended in favor of some other dispatcher, it
+	initiates either a <emphasis>soft</emphasis> preemption or a
+	<emphasis>hard</emphasis> preemption.
+      </para>
+
+      <para>
+	A soft preemption is attempted if the two dispatchers are in the same
+	priority class and if the currently running dispatcher has been
+	well-behaved.
+	In a soft preemption, the running dispatcher is interrupted (via a
+	mechanism described later) but is allowed to continue long enough to
+	get itself into a clean state and to voluntarily yield the processor.
+	After a successful soft preempt the preempted process
+	<quote>owns</quote> all of its own machine state.
+	No machine state for the process is saved in the kernel.
+      </para>
+
+      <para>
+	If the priority class of the currently running dispatcher is lower
+	(higher-numbered) than that of the should-be-running dispatcher, or
+	if the current dispatcher hasn't responded in a timely manner to a
+	previous soft preempt attempt, the current dispatcher is
+	hard-preempted.  In a hard preempt, the dispatcher is immediately
+	stopped and its machine state is saved in the kernel.  Because it's
+	not in a clean state, a hard-preempted dispatcher cannot accept
+	incoming synchronous interprocess messages.
+      </para>
+
+      <para>
+	A running dispatcher is soft-preempted when its quantum expires, even
+	if its domain remains at the head of the kernel dispatch queue.
+	This policy gives other dispatchers in the same domain a chance to run
+	(albeit with no attempt at fairness), and it lets dispatchers use
+	preemption requests to drive internal time-slicing.
+      </para>
+
+    </section>
+
+    <section id="Sched.ipc">
+      <title>Synchronous Interprocess Communication</title>
+
+      <para>
+	The primary interprocess communication mechanism in K42 is the
+	<emphasis>protected procedure call</emphasis>, or
+	<emphasis>PPC</emphasis>, which at a high level is the invocation
+	of a method on an object that resides in another address space.
+	The mechanism is designed to allow efficient communication between
+	entities in different address spaces but on the same physical
+	processor.  The PPC design, rationale, and implementation are
+	described in another white paper.  Here we address the interaction
+	between the PPC mechanism and the kernel scheduler.
+      </para>
+
+      <para>
+	The kernel service that supports the protected-procedure-call
+	mechanism is a pair of system calls (one for call and one for
+	return) that transfer control from one dispatcher to another,
+	switching address spaces along the way.  Most machine register are
+	preserved from sender to receiver, so registers can be used to pass
+	arguments and return values.
+      </para>
+
+      <para>
+	A call or return is an explicit handoff of the processor from one
+	dispatcher to another, and we had to decide how to integrate such
+	handoffs into the resource-domain-based kernel scheduling
+	infrastructure.
+	We considered and rejected two <quote>pure</quote> approaches.
+      </para>
+
+      <para>
+	Under one approach, we would formally switch from the sending
+	dispatcher's resource domain to the receiver's domain on every call
+	and return.  CPU time would always be charged accurately to the
+	resource domain of the running dispatcher.  A call or return to a
+	dispatcher whose resource domain wasn't entitled to run (given its
+	priority class, weight, and past CPU usage) would result in an
+	immediate soft or hard preemption.  This approach is easy to
+	describe and it meshes cleanly with the kernel scheduler.  However,
+	involving the scheduler in every call and return would severely
+	degrade the performance of the PPC mechanism, and extreme PPC
+	efficiency is fundamental to the overall design of the K42 system.
+      </para>
+
+      <para>
+	Under the second approach we considered, services invoked via PPC
+	would always execute in the resource domains of their callers
+	rather than in their own domains.  A call would switch dispatchers
+	(and address spaces) but would not change the current resource
+	domain (to which CPU time is being charged).  A return would switch
+	back.  Servers would consume the CPU resources of their clients and
+	would be subject to their clients' resource constraints.  We would
+	provide a mechanism by which a dispatcher in a server process could
+	switch from working in the resource domain of one of its clients to
+	working in the domain of another if it internally switches the
+	client it's servicing.  This model allows for an efficient PPC
+	implementation, and it has the advantage that CPU time spent in
+	server processes is charged to the appropriate clients.  It adds
+	complexity to the kernel scheduler, because server dispatchers
+	would sometimes have to be scheduled as if they belonged to their
+	clients' resource domains, and because the kernel would need some
+	way to authenticate the requests servers make to re-enter client
+	domains.  A more important drawback to the model, however, is that
+	it leads to priority inversion problems in server processes.  A
+	server thread working on behalf of a highly constrained client
+	might manage to acquire a lock just before running out of CPU time,
+	and might thereby degrade the service provided to other clients.
+	The traditional solution to such problems would involve changing
+	all our locks to ones that support priority inheritance.  Such
+	locks are inherently more costly in both time and space than our
+	lightweight locks, and thus we would prefer not to use them unless
+	there were really needed.
+      </para>
+
+      <para>
+	We've settled on a compromise approach that, while it's not as
+	clean semantically as the approaches outlined above, allows for an
+	efficient implementation and does not induce priority inversion
+	problems in servers.  On a call, we switch dispatchers and address
+	spaces without involving the scheduler and without switching
+	resource domains.  We say that the called dispatcher is executing
+	in a resource domain <emphasis>borrowed</emphasis> from the caller.
+	If the server completes the request without incident (the common
+	case), the return transfers control back to the caller and the
+	kernel scheduler never knows that the call happened.  All the
+	service time is effectively charged to the caller's resource
+	domain.  If, however, an interrupt, page fault, or other event
+	invokes the kernel scheduler while the request is being serviced,
+	the scheduler notices that the currently-running dispatcher is
+	executing in a borrowed domain.  At that point, it charges any
+	accumulated CPU time to the borrowed domain and makes the server
+	dispatcher runnable in its own domain.  The remaining request
+	processing will be charged to the server's domain and will run with
+	the server's priority and weight, precluding any priority inversion
+	problems in the server.  When the scheduler takes a dispatcher out
+	of a borrowed domain, it also arranges things so that the eventual
+	PPC return from that dispatcher is diverted from the normal fast
+	path and instead goes through the scheduler.  If the return is not
+	diverted from the normal path, the original client would wind up
+	executing in the server's resource domain, which would constitute
+	an unacceptable transfer of resources.  The PPC return diversion is
+	accomplished without adding cycles to the normal fast return path.
+      </para>
+
+      <para>
+	The two approaches we considered and rejected are pure in a
+	theoretical sense, in that it's always known who pays for service
+	requests.
+	In the first approach, the server pays for all request servicing and
+	would have to have an alternative mechanism for charging costs back
+	to clients.
+	In the second approach, the clients pay for all requested services.
+	In the compromise model we've adopted, the accounting is not as
+	precise.
+	Most request-servicing times are charged to the clients making the
+	requests, but more-or-less random events will cause some fraction of
+	the service times to be charged to the server.
+	We believe the imprecision is acceptable, given the efficient PPC and
+	locking implementations the model allows.
+      </para>
+
+    </section>
+
+    <section id="Sched.exc-level">
+      <title>Exception Level</title>
+
+      <para>
+	Kernel scheduling, along with low-level interrupt and exception
+	handling, constitutes a layer of the kernel we call
+	<emphasis>exception level</emphasis>.
+	Exception-level code is characterized by the fact that it runs with
+	hardware interrupts disabled and accesses only pinned data structures
+	that are not read-write shared across processors.
+	Higher-level code that needs to interface with exception level
+	synchronizes with it by disabling hardware interrupts.
+      </para>
+
+    </section>
+
+    <section id="Sched.kern-proc">
+      <title>Kernel Process</title>
+
+      <para>
+	Non-exception-level kernel functionality runs in the context of a
+	kernel process that in most respects is like any other process.  It
+	has dispatchers (a primary and an idle-loop dispatcher) on each
+	physical processor, and the dispatchers use the same library code
+	as user-level processes to support multiple threads in the kernel
+	process.  Kernel-process threads (or more simply, kernel threads)
+	can access non-pinned kernel data structures and structures that
+	are read-write shared across processors.  Locks are used for
+	synchronization, just as they are in user-level processes.  Almost
+	all kernel services are implemented as services exported by the
+	kernel process via the normal protected procedure call mechanism.
+	That is, a user process accesses most kernel services by making
+	calls on the kernel process in the same way that it makes calls on
+	other server processes.  The only explicit system calls are those
+	that implement the protected procedure call mechanism itself plus a
+	few that directly affect low-level scheduling (request-timeout and
+	yield-processor, for example).
+      </para>
+
+    </section>
+
+    <section id="Sched.rsrvd-thrds">
+      <title>Reserved Threads</title>
+
+      <para>
+	When a user-level dispatcher makes an exception-level request (either
+	an explicit system call or a page fault or trap), and the request
+	cannot be handled entirely at exception level, the request is handled
+	on a kernel thread working on behalf of the user-level dispatcher.
+	Examples of such requests are messages that cannot be delivered
+	locally but must instead be delivered to other processors, and all
+	user-mode page faults.
+	A dispatcher is allowed to have at most one such request outstanding
+	at any time, and we guarantee that the kernel process has enough
+	threads so that every user-level dispatcher can have one working on
+	its behalf.
+	We use the term <emphasis>reserved thread</emphasis> to refer to a
+	thread working on behalf of a particular dispatcher.
+	Reserved threads, however, are not permanently bound to dispatchers
+	but are allocated from the normal thread pool as needed and then
+	released.
+	Threads are reserved in the sense that attempts to allocate threads
+	for other uses will fail if the allocation would leave fewer threads
+	in the pool than might be needed, and attempts to create new
+	dispatchers will fail if the kernel can't spare the requisite number
+	of threads.
+	Reserved threads are dynamically assigned, not to reduce the
+	number of threads the kernel must have, but to allow threads to be
+	serially reused with different dispatchers, resulting in better cache
+	behavior for kernel thread stacks.
+      </para>
+
+      <para>
+	A reserved thread is responsible for its dispatcher.
+	It keeps track, if necessary, of the dispatcher's machine state and
+	sees that the dispatcher is resumed at an appropriate time.
+	While handling its request, a reserved thread may block for locks or
+	may suffer page faults on pageable kernel data structures.
+	When it has completed its request, it resumes its dispatcher
+	immediately unless conditions have changed such that its dispatcher
+	isn't the one that should be running.
+	In that case it waits until its dispatcher is again chosen to run by
+	the kernel scheduler and then resumes it.
+	A hard preemption is a special-case use of the reserved thread in
+	which the thread has no particular task to perform but goes straight
+	to waiting for its dispatcher to again be chosen to run.
+      </para>
+
+      <para>
+	For kernel scheduling purposes, a dispatcher's use of its reserved
+	thread is handled much as if the dispatcher made a protected procedure
+	call to the kernel process.
+	That is, we switch to running a kernel-process dispatcher but we
+	remain in the client dispatcher's resource domain as long as the
+	reserved thread isn't interrupted or blocked.
+	In this way most interactions with the kernel process bypass the
+	kernel scheduler.
+      </para>
+
+    </section>
+
+    <section id="Sched.pgflt-handling">
+      <title>Page-Fault Handling</title>
+
+      <para>
+	When a thread running under a user-level dispatcher suffers a page
+	fault, a kernel thread is allocated to be the dispatcher's reserved
+	thread and the fault information is passed to it.
+	It traverses kernel data structures, which may themselves be pageable,
+	to classify the fault into one of three categories: a bad-address
+	fault, an in-core fault, or an out-of-core fault.
+	A bad-address fault is reflected back to the dispatcher as a trap (via
+	a mechanism described later).
+	An in-core fault is resolved (by establishing a valid mapping for the
+	faulting address) and the dispatcher is resumed where it left off.
+	For an out-of-core fault, the reserved thread initiates the I/O
+	operation needed to resolve the fault and then hands control back to
+	its dispatcher with an indication that it has suffered a page fault.
+	The dispatcher sets aside the thread it was running and runs another
+	thread if it has one.
+	Later, when the I/O operation completes, the dispatcher gets a
+	notification that the page fault has been resolved, and at that point
+	it can resume the thread that had been running.
+	The mechanisms for reflecting a fault back to the dispatcher and for
+	notifying it of a fault completion are described in more detail later.
+      </para>
+
+      <para>
+	Kernel-mode page faults are handled in another way because they occur
+	in the process (the kernel process) that is itself responsible for
+	resolving faults.
+	A kernel-mode fault can occur only when a kernel thread is running,
+	because exception-level code and critical dispatcher code in the
+	kernel never access pageable kernel memory.
+	Such a fault is handled on the thread that suffered it.
+	The fault-time machine state is pushed on the thread's stack, and the
+	thread is resumed in fault-handling code.
+	This code resolves the fault if it is an in-core page fault, and it
+	initiates the I/O operation and waits for it to complete otherwise.
+	In either case it eventually restores the machine state from its stack
+	and returns to the point at which the fault occurred.
+	We guarantee that the data structures that are traversed in handling a
+	kernel-mode page fault are pinned, so that we never take a second
+	kernel-mode fault.
+      </para>
+
+    </section>
+
+  </section>
+
+  <section id="Sched.dsp-interface">
+    <title>Kernel/Dispatcher Interface</title>
+
+    <para>
+      The interface the kernel provides to a dispatcher is in many ways
+      analogous to the interface a hardware processor provides to an operating
+      system.
+    </para>
+
+    <section id="Sched.dsp-structure">
+      <title>Dispatcher Structure</title>
+
+      <para>
+	The interface is centered around a memory region, called the
+	dispatcher structure, that is read-write shared between the dispatcher
+	and the kernel.
+	The structure contains constructs corresponding to a
+	disable-interrupts bit, a pending-interrupts bit vector, a
+	machine-state save area, and various other control and status
+	registers and message buffers.
+	Constructs corresponding to an interrupt-dispatch vector and a timer
+	control register are also provided, but these are manipulated through
+	a system-call interface rather than through the shared-memory
+	structure, so that the kernel doesn't have to poll for changes.
+      </para>
+
+      <para>
+	When a dispatcher is running, the kernel provides a pointer to the
+	corresponding dispatcher structure in a well-known location in the
+	process's virtual address space.
+	This virtual location is part of a read-only page of information
+	that the kernel shares with all processes.
+	Some of the information in the page is specific to the processor on
+	which it is accessed, so the virtual page is mapped to different
+	physical pages on different processors.
+	The kernel changes the dispatcher pointer for the current processor
+	when it chooses a new dispatcher to run.
+      </para>
+
+      <para>
+	Library code can extend the dispatcher structure with user-level
+	scheduling information that is not part of the kernel/dispatcher
+	interface.
+	Extending the dispatcher structure in this way lets us address all
+	dispatcher-specific information, both shared and private, via the
+	single dispatcher pointer the kernel provides.
+      </para>
+
+    </section>
+
+    <section id="Sched.entry-points">
+      <title>Entry Points</title>
+
+      <para>
+	When it's created, a dispatcher initializes (via system call) a
+	vector of entry points, which are code addresses at which it will
+	be entered under various conditions.  There are entry points for
+	starting to run in a clean state, for being interrupted to handle
+	an asynchronous event, for being informed that a synchronous trap
+	has occurred or that an out-of-core page fault has been suffered,
+	for accepting an incoming protected procedure call or reply, and
+	for being informed that an outgoing call or reply has failed.  Each
+	entry point has its own set of semantics concerning the state of
+	various machine registers and constructs in the dispatcher
+	structure.
+      </para>
+
+      <para>
+	As an example, consider the trap entry point.
+	This entry point is invoked when a running dispatcher executes a trap
+	instruction, divides by zero, or otherwise does something that raises
+	a synchronous hardware exception.
+	Bad-address page faults are also reported as traps.
+	When the trap code is entered, the fault-time content of a subset of
+	the machine registers will have been saved in a reserved area of the
+	dispatcher structure.
+	The particular set of registers saved in this way is
+	architecture-dependent, but it generally includes the registers that
+	are volatile according to the architecture's C-language calling
+	conventions, plus basic things like the program counter and stack
+	pointer.
+	All registers that were not saved in the dispatcher structure are
+	preserved from the time of the fault.
+	The current content of the registers that were saved is mostly
+	undefined.
+	The obvious exception is the program counter, whose current content is
+	the address of the trap entry point code itself.
+	Other exceptions are a few volatile general-purpose registers that are
+	used to convey architecture-dependent information about the particular
+	trap that occurred.
+	The content of the stack pointer register is not defined when the
+	entry point is invoked.
+	The lowest-level interrupt and fault handlers in the kernel are
+	programmed to save necessary machine state directly in the current
+	dispatcher structure, so that the state can be passed up to the
+	dispatcher, if necessary, without copying.
+      </para>
+
+      <para>
+	The semantics of the other entry points are specified in a similar
+	manner.  They range from the <emphasis>run</emphasis> entry point,
+	for which the content of nearly all the registers is undefined, to
+	the protected procedure call and return entry points, for which the
+	content of nearly all the registers is defined to be preserved from
+	the sender.
+      </para>
+
+      <para>
+	Note that the page-fault entry point does not ask the dispatcher to
+	handle a page fault (ala
+	ExoKernel<citation><xref linkend="Engler95"></citation>), but merely
+	informs the dispatcher that a fault has occurred so that it can run
+	something else.
+	A tag identifying the fault is passed to the dispatcher, and a later
+	asynchronous notification tells it when the faulting code
+	associated with the tag can be resumed.
+	Actually resolving the fault is the kernel's responsibility.
+      </para>
+
+    </section>
+
+    <section id="Sched.disabled-flag">
+      <title>Disabled Flag</title>
+
+      <para>
+	Dispatcher code has critical sections during which new entry point
+	invocations cannot be tolerated.
+	A <emphasis>disabled</emphasis> flag in the shared dispatcher
+	structure is used to protect such critical sections.
+	The kernel sets the disabled flag before invoking an entry point, and
+	until the dispatcher clears the flag the kernel will not invoke the
+	same or any other entry point.
+	What it does instead depends on the particular entry point it would
+	like to invoke.
+	For example, if it's a protected procedure call or return that the
+	kernel is attempting to deliver, the message is instead reflected back
+	to the sender so that it can be re-sent later.
+      </para>
+
+      <para>
+	A dispatcher can set the disabled flag any time it enters critical
+	code.
+	In particular, it can use the flag to avoid race conditions involving
+	any of the low-level scheduling system calls (for example, to avoid
+	yielding the processor just as a thread becomes runnable because of a
+	page-fault completion notification).
+	The kernel expects the disabled flag to be set when a dispatcher makes
+	a scheduling or IPC system call, and it clears the flag once the
+	system call has been validated.
+	This protocol leaves the dispatcher in a clean state when it makes an
+	outgoing protected procedure call, so it can be rescheduled
+	(perhaps to run another thread) if the call happens to block in the
+	called process.
+      </para>
+
+      <para>
+	A page fault while disabled is an interesting case.  The dispatcher
+	cannot be informed of such a fault even if it's an out-of-core
+	fault, so instead, the reserved kernel thread for the dispatcher
+	blocks in the kernel until the I/O completes and then resumes the
+	dispatcher without it ever knowing the fault occurred.  Disabled
+	page faults are expensive in that they block the entire dispatcher
+	while they are resolved, so dispatcher code should and does limit
+	its references to virtual storage while disabled to those
+	structures directly involved in scheduling.  It's hoped that those
+	structures will stay <quote>hot</quote> so that disabled page
+	faults are infrequent.
+      </para>
+
+      <para>
+	The trap entry point is the one exception to the rule that no entry
+	point will be invoked while the dispatcher is disabled.  If the
+	dispatcher divides by zero or references a bad address, the trap
+	has to be reported even if the dispatcher is disabled.  For that
+	reason the trap entry point uses a state save area in the
+	dispatcher structure separate from the save area used by all the
+	other entry points.  Also, the old value of the disabled flag is
+	passed to the trap entry point so that it can restore it if the
+	trap is one that can be handled (a breakpoint trap, for example).
+	Traps in the trap entry point code itself cannot be handled, and
+	results in process termination.
+      </para>
+
+      <figure>
+	<title>Dispatcher Structure</title>
+	<mediaobject>
+	  <imageobject>
+	    <imagedata fileref="Dispatcher.eps"
+		       format="eps" align="center">
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Dispatcher.jpg"
+		       format="jpg" align="center">
+	  </imageobject>
+	  <textobject>
+	    <simpara>Picture not available.</simpara>
+	  </textobject>
+	</mediaobject>
+      </figure>
+
+    </section>
+
+    <section id="Sched.software-intrs">
+      <title>Software Interrupts</title>
+
+      <para>
+	All types of asynchronous events for a dispatcher are mapped to bits
+	of a software pending-interrupts vector in the dispatcher structure.
+	There are bits that signal timeouts, soft preempts, page-fault
+	completions, asynchronous message arrivals, and
+	dispatcher-to-dispatcher interrupts.
+	All setting and clearing of software interrupt bits is done with
+	non-blocking atomic operations to avoid losing interrupts.
+      </para>
+
+      <para>
+	Many of the software interrupt bits are associated with secondary data
+	structures that carry more information about the associated
+	asynchronous events.
+	The primary interrupt bits are collected in one word so that they can
+	all be checked at once.
+	A primary bit being on is an indication that its associated secondary
+	structure needs attention.
+	For example, the primary page-fault-completion interrupt bit is
+	associated with a second bit vector that is indexed by the tags that
+	identify outstanding page faults.
+	Several such faults may complete while a dispatcher isn't running, and
+	the secondary bit vector records them all.
+	Another example is the asynchronous message mechanism.
+	The dispatcher structure contains a pair of circular buffers for
+	incoming asynchronous messages, together with their head and tail
+	pointers.
+	One buffer is for messages generated locally and the other is for
+	messages arriving from other processors.
+	The buffers are split because the synchronization requirements are
+	different for the two cases.
+	A single primary software interrupt bit is used to indicate the fact
+	that new messages have been deposited.
+      </para>
+
+      <para>
+	A dispatcher checks its software interrupt vector whenever it's
+	entered at its <emphasis>run</emphasis> entry point.
+	It processes any bits that are on while it's still disabled, but
+	often handling an interrupt involves little more than creating or
+	unblocking a thread to do the real work after enabling.
+	If the dispatcher is already running when an event arrives, it is
+	re-entered at its <emphasis>interrupt</emphasis> entry point.
+	The machine state as of the time of the interrupt is passed up much as
+	it is for the trap entry point.
+	The interrupt entry point code processes the new software
+	interrupt(s), and then has the option of resuming the thread that was
+	running or of suspending that thread and running another.
+	If it chooses to resume the current thread, it does so without ever
+	having explicitly saved the non-volatile registers.
+	It simply reloads the volatile registers from the save area in the
+	dispatcher structure before re-enabling.
+	Otherwise, it copies the state stored in the dispatcher structure onto
+	the current thread's stack, saves the non-volatile registers, also on
+	the current stack, and then chooses another thread to run.
+      </para>
+
+      <para>
+	If a dispatcher is disabled when a software interrupt arrives, the
+	kernel sets the interrupt bit but does not interrupt the dispatcher.
+	Dispatchers are expected to check their software interrupt vectors
+	each time they clear their disabled flags in order to catch interrupts
+	that arrived while they were disabled.
+      </para>
+
+      <para>
+	When a dispatcher does something to cause a kernel-process reserved
+	thread to begin working on its behalf, the dispatcher itself is marked
+	as disabled.
+	Otherwise it might be re-entered, allowing it to do something that
+	would require a second reserved thread.
+	When the reserved thread finishes its task and returns control to the
+	dispatcher, it clears the disabled flag if it was not set originally.
+	In that case the kernel must check for pending interrupts that may
+	have appeared while the dispatcher was disabled, and if there are any
+	it must resume the dispatcher with a software interrupt rather than
+	where it left off.
+      </para>
+
+      <para>
+	The setting of a software interrupt bit when the interrupt vector was
+	previously clear is the only point at which an unrunnable dispatcher
+	can become runnable.
+	The kernel notices such transitions and uses them to cause new
+	scheduling evaluations.
+	No re-evaluation is necessary if other software interrupt bits were
+	already set or if the target dispatcher was already runnable.
+	A dispatcher remains runnable as long as its disabled flag is set, it
+	has pending software interrupts, or a third dispatcher structure
+	field, the <emphasis>HasWork</emphasis> field, is non-zero.
+	The dispatcher uses the HasWork field to keep itself runnable after
+	soft-preemptions and after making an outgoing protected procedure
+	call.
+	The kernel treats the HasWork field as a zero/non-zero boolean, but
+	the field is in fact a full 64-bit word so that dispatcher code can
+	store useful information there.
+	K42's default dispatcher implementation uses the field to anchor its
+	list of runnable threads.
+      </para>
+
+      <para>
+	Note that soft-preempt requests are delivered as software interrupts
+	rather than via a special entry point.
+	This design allows a dispatcher to respond to such a request (and
+	avoid a hard preemption), even if the request arises at a time when
+	the dispatcher happens to be disabled (assuming the disabled interval
+	is short).
+      </para>
+
+    </section>
+
+    <section id="Sched.dsp-to-dsp-intrs">
+      <title>Dispatcher-to-Dispatcher Interrupts</title>
+
+      <para>
+	The kernel provides a service by which code running in one dispatcher
+	can raise a software interrupt in another dispatcher in the same
+	process.
+	The service is efficient because the kernel can set the requested bit
+	(using an atomic <emphasis>fetch-and-OR</emphasis> operation) in the
+	target dispatcher structure, even if that structure is on another
+	processor.
+	If the interrupt flags word was already non-zero, no further action is
+	necessary.
+	Otherwise the kernel must make the target dispatcher runnable, if it
+	isn't already.
+	If the dispatcher is on another processor, the kernel must send an
+	exception-level request to that processor, but it needn't wait for the
+	request to be processed.
+      </para>
+
+    </section>
+
+    <section id="Sched.timeouts">
+      <title>Timeouts</title>
+
+      <para>
+	A dispatcher can have one outstanding timeout request registered with
+	the kernel.
+	Changes to the requested timeout time are made via system call so that
+	the kernel doesn't have to repeatedly check some field of the
+	dispatcher structure.
+	When the requested time arrives, a software timer interrupt is
+	generated.
+	This interrupt may make the dispatcher runnable when it wasn't
+	previously, but whether or not it actually runs depends on the
+	priorities of other runnable dispatchers.
+      </para>
+
+    </section>
+
+  </section>
+
+  <section id="Sched.user-sched">
+    <title>User-Level Scheduler</title>
+
+    <para>
+      The K42 two-level scheduling model allows library code to provide
+      user-level thread implementations tailored to specific applications.
+      This section describes the default thread implementation provided with
+      the system.
+    </para>
+
+    <section id="Sched.thread-objs">
+      <title>Thread Objects</title>
+
+      <para>
+	Each thread is represented by a small object that contains the facts
+	needed to manage the thread.
+	Any thread other than the one currently running will have its
+	stack pointer saved in its thread object.
+	All other machine state for the thread (including the thread's program
+	counter) is stored on the thread's stack.
+	Resuming a thread requires loading its stack pointer value into the
+	stack pointer register, retrieving the program counter value from a
+	fixed offset from the stack pointer, and branching to that location.
+	Any further state restoration is the responsibility of the branched-to
+	code, and can range from none (for a newly-created thread that hasn't
+	run before) to a full machine-state restore (for a thread that was
+	suspended involuntarily because of a page fault or preemption).
+	Threads that suspend themselves voluntarily (by blocking or yielding)
+	save and restore just that part of the machine state that is
+	<quote>non-volatile</quote> according to the the C-language calling
+	conventions of the architecture.
+      </para>
+
+    </section>
+
+    <section id="Sched.curThread">
+      <title>CurrentThread</title>
+
+      <para>
+	An always-accessible location known as
+	<emphasis>CurrentThread</emphasis> is used to hold a pointer to the
+	thread object of the currently-running thread.
+	On architectures whose ABIs reserve a register that can be used for
+	this purpose (PowerPC, for example), CurrentThread is simply a
+	symbolic name for this register.
+	On other architectures, CurrentThread is bound to a well-known
+	location in the process's virtual address space.
+	Like the dispatcher pointer, this location is mapped to different
+	physical pages on different processors so that each processor can have
+	its own content.
+	This <quote>pseudo-register</quote> is supported by the kernel on
+	architectures that need it.
+      </para>
+
+      <para>
+	The ability to obtain the current thread pointer directly, without
+	going through the dispatcher pointer, is necessary because a thread
+	can migrate from one dispatcher to another.
+	Once the dispatcher pointer is loaded into a register, the register
+	value may no longer point to the current dispatcher.
+	A thread can make itself non-migratable by setting a flag in its
+	thread object (which it can reach through CurrentThread).
+	Only when it is non-migratable is it safe for a thread to access the
+	dispatcher structure.
+	Migration is discussed in more detail later.
+      </para>
+
+    </section>
+
+    <section id="Sched.thread-ids">
+      <title>Thread IDs</title>
+
+      <para>
+	Every thread is assigned a <emphasis>threadID</emphasis>.
+	This 64-bit handle identifies both the dispatcher on which the thread
+	is running and the particular thread within that dispatcher.
+	A new threadID is assigned when a thread migrates from one dispatcher
+	to another, so a remembered threadID remains valid only while the
+	thread it designates remains non-migratable.
+      </para>
+
+      <para>
+	We use threadIDs rather than thread-object pointers to refer to
+	threads for two reasons.
+      </para>
+
+      <para>
+	First, it's easy to check the validity of a threadID, so it's safe to
+	use threadIDs to refer to threads in other processes.
+	For example, in an outgoing protected procedure call, we include the
+	threadID of the thread making the call.
+	We expect the callee to return the threadID to us in its reply so that
+	we can match the reply with the thread waiting for it.
+	We validate the threadID provided by the callee before using it, a
+	precaution that wouldn't be so easy if we were passing around thread
+	pointers instead of threadIDs.
+      </para>
+
+      <para>
+	Second, it's possible to tell from a threadID alone whether or not the
+	designated thread resides on the current dispatcher, and therefore
+	whether or not it's possible to perform a scheduling operation
+	locally.
+	A prime example is the <emphasis>unblock</emphasis> operation, which
+	takes a threadID as its parameter.
+	A quick check of the threadID tells us whether we can complete the
+	operation locally or instead must ship it to the target thread's
+	dispatcher.
+	In the latter case, we know where to send the operation just by
+	looking at the threadID, avoiding the expensive cross-processor cache
+	miss that accessing the thread object itself would most likely
+	involve.
+      </para>
+
+    </section>
+
+    <section id="Sched.thread-creation">
+      <title>Thread Creation</title>
+
+      <para>
+	New threads are created either by explicit request or implicitly as a
+	result of incoming protected procedure calls.
+	The parameters to a thread creation request are a pointer to a
+	function the thread is to execute and a one-word argument to be passed
+	to that function.
+	The thread library handles the request by allocating a thread object
+	from a per-dispatcher free-list (assuming the list isn't empty),
+	initializing a few words of the associated thread stack to cause the
+	thread to execute the requested function when it runs, and appending
+	the thread to the dispatcher's ready queue.
+	Creating a thread to handle an incoming PPC is even less work, because
+	the thread is made to run immediately and most of its register state
+	comes directly from the caller.
+      </para>
+
+      <para>
+	When threads terminate, their thread objects are pushed back on the
+	per-dispatcher free-list of threads available for reuse.
+	The free-list is managed as a stack so that recently-terminated
+	threads are reused before their thread objects and stacks are flushed
+	from the cache.
+      </para>
+
+      <para>
+	Creating a new thread (assuming the free-list isn't empty) is cheaper
+	than unblocking an existing one, because there's less machine state
+	involved.
+	For this reason we tend to avoid using long-running threads that block
+	waiting for timers or asynchronous notifications, and instead create
+	new threads to handle such events.
+      </para>
+
+      <para>
+	When the free-list is empty and a new thread is needed, we allocate
+	space for a thread object and stack together.
+	The thread object is located at the base of the stack so that the
+	object doesn't wind up in a virtual page that is otherwise unused.
+	In an application, stacks can be ridiculously large, given the 64-bit
+	virtual address space.
+	Kernel-process thread stacks are pinned, so they should be as small
+	as possible.
+	The new thread object is initialized and a threadID is assigned.
+	At this point the new thread can be used as if it had been allocated
+	from the free-list.
+      </para>
+
+    </section>
+
+    <section id="Sched.block-unblock">
+      <title>Block/Unblock Semantics</title>
+
+      <para>
+	Two principal operations provided by the K42 thread implementation
+	are <emphasis>block</emphasis> and <emphasis>unblock</emphasis>.  A
+	thread calls block to make itself unrunnable.  It must first store
+	its own threadID in some data structure so that other code can
+	later unblock it.  The thread must be non-migratable before
+	blocking, to ensure its threadID is well-defined.  As described
+	above, unblock takes a threadID as parameter and makes the
+	designated thread runnable again, either directly or by forwarding
+	the request to the thread's dispatcher.  Matching block and unblock
+	calls are allowed to occur in either order, so the blocker's
+	store-threadID-then-block sequence does not have to be atomic.
+      </para>
+
+    </section>
+
+    <section id="Sched.thread-migration">
+      <title>Thread Migration</title>
+
+      <para>
+	Threads are migrated from one dispatcher to another for two reasons --
+	for balancing a workload across processors and for changing the
+	quality of service provided to particular threads.
+      </para>
+
+      <section id="Sched.load-balancing">
+	<title>Load Balancing</title>
+
+	<para>
+	  When a workload consists of a number of independent tasks whose
+	  execution times are not known a priori, it can happen that several
+	  long-running threads wind up on one dispatcher while dispatchers on
+	  other processors sit idle.
+	  Our default threading library solves this problem by moving threads
+	  from busy to idle dispatchers.
+	  The time scale for migration decisions is fairly large, because even
+	  though it's mechanically easy to move a thread on a shared-memory
+	  multiprocessor, the cost in terms of cross-processor cache misses
+	  can be large.
+	</para>
+
+      </section>
+      <section id="Sched.qos-changes">
+	<title>Quality-of-Service Changes</title>
+
+	<para>
+	  The threads running on a given dispatcher are not visible to the
+	  kernel and are therefore all of equal importance as far as kernel
+	  scheduling is concerned.
+	  The only way to change the kernel-level scheduling characteristics
+	  of a thread is to move the thread to a dispatcher whose resource
+	  domain has the desired characteristics.
+	  Migrating threads between dispatchers on the same processor is much
+	  less expensive than moving them across processors, so applications
+	  can use this technique for even relatively fine-grained priority
+	  changes.
+	</para>
+
+	<para>
+	  The K42 default threading library uses migration to give precedence
+	  to I/O-bound threads over CPU-bound threads, both within a process
+	  and across the processes belonging to a particular user.
+	  By default, every user is assigned two general-purpose resource
+	  domains, and every process the user creates will have one dispatcher
+	  in each domain (on each processor the process uses).
+	  The two domains have the same priority class and weight, but they
+	  are used in such a way as to maintain a higher precedence for the
+	  I/O-bound domain under the kernel's proportional-share scheduling
+	  algorithm.
+	  Specifically, threads that run for a long time without blocking are
+	  migrated to the dispatcher in the CPU-bound domain, while threads
+	  that block frequently are moved to the I/O-bound dispatcher.
+	  By under-utilizing its share of the processor, the I/O-bound domain
+	  can provide low-latency response for its threads when the I/O
+	  operations on which those threads are blocked complete.
+	</para>
+
+      </section>
+    </section>
+
+    <section id="Sched.mp-msgs">
+      <title>Intra-process Communication</title>
+
+      <para>
+	If an application is spread across several dispatchers, either for
+	parallelism or because parts of the application run with different
+	service requirements, the different parts may need to communicate
+	among themselves.
+	Shared memory is the natural transport mechanism for such
+	communication, and the dispatcher-to-dispatcher interrupt mechanism
+	provides the asynchronous notification capability needed for a
+	complete intra-process communication facility.
+	Several software interrupt bits are reserved for this purpose.
+      </para>
+
+      <para>
+	The K42 library provides an efficient facility for sending messages to
+	other dispatchers.
+	Messages are aligned on cache-line boundaries to minimize
+	cross-processor cache traffic, and interrupts are sent only when a
+	message queue makes the transition from empty to non-empty.
+	Separate queues are used for requests that can be handled at
+	dispatcher level (with the dispatcher disabled flag set) and requests
+	that must be handled on threads.
+	Both one-way and round-trip communication models are provided.
+      </para>
+
+    </section>
+
+    <section id="Sched.timers">
+      <title>Timers</title>
+
+      <para>
+	The K42 library maintains an ordered set of outstanding timeout
+	requests.  Only the <quote>nearest</quote> timeout is registered
+	with the kernel.  All other requests are managed in the
+	application's own address space.  A fixed set of kernel resources
+	can thereby support an arbitrary number of application timers.
+	Moreover, many timeouts may be requested and later cancelled
+	without ever involving the kernel yielding a significant
+	performance advantage.  Cancelling a timeout is almost as common an
+	operation as requesting one, because most timeouts are established
+	in order to catch exceptional events that don't happen.
+      </para>
+
+    </section>
+
+    <section id="Sched.pthrds">
+      <title>PThreads</title>
+
+      <para>
+	The K42 system provides a
+	Posix Threads<citation><xref linkend="PThreads"></citation>
+	implementation layered on top of the default K42 threading library.
+	The pthreads implementation extends (via subclassing) the basic thread
+	object with pthreads-specific information.
+	Since the pthreads extension and the basic thread object are
+	co-located, the CurrentThread pointer can be used to reach either,
+	resulting in a very efficient implementation of
+	<emphasis>pthread_self()</emphasis>.
+      </para>
+
+    </section>
+
+  </section>
+
+  <section id="Sched.resmgr">
+    <title>Resource Manager</title>
+
+    <para>
+      All policies for scheduling resources are handled in user space by
+      the Resource Manager.  The Resource Manager is responsible for
+      tracking what resources (CPU, IO, memory, etc.), have been allocated,
+      how they are being used and based on that information for making
+      decisions about how to allocate future requests for resources or
+      re-allocate current requests.  As part of this, the Resource Manager
+      is responsible for providing real-time QOS guarantees and providing
+      gang scheduling.  The Resource Manager is currently under active
+      development.  In this section we will describe the mechanisms
+      currently in place and discuss the on-going work.
+    </para>
+
+    <section id="Sched.kernel-interaction">
+       <title>Kernel Interaction</title>
+
+      <para>
+	All requests to create new dispatchers are made to the Resource
+	Manager.  Based on which user made the request, the particulars of
+	the request, and information the Resource Manager has tracked about
+	past and current resource allocation, it makes a decision about
+	which domain to place the dispatcher in.  On a multiprocessor
+	machine this involves considering what processor to place the
+	dispatcher on as well.  The kernel keeps track of dispatchers in
+	CPU Containers.  CPU Containers export an interface that allows the
+	Resource Manager to create, attach, and detach dispatchers.
+      </para>
+  
+      <para>
+	When the Resource Manager created the CPU Container it associated
+	with it a series on properties including its priority and weight.
+	As stated in the introduction of this section, the kernel does not
+	implement any resource policies, only mechanism.  It is the
+	Resource Manager's responsibility to create CPU Containers with the
+	correct properties to implement the policies it provides to the
+	users.  Creating, attaching, and detaching dispatchers from CPU
+	Containers is the extent to which the Resource manager tells the
+	kernel how to schedule the different dispatchers.
+      </para>
+
+      <para>
+	The other direction of interaction is the kernel providing
+	information to the Resource Manager about the resource utilization.
+	Currently this is at a early state in our system, and more study
+	needs to occur to understand the best information to provide to the
+	Resource Manager, as well as the best mechanism for providing that
+	information.
+      </para>
+  
+      <para>
+	Currently the kernel makes available the instantaneous number of
+	runnable dispatchers, the time weighted average of how much time
+	the different CPU Containers have used, and the time weighted
+	average of the amount of idleness on the processor.  This is
+	currently provided via a cache aligned shared memory region.  This
+	information provides enough data to implement the simple policies
+	we have used to date in K42.  As work progresses in the area we
+	expect to considerable expand both the type of data the kernel
+	provides and the interface for providing it.
+      </para>
+    </section>
+
+
+    <section id="Sched.resource-manager-tracking">
+       <title>Resource Manager Tracking</title>
+
+      <para>
+	In addition to obtaining information from the kernel about resource
+	utilization, it is the responsibility of the Resource Manager to
+	track and record the decisions it has made.  In addition to this it
+	also needs to track the user and processes in the system and what
+	resources they have been given and where they have been schedule.
+	In this section we describe the information tracked by the Resource
+	Manager to be used in combination with the resource utilization
+	information provided by the kernel to make scheduling decisions.
+      </para>
+
+      <para>
+	As described, a domain is a container holding all work that should
+	be treated with the same characteristics from the kernel.  The CPU
+	Container interface is what the Resource Manager uses to
+	communicate with the kernel about which work belongs together.  The
+	Resource Manager represents a Domain as a collection of CPU
+	Containers across the different processors in which it has placed
+	work.  It associates with this Domain the priority, weight, and
+	other parameters associated with creating CPU Containers.
+      </para>
+
+      <para>
+	The Resource Manager is responsible of tracking the different users
+	in the system.  For each user, it tracks what Domain(s) it has
+	processes in, on which processors it is running on, the number of
+	dispatchers it has created on each processor, a primary (normally
+	original) processor, and other information.  In addition to
+	tracking user IDs, the Resource Manager tracks all Process IDs in
+	the system.  For a given process it caches the userid it belongs
+	to, and virtual to physical processor mapping, a dispatcher grid
+	indicating what virtual processor/resource domain pair this process
+	has created a dispatcher in, and other information.
+      </para>
+
+      <para>
+	For each processor the resource managers track how many Domains
+	have at least one dispatcher on that processor.  It uses the
+	processor info structure also to cache the resource allocation made
+	available from the kernel, and update the information proactively
+	to avoid the potential of simultaneously scheduling multiple new
+	dispatchers on the same apparently low utilized resource.
+      </para>
+
+      <para>
+	All this information may gathered because the Resource Manager is
+	on the call path of creating a dispatcher.  The Resource Manager
+	stores the information associated with the call and in turn then
+	calls the kernel to get the dispatcher created.  Similarly the
+	Resource Manager uses K42's object destruction mechanisms in order
+	to ensure that it properly removes the above information once a
+	process or user goes away.  The Resource Manager registers itself
+	for the process termination callback that occurs whenever the
+	object representing the process goes away, which itself is
+	triggered by the destruction of the kernel's object representing
+	the process.
+      </para>
+    </section>
+
+    <section id="Sched.policies">
+       <title>Policies</title>
+
+      <para>
+	As described above, the kernel provides proportional-share
+	scheduling between the different domains within a given priority
+	band on a processor.  It is the Resource Manager's responsibility
+	to extend this mechanism to provide a policy across processors and
+	to use these mechanisms to provide real-time and gang-scheduled
+	policies.  The mechanisms described above have been completed in
+	K42.  Only simplistic policies have been implemented thus far.
+	Work is actively continuing to examine how to scalable extend the
+	proportional-share model across a multiprocessor.  Also while we
+	have designed the real-time and gang-scheduling policies more
+	implementation is needed to make them complete.  In the rest of
+	this section we describe the current policies that have been
+	implemented, and in the continuing work section <xref
+	linkend="Sched.continuing-work"> we describe planned policies and
+	directions.
+      </para>
+
+      <para>
+	As mentioned in the preceding sections, K42 resource management
+	infrastructure is designed so that two users with equal importance
+	will share the machine equally independent of the number of
+	processes or threads they create.  This is accomplished by placing
+	all processes associated with a given user into a single domain
+	(actually a pair I/O and CPU).  These domains are what the Resource
+	Manager maps to CPU Containers.  The kernel provides
+	proportional-share scheduling between the different CPU Containers.
+	Therefore the two users will obtain equal (according the their
+	assigned weight) portions of the machine.  This is implemented in
+	K42 and has used to run some of the benchmarks such as SPEC SDET.
+      </para>
+
+      <para>
+	Currently K42's Resource Manager has only a simple notion of load
+	across processors.  It first balances the number of Domains it has
+	assigned to processors and then chooses additional processors based
+	on the amount of idleness.  Load balancing is also currently overly
+	simple.  The Resource Manager daemon thread that runs once a second
+	to update the cache of resource allocation information provided
+	from the kernel looks to see if there is a greater than two load
+	imbalance in the number of instantaneously runnable dispatchers on
+	a given processor.  If so then it uses the above algorithm to
+	determine another suitable processor and moves an entire virtual
+	processor's work to that other physical processor.  To date these
+	policies have been sufficient to run benchmarks but need
+	considerable work to perform adequately under normal time-sharing
+	workloads.
+      </para>
+    </section>
+
+    <section id="Sched.real-time-and-gang-scheduling-policies">
+       <title>Real-Time and Gang-Scheduling Policies</title>
+
+      <para>
+	As described above the kernel does not implement any scheduling
+	policies including real-time and gang-scheduling.  Instead it will
+	be the Resource Manager's responsibility to create the appropriate
+	CPU Containers so that when the kernel schedules the CPU Containers
+	that all the policies are correctly implemented.  The plan is to
+	place gang-scheduled tasks in priority band 2 and real-time tasks
+	in priority band 3.  Note, this does not mean that gang-scheduled
+	jobs are a higher priority the real-time ones.
+      </para>
+
+      <para>
+	There will be an admission controller that will accept new
+	real-time or gang-scheduled tasks into the system.  It will track
+	the amount of time (in terms of percentage per processor) that has
+	already been admitted, plus the amount that is reserved for normal
+	time-sharing tasks.  It will only admit new jobs into the system if
+	there is enough available time and time slots on the processor(s)
+	it will place those tasks.
+      </para>
+
+      <para>
+	K42 will allow fine-grained gang-scheduling.  As an example, a
+	gang-scheduled task may get five milliseconds out of every ten.
+	When admitted to the system the Resource Manager decide in which
+	part of every ten milliseconds the task will run.  The Resource
+	Manager will start a daemon on each processor that task will run
+	on.  This daemon will unblock the gang-scheduled task at the
+	beginning of when it is supposed to run, for example two
+	milliseconds into every ten millisecond interval, and then block
+	the task at seven milliseconds.  Because the gang-scheduled task
+	was in priority band two it will be guaranteed to run regardless of
+	what other work is ready in the system.  The Resource Manager
+	assume hardware synchronized clocks across the complex (if not
+	software ones can be implemented with fine-enough granularity).
+	Thus, the is not global coordination needed.  On each processor the
+	Resource Manager daemon will unblock the gang-scheduled task at the
+	appropriate time and the gang-scheduled tasks on all the processor
+	will run concurrently with no global coordination.  This is the
+	reason why gang-scheduled tasks are given a higher priority - not
+	because they are more important than real-time tasks, but rather
+	that they must run concurrently across all the processors when
+	their counterpart tasks are started.
+      </para>
+
+      <para>
+	This implementation of gang scheduling has the potential of
+	preventing real-time tasks from meeting their deadlines.  For
+	example, continuing form the above, if a real-time task needed to
+	run for one hundred microseconds every two milliseconds there would
+	be a problem.  While there is enough overall time in the system to
+	allow this, the real-time task would not preempt the above
+	gang-scheduled task and thus it would miss its deadline.  It is
+	therefore the Admission Controller's responsibility in coordination
+	with the Resource Manager to ensure that when new tasks enter the
+	system a runnable schedule is achievable.  To solve the problem of
+	the above examples, the Admission Controller could request the
+	Resource Manager to schedule the gang-scheduled task one every two
+	milliseconds.
+      </para>
+
+      <para>
+	The current plans for the real-time interface is for a task to
+	request for a given amount of time every so often.  For example a
+	task may specify it want the CPU for five of every sixteen
+	milliseconds.  This will be examined by the Admission Controller in
+	conjunction with data stored by the Resource Manager, and the task
+	will be admitted time permitting.  Some mechanism is in place for
+	the real-time and gang-scheduling implementations, but these both
+	constitute on-going work in the system.
+      </para>
+    </section>
+
+    <section id="Sched.continuing-work">
+       <title>Continuing Work</title>
+
+      <para>
+	Much of the Resource Management in K42 has been focused on
+	developing the mechanisms needed to implement the higher level
+	policies.  There is still considerable work left to be done.  This
+	includes an adequate lad-balancing policy, a multiple processor
+	proportional-share scheduling algorithm, an implementation of the
+	real-time and gang-scheduling policies described above and an
+	adequate to balance load with in a given domain.
+      </para>
+
+    </section>
+
+  </section>
+
+<!--
+  <section id="Sched.discussion">
+    <title>Discussion</title>
+
+    <para>
+      This section is still a work in progress.
+    </para>
+
+  </section>
+
+  <section id="Sched.related">
+    <title>Related Work</title>
+
+    <para>
+      This section is still a work in progress.
+    </para>
+
+    <para>
+      Anderson et al.<citation><xref linkend="Anderson91"></citation> in
+      their work on scheduler activations and
+      Marsh et al.<citation><xref linkend="Marsh91"></citation> in their work
+      on the Psyche operating system introduced the notion of multi-level
+      scheduling.
+      Since that time, multi-level scheduling has become a standard part of
+      most commercial operating systems.
+    </para>
+
+    <para>
+      With both the scheduler activations work and the Psyche work, a
+      user-level library multiplexes application threads on top of a
+      scheduling entity provided by the kernel.
+      The kernel notifies the application library when an application thread
+      performs a blocking system call, giving the library the opportunity to
+      schedule other user-level work.
+    </para>
+
+    <para>
+      The main differences between scheduler activations and Psyche stem from
+      the characteristics of the hardware architectures for which they were
+      designed.
+      Scheduler activations was designed for UMA multiprocessors, and focused
+      on providing concurrency with little concern for locality.
+      Psyche was designed for a NUMA multiprocessor.
+      In this regard K42 resembles Psyche.
+      For example, we share with Psyche the use of processor-specific data
+      structures, the ability to <emphasis>interrupt</emphasis> a virtual
+      processor so that it can schedule its local threads, and the notion of a
+      <emphasis>soft preemption</emphasis> in which a user-level scheduler
+      is given a chance to clean up and yield the physical processor
+      voluntarily.
+      On the other hand, K42 shares with scheduler activations the ability to
+      reflect blocking page faults up to the user-level scheduler.
+    </para>
+
+    <para>
+      Some multi-level scheduling work has tried to retrofit a two-level
+      scheduler into an existing operating system.
+      Since K42 does not have this constraint, there are several major
+      differences between K42 and previous work.
+      One difference is that K42 works very hard to always have the full state
+      of an application's threads in the application's own address space.
+      Our page fault path delivers this state back to the application, and
+      most blocking services of the operating system are structured so that
+      threads block in the application's address space instead of in the
+      kernel or system services.
+      <footnote>
+	<para>
+	  The only time a thread's state is not available in the application's
+	  address space is when a server is blocked on a page fault or lock
+	  while handling a request on behalf of that thread.
+	</para>
+      </footnote>
+      By not having the thread state in the kernel, the application is free to
+      use more threads without consuming precious system resources to keep
+      track of blocked application threads.
+      It also makes all of the state visible to, for example, garbage
+      collectors, which we believe will allow faster progress in the presence
+      of page faults and blocking requests.
+    </para>
+
+    <para>
+      Saving thread state in the application space is typically cheaper than
+      doing so in the operating system.
+      For example, the saving of registers is exposed to the compiler when we
+      block I/O requests in the application, reducing the number of registers
+      that need to be saved.
+      For a page fault, reflecting the state back up to the application when
+      the fault first occurs allows us to maintain the non-volatile state in
+      the processor registers until the application scheduler can save them
+      into the application-level thread descriptor.
+      With Psyche and scheduler activations, the state is first saved in the
+      kernel, then later saved in the application level when the blocking
+      operation completes.
+      (Theoretically the second saving of registers could be avoided if the
+      application had no other work to do.)
+    </para>
+
+    <para>
+      On a page fault or blocked I/O request, the system notifies the
+      <emphasis>application</emphasis> of the resource change, and not the
+      thread that is impacted (e.g., the application is notified of the
+      address of the page that has become mapped, or the socket that has data
+      available for reading).
+      This means that the only constraints the system places on the
+      application are on the number of resources the application as a whole
+      can use (e.g., the number of sockets that it can open) not the number of
+      threads that can be blocked on sockets.
+      Moreover, in the case where multiple application threads have faulted on
+      the same page or are blocked on the same socket, it is only necessary to
+      communicate with the application once.
+    </para>
+
+    <para>
+      Like K42, the Exokernel operating
+      system<citation><xref linkend="Engler95"></citation>
+      <citation><xref linkend="Kaashoek97"></citation> is not constrained by
+      having to modify an existing system.
+      Exokernel proposed but never implemented a user-level thread library.
+      Moreover, the Exokernel work was purely for uniprocessor systems.
+      However, in many ways the actual implementation of K42 is much closer to
+      Exokernel than it is to other multi-level scheduling work, and could
+      almost be viewed as an extension of that work.
+      Exokernel does deliver the full state of faults to the application
+      library.
+      Exokernel also does all blocking at the application level.
+      In fact, the library OS concept they pursue moves all operating system
+      functionality into the application level.
+      K42's approach could be thought of as a more conservative version of
+      this work.
+    </para>
+
+    <para>
+      K42 differs from other multi-level scheduler work, and Exokernel, in
+      the domain abstraction we provide to applications.
+      This combines quality of service scheduling with background, real-time,
+      and gang-scheduled work.
+      The previous work all used either simple priority or round robin
+      scheduling in the kernel.
+      This provides another degree of application-level customizability,
+      making it possible for the user-level scheduler to manage work with very
+      different requirements in the same application.
+    </para>
+
+    <para>
+      From a multiprocessor perspective, K42 borrows heavily from the Tornado
+      operating system, developed at the University of
+      Toronto <citation><xref linkend="Gamsa99"></citation>.
+      It too does all scheduling locally on each processor.
+      It also uses a PPC facility for communicating with servers.
+    </para>
+  </section>
+
+-->
+
+<!--
+Local Variables:
+sgml-validate-command: "nsgmls -s %s %s"
+sgml-indent-data: t
+sgml-insert-missing-element-comment: t
+End:
+-->
+<!--  LocalWords:  reviewer's
+ -->
+<!--
+Comments from Andrew Baumann:
+* IPC/PPC isn't covered, except to say that it's the subject of another
+  (apparently non-existent?) white paper. This is the biggest gap.
+* In 2.8, or elsewhere, it's probably worthwile explicitly making the point
+  that the same dispatcher code runs in the kernel process.
+* The disabled flag is in the wrong place.
+* The diagram of the dispatcher layout implies that the process annex is part
+  of the same structure, it's probably worth separating these to avoid
+  confusion.
+* It might also be a good idea to introduce the term "process annex".
+  Question: does a process with multiple dispatchers have multiple process
+  annexes? Shouldn't they be called dispatcher annexes?
+* In 4.1 the description of how a thread's state is stacked is very brief
+  compared to the detail in the talk. It might be worth covering what happens
+  to turn a pagefault entry into a self-restoring frame on that thread's
+  stack.
+-->

@@ -1,0 +1,18 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: servers.ent,v 1.2 2004/10/13 22:11:48 apw Exp $
+-->
+<!entity serversOver SYSTEM "serversOver.sgml">
+<!entity serversPrgG SYSTEM "serversPrgG.sgml">
+<!entity % kfs SYSTEM "../kfs/doc/kfs.ent">
+%kfs;
+<!entity % nfs SYSTEM "../nfs/doc/nfs.ent">
+%nfs;
+<!entity % pty SYSTEM "../pty/doc/pty.ent">
+%pty;

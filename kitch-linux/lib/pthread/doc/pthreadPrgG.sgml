@@ -1,0 +1,165 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: pthreadPrgG.sgml,v 1.1 2001/09/30 21:09:26 bob Exp $
+-->
+<title>pthread directory</title>
+<section>
+  <title>Files</title>
+  <para>
+    <ulink url="&topsrc/lib/pthread/MigrationManager.H">
+      <filename> MigrationManager.H </filename> </ulink>: This class
+      is responsible for doing load balancing of pthreads between virtual
+      processors.  A migration thread is run on each VP, and is started by
+      a call to MigrationManager::CreateMigrationThread().  The migration
+      thread runs in a loop, waking up periodically to see if load
+      balancing needs to be done.  If the migration thread finds that the
+      ready queue on its VP is empty, then it starts querying the other VPs
+      to see if they have threads that can be stolen.  If so, the thread is
+      migrated from the remote VP to the current VP.
+  </para>
+
+  <para>
+    <ulink url="&topsrc/lib/pthread/ThreadManagerPthread.H">
+      <filename> ThreadManagerPthread.H </filename> </ulink>
+    <ulink url="&topsrc/lib/pthread/ThreadManagerPthread.C">
+      <filename> [.C] </filename> </ulink> Thread structures and stacks are
+      allocated from a central pool of memory.  This class is meant to be
+      used by the linuxthreads library in glibc.  A few capabilities are
+      exported to linuxthreads:
+
+    <itemizedlist spacing="compact">
+      <listitem>
+	<simpara>
+	  Thread Creation: The <function> CreateThread() </function> method
+	  allows new threads to be started.
+	</simpara>
+      </listitem>
+
+      <listitem>
+	<simpara>
+	  pthread_t Management: An array of thread handles is maintained.
+	  This is used for two purposes: 1) To convert the pthread_t
+	  identifiers into Thread pointers and 2) To allow thread
+	  descriptors to be locked.
+	</simpara>
+      </listitem>
+
+      <listitem>
+	<simpara>
+	  Thread Identification: The <function> ThreadSelf() </function>
+	  function allows a running thread to locate its own Thread
+	  descriptor.
+	</simpara>
+      </listitem>
+    </itemizedlist>
+  </para>
+
+  <para>
+    <ulink url="&topsrc/lib/pthread/ThreadPthread.H">
+      <filename> ThreadPthread.H </filename> </ulink>
+    <ulink url="&topsrc/lib/pthread/ThreadPthread.C">
+      <filename> [.C] </filename> </ulink> This is a type of
+    <ulink url="&topsrc/lib/libc/scheduler/Tthread.H">
+      Thread </ulink> which includes extra fields for pthreads.  In
+      particular, it has an embedded pthread_descr_struct structure, which
+      is used by the C portion of linuxthreads to manage the pthread state.
+  </para>
+
+  <para>
+    <ulink url="&topsrc/lib/pthread/threads.h">
+      <filename> threads.h </filename> </ulink>
+    <ulink url="&topsrc/lib/pthread/threads.C">
+      <filename> [.C] </filename> </ulink> This is the C interface exported
+      to linuxthreads.  Many C to C++ stubs are here, as well as
+      definitions of data structures shared between the C and C++ code.
+      This code is quite kludgey, and it should go away once libemu is
+      integrated with glibc.
+  </para>
+
+</section>
+
+<section>
+  <title>Locking Protocol</title>
+  <para>
+    There are four locks used in pthreads currently:
+    <itemizedlist spacing="compact">
+      <listitem>
+	<simpara>
+	  Thread allocation: A compare-and-swap is used to ensure that
+	  chunks of memory are allocated atomically from the shared pool of
+	  memory.
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Thread ID allocation: A compare-and-swap is used here as well to
+	  allocate slots from the array of thread handles.
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Thread creation: In the glibc portion of pthreads a lock is used
+	  to protect insertion and deletion of the thread into a linked
+	  list of all of the threads.  Hopefully this linked list can be
+	  eradicated in the future.
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  Thread locking: The thread handle contains a lock per thread,
+	  which must be held whenever a thread is accessing another
+	  thread's thread descriptor, or when trying to exit the current
+	  thread.  The lock serves two purposes: 1) To make sure that only
+	  one thread is accessing another threads descriptor at once, and
+	  2) To make sure that the thread descriptor stays valid while
+	  another thread is accessing it.
+	</simpara>
+      </listitem>
+    </itemizedlist>
+  </para>
+</section>
+
+<section>
+  <title>Dicsussion</title>
+  <para>
+    This pthreads implementation started out as a port of the LinuxThreads
+    portion of glibc.  As such, it still shares a bunch of code with
+    LinuxThreads, as well as inheriting some of its data structures.  Also,
+    there is an (inelegant) partitioning of the functionality between the C
+    code in glibc, and the C++ code in the libemu library.
+  </para>
+
+  <para>
+    LinuxThreads used a server model for thread management.  All creation,
+    destruction, and join requests were relayed to a manager thread, which
+    serialized all the requests (avoiding the need for locking) and
+    maintained data structures tracking the threads.  Since this model did
+    not fit in well with our design for K42, we eliminated this manager
+    thread, as well as all of the data structures associated with it.
+  </para>
+
+  <para>
+    The basic thread management functions, such as pthread_create(),
+    pthread_join(), and pthread_exit() have been re-written to work with
+    K42.  Auxilliary functions, such as the locking code and thread
+    specific data code has not been changed at all.  In order for this to
+    happen, portions of the data structures used by the unchanged code are
+    still maintained as normal C data structures, rather than moving all
+    state into the ThreadPthread class.  Because of this, a copy of the
+    (abbreviated) pthread_descr_struct is embedded in the ThreadPthread
+    class.
+  </para>
+</section>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./pthread.sgml" "chapter" "title")
+End:
+-->

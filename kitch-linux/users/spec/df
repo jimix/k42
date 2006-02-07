@@ -1,0 +1,5 @@
+#!/bin/sh
+# echo is a builtin 
+
+exec echo "Filesystem           1k-blocks      Used Available Use% Mounted on
+/dev/sda3              8488696   5093324   3395372  61% /"

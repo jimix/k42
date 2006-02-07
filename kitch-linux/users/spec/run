@@ -1,0 +1,61 @@
+#!/bin/sh
+##################################################################
+##								##
+##		     Copyright (c) 1991 AT&T			##
+##	               All Rights Reserved 			##
+##								##
+##   This is AT&T's unpublished software for SPEC authorized    ##
+##                  and licensed users only                     ##
+##								##
+##################################################################
+
+########################################################
+## Usage: $0 Max-clone run-sequence                   ##
+########################################################
+
+SCRIPT_LIMIT=$1			## maximum number of clones ##
+TMP=/usr/tmp
+GBFILE=$TMP/sdesar		## point to sadc file ##
+ERFILE=$TMP/err.out		## Error file
+THRPUT=$TMP/thrp.out
+TMPDIR=/tmp			## location of gcc temp files
+export SCRIPT_LIMIT GBFILE ERFILE THRPUT
+cd $HOME			## goto working area ##
+shift
+
+Var1=%H		# need to separate so sccs doesn't convert it on us
+Var2=%M
+Var3=${Var1}${Var2}
+
+while [ $# != 0 ]
+do
+	## check script number ##
+	if [ $1 -gt $SCRIPT_LIMIT ]; then
+		echo "\nrun for $1 script(s) is being ignored"
+		echo "the number of scripts must be \c"
+		echo "less than or equal to the number of clones\n"
+	elif [ $1 -eq 0 ]; then
+		echo "\nrun for $1 scripts is being ignored\n"
+	else
+	        echo "\n-------------------- $1 Scripts ---------------------\n"\
+		>> $THRPUT
+		## remove sadc file ##
+		[ -f $GBFILE ] && mv $GBFILE ${GBFILE}_LAST
+
+		## create unique name for run ##
+		UNIQ_NAME=`date +${Var3}.%a`
+		echo "run$1.$UNIQ_NAME" >> $THRPUT
+
+		## call driver ##
+		echo "starting $1 terminal(s)" 
+		env - HOME=$HOME PATH=$PATH TMPDIR=$TMPDIR LANG=$LANG PS1="$PS1" TERM=$TERM WCC="$WCC" WCFLAGS="$WCFLAGS" SDETTRACE="$SDETTRACE"\
+		      driver <<-!
+				set outpfx=output/$1run
+				file scripts/term=$1 suffix=1
+				execute
+			!
+	fi
+
+	## goto next run ##
+	shift
+done

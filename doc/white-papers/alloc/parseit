@@ -1,0 +1,188 @@
+#!/bin/sh	-- perl
+eval 'exec perl -S $0 ${1+"$@"}'
+    if 0;
+#!/usr/agora/bin/perl5
+
+$basetime=0; 
+$maxtime=0; 
+$maxthreads=0;	
+%results={};
+$filePrefix="";
+
+sub processResults {
+  local($name, $time, $procs, $threads) = @_;
+
+  if ($threads > $procs) { 
+    $results{$threads} = $time/($threads/$procs);
+  } else {
+    $results{$threads} = $time;
+  }
+
+#  print "name = $name time = $time procs = $procs threads = $threads\n";
+
+}
+
+sub numerically { $a <=> $b }
+
+sub printResults {
+  local($name, $filename, $max) = @_;
+  local($time) = 0;
+  local($threads) = 0;
+  local($i) = 0;
+
+  if (-e $filename) {
+    die "Error: $filename already Exists."
+  }
+
+  open (RESULTS, ">$filename") || die "Can't open $filename";
+  
+  print RESULTS "$name\n\n";
+
+  foreach $threads (sort numerically (keys %results)) {
+    $time = $results{$threads};
+    if ($time eq "max") { 
+      $time = $testMaxTime + 1;
+    }
+    for ($i = 0; $i < $threads; $i++) {
+      print RESULTS "$time\n";
+    }
+    print RESULTS "\n";
+#   print "time = $time  threads = $threads\n";
+  }
+
+  close RESULTS;
+#  print "**** TEST END testMaxTime = $max ****\n";
+}
+
+sub processTest {
+  local($testCount) = @_;
+  local($testname) = "";
+  local($name) = "";
+  local($time) = 0;
+  local($doneflg) = 0;
+  local($line) = 0;
+  local($procs) = 0;
+  local($threads) = 0;
+  local($oprocs) = 0;
+  local($othreads) = 0;
+  local($testMaxTime) = 0;
+  local($filename) = "";
+  local($type)="";
+  local($curtype)="";
+
+    do {
+      $_ = <STDIN>;
+      if (! $_ ) {
+	# if eof exit loop and this will exclude a partial final
+        # result.
+	$doneflg = 1;
+      }
+      chop;
+      if ($_ ne "") {
+        $line++;
+	if ($line > 3) {
+	  die "uknown test format line=$line\n";
+	}
+        if ($line == 1) {
+	  if (/^Running: \.\/(\S+) (\d+) (\d+).*/) {
+	    $name=$1;
+	    $oprocs = $procs; $othreads = $threads;
+	    $procs = $2; $threads = $3;
+	    if ($threads > $procs) {
+	       $type = "scalability";
+	    } else {
+	       $type = "base";
+            }   
+	    if ($testname eq "") {   # first line of test set testname and type
+	      $testname = $name;
+	      $curtype  = $type;
+	      $filename = "";
+            } elsif (! ($curtype eq $type)) { # type has changed process 
+              # process Current results and setup for gathering results for
+              # new type
+	      &printResults($testname, $filename, $testMaxTime);
+	      %results = {};
+	      # add the previous results as initial case for the new type
+	      &processResults($testname, $time, $oprocs, $othreads);
+	      $curtype = $type;
+	      $filename = "";
+	      $testMaxTime = 0;
+            }
+
+	    if ($name ne $testname) {
+	      die "1:name=$name testname=$testname oops did not",
+	          " get right name\n";
+	    }
+
+            if ($filename eq "") {
+	      if (/^Running: \.\/(.+)$/) {
+		$filename = $1;
+	      } else {
+		die "unable to determine filename from: $_\n";
+	      }
+	      $filename = join('_', split(' ', $filename));
+	      $filename = "$filePrefix" . 
+		"$filename" . ".tnum_$testCount.data";
+	    }
+	  } elsif (/^-+$/) {
+	    $doneflg = 1;
+          } else {
+	    die "unknown line type 1: $_\n"
+	  }
+	}
+
+	if ($line == 2) {
+	  $time = 0;
+	  if (/^.*\.\/(\S+)(:| ).* (\d+) procs, (\d+) threads, (\d+) .*$/) {
+	    $name = $1;
+#	    $procs = $2; $threads = $3;
+	    if ($name ne $testname) {
+	      die "2:name=$name testname=$testname oops did not",
+		" get right name\n";
+	    }
+	  } elsif (/.*Process exceeded.*/) {
+	    $time = "max";
+	  } else {
+	    die "unknown line type 2: $_\n";
+	  }
+	}
+
+        if ($line == 3) {
+	  if ($time ne "max") {
+	    if (/^Time elapsed = (\S+)$/) {
+	      $time = $1;
+	      if ($time > $testMaxTime) {
+		$testMaxTime = $time;
+	      }
+	    }else {
+	      die "unknown line type 3: $_\n"
+	    }
+	  }
+	  &processResults($testname, $time, $procs, $threads);
+	  $line = 0;
+	  $name = "";
+	}
+
+      }
+    } until ($doneflg == 1);
+    &printResults($testname, $filename, $testMaxTime);
+    %results = {};
+}
+
+if ($#ARGV == 0) {
+  $filePrefix = $ARGV[0];
+}
+
+while (<STDIN>)
+{
+   $basetime=0; $maxtime=0; $maxthreads=0; 
+
+   chop;
+
+   if (/^Base time is (.*); Max time is (.*); maxthreads (.*)$/) {
+     $testCount++; $basetime=$1; $maxtime=$2; $maxthreads=$3;
+#     print "**** START TEST ****\n";
+     &processTest($testCount);
+   }
+
+}

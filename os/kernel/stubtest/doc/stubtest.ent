@@ -1,0 +1,12 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: stubtest.ent,v 1.1 2001/07/31 17:34:49 mike Exp $
+-->
+<!entity stubtestOver SYSTEM "stubtestOver.sgml">
+<!entity stubtestPrgG SYSTEM "stubtestPrgG.sgml">

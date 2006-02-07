@@ -1,0 +1,12 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: misc.ent,v 1.1 2001/07/25 13:28:24 mike Exp $
+-->
+<!entity miscOver SYSTEM "miscOver.sgml">
+<!entity miscPrgG SYSTEM "miscPrgG.sgml">

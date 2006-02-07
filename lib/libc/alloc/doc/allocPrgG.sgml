@@ -1,0 +1,472 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: allocPrgG.sgml,v 1.5 2001/09/23 18:23:57 bob Exp $
+-->
+<title>Allocation library</title>
+<section>
+  <title>Allocation library</title>
+  <para>
+    For an discussion of how to use the allocation facilities, read
+    <ulink url="&topsrc/doc/ALLOC.html">this</ulink>.
+  </para>
+</section>
+<section>
+  <title>Overview</title>
+  <section>
+    <title>Block Allocator</title>
+    <para>
+      The Block allocator is based on a set of per-processor free lists
+      (the <classname>LMalloc </classname>class), one per basic block size
+      supported (currently powers-of-2 up to 2048 bytes), with lists of
+      lists (the<classname> GMalloc </classname>class) cached in another
+      per-block-size class for a number of these per-processor free lists
+      (generally one per NUMA node), and per-page lists of free blocks of a
+      fixed size (the <classname>MemDesc</classname> class).  The pages are
+      allocated and freed in large contiguous chunks (the<classname>
+      AllocRegion </classname>class for virtual memory, a slightly
+      different approach based on the use of individual pages and the
+      framedesc descriptors for kernel pinned memory).  These chunks are
+      managed by the<classname> AllocRegionManager</classname> class
+      (<classname>AllocRegionManagerKern</classname> for kernel pinned
+      memory) , with one of these classes per NUMA node (and one per
+      processor for handling LocalStrict memory).  Allocation requests
+      proceed up the chain: first they try the per-processor free lists,
+      and then the NUMA node list of lists, then the<classname>
+      MemDescs</classname> through the <classname>AllocRegion
+      </classname>class, try the<classname> MemDescs</classname> for the
+      requested size in each AllocRegion in turn.  If these all fail,
+      MemDescs for pages that are not currently assigned a block size are
+      searched for among the AllocRegions.  If no free MemDescs are found,
+      the last resort is to allocate a new AllocRegion (i.e., ask the
+      PageAllocator for a new large contiguous chunk of memory).
+      Currently, if this fails, it is considered fatal.
+    </para>
+
+    <para>
+      Note that the memory leak detection facility is currently not
+      operational, although it should only require minor adjustments to
+      make it functional again.
+    </para>
+
+    <para>
+      The front-ends to the allocator that the user mostly sees are the
+      global functions and classes that define basic allocator and free
+      calls and classes that can be used in templates for parameterizing
+      the type of memory allocated, and the macros used to declare
+      class-specific new and delete operators for classes.  These can be
+      found in <ulink
+      url="&topsrc/lib/libc/alloc/alloc.H"><filename>alloc.H</filename>
+      </ulink> and in <ulink
+      url="&topsrc/lib/libc/alloc/AllocPool.H"><filename>AllocPool.H
+      </filename></ulink>.
+    </para>
+
+    <para>
+      These front-ends call the AllocPool allocation methods by referencing
+      a global array, allocLocal, that is allocated in per-processor
+      memory.  The array contains two objects, one for paged memory one for
+      pinned memory.  These two instances exist in both kernel and user
+      space to provide library compatibility.  In user-space the pinned
+      version still holds virtual memory, and allocates more memory from a
+      next level instance that is shared with the paged instances.  In the
+      kernel, the two types have independent instances (and for some
+      classes independent class types) all the way through.
+
+    </para>
+    <para>
+
+      The AllocPool methods map the size parameters given by the
+      front-ends along with the type of memory requested, to the
+      appropriate per-processor free-list for the given size and
+      memory type.  They then call the LMalloc allocation or free
+      methods to remove or add a single block to the free list for its
+      size and type.  These calls are architecture specific to allow
+      for maximum optimization for these common calls (in the common
+      case, all the previous layers of calls would be compiled away
+      through compile-time inlining and subsequent optimizations).  If
+      the free list is empty (or full in the case of free), these
+      archictecture-specific functions call more general methods in
+      the LMalloc class.  Requests are then passed up, as necessary,
+      through the NUMA layer (GMalloc), and the page and region layer
+      (PMalloc and AllocRegion).
+
+    </para>
+    <para>
+
+      Because of the need to support both paged and pinned memory in a
+      common allocator, some of the functionality is split between
+      this directory and the kernel <ulink
+      url="&topsrc/os/kernel/mem/README.html">Memory
+      Manager</ulink>, with the support for true pinned memory found
+      in the Memory Manager.  The split between the two types is
+      through the class <ulink
+      url="&topsrc/lib/libc/alloc/VAllocServices.H"><filename>
+      VAllocServices</filename></ulink>, and through the class <ulink
+      url="&topsrc/lib/libc/alloc/PMalloc.H"><filename> PMalloc.H
+      </filename></ulink>, both of which provide pure virtual methods
+      which the two implementations implement to provide their
+      separate implementations.
+
+    </para>
+    <para>
+
+      (See the <ulink
+      url="&topsrc/doc/ALLOC.html"> Allocation
+      Library Guide</ulink> for an overview of the different classes
+      of allocatable memory and how to use the interfaces to the
+      library.)
+
+    </para>
+  </section>
+  <section>
+    <title>Page Allocator</title>
+    <para>
+
+      The Page Allocator uses a version of Stephenson's fast first
+      fit.  It maintains a binary tree with each node representing a
+      free block.  The top of any subtree represents the largest free
+      block of the subtree.  The two branches are called low and high,
+      with the low subtree containing blocks with starting addresses
+      lower than the top block of the subtree, and the high subtree
+      containing blocks with higher addresses.  This makes it possible
+      to find blocks of a given size or free blocks with a given
+      address relatively quickly.
+
+    </para>
+    <para>
+
+      There is one instance of the class per numa node, with a
+      front-end that tries to allocate from the local numa node, and
+      always frees a block back to its home node.
+
+    </para>
+  </section>
+</section>
+<section>
+  <title>Locking Protocol</title>
+  <section>
+    <title>Block Allocator</title>
+    <para>
+
+      The per-processor free lists (LMalloc) uses lock-free operations
+      if possible on the given platform, otherwise use bit-based
+      locking embeded in the pointer to the lists.  The
+      <classname>GMalloc </classname>class uses a bit-based lock on
+      the free list; everything else is read-only.  The
+      AllocRegionManager uses a somewhat involved locking hierarchy
+      that is private to the classes directly involved: namely the
+      AllocRegionManager, AllocRegionDesc, and MemDesc.  It's best to
+      consult the header <ulink
+      url="&topsrc/lib/libc/alloc/AllocRegionManager.H">
+      <filename>AllocRegionManager.H</filename></ulink> for the
+      details.
+
+    </para>
+  </section>
+  <section>
+    <title>Page Allocator</title>
+    <para>
+
+      A single lock is used to protect the entire tree and all
+      operations on the page allocator.
+
+    </para>
+  </section>
+</section>
+<section>
+  <title>Files</title>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/alloc/alloc.H"><filename>
+	alloc.H</filename></ulink>: This header file defines global
+	inlined functions for allocating a free memory of different
+	types.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/lib/libc/alloc/AllocCell.H"><filename>AllocCell.H
+	</filename></ulink><ulink
+	url="&topsrc/lib/libc/alloc/AllocCell.C"><filename>[.C]</filename></ulink>:
+	This defines the structure for a quick-list cell structure,
+	with an embedded count of the elements in the list, a pointer
+	to the next element in the list, and a 2-bit lock.  These
+	structures are contained in the free blocks themselves.  Two
+	of them are use when maintaining lists-of-lists of blocks;
+	Hence the minimum block size must be at least as large as two
+	of these structures.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/lib/libc/alloc/AllocPool.H"><filename>AllocPool.H
+	</filename></ulink><ulink
+	url="&topsrc/lib/libc/alloc/AllocPool.C"><filename>[.C]</filename>
+	</ulink>: Contains the definition for the main structure that
+	holds the per-processor memory allocation information, as well
+	as the basic interface for allocating memory (most clients,
+	however, use front-end routines or macros to access this
+	class, provided here and in <ulink
+	url="&topsrc/lib/libc/alloc/alloc.H"><filename>alloc.H</filename>
+	</ulink>). It also defines the pool structure (which may go
+	away) for supporting both paged and pinned allocations.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/lib/libc/alloc/LeakProof.H"><filename>LeakProof.H
+	</filename></ulink><ulink
+	url="&topsrc/lib/libc/alloc/LeakProof.C"><filename>[.C]</filename></ulink>:
+	This class maintains information for tracking the source of
+	allocation requests to help detect memory leaks.  It is not
+	currently functional.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/lib/libc/alloc/DataChunk.H"><filename>DataChunk.H
+	</filename></ulink><ulink
+	url="&topsrc/lib/libc/alloc/DataChunk.C"><filename>[.C]</filename></ulink>:
+	Simple class that defines an abstraction of a block of memory
+	with next and nextList fields for managing lists of lists of
+	chunks.  Free chunks are managed as DataChunks in some classes
+	that don't need the locking or counting features of the
+	AllocCell class.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/alloc/LMalloc.H"><filename>LMalloc.H
+	</filename></ulink><ulink
+	url="&topsrc/lib/libc/alloc/LMalloc.C"><filename>[.C]</filename>
+	</ulink>: This class maintains per-processor free lists of
+	blocks of a given size.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/alloc/GMalloc.H"><filename>GMalloc.H
+	</filename></ulink><ulink
+	url="&topsrc/lib/libc/alloc/Gmalloc.C"><filename>[.C]</filename>
+	</ulink>: This class handles requests for new lists of free
+	blocks for a fixed size block and list length from the LMalloc
+	layer.  In generally serves a number of lower layers,
+	generally all belonging to a common NUMA node.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/alloc/PMalloc.H"><filename>PMalloc.H
+	</filename></ulink><ulink
+	url="&topsrc/lib/libc/alloc/PMalloc.C"><filename>[.C]</filename>
+	</ulink>: This class currently has little functionality beyond
+	being a go-between to pass requests from the
+	<classname>GMalloc </classname>class to the
+	<classname>AllocRegionManager </classname>class.  However, it
+	does have a pure virtual base class, and a implementation for
+	paged memory (actually, it handles both PAGED and PINNED for
+	the user-level, but only PAGED for the kernel).  The PINNED
+	kernel version is in the kernel Memory Manager directory in
+	<ulink
+	url="&topsrc/os/kernel/mem/PMallocKern.H"><filename>
+	PMallocKern.H</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/PMallocKern.C"><filename>
+	[.C]</filename></ulink> and calls the AllocRegionManagerKern
+	(<ulink
+	url="&topsrc/os/kernel/mem/AllocRegionManagerKern.H"><filename>
+	AllocRegionManagerKern.H</filename></ulink>
+	<ulink
+	url="&topsrc/os/kernel/mem/AllocRegionManagerKern.C">
+	<filename>[.C]</filename></ulink>) class.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/lib/libc/alloc/AllocRegionManager.H">
+	<filename>AllocRegionManager.H </filename></ulink><ulink
+	url="&topsrc/lib/libc/alloc/AllocRegionManager.C">
+	<filename>[.C]</filename> </ulink>: This is the main interface
+	to the AllocRegions holding the MemDescs for the allocator.
+	It keeps track of the AllocRegions and handles allocations of
+	new blocks from the MemDescs and frees back to the MemDescs,
+	as well as free MemDesc management.  The relationship between
+	AllocRegionManagers and processors is currently one per
+	numa-node, although this can be easily changed.  The pinned
+	kernel implementation can be found in <ulink
+	url="&topsrc/os/kernel/mem/AllocRegionManagerKern.H">
+	<filename>AllocRegionManagerKern.H</filename></ulink>
+	<ulink url="&topsrc/os/kernel/mem/AllocRegionManagerKern.C">
+	<filename>[.C]</filename></ulink> It uses the global
+	FrameDescs in the FrameArray to keep track of individual pages
+	that have been allocated for the allocator.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/lib/libc/alloc/MemDesc.H"><filename>MemDesc.H</filename>
+	</ulink><ulink
+	url="&topsrc/lib/libc/alloc/MemDesc.C"><filename>[.C]</filename>
+	</ulink>: MemDescs contains information about a single page
+	memory and the blocks allocated from it.  The pinned kernel
+	implementation can be found in
+	<ulink url="&topsrc/os/kernel/mem/MemDescKern.H">
+	<filename>MemDescKern.H</filename> </ulink><ulink
+	url="&topsrc/os/kernel/mem/MemDescKern.C">
+	<filename>[.C]</filename></ulink> It uses the global
+	FrameDescs in the FrameArray to actually store the
+	information, rather than allocated a separate object for this
+	purpose
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/lib/libc/alloc/VAllocServices.H"><filename>VAllocServices.H
+	</filename></ulink><ulink
+	url="&topsrc/lib/libc/alloc/VAllocServices.C"><filename>
+	[.C]</filename></ulink>: This is a catch-all class for all of
+	the general internal services of the allocator that are
+	dependent on the memory being pinned or paged.  It provides a
+	pure virtual base class, with an implementation in this
+	directory to handle paged memory (and the pseudo-pinned memory
+	of user space), and an implemenation in the kernel Memory
+	Manager directory in <ulink
+	url="&topsrc/os/kernel/mem/VAllocServicesKern.H">
+	<filename>
+	VAllocServicesKern.H</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/VAllocServicesKern.C">
+	<filename>
+	[.C]</filename></ulink> for the kernel pinned version.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/alloc/AllocStats.H"><filename>
+	AllocStats.H</filename></ulink><ulink
+	url="&topsrc/lib/libc/alloc/AllocStats.C"><filename>[.C]</filename></ulink>: This
+	is a shared class that collects stats about allocations and
+	frees for the different levels and allocation types.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/lib/libc/alloc/MemoryMgrPrimitive.H"><filename>
+	MemoryMgrPrimitive.H</filename></ulink><ulink
+	url="&topsrc/lib/libc/alloc/MemoryMgrPrimitive.C">
+	<filename>[.C]</filename></ulink>: This class provides a
+	primitive allocator for allocating memory during program
+	startup when the general allocator is not available.  It only
+	handles allocations, not frees.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/alloc/PageAllocator.H"><filename>
+	PageAllocator.H</filename></ulink>: This is the abstract base
+	class for page allocators, providing the ability to allocate
+	arbitrary chunks of pages (with given alignement and offset
+	constraints).  It is used by the regular allocator to acquire
+	large chunks of free memory, as well as other components that
+	need large chunks of free space.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/lib/libc/alloc/PageAllocatorDefault.H"><filename>
+	PageAllocatorDefault.H</filename></ulink><ulink
+	url="&topsrc/lib/libc/alloc/PageAllocatorDefault.C">
+	<filename>[.C]</filename></ulink>: This is the base
+	implementation of the page allocator that all implementations
+	use.  It uses a tree-based data structure to keep track of
+	free blocks, with the meta-data kept separate from the free
+	blocks.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/lib/libc/alloc/PageAllocatorUser.H"><filename>
+	PageAllocatorUser.H</filename></ulink><ulink
+	url="&topsrc/lib/libc/alloc/PageAllocatorUser.C">
+	<filename>[.C]</filename></ulink>: This is the user-space
+	virtual-memory-based page allocator used by the other
+	user-space components.  It inherits from the Default allocator
+	and instantiates one rep per numa node.  Memory is logically
+	partitioned based on some of the address bits, so that each
+	rep owns a fraction of the address space.  The partitioning
+	currently uses the vp number divided by the
+	KernelInfo::ProcsPerNumaNode value to determine which numa
+	node a request comes from, with a reverse mapping to identify,
+	based on the address of a block, which rep a chunk of memory
+	belongs to.  The class handles initialization (including the
+	initialization of the more general purpose allocator through
+	the allocPool::init function) as well as choosing which rep to
+	send an allocation to depending on allocation parameters, and
+	locating the correct rep to free memory to.
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+  <para>
+
+    Misc support files:
+
+  </para>
+
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/alloc/alloctst.C"><filename>
+	Alloctst.C</filename></ulink>: A simple test driver program.
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+</section>

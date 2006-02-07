@@ -1,0 +1,38 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: libc.ent,v 1.12 2003/03/21 15:12:15 bob Exp $
+-->
+<!entity libcOver SYSTEM "libcOver.sgml">
+<!entity libcPrgG SYSTEM "libcPrgG.sgml">
+
+<!-- this needs to be before the inclusion of fslib -->
+<!entity fslibFigPath "../fslib/doc">
+
+<!entity % sync SYSTEM "../sync/doc/sync.ent">
+%sync;
+<!entity % libTrace SYSTEM "../trace/doc/trace.ent">
+%libTrace;
+<!entity % io SYSTEM "../io/doc/io.ent">
+%io;
+<!entity % usr SYSTEM "../usr/doc/usr.ent">
+%usr;
+<!entity % alloc SYSTEM "../alloc/doc/alloc.ent">
+%alloc;
+<!entity % cobj SYSTEM "../cobj/doc/cobj.ent">
+%cobj;
+<!entity % fslib SYSTEM "../fslib/doc/fslib.ent">
+%fslib;
+<!entity % misc SYSTEM "../misc/doc/misc.ent">
+%misc;
+<!entity % scheduler SYSTEM "../scheduler/doc/scheduler.ent">
+%scheduler;
+<!entity % stdlib SYSTEM "../stdlib/doc/stdlib.ent">
+%stdlib;
+<!entity % sys SYSTEM "../sys/doc/sys.ent">
+%sys;

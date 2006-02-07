@@ -1,0 +1,19 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: testsOver.sgml,v 1.1 2001/09/30 21:09:28 bob Exp $
+-->
+<title>tests overview goes here</title>
+<para>tests overview text goes here</para>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./tests.sgml" "chapter" "title")
+End:
+-->

@@ -1,0 +1,135 @@
+#!/bin/sh
+##################################################################
+##								##
+##		     Copyright (c) 1991 AT&T			##
+##	               All Rights Reserved 			##
+##								##
+##   This is AT&T's unpublished software for SPEC authorized    ##
+##                  and licensed users only                     ##
+##								##
+##################################################################
+## copy clone files in master location to each clone directory ##
+N=$1		# maximum number of clones
+shift
+M=$#		# number of clone directories
+Err_flag=0
+umask 000
+
+# Make the files in the masterclone directory 777 so when they
+# are cpio'd to each clone's own directory, they will be writable
+# by that clone.
+
+cd masterclone
+if [ `ls -ld | grep -c 'drwxrwxrwx'` -ne 1 ]; then
+	echo "changing permissions on masterclone working space to 777"
+	find . -print | xargs chmod 777
+# else
+# 	echo "note: assuming the masterclone working space"
+# 	echo "      to have permissions 777 throughout"
+fi
+cd ..
+q=0
+while [ $q != $M ] 
+do 
+	cdirs=`expr "$1" : '\(/.*\)' \| \`pwd\`/"$1"`
+	echo $cdirs
+	q=`expr $q + 1`
+	p=$q
+##	[ ! -d $1 ] && mkdir $1
+	if [ ! -d $cdirs ]
+	then 
+		mkdir $cdirs
+		if [ ! -d $cdirs ]
+		then
+			echo "Could not create home directory for clones - $cdirs" | tee -a $ERFILE
+			exit 1
+		fi
+	fi
+#
+# In the above EXIT is changed to EXIT 1 to exit with error SKD 3/5/91
+# 		exit
+#	cd $cdirs
+	while [ $p -le $N ]
+	do
+# The following line changed to get rid of CLOBBER, SKD: 3/5/1991 
+#	if [ "$CLOBBER" = YES ] || [ ! -d $1/clone${p} ]; then
+#
+	if [ ! -d $cdirs/clone${p} ]; then
+			echo "Initializing clone directory: $cdirs/clone${p}"
+			[ ! -d $cdirs/clone${p} ] && mkdir $cdirs/clone${p}
+# If mkdir  fails we should get out of this condition and exit with error.
+# SKD 03/08/91
+			if [ $? -ne 0 ]
+			then 
+				echo "last cmd failed"
+				Err_flag = 1
+			fi
+			if [ "$Err_flag" = 0 ]
+			then
+				cd $HOME/masterclone
+		#
+		# Put in background so we can have several going at
+		# once, since some will normally go to different disks.
+		#
+				find . -print | cpio -pdum $cdirs/clone${p}   &
+			else
+				exit 1
+			fi
+		else
+			echo "$cdirs/clone${p} exists, clone not recopied"
+		fi
+
+		p=`expr $M + $p`
+	done
+	shift
+done
+if [ "$Err_flag" = 1 ]
+then
+	echo " "
+	echo "Exiting copy.clone because of errors in making clone directories"
+	echo "Check up permissions on the directories and validity of "
+	echo "Full path names given in M.vendor files. The benchmark "
+	echo "Requires full path names for all clones!!!"
+	echo " "
+	exit 1
+fi
+wait		# for all the cpio's to finish
+
+#
+# Check if there are enough termscripts for the maximum number
+# of scripts
+#
+CUR_CNT=`ls $HOME/scripts/term.* 2> /dev/null | wc -l`
+MSG=NO
+
+while [ $CUR_CNT -lt $N ]
+do
+	if [ $MSG = "NO" ]
+	then
+		echo "Adding more scripts"
+		MSG=YES
+	fi
+
+	CUR_CNT=`expr $CUR_CNT + 1`
+	CPYTERM=`expr $CUR_CNT % 40`
+
+	if [ -e $HOME/scripts/term.$CPYTERM ]
+	then
+	(ed $HOME/scripts/term.$CPYTERM <<!
+2d
+1a
+cd \$CLONE_DIR/clone$CUR_CNT/scripts
+.
+w $HOME/scripts/term.$CUR_CNT
+q
+!
+	) > /dev/null
+	fi
+
+	if [ $N -eq $CUR_CNT ]
+	then
+		echo ""
+	else
+		echo ". \c"
+	fi
+done

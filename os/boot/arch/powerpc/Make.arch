@@ -1,0 +1,72 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.24 2004/04/18 15:26:42 mostrows Exp $
+# ############################################################################
+
+
+ifdef IN_OBJ_DIR
+
+LIBGCC_64 = $(shell $(TARGET_CC) -print-libgcc-file-name)
+LIBGCC_32 = $(shell $(TARGET32_CC) -print-libgcc-file-name)
+
+# main.o must be first, so as to generate the entry point
+BOBJS	= first.o main.o cl_in_services.o prom.o lmb.o misc.o printf.o zlib.o
+
+prom.o : prom.c lmb.h ../../../kernel/bilge/arch/powerpc/prom.h \
+	../../../kernel/bilge/arch/powerpc/BootInfo.H 
+
+lmb.o : lmb.c lmb.h ../../../kernel/bilge/arch/powerpc/prom.h \
+	../../../kernel/bilge/arch/powerpc/BootInfo.H 
+
+main.o : main.c ../../../kernel/bilge/arch/powerpc/prom.h lmb.h \
+	../../../kernel/bilge/arch/powerpc/BootInfo.H
+
+# Need to link in -lgcc during build for simos-boot.o
+simos-boot.o : simos-boot.c ../../../kernel/bilge/arch/powerpc/BootInfo.H lmb.h
+	$(TARGET_CC) $(BOOT64_CFLAGS) -o simos-boot1.o -c $<
+	$(TARGET_CC) $(BOOT64_CFLAGS) -static -o $@ -Wl,-r -nostdlib simos-boot1.o $(LIBGCC_64)
+
+boot.o: $(BOBJS) asm_utils.o 
+	$(TARGET32_CC)  -Wl,-r -o $@ -nostdlib $^ $(LIBGCC_32)
+
+clean ::
+	-$(RM) simos-boot simos-boot.o boot $(BOBJS) asm_utils.o core 
+
+
+#############################################################################
+#  rules to be made in object directory
+#############################################################################
+
+#
+# Assuming ELF
+#
+
+%.o:%.S
+	$(TARGET32_CC) -fPIC  -c  $(TARGET32_CFLAGS) -Wa,-mppc64 $< -o $@
+
+%.o:%.c
+	$(TARGET32_CC) -fPIC  -c  $(TARGET32_CFLAGS) $< -o $@
+
+TARGETS+=boot.o simos-boot.o
+
+CPPFLAGS = -Upowerpc -D__GNU_AS__ -DTARGET_MACHINE="powerpc" \
+	-I$(MKKITCHTOP)/include -DGCC3 -DBOOT_PROGRAM
+
+TARGET32_CFLAGS = $(CPPFLAGS) -msoft-float -mminimal-toc \
+		-Wa,-strip-local-absolute -Wa,-mppc64 -g
+
+BOOT64_CFLAGS = $(CPPFLAGS) -I$(MKKITCHTOP)/include \
+                -msoft-float -mminimal-toc \
+		-Wa,-strip-local-absolute -Wa,-mppc64 -g
+
+
+#############################################################################
+#  end of object directory rules
+#############################################################################
+endif

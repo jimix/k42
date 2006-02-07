@@ -1,0 +1,91 @@
+/******************************************************************************
+ * K42: (C) Copyright IBM Corp. 2000.
+ * All Rights Reserved
+ *
+ * This file is distributed under the GNU LGPL. You should have
+ * received a copy of the license along with K42; see the file LICENSE.html
+ * in the top-level directory for more details.
+ *
+ * $Id: help.txt,v 1.1 2004/02/23 00:35:38 bob Exp $
+ *****************************************************************************/
+
+Overview:
+
+    After opening a trace file the view in the graphics represents a
+    timeline showing all the events in the file in time increasing order.
+    As trace files may contain many more events than could be individually
+    shown at a given resolution kmon chooses to represent the color and
+    height of each vertical pixel as follows.  It will count all the events
+    that map to a given pixel at the current zoom resolution.  If only one
+    event maps to the given pixel a full height bar will be shown.  If more
+    than one event maps to that pixel but all from the same display entity
+    a 3/4 bar will be shown.  If events from more than one display entity
+    map to a given pixel then a 1/2 height bar will be shown with the color
+    being unspecified by normally the last event in time that would map to
+    that pixel.
+
+Display Entities:
+
+    Currently the only way of choosing colors is by CDAs or CommID.  CDAs
+    correspond to domains in K42 and communication ids or CommIDs may
+    currently be used instead of PIDs.  In the future PIDs will be able to
+    be set as a display entity as well.  All these choices are available
+    under the Show menu.  Additionally the color that is being used to
+    display each entity may be changed to highlight a display entity of
+    interest.
+
+
+Colors: The kernel is always represented by default as red and the idle
+    loop is represented by default as blue.  Other display entities are
+    assigned from a rotating color scheme not including blue or red.  Their
+    colors (as well as the kernel and idle loop) may be set by choosing the
+    CommID choice from the Show menu.
+
+
+Scrolling:
+
+    Clicking the arrow keys in the scroll bar moves the screen 1/4 of the
+    way to the right or left.  Clicking in the scroll bar to the right or
+    left of indicator will move a full screen in that direction.
+
+Zooming:
+
+    There are many options for zooming using the zoom menu.  Most are
+    reasonably obvious.  At a given zoom range you can set a mark.  The
+    begin and end time will be remembered.  At any future time, until the
+    set zoom mark option is chosen again, choosing to zoom mark will zoom
+    back into the time range that was displayed when set zoom mark was
+    executed.
+	
+    To zoom using the mouse left click on the beginning time and right
+    click on the ending time, then middle clicking will zoom into the time
+    range specified by the two lines drawn when the let and mouse button
+    were clicked.  Successive clicks of the left and right mouse bottom
+    toggle the begin and end line respectively.
+	
+
+Text Display Box:
+
+    The text display box can be used to show statistics for the time range
+    of events being displayed in the graph, can be used to display
+    execution or lock stats if tied in with traceProfile.  This can be used
+    to connect the tool to Eclipse.
+
+    The text box below the main graph can also be used to view the actual
+    trace events.  This can be activated by clicking the middle button in
+    the graph at the place where event is desired.  While viewing event,
+    ctrl-b and ctrl-f or the left and right arrow may be used to move
+    forward and backward by events.
+
+
+Showing Events:
+
+    The kmon tool will display or highlight specific events.  This option
+    is initiated by choosing Show Event from the Show menu.  The tool is
+    integrated with the K42 performance monitoring infrastructure and will
+    provide a dialog window allowing the user to choose the event and color
+    with which to display that event.  All events in the given time display
+    range will be placed on the graph and a count of the events will be
+    displayed.  A common example may be to mark process start event with
+    green and process terminate with red to show when processes start and
+    stop.

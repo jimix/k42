@@ -1,0 +1,29 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: trace.sgml,v 1.4 2001/09/17 20:38:41 bob Exp $
+-->
+<!doctype book PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!entity % trace.ent SYSTEM "trace.ent">
+%trace.ent;
+]>
+<!-- $Id: trace.sgml,v 1.4 2001/09/17 20:38:41 bob Exp $ -->
+<book id="K42">
+<chapter id="libTraceOver">
+&libTraceOver;
+</chapter>
+<chapter id="libTracePrgG">
+&libTracePrgG;
+</chapter>
+</book>
+<!--
+Local Variables:
+mode: sgml
+sgml-default-dtd-file: "./DocBook.ced"
+End:
+-->

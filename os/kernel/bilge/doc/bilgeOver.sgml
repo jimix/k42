@@ -1,0 +1,39 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: bilgeOver.sgml,v 1.4 2004/12/27 13:42:50 dilma Exp $
+-->
+<title>Bilge overview guide goes here</title>
+<para>Bilge overview guide text goes here</para>
+<section>
+  <title>System Misc functionality</title>
+  <para>
+    void _TraceSetMaskAllProcs - sets the mask on all the processors, waits
+    until all processors have set the mask, and then returns;
+  </para>
+</section>
+<section>
+  <title>Thin wire function</title>
+  <para>
+    The Wire class is called from GDBIO in application level to do writes to
+    thinwire for gdb. Calls kernel implementation of thinwireWrite...
+  </para>
+
+  <para>
+    The thinwireWrite implementation in machine specific thinwire.C will, for 
+    mambo return an error -1 if not enabled, this happens by a check. 
+    There is a spin lock here, called low level.
+  </para>
+
+  <para>
+    The ThinWireMgr class 
+  </para>
+
+  <para>
+  </para>
+</section>

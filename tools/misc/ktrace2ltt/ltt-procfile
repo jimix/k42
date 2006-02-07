@@ -1,0 +1,14 @@
+PID: 1; PPID: 0; NAME: baseServers
+PID: 2; PPID: 1; NAME: nfs
+PID: 7; PPID: 1; NAME: /kbin/sysctl
+PID: 12; PPID: 1; NAME: rlogind
+IRQ: 2; NAME: 82c59 secondary cascade
+IRQ: 3; NAME: serial
+IRQ: 4; NAME: serial
+IRQ: 16; NAME: 82c59 cascade
+IRQ: 18; NAME: PCnet/FAST 79C971
+IRQ: 19; NAME: RAS_EPOW
+IRQ: 48; NAME: IPI0 (call function)
+IRQ: 49; NAME: IPI1 (reschedule)
+IRQ: 50; NAME: IPI2 (unused)
+IRQ: 51; NAME: IPI3 (debugger break)

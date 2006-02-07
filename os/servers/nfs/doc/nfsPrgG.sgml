@@ -1,0 +1,45 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: nfsPrgG.sgml,v 1.1 2001/09/23 18:24:10 bob Exp $
+-->
+<title>NFS File System</title>
+<section>
+  <title>NFS Environment Variables</title>
+  <para>
+    NFS presently needs two environment variables to function properly.
+  </para>
+
+  <para>
+    K42_NFS_ROOT = hostname:rootpathname
+  </para>
+
+  <para>
+    K42_NFS_ID = uid:gid
+  </para>
+
+  <para>
+    These variables are set by kthinwire script with help from knfsroot
+    script.  Presently, knfsroot sets the hostname component of
+    K42_NFS_ROOT to the localhost.
+  </para>
+
+  <para>
+    One can choose the hostname for the K42_NFS_ROOT environment variable
+    by defining the K42_NFS_HOST environment variable. Currently, this
+    should be assigned as a; dotted ip address (192.168.1.1), not a
+    standard machine "hostname".
+  </para>
+</section>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./nfs.sgml" "chapter" "title")
+End:
+-->

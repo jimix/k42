@@ -1,0 +1,48 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: profile,v 1.2 2001/03/19 01:25:50 bob Exp $
+# ############################################################################
+#
+# spec profile
+#
+
+#set -x
+echo "+"
+
+HOME=/home/$USER
+export HOME
+
+PATH=$PATH:$HOME:/tests/linux
+
+export PATH
+
+# ask bob why this doesn't work
+#/trace2file
+
+numcpu=`ppCount`
+#cpuseq=`seq $numcpu`
+cpuseq=$numcpu
+/traceAddEvent init
+testdriver.sh 0
+
+for i in $cpuseq
+do
+  echo "Starting run $i"
+  /traceAddEvent "startTiming:$i" 1
+
+  testdriver.sh $i
+
+  /traceAddEvent "endTiming:$i" 0
+  echo "Done run $i"
+done
+
+#traceDump
+
+echo "-"
+exit

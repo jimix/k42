@@ -1,0 +1,19 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: toolsOver.sgml,v 1.1 2001/09/27 15:27:32 bob Exp $
+-->
+<title>tools overview goes here</title>
+<para>tools overview text goes here</para>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./tools.sgml" "chapter" "title")
+End:
+-->

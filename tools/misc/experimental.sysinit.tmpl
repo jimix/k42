@@ -1,0 +1,154 @@
+#!/bin/bash
+#set -x
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# ****************************************************************************/
+#/****************************************************************************
+# * Module Description: Please see associated experimental.CommandFile.tmpl
+#                       The only line you should have to change here is the
+#                       value of EXPERIMETDIR.  Place a copy of this file 
+#                       (renamed to sysinit) and a copy of
+#                       experimental.CommandFile.tmpl (rename to CommandFile)
+#                       into directory specified as EXPERIMETDIR.
+#                       Then use hwconsole -m machine -E <experiment directory>
+# * **************************************************************************/
+
+readonly EXPERIMENTDIR="/home/jappavoo/k42-pem"
+
+readonly K42_INIT="/kbin/sysinit"
+readonly STATEFILE="${EXPERIMENTDIR}/SysinitCommander.statefile";
+readonly COMMANDFILE="${EXPERIMENTDIR}/CommandFile";
+
+typeset -i cmdNum;
+typeset -i nextCmdNum;
+typeset -i cpus;
+typeset -i nextCpus;
+declare ctrlFlgs="";
+declare nextCtrlFlgs="";
+declare name="";
+declare nextName="";
+declare cmdLine="";
+declare nextCmdLine="";
+
+
+function processStateFile()
+{
+   if [[ -f $STATEFILE ]]
+   then
+      read cmdNum cpus ctrlFlgs name cmdLine < $STATEFILE
+   else 
+     echo "$STATEFILE: not found ... must be then start"
+   fi
+   return 0;
+}
+
+function generateNextState()
+{
+   local -i lineCnt=0;
+   local ncpus nflgs ncmdline nname
+   local found=0;
+
+   if [[ -z "$cmdNum" ]]
+   then
+      nextCmdNum=0;
+   else
+      nextCmdNum=$((cmdNum + 1));
+   fi
+
+   if [[ -f $COMMANDFILE ]]
+   then
+      while read ncpus nflgs nname ncmdline
+      do
+          if [[ -z $ncpus || $ncpus == '#'* ]]
+          then
+              continue
+          fi
+          if (( $lineCnt == $nextCmdNum ))
+          then
+           nextCpus=$ncpus; nextCtrlFlgs=$nflgs; nextName=$nname nextCmdLine=$ncmdline;
+           echo "$nextCmdNum $nextCpus $nextCtrlFlgs $nextName $nextCmdLine" > $STATEFILE
+           # rather than returning here we coninue to loop through the file
+           # so that every run touches the same amount of file data
+           found=1;
+          fi
+          lineCnt=$((lineCnt + 1));
+      done < $COMMANDFILE
+      if [[ $found == 0 ]] 
+      then
+        unset nextCmdNum;
+      fi
+    else
+      echo "$COMMANDFILE: does not exist";
+      exit -1;
+    fi
+    return 0;
+}
+
+function setControlFlags()
+{
+    local flgs="$1";
+
+    echo "0|C$flgs">/ksys/console
+    return 0;
+}
+
+function reboot()
+{
+    local cpus=$1
+
+    echo "Rebooting to $cpus";
+    echo "0|X $cpus" >/ksys/console;
+    return 0;
+}
+
+
+function initOS()
+{
+   echo "Launching standard startup script $K42_INIT"
+   $K42_INIT
+}
+
+function terminate()
+{
+  echo "0|XX" > /ksys/console
+  return 0;
+}
+
+
+initOS;
+
+HOME=${EXPERIMENTDIR}
+PATH=${PATH}:$HOME/bin:/kbin
+
+export HOME
+
+processStateFile;
+
+echo 0 > /ksys/wireDaemon
+
+if [[ -n "$cmdLine" ]]
+then
+    echo "*****START: $cpus $ctrlFlgs $cmdNum $name \"$cmdLine\""
+    bash -c "$cmdLine"
+    echo "*****END: $cpus $ctrlFlgs $cmdNum $name $cmdLine" 
+fi
+
+echo 1 > /ksys/wireDaemon
+
+generateNextState
+
+if [[ -n "$nextCmdNum" ]] 
+then
+  setControlFlags "$nextCtrlFlgs";
+  reboot          "$nextCpus";
+fi
+
+rm $STATEFILE
+terminate;
+

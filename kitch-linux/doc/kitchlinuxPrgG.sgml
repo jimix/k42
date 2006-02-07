@@ -1,0 +1,36 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: kitchlinuxPrgG.sgml,v 1.1 2001/09/30 21:09:24 bob Exp $
+-->
+<title>kitchlinux directory</title>
+<section>
+  <title>Introduction</title>
+  <para>
+    This portion of the source tree represents K42's linux support efforts.
+    It consists mainly of libemu.a and some simple test programs.
+  </para>
+</section>
+<section>
+  <title>Introduction</title>
+  <para>
+    Kitch-linux requires the <envar> KITCH_LINUX </envar> make variable set
+    to the directory that contains the installation of glibc, that is the
+    directory that contains <filename>include</filename> and
+    <filename>lib</filename> subdirectories, this is obtained by default
+    from the top level MakePaths.proto makefile. You can override it as
+    described in this file if you have your own version of glibc.
+  </para>
+</section>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./kitchlinux.sgml" "chapter" "title")
+End:
+-->

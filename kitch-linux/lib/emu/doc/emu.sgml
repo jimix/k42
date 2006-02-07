@@ -1,0 +1,30 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: emu.sgml,v 1.1 2001/09/30 21:09:26 bob Exp $
+-->
+<!doctype book PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!entity topsrc "../../..">
+<!entity % emu.ent SYSTEM "emu.ent">
+%emu.ent;
+]>
+<!-- $Id: emu.sgml,v 1.1 2001/09/30 21:09:26 bob Exp $ -->
+<book id="K42">
+<chapter id="emuOver">
+&emuOver;
+</chapter>
+<chapter id="emuPrgG">
+&emuPrgG;
+</chapter>
+</book>
+
+<!--
+Local Variables:
+mode: sgml
+End:
+-->

@@ -1,0 +1,24 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: testsPrgG.sgml,v 1.1 2001/09/30 21:09:28 bob Exp $
+-->
+<title>kitch-linux Simple Test Programs</title>
+<section>
+  <title>Introduction</title>
+  <para>
+    TBD
+  </para>
+</section>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./tests.sgml" "chapter" "title")
+End:
+-->

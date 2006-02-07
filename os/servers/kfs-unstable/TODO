@@ -1,0 +1,93 @@
+/*****************************************************************************
+ * K42: (C) Copyright IBM Corp. 2003.
+ * All Rights Reserved
+ *
+ * This file is distributed under the GNU LGPL. You should have
+ * received a copy of the license along with K42; see the file LICENSE.html
+ * in the top-level directory for more details.
+ *
+ * $Id: TODO,v 1.1 2004/02/11 23:03:56 lbsoares Exp $
+ *****************************************************************************/
+
+- Build a PSOUnixTraditional, which contains direct references to
+  blocks and indirect blocks, similar to the old (traditional) Unix
+  inodes.
+
+- Build  a PSOExtent which allocates extends instead of individual
+  blocks.
+
+- Build a PSOSnapDiskBlock which, for each new write, should write the
+  block to a new location (i.e. allocate a new block, write our
+  in-memory buffer to it and deallocate the old block
+
+- Build a PSORamBlock which would permit KFS to run on purely on a
+  "ram disk". Useful for testing basic overhead.
+
+- Implement snapshotting in KFS. We still need to decide if we should
+  have a back-ground kernel thread or make an user-space application
+  (or both). Theorically, after PSOSnapDiskBlock is implemented, this
+  will be "easy".
+
+- return a meaningful d_type in getDnts instead of DT_UNKNOWN
+
+- KFS for Linux uses stuff that we have in the tools directory. In the
+  long run it would be better if, in the K42 kitchsrc tree), if we
+  moved the KFS related tools source files to os/servers/kfs.
+
+- Bug FIX for rename: we need to check if the new entry is a
+  directory; if so, it has to be empty (regress.sh in K42 doesn't fail
+  on this test because the file system independent layer performs a
+  check that catches the problem in our test, but it would be possible
+  to write a test where fslib doesn't have enough cached information
+  to properly deal with this error scenario)
+
+- have read only behavior for KFS
+
+- we're executing currently in a "paranoic" mode: every flush results
+  in invoking the flush() method for datablock, instead of checking
+  dirty bits and acting accordingly (we have the dirty bit checking ifdef'd
+  out, but anyway we believe that these bits are not being properly
+  maintainted)
+ 
+- add a simple form of block caching so that current scheme of reading
+  blocks any time a directory is accessed for its contents doesn't result
+  in actual I/O necessarily
+
+- memory management of KFS objects
+	- instead of adding the objects to lists and keep moving them around,
+	  use access bits to determine which ones to skip during a
+	  memory  "cleanup"
+
+- extent block allocation: allocating a sequence of blocks, a la HFS
+
+- specializations for tools side: new classes instead of all sorts of
+  ifndef KFS_TOOLS clauses. For example, in the tools side we want flushes
+  to be carried out immediately; in a "normal running" mode we want to
+  have some sort of daemon that outputs dirty blocks to the disk periodically
+
+- synchronous I/O ops for getting blocks into KFS address space; asynch when
+serving external requests
+
+- symlinks
+
+- remove some  of KFS'  limitations, by  making  some parts  non-static:
+	* remove the chack for PSORecordMap  in the superblock (instead of
+          one block for the bitmap+list_of_blocks, we have two. Ugly and
+	  inneficient hac)
+        * block bitmap lists
+
+
+  Done items
+  ----------
+
+- Remove the DataBlock object and replace it with a PSO (like
+  PSODiskBlock) and change some some classes' interfaces so that no
+  one accesses disk blocks directly except this low-level PSO.
+
+- It seems that getToken (which does a lookup based on full pathname) is
+  only used by KFS itself on creation:
+  ./FileSystemKFS.C:162:    ObjToken *otok = obj->getToken(".", strlen("."));
+  If this is true, we should get rid of this particular use and get rid of
+  the method. It's being used in Linux for now, but maybe we want to
+  use there a method based on the current directory token (something
+  like getFSFileOrServerFile()).

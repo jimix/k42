@@ -1,0 +1,28 @@
+# /etc/bashrc
+
+# System wide functions and aliases
+# Environment stuff goes in /etc/profile
+
+# are we an interactive shell?
+if [ "$PS1" ]; then
+    if [ "x`tput kbs`" != "x" ]; then # We can't do this with "dumb" terminal
+        stty erase `tput kbs`
+    fi
+    case $TERM in
+        xterm*)
+            PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"'
+            ;;
+        *)
+            ;;
+    esac
+    PS1="[\u@\h \W]\\$ "
+    
+    if [ "x$SHLVL" != "x1" ]; then # We're not a login shell
+        for i in /etc/profile.d/*.sh; do
+            if [ -x $i ]; then
+                . $i
+            fi
+        done
+    fi
+fi
+

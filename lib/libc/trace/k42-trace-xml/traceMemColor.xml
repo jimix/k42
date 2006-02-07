@@ -1,0 +1,501 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceMemColor.xml,v 1.5 2004/07/08 17:15:32 gktse Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<classList layerId='HW'>
+	<class id='MemColor' value='21' mask='0x0000000000200000' />
+</classList>
+
+<event name="HW::MemColor::SetColor" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="SetColor" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="startAddr" type="uint64" description="start address of color range"/>
+		<field name="endAddr" type="uint64" description="end address of color range"/>
+		<field name="var" type="string" description="variable name"/>
+	</fields>
+	<k42Format value='Set color, color  %0[%lld] startAddr %1[%llx] endAddr %2[%llx] var %3[%s]' />
+</event>
+
+
+
+<event name="HW::MemColor::SetCtrfReq" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="SetCtrfReq" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="freq" type="uint64" description="counter sampling frequency"/>
+		<field name="event" type="string" description="counter event name"/>
+	</fields>
+	<k42Format value='Set counter sampling frequency, color  %0[%lld] freq %1[%llx] event %2[%s]' />
+</event>
+
+
+<event name="HW::MemColor::SetThresh" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="SetThresh" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="freq" type="uint64" description="event sampling threshold"/>
+		<field name="event" type="string" description="event name"/>
+	</fields>
+	<k42Format value='Set event sampling threshold, color  %0[%lld] thresh %1[%llx] event %2[%s]' />
+</event>
+
+
+
+<event name="HW::MemColor::Load" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="Load" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='Load, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::Store" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="Store" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='Store, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::L1DHit" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="L1DHit" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='L1D cache hit, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+
+
+<event name="HW::MemColor::L1DMiss" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="L1DMiss" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='L1D cache miss, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::L2Miss" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="L2Miss" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='L2 cache miss, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::L2Hit" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="L2Hit" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='L2 cache hit, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::DTLBMiss" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DTLBMiss" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='DTLB miss, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::DTLBHit" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DTLBHit" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='DTLB hit, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::DSLBHit" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DSLBHit" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='SLB hit, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::DSLBMiss" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DSLBMiss" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='DSLB miss, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::DPgflt" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DPgflt" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='Data page fault, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+
+
+<event name="HW::MemColor::LoadCtr" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="LoadCtr" />
+	<fields>
+		<field name="color" type="uint64" description="Color ID"/>
+		<field name="value" type="uint64" description="counter value"/>
+                <field name="startTime" type="uint64" description="start interval timestamp" />
+                <field name="endTime" type="uint64" description="end interval timestamp" />
+	</fields>
+	<k42Format value='Load, color  %0[%lld] ctr %1[%lld]' />
+</event>
+
+<event name="HW::MemColor::StoreCtr" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="StoreCtr" />
+	<fields>
+		<field name="color" type="uint64" description="Color ID"/>
+		<field name="value" type="uint64" description="counter value"/>
+                <field name="startTime" type="uint64" description="start interval timestamp" />
+                <field name="endTime" type="uint64" description="end interval timestamp" />
+	</fields>
+	<k42Format value='Store, color  %0[%lld] ctr %1[%lld]' />
+</event>
+
+<event name="HW::MemColor::L1DHitCtr" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="L1DHitCtr" />
+	<fields>
+		<field name="color" type="uint64" description="Color ID"/>
+		<field name="value" type="uint64" description="counter value"/>
+                <field name="startTime" type="uint64" description="start interval timestamp" />
+                <field name="endTime" type="uint64" description="end interval timestamp" />
+	</fields>
+	<k42Format value='L1D cache hit, color  %0[%lld] ctr %1[%lld]' />
+</event>
+
+
+<event name="HW::MemColor::L1DMissCtr" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="L1DMissCtr" />
+	<fields>
+		<field name="color" type="uint64" description="Color ID"/>
+		<field name="value" type="uint64" description="counter value"/>
+                <field name="startTime" type="uint64" description="start interval timestamp" />
+                <field name="endTime" type="uint64" description="end interval timestamp" />
+	</fields>
+	<k42Format value='L1D cache miss, color  %0[%lld] ctr %1[%lld]' />
+</event>
+
+<event name="HW::MemColor::L2MissCtr" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="L2MissCtr" />
+	<fields>
+		<field name="color" type="uint64" description="Color ID"/>
+		<field name="value" type="uint64" description="counter value"/>
+                <field name="startTime" type="uint64" description="start interval timestamp" />
+                <field name="endTime" type="uint64" description="end interval timestamp" />
+	</fields>
+	<k42Format value='L2 cache miss, color  %0[%lld] ctr %1[%lld]' />
+</event>
+
+<event name="HW::MemColor::L2HitCtr" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="L2HitCtr" />
+	<fields>
+		<field name="color" type="uint64" description="Color ID"/>
+		<field name="value" type="uint64" description="counter value"/>
+                <field name="startTime" type="uint64" description="start interval timestamp" />
+                <field name="endTime" type="uint64" description="end interval timestamp" />
+	</fields>
+	<k42Format value='L2 cache hit, color  %0[%lld] ctr %1[%lld]' />
+</event>
+
+<event name="HW::MemColor::DTLBMissCtr" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DTLBMissCtr" />
+	<fields>
+		<field name="color" type="uint64" description="Color ID"/>
+		<field name="value" type="uint64" description="counter value"/>
+                <field name="startTime" type="uint64" description="start interval timestamp" />
+                <field name="endTime" type="uint64" description="end interval timestamp" />
+	</fields>
+	<k42Format value='DTLB miss, color  %0[%lld] ctr %1[%lld]' />
+</event>
+
+<event name="HW::MemColor::DTLBHitCtr" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DTLBHitCtr" />
+	<fields>
+		<field name="color" type="uint64" description="Color ID"/>
+		<field name="value" type="uint64" description="counter value"/>
+                <field name="startTime" type="uint64" description="start interval timestamp" />
+                <field name="endTime" type="uint64" description="end interval timestamp" />
+	</fields>
+	<k42Format value='DTLB hit, color  %0[%lld] ctr %1[%lld]' />
+</event>
+
+<event name="HW::MemColor::DSLBHitCtr" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DSLBHitCtr" />
+	<fields>
+		<field name="color" type="uint64" description="Color ID"/>
+		<field name="value" type="uint64" description="counter value"/>
+                <field name="startTime" type="uint64" description="start interval timestamp" />
+                <field name="endTime" type="uint64" description="end interval timestamp" />
+	</fields>
+	<k42Format value='SLB hit, color  %0[%lld] ctr %1[%lld]' />
+</event>
+
+<event name="HW::MemColor::DSLBMissCtr" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DSLBMissCtr" />
+	<fields>
+		<field name="color" type="uint64" description="Color ID"/>
+		<field name="value" type="uint64" description="counter value"/>
+                <field name="startTime" type="uint64" description="start interval timestamp" />
+                <field name="endTime" type="uint64" description="end interval timestamp" />
+	</fields>
+	<k42Format value='DSLB miss, color  %0[%lld] ctr %1[%lld]' />
+</event>
+
+<event name="HW::MemColor::DPgfltCtr" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DPgfltCtr" />
+	<fields>
+		<field name="color" type="uint64" description="Color ID"/>
+		<field name="value" type="uint64" description="counter value"/>
+                <field name="startTime" type="uint64" description="start interval timestamp" />
+                <field name="endTime" type="uint64" description="end interval timestamp" />
+	</fields>
+	<k42Format value='Data page fault, color  %0[%lld] ctr %1[%lld]' />
+</event>
+
+
+<event name="HW::MemColor::LoadThresh" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="LoadThresh" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='Load, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::StoreThresh" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="StoreThresh" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='Store, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::L1DHitThresh" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="L1DHitThresh" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='L1D cache hit, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+
+
+<event name="HW::MemColor::L1DMissThresh" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="L1DMissThresh" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='L1D cache miss, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::L2MissThresh" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="L2MissThresh" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='L2 cache miss, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::L2HitThresh" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="L2HitThresh" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='L2 cache hit, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::DTLBMissThresh" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DTLBMissThresh" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='DTLB miss, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::DTLBHitThresh" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DTLBHitThresh" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='DTLB hit, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::DSLBHitThresh" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DSLBHitThresh" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='SLB hit, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::DSLBMissThresh" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DSLBMissThresh" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='DSLB miss, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+<event name="HW::MemColor::DPgfltThresh" description="memory color event">
+	<layerId value="HW" />
+	<classId value="MemColor" />
+	<specifier value="DPgfltThresh" />
+	<fields>
+		<field name="color" type="uint64" description="color ID"/>
+		<field name="memAddr" type="uint64" description="memory address accessed"/>
+		<field name="instAddr" type="uint64" description="instruction address"/>
+	</fields>
+	<k42Format value='Data page fault, color  %0[%lld] memAddr %1[%llx] instAddr %2[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="instAddr" />
+</event>
+
+
+
+</PEM_Events>

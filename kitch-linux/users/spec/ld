@@ -1,0 +1,6 @@
+#!/bin/bash
+test "$1" = "-r" && shift
+test "$1" = "-o" && shift
+
+exec echo $* > $1
+

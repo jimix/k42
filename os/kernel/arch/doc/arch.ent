@@ -1,0 +1,18 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: arch.ent,v 1.4 2003/03/10 23:32:05 bob Exp $
+-->
+<!entity archOver SYSTEM "archOver.sgml">
+<!entity archPrgG SYSTEM "archPrgG.sgml">
+<!entity % amd64 SYSTEM "../amd64/doc/amd64.ent">
+%amd64;
+<!entity % generic64 SYSTEM "../generic64/doc/generic64.ent">
+%generic64;
+<!entity % powerpc SYSTEM "../powerpc/doc/powerpc.ent">
+%powerpc;

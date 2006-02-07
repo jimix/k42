@@ -1,0 +1,100 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceLibC.xml,v 1.3 2004/12/17 22:11:06 cascaval Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="LIB::LibC::Malloc" 
+       description="address and size from libc malloc">
+	<layerId value="LIB" />
+	<classId value="LibC" />
+	<specifier value="Malloc" />
+	<fields>
+		<field name="address" type="uint64" 
+                 description="allocated address"   />
+		<field name="size" type="uint64" 
+                 description="number of bytes allocated"   />
+		<field name="callSite" type="uint64"
+		 description="address in the caller where malloc is invoked" />
+	</fields>
+	<k42Format value='Malloc called from addr 0x%2[%llx]: %1[%lld] bytes allocated at %0[%llx]' />
+</event>
+
+<event name="LIB::LibC::Realloc" 
+       description="address and size from libc realloc">
+	<layerId value="LIB" />
+	<classId value="LibC" />
+	<specifier value="Realloc" />
+	<fields>
+		<field name="address" type="uint64" 
+                 description="allocated address"   />
+		<field name="oldAddress" type="uint64" 
+                 description="old allocated address"   />
+		<field name="size" type="uint64" 
+                 description="number of bytes allocated"   />
+		<field name="callSite" type="uint64"
+		 description="address in the caller where realloc is invoked"/>
+	</fields>
+	<k42Format value='Realloc called from addr 0x%3[%llx]: replacing address 0x%1[%llx] with %2[%lld] bytes allocated at %0[%llx]' />
+</event>
+
+<event name="LIB::LibC::Free" description="address from libc free">
+	<layerId value="LIB" />
+	<classId value="LibC" />
+	<specifier value="Free" />
+	<fields>
+		<field name="address" type="uint64" 
+                 description="freed address"   />
+	</fields>
+	<k42Format value='freed address %0[%llx]' />
+</event>
+
+<event name="LIB::LibC::Mmap" 
+       description="address and size from libc malloc">
+	<layerId value="LIB" />
+	<classId value="LibC" />
+	<specifier value="Mmap" />
+	<fields>
+		<field name="address" type="uint64" 
+                 description="allocated address"   />
+		<field name="size" type="uint64" 
+                 description="number of bytes allocated"   />
+		<field name="callSite" type="uint64"
+		 description="address in the caller where mmap is invoked" />
+		<field name="offset" type="uint64"
+		 description="offset from the beginning of the file" />
+		<field name="prot" type="uint32"
+		 description="memory protection" />
+		<field name="flags" type="uint32"
+		 description="type of mapped object" />
+		<field name="fd" type="uint32"
+		 description="file descriptor" />
+	</fields>
+	<k42Format value='Map: %1[%lld] bytes mapped at %0[%llx] by caller addr %2[%llx] with protection %4[%ld] flags %5[%ld] fd %6[%ld] and offset %3[%lld]' />
+</event>
+
+
+<event name="LIB::LibC::Munmap" description="munmap call">
+	<layerId value="LIB" />
+	<classId value="LibC" />
+	<specifier value="Munmap" />
+	<fields>
+		<field name="address" type="uint64" 
+                 description="unmapped address"   />
+		<field name="len" type="uint64" 
+                 description="length of unmapped region"   />
+	</fields>
+	<k42Format value='unmapped address %0[%llx] length %1[%lld]' />
+</event>
+
+
+</PEM_Events>

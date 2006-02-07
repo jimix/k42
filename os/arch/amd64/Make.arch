@@ -1,0 +1,96 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.19 2005/06/29 16:16:16 rosnbrg Exp $
+# ############################################################################
+
+ifdef IN_OBJ_DIR
+# ############################################################################
+#  rules to be made in object directory
+# ############################################################################
+
+#TARGETS += boot_image boot_image.dbg
+TARGETS += boot_image
+
+targets :: subdirs_targets
+install_targets :: subdirs_install_targets
+
+floppy.bin: boot/boot boot_image
+	$(MKTOOLBIN)mkboot boot/boot boot_image -o floppy.bin
+
+reboot.bin: boot/reboot
+	$(MKTOOLBIN)mkboot boot/reboot /dev/null -o reboot.bin
+
+
+
+##################################################################
+#
+#
+#
+
+ifndef LINUXSRCROOT
+LKMOD = 
+
+else
+LKMOD = $(LINUXSRCROOT)/k42linuxio.a
+$(LKMOD): 
+
+#	make -C $(LINUXSRCROOT) ARCH=k42 k42linux.a
+endif
+
+##################################################################
+#
+#   kernel boot image 
+#
+# The kernel has two parts -- a 16/32-bit real-protected part
+# that starts at 0x0000000001000000 (real) (start.S) and the main
+# part which runs in 64-bit virtual mode at 0x0000700000000000
+# (virtual).  Setting this up is done in the loader script kernel.lds.
+
+LIBS= $(LKMOD) $(LIB_GCC) $(LIBDIR)/libk.a $(LIB_LK)
+
+LDSCRIPT=$(SRC_DIR_PATH)/arch/amd64/kernel.lds
+
+boot_image: $(LDSCRIPT) kernel/init/part2.o kernel/libkern.INPUT servers/bootServers.o $(LIBS)
+	$(TARGET_LD)   \
+		$(KLDFLAGS) \
+		--noinhibit-exec \
+		--script=kernel/libkern.INPUT \
+		servers/bootServers.o \
+		--script=$(LDSCRIPT) \
+		-L$(KITCH_GLIB) \
+		-Wl,-rpath-link,$(KITCH_GLIB) \
+		$(LIBS) \
+		--output=$@ \
+		--print-map > $(basename $@).map
+
+
+##################################################################
+#
+# debug version of kernel boot image 
+#
+DDSCRIPT=$(SRC_DIR_PATH)/arch/amd64/kdebug.lds
+
+boot_image.dbg: $(DDSCRIPT) kernel/init/part2.o kernel/libkern.INPUT servers/bootServers.o $(LIB_GCC) $(LIBDIR)/libk.a
+	$(TARGET_LD)   \
+		$(KLDFLAGS) \
+		-L$(KITCH_GLIB) \
+		--noinhibit-exec \
+		--script=kernel/libkern.INPUT \
+		servers/bootServers.o \
+		--script=$(DDSCRIPT) \
+		--library=k \
+		$(LIB_GCC) \
+		--output=$@ 
+
+
+
+# ############################################################################
+#  end of object directory rules
+# ############################################################################
+endif

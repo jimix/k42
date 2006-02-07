@@ -1,0 +1,592 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: fslibPrgG.sgml,v 1.14 2003/03/21 15:12:15 bob Exp $
+-->
+
+<title>File System Library</title>
+
+<section><title>Introduction</title>
+  <para>
+    DirLinuxFS objects represent directories being currently cached
+    (either because they were manipulated or because they were used
+    for traversing a pathname). ServerFile objects represent files.
+    A DirLinuxFS object keeps a list of subdirectories of files
+    currently being cached. DirLinuxFS objects are organized in a
+    tree that represents the namespace currently cached.
+  </para>
+
+  <para> 
+    The File System Library (fslib) entry point is the object
+    NameTreeLinuxFS. There is one NameTreeLinuxFS object for each file
+    system. Its interface contains file operations based on pathnames
+    (e.g. stat, chmod, utime, open/creat). 
+    Operations for a given pathname in
+    the file system are carried out by identifying the DirLinuxFS object
+    corresponding to the container directory. This is
+    performed by traversing the tree of DirLinuxFS, interacting with
+    the file system for directory lookups and allocating new
+    DirLinuxFS instances as needed. Then the container directory is
+    invoked to perform the operation. For example, consider a
+    stat("/usr/include/stdio.h", stat_buffer_ptr). NameTreeLinuxFS::stat
+    gets the DirLinuxFS instance corresponding to "/usr/include"
+    and invokes DirLinuxFS::stat("stdio.h", stat_buffer_ptr) on this
+    instance. The instance carries out this operation by delegating to 
+    work:
+    <itemizedlist>
+      <listitem>
+	<para> If "stdio.h" is currently being cached (i..e, a
+	  ServerFile object corresponding to "stdio.h" exists), it
+	  invokes the operation on the ServerFile (which is then
+	  responsible to interact with the File System object;
+	</para>
+      </listitem>
+      <listitem>
+	<para> If "stdio.h" is not being currently cached, the
+	  DirLinuxFS object interacts with the File System object, getting
+	  back either an unique identifier (token) for the file corresponding
+	  to the name "stdio.h" or a ServerFile object reference to
+	  it. If it got back a token, it interacts directly with the
+	  File System object, passing the token along.
+	</para>
+      </listitem>
+    </itemizedlist>
+  </para>
+  
+  <para> ServerFile and DirLinuxFS objects may go away, either because 
+    they became invalid (for example, they correspond to NFS files
+    that have been removed in the remote server) or because they
+    are intended to free their resources (they make themselves available
+    for disappearing when they learn they have no outstanding client;
+    some external agents tells them to to go away if possible).
+  </para>
+
+  <para>
+    The File System Library should guarantee that
+    all necessary locking is done before
+    getting to the File System object, i.e., the File System Library
+    does not issue two concurrent File System operations with the same
+    target.
+  </para>
+
+</section>
+
+<section id="protocols"><title>Protocols</title>
+
+  <section>
+    <title>Object Creation and Delegation of work</title>
+
+    <para> The lookup operation that results in finding a container
+    directory dir_obj returns after acquiring the lock
+    for the nameHolder object used to get to dir_obj
+    (for root we have a nameHolder object also. It is not used to get to
+    the root, of course, but it's there to be locked). This guarantees that
+    the dir_obj can't go away between lookup and the invocation of the
+    operation on it. Once the operation on dir_obj is finished, the caller
+    (a method in NameTreeLinuxFS) will release the nameholder lock.
+    </para>
+    <para> Operations in a container directory dir_obj start by searching for
+      the target name entry in its children list. The three scenarios
+      possible are: (1) the target is not found, (2) the target is
+      found but only a token for it is available, (3) the target is
+      found with a correspoinding ServerFile object. 
+    </para>
+
+    <para>When the target is not found, some DirLinuxFS operations will take
+    action in creating a ServerFile while others will retrieve a token 
+    for the file only:</para>
+    <itemizedList spacing="compact">
+      <listitem>
+	<para> For <emphasis>Directory lookup</emphasis> operations,
+	  a new DirLinuxFS object is created for the name
+	  entry. This is done holding dir_obj's lock;
+	</para>
+      </listitem>
+      <listitem>
+	<para> For <emphasis>open</emphasis> operations:</para>
+	<itemizedList spacing="compact">
+	  <listitem><para>lock dir_obj</para></listitem>
+	  <listitem>
+	    <para>If the name entry corresponds to a directory, a new
+	      DirLinuxFS object is instantiated. If it corresponds to a
+	      file, we request the File System object to provide a
+	      ServerFile. The File System checks if the desired file has 
+	      multiple links:
+	    </para>
+	    <itemizedList spacing="compact">
+	      <listitem><para>If the file has a single link, the File System 
+		  creates a new ServerFile instance for it and return it 
+		  to dir_obj;
+		</para>
+	      </listitem>
+	      <listitem><para>If the file has multiple links, the File
+		  System checks if a ServerFile already exists for
+		  the target file. For this purpose the File System
+		  objects maintains a list of MultiLinkSF objects. A
+		  MultiLinkSF object holds a reference to a ServerFile
+		  and a lock. This lock is used to avoid a race
+		  between giving the ServerFile reference to a
+		  directory and checking if a ServerFile can go away
+		  (which involves checking that it has no parent,
+		  i.e., there is no reference to it in the namespace
+		  tree). The steps performed by the File System object 
+		  are: 
+		</para>
+		<orderedList numeration="arabic" spacing="compact">
+		  <listitem><para>
+		      lock the list of MultiLinkSF objects;
+		    </para>
+		  </listitem>
+		  <listitem><para>
+		      search for a MultiLinkSF that corresponds to the
+		      target file. If found, lock the MultiLinkSF
+		      object, unlock the list and return it to
+		      dir_obj. If not found, create a ServerFile
+		      object, create a  MultiLinkSF for it, lock the
+		      MultiLinkSF, unlock the list and return the
+		      MultiLinkSF to dir_obj;
+		    </para>
+		  </listitem>
+		</orderedList>
+	      </listitem>
+	    </itemizedlist>
+	  </listitem>
+	  <listitem> <para>If dir_obj got back a ServerFile reference
+	      for a single-linked file, it interacts with the
+	      ServerFile object to register itself as its parent,
+	      finishes up actions needed in open (check directory
+	      flags, giveAccess), releases the directory lock and
+	      returns. If it got back from the File System a
+	      MultiLinkSF object, it interacts with the ServerFile 
+	      to register itself as its parent, unlocks the
+	      MultiLinkSF, and proceeds with the open actions as
+	      with the single-link case.
+	    </para>
+	  </listitem>
+	</itemizedList>
+      </listitem>
+
+      <listitem>
+	<para>For the <emphasis>link</emphasis> operation, the procedure 
+	  is similar to <emphasis>open</emphasis>, i.e., a ServerFile
+	  is created (making sure that an existing one is used for
+	  multiple link files, if such object already exists.
+	  Once the ServerFile is available, its
+	  <emphasis>link</emphasis> method is invoked (while still
+	  holding dir_obj's lock). ServerFile::link acquires its own lock,
+	  interacts with the FileSystem object, and releases its lock, 
+	  and returns. </para>
+      </listitem>
+
+      <listitem>
+	<para>For the <emphasis>rmdir</emphasis> and
+	  <emphasis>unlink</emphasis> and operation, when the
+	  directory to be removed is not found, no object for it will
+	  be created. The operation will be performed completely while 
+	  holding dir_obj's lock, so it is guaranteered that no
+	  ServerFile or token will be allocated for the entry as the
+	  operation proceeds.</para>
+      </listitem>
+
+      <listitem>
+	<para>For all other pathname-based operations (stat, uname,
+	  chmod, chown, utime), the directory will cache only a token
+	  for the target name entry. It will interact with the
+	  FileSystem object to carry out the operation (holding
+	  dir_obj's lock until the operation is complete)</para>
+      </listitem>
+
+    </itemizedList>
+
+    <para>If a token corresponding to the target name entry is
+      found (case 2):
+    </para>
+    <itemizedList spacing="compact">
+      <listitem><para>
+	  the <emphasis>open</emphasis> and
+	  <emphasis>link</emphasis> operations will "upgrade" the
+	  token to a ServerFile reference (i.e., the ServerFile object 
+	  is created in the same way we did when
+	  the target name entry was not found). They complete its
+	  actions while holding dir_obj's lock;
+	</para>
+      </listitem>
+      <listitem><para>All other operations are carried out by
+	  interacting with the FileSystem object (passing the token
+	  along). The directory lock is hold through the whole
+	  execution, so it is guaranteed that the token won't be used
+	  or upgraded to a ServerFile as the operation proceeds.
+	</para>
+      </listitem>
+    </itemizedList>
+    
+
+    <para>If a ServerFile/DirLinuxFS object for the target name entry
+      is available (case 3):</para>
+    <itemizedList spacing="compact">
+      <listitem><para>the <emphasis>open</emphasis>,
+	  <emphasis>link</emphasis>, and <emphasis>unlink</emphasis>
+	  operations proceed by invoking
+	  the ServerFile's method while holding dir_obj's lock;
+	</para>
+      </listitem>
+      <listitem><para>the <emphasis>rmdir</emphasis> checks if the
+	  found DirLinuxFS corresponds to an empty directory. If so, 
+	  it removes the object from its children list, and
+	  interacts with the FileSystem object for carrying out the
+	  operation (while holding the directory lock);
+	</para
+      </listitem>
+      <listitem><para>all other pathname-based operations proceed
+	  through the following steps:</para>
+	  <orderedList numeration="arabic" spacing="compact">
+	    <listitem><para>while still holding dir_obj's lock, it
+		locks the child entry where the target name entry
+		has been found. (As described in <xref
+		  linkend="fslibDestruction">, destroying ServerFile
+		  objects require getting rid of all child entries
+		  refering to it; holding the lock guarantees that
+		  even though we release the container directory
+		  lock, the ServerFile can't disappear before
+		  finishing the work we're delegating to it)
+	    </para>
+	  </listitem>
+	  <listitem><para>it releases dir_obj's
+	      lock;
+	    </para></listitem>
+	  <listitem><para>it invokes the corresponding
+	      ServerFile/DirLinuxFS method;</para></listitem>
+	  <listitem><para>it releases the child entry lock.</para>
+	  </listitem>
+	</orderedList>
+      </listitem>
+    </itemizedList>
+
+  </section>
+
+  
+  <section id="fslibDestruction">
+    <title>Object Destruction</title>
+    <para>
+      The two internal objects that have to go away are 1) ServerFiles that
+      interact with applications and FRs, and 2) DirLinuxFS objects that
+      cache namespace (and interact with application for directory
+      operations). 
+      The FileSystem maintains a list of candidate ServerFile objects
+      list.  
+    </para>
+    
+    <para>NOT DONE YET: we do not deal with detecting DirLinuxFS candidates
+      to be destroyed. Their destruction protocol has to be different from
+      the one dealing with files, since DirLinuxFS objects with no clients
+      may still be very useful for lookups.
+    </para>
+
+    <para>
+    ServerFile objects are destroyed in the following way:
+    </para>
+    <itemizedlist spacing ="compact">
+
+      <listitem> <simpara> <emphasis>Deleted files:</emphasis>
+	  Files that have been unlinked resulting in nlink == 0 (no
+	  outstanding links) are destroyed
+	  when all of its clients have gone away.</simpara>
+	<simpara> The unlink() call (in the case where no more links to the
+	  file exist) checks for the existence of other clients:</simpara>
+	<itemizedlist spacing="compact">
+	  <listitem><simpara> If there are external clients other than the
+	      FR, unlink() stores the information that the file needs to
+	      be deleted (i.e., it has been already unlinked from the
+	      directory, but the file data needs to be freed) when the last
+	      client goes away. </simpara>
+	    <simpara> When all clients have gone away,
+	      exportedXObjectListEmpty() is invoked. This method checks if
+	      there was a removal pending; if so performs it and invokes
+	      destroy().</simpara>
+	    <simpara> Every time a clients go away, the method
+	      handleXObjFree is invoked. This method checks if the only
+	      external client is a FR. If so, it interacts with the
+	      FR (as described in the item below) so that this last
+	      client goes away and exportedXObjectListEmpty() is invoked.
+	    </simpara>
+	  </listitem>
+	  
+	  <listitem><simpara> If the only external client is the FR,
+	      unlink() talks to the FR using its _remove method. 
+	      FR::_remove() checks if the FR is in use. If it is not,
+	      it will invoke ServerFileBlock::frIsNotInUse(), which
+	      results in the ServerFile releasing the FR. 
+	      The list of clients will become empty, and 
+	      exportedXObjectListEMpty() invokes destroy().</simpara>
+	  </listitem>		
+	  <listitem><simpara> If no external client exists (not even a FR),
+	      unlink() invokes method destroy()</simpara>
+	  </listitem>
+	</itemizedList>
+      </listitem>
+	  
+      <listitem>
+	<simpara> <emphasis>Invalid/Stale files:</emphasis> When the
+	  last client goes away, exportedXObjectListEmpty() checks for
+	  invalid/stale files and invokes destroy() for them.
+	</simpara>
+      </listitem>
+
+      <listitem><simpara><emphasis>Other files:</emphasis>
+	  When a ServerFile has no external client left (besides possibly
+	  the FR), it puts itself on a list of
+	  "free: ServerFile instances (the FreeList maintained by the
+	  FileSystem). When the FileSystem object is
+	  initialized, it sets up a periodical event for going
+	  through the FreeList and invoking ServerFile::tryToDestroy() if
+	  the list entry has been there for more than a specified
+	  amount of time.
+	</simpara>
+      </listitem> 
+    </itemizedlist>
+
+    <para>The method tryToDestroy() performs the following actions:</para>
+
+    <itemizedList>
+      <listitem>
+	<simpara> It checks if its has clients:</simpara>
+	  <itemizedList>
+	    <listitem><simpara>If it has any client besides a FR, it
+		can't be destroyed now. It moves itself to the end of
+		the FreeList and returns.</simpara>
+	    </listitem>
+	    <listitem><simpara>If its single client is the FR, it
+		interacts with the FR to check if the FR can go away.
+		If it can't (i.e., the FR has clients now), it won't
+		be destroyed; it moves itself to the end of the FreeList
+		and returns. (This interaction with the FR can not be
+		permorfed holding the ServerFile locked).</simpara>
+	      <simpara>
+		If the FR can go away, it is detached (and the lock
+		reacquire for checking again if there are clients). If
+		not, tryToDestroy() puts the object on the end of the
+		FreeList and returns.
+	      </simpara>
+	    </listitem>
+
+	    <listitem><simpara> If there are clients at all, ServerFile
+		interacts with its parents and the MultiLinkManager so that
+		all reference to it in the cached namespace go away.</simpara>
+	      <simpara>tryToDestroy initiates a detach from all its
+		parents. <xref linkend="detach-file">
+		  pictures the
+		  interaction of a ServerFile <emphasis>sf</emphasis>
+		  with a parent 
+		  <emphasis>p</emphasis>. Step 4
+		  (DirLinuxFS locking child entry) is necessary to
+		  guarantee that whatever work object <emphasis>p</emphasis> has 
+		  delegated to <emphasis>sf</emphasis> has been completed 
+		  (as described in ??). In step 7,
+		  ServerFile sf checks to see if it has new clients before 
+		  going ahead with the detachment. This is necessary
+		  because as the ServerFile was issueing (1), it could be
+		  receiving new clients, and therefore it can't go away,
+		  so we need to make sure that it will be still reachable
+		  from the namespace cache.
+	      </simpara>
+	      <figure id="detach-file">
+		<title>Server File detaching from a DirLinuxFS parent</title>
+		<mediaobject>	
+		  <imageobject>
+		    <imagedata fileref="&fslibFigPath;/figures/detach-file.eps"
+			       format="eps" align="center" scale=60>
+		  </imageobject>
+		  <imageobject>
+		    <imagedata fileref="figures/detach-file.jpg"
+			       format="jpg" align="center" scale=60>
+		  </imageobject>
+		</mediaobject>
+	      </figure>
+	      
+	      <simpara>
+		If a request to detach from a parent is denied, tryToDestroy 
+		gives up. If the detachment succeeds for all parents and
+		still there are no clients the next step
+		is to interact with the FileSystem object to make sure that
+		the ServerFile does not appear in the list of 
+		MultiLinkSF objects. This interaction is very similar to
+		detaching from DirLinuxFS parents, and it is presented in
+		<xref linkend="detach-multlink">.
+		  The test in Step 6 guarantees that if new directories got to
+		  the ServerFile or new clients exist, tryToDestroy() gives
+		  up.
+	      </simpara>
+	    <figure id="detach-multlink">
+	      <title>Server File detaching from FileSystem obj</title>
+	      <mediaobject>	
+		<imageobject>
+		  <imagedata fileref="&fslibFigPath;/figures/detach-multilink.eps"
+			     format="eps" align="center" scale=60>
+		</imageobject>
+		<imageobject>
+		  <imagedata fileref="figures/detach-multilink.jpg"
+			     format="jpg" align="center" scale=60>
+		</imageobject>
+	      </mediaobject>
+	    </figure>
+	    </listitem>
+	  </itemizedlist>
+      </listitem> 
+      <listitem>
+	<simpara>
+	  When the memory manager has completed. (FIXME: I don't remember
+	  exactly what we mean here.)
+	</simpara>
+      </listitem> 
+      
+    </itemizedlist>
+
+  
+  </section>
+
+</section>
+
+<section><title>Guarantees</title>
+
+  <para>
+    The File System Library does not issue two concurrent FileSystem
+    operations that conflict, i.e., that have a target (either directory 
+    or file) in common. The protocols described in <xref linkend="protocols">
+      provide this guarantee because:
+  </para>
+  <itemizedList spacing="compact">
+    <listitem><para>
+	if there isn't an object (DirLinuxFS or ServerFile) to represent
+	the target involved, the container directory is locked through the 
+	invocation of the FileSystem object, thereby blocking any
+	operation on anything on the diretory;
+      </para>
+    </listitem>
+    <listitem><para>
+	if there is an object (DirLinuxFS or ServerFile) to represent
+	the operation target, there is only one such object reachable from 
+	the namespace (the protocols for creation/destruction of
+	objects guarantee that), so the object can correctly work as a
+	synchronization point. The lock of this object is held through the 
+	whole operation. If the operation involves both the
+	directory container and the file/directory target
+	(e.g. link, unlink, rmdir), then the container directory
+	lock is also held during the operation.
+      </para>
+    </listitem>
+  </itemizedList>
+</section>
+
+<section><title>Files</title>
+  <itemizedlist>
+    <listitem>
+      <simpara>
+	
+	<ulink url="&topsrc/lib/libc/fslib/FileSystem.H"><filename>
+	    FileSystem.H</filename></ulink>
+	<ulink url="&topsrc/lib/libc/fslib/FileSystem.C"><filename>
+	    [.C]</filename></ulink>: Defines interface a file
+	system should implement to use fslib.
+	
+      </simpara>
+    </listitem> 
+    <listitem>
+      <simpara>
+	
+	<ulink url="&topsrc/lib/libc/fslib/FSCreds.H"><filename>
+	    FSCreds.H</filename></ulink>: Interface for setting/using
+	credentials.
+	
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	
+	<ulink url="&topsrc/lib/libc/fslib/NameTreeLinuxFS.H"><filename>
+	    NameTreeLinuxFS  
+	    [.H]</filename></ulink>
+	<ulink url="&topsrc/lib/libc/fslib/NameTreeLinuxFS.C"><filename>[.C]
+	  </filename></ulink>:  
+	Entry point for name lookups.
+	
+      </simpara>
+    </listitem> 
+    
+    <listitem>
+      <simpara>
+	
+	<ulink url="&topsrc/lib/libc/fslib/DirLinuxFS.H"><filename> DirLinuxFS
+	    [.H]</filename>
+	</ulink><ulink url="&topsrc/lib/libc/fslib/DirLinuxFS.C">
+	  <filename>[.C]</filename></ulink>:
+	Caches directory state for a single directory.
+	
+      </simpara>
+      
+      <itemizedlist>
+      <listitem>
+	<simpara>
+
+	    <ulink url="&topsrc/lib/libc/fslib/DirLinuxFSVolatile.H">
+	      <filename> DirLinuxFSVolatile
+		[.H]</filename></ulink>
+	    <ulink url="&topsrc/lib/libc/fslib/DirLinuxFSVolatile.C">
+	      <filename>[.C]</filename></ulink>:
+	    Specializes DirLinuxFS behavior for file systems
+	    where cached data (token, status) can change
+	    "externally" to the file system.
+	    
+	  </simpara>
+	</listitem> 
+      </itemizedlist>
+    </listitem> 
+    
+    <listitem>
+      <simpara>
+	
+	<ulink url="&topsrc/lib/libc/fslib/ServerFile.H"><filename> ServerFile
+	    [.H]</filename></ulink>
+	<ulink url="&topsrc/lib/libc/fslib/ServerFile.C">
+	  <filename>[.C]</filename></ulink>:
+	Caches state of a file.
+      </simpara>
+      
+      <itemizedlist>
+	<listitem>
+	  <simpara>
+	    
+	    <ulink url="&topsrc/lib/libc/fslib/ServerFileBlock.H">
+	      <filename> ServerFileBlock
+		[.H]</filename></ulink>:
+	    Maintains relationship for block server files with FR.
+	    
+	  </simpara>
+	</listitem>
+	
+	<listitem>
+	  <simpara>
+	    <ulink url="&topsrc/lib/libc/fslib/ServerFileDir.H">
+	      <filename> ServerFileDir [.H]</filename> </ulink>
+	    <ulink url="&topsrc/lib/libc/fslib/ServerFileDir.C">
+	      <filename>[.C]</filename></ulink>:
+	    Exports standard interface for a directory.
+	  </simpara>
+	</listitem>
+	
+      </itemizedlist>
+      
+    </listitem>
+  </itemizedlist>
+</section>
+<!--
+Local Variables:
+sgml-validate-command: "nsgmls -s %s %s"
+sgml-indent-data: t
+sgml-insert-missing-element-comment: t
+End:
+-->

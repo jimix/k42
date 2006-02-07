@@ -1,0 +1,212 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceUser.xml,v 1.12 2005/08/31 13:56:13 dgurley Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::User::User2">
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="User2" />
+	<k42Format value='' />
+</event>
+
+
+<event name="OS::User::User3">
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="User3" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='first data word %0[%llx] second data word %1[%llx]' />
+</event>
+
+
+<event name="OS::User::EnterProc">
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="EnterProc" />
+	<k42Format value='entered non-K42 process code' />
+</event>
+
+
+<event name="OS::User::RunULLoader" description="load a new executable semantically from the user's point of view (similar to TRACE_USER_START_EXEC)">
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="RunULLoader" />
+	<fields>
+		<field name="pid" type="uint64" description="process ID" />
+	</fields>
+	<k42Format value='loading new executables PID %0[%llx]' />
+</event>
+
+
+<event name="OS::User::Spawn" description="creates a new process with a new executable">
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="Spawn" />
+	<fields>
+		<field name="pid"    type="uint64" description="process id" />
+		<field name="ppid"   type="uint64" description="parent process id" />
+		<field name="field2" type="uint64" description="unknown" />
+		<field name="executableName" type="string" description="name of executable" />
+	</fields>
+	<k42Format value='spawned new process PID %0[%llx] PPID %1[%llx] name %3[%s]' />
+</event>
+
+
+<event name="OS::User::StartExec" description="overlay executable onto an existing process" >
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="StartExec" />
+	<fields>
+		<field name="pid"  type="uint64" description="process id" />
+		<field name="executableName" type="string" decsription="name of the newly loaded executable" />
+	</fields>
+	<k42Format value='about to exec: PID %0[%llx] name %1[%s] ' />
+</event>
+
+
+<event name="OS::User::Str">
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="Str" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+	</fields>
+	<k42Format value='vp %0[%llx] says: &#96;%1[%s]&#39;' />
+</event>
+
+
+<event name="OS::User::SyscallEnter" description="just before system call, automatically generated">
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="SyscallEnter" />
+	<fields>
+		<field name="field0" type="uint64" description="pid of process making syscall" />
+		<field name="field1" type="uint64" description="third parameter to syscall" />
+		<field name="field2" type="uint64" description="next parameter and so on" />
+		<field name="field3" type="uint64" />
+		<field name="field4" type="uint64" />
+		<field name="field5" type="uint64" description="second parameter and so on" />
+		<field name="field6" type="uint64" description="first parameter to syscall" />
+		<field name="field7" type="string" description="syscall name" />
+	</fields>
+	<k42Format value='%7[%s] 0x%0[%llx]: %6[%llx] %5[%llx] %1[%llx] %2[%llx] %3[%llx] %4[%llx]' />
+</event>
+
+
+<event name="OS::User::SyscallEnterS_FMT" description="just before system call, automatically generated">
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="SyscallEnterS_FMT" />
+	<fields>
+		<field name="field0" type="uint64" description="pid of process making syscall" />
+		<field name="field1" type="uint64" description="third parameter to syscall" />
+		<field name="field2" type="uint64" description="next parameter and so on" />
+		<field name="field3" type="uint64" />
+		<field name="field4" type="uint64" />
+		<field name="field5" type="uint64" description="second parameter and so on" />
+		<field name="field6" type="string" description="first parameter to syscall" />
+		<field name="field7" type="string" description="syscall name" />
+	</fields>
+	<k42Format value='%7[%s] 0x%0[%llx]: %6[%s] %5[%llx] %1[%llx] %2[%llx] %3[%llx] %4[%llx]' />
+</event>
+
+
+<event name="OS::User::SyscallEnterSS_FMT" description="just before system call, automatically generated">
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="SyscallEnterSS_FMT" />
+	<fields>
+		<field name="field0" type="uint64" description="pid of process making syscall" />
+		<field name="field1" type="uint64" description="third parameter to syscall" />
+		<field name="field2" type="uint64" description="next parameter and so on" />
+		<field name="field3" type="uint64" />
+		<field name="field4" type="uint64" />
+		<field name="field5" type="string" description="second parameter and so on" />
+		<field name="field6" type="string" description="first parameter to syscall" />
+		<field name="field7" type="string" description="syscall name" />
+	</fields>
+	<k42Format value='%7[%s] 0x%0[%llx]: %6[%s] %5[%s] %1[%llx] %2[%llx] %3[%llx] %4[%llx]' />
+</event>
+
+
+<event name="OS::User::SyscallExit">
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="SyscallExit" />
+	<fields>
+		<field name="field0" type="uint64" description="pid of process making syscall" />
+		<field name="field1" type="uint64" description="return code from syscall" />
+		<field name="field2" type="string" description="syscall name" />
+	</fields>
+	<k42Format value='%2[%s] 0x%0[%llx]: rc %1[%llx]' />
+</event>
+
+
+<event name="OS::User::ProcKill">
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="ProcKill" />
+	<fields>
+		<field name="pid"  type="uint64" description="process ID"/>
+		<field name="type" type="uint64" description="replicated (uniprocessor) or shared (multiprocessor)" />
+	</fields>
+	<k42Format value='exit process PID %0[%llx] type %1[%llx]' />
+</event>
+
+
+<event name="OS::User::ProcKillDone">
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="ProcKillDone" />
+	<fields>
+		<field name="pid"  type="uint64" description="process ID"/>
+		<field name="type" type="uint64" description="replicated (uniprocessor) or shared (multiprocessor)" />
+	</fields>
+	<k42Format value='exit process PID %0[%llx] type %1[%llx]' />
+</event>
+
+
+<event name="OS::User::SyscallInfo">
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="SyscallInfo" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="string" />
+	</fields>
+	<k42Format value='Syscall data: 1:%0[%llx] 2:%1[%llx] 3:%2[%llx] 4:%3[%s]' />
+</event>
+
+<event name="OS::User::Argv"
+       description="information about the arguments used to run an executable">
+	<layerId value="OS" />
+	<classId value="User" />
+	<specifier value="Argv" />
+	<fields>
+		<field name="lengths" type="string" 
+                    description="a space delineated list of the length
+                                 of the arguments" />                    
+		<field name="argv" type="string"
+                    description="space delineated concatenated list of arguments" />
+	</fields>
+	<k42Format value='lengths %0[%s] argv %1[%s]' />
+</event>
+
+</PEM_Events>

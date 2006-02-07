@@ -1,0 +1,17 @@
+###############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the license along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+# $Id: Make.WINtst,v 1.9 2001/06/19 17:20:39 peterson Exp $
+###############################################################################
+
+foo.C : $(SRC_DIR_PATH)/WINtst/SysFacts.H
+
+$(SRC_DIR_PATH)/WINtst/SysFacts.H : $(SRC_DIR_PATH)/powerpc/SysFacts.H
+	$(CP) $(SRC_DIR_PATH)/powerpc/SysFacts.H $(SRC_DIR_PATH)/WINtst/SysFacts.H
+
+LOADLIBES += -lk -lc

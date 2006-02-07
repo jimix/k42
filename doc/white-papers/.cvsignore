@@ -1,0 +1,12 @@
+*.html
+*.tex
+*.pdf
+*.ps
+*.eps
+*.rtf
+*.out
+*.log
+*.aux
+*.fig
+*.png
+*.jpg

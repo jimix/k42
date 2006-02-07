@@ -1,0 +1,637 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceMem.xml,v 1.11 2005/05/12 07:02:40 cyeoh Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+<event name="OS::Mem::RegCreateFix">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="RegCreateFix" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='Region default created fixlen with address %0[%llx] and size %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::RlstAttach">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="RlstAttach" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='RegL::attaching new reg, last va 0x%0[%llx], sz 0x%1[%llx], newa 0x%2[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMCRWGetPage">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMCRWGetPage" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='allocated a new page offset %0[%llx] phys addr %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMCRWFoundPage">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMCRWFoundPage" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='found a page offset %0[%llx] phys addr %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMCOMAtchReg">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMCOMAtchReg" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='Region %0[%llx] attached to FCM %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMCOMAddPage">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMCOMAddPage" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='PC %0[%llx]: added %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMDefGetPage">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMDefGetPage" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='get page allocated a new page offset %0[%llx] phys addr %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMDefFoundPage">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMDefFoundPage" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='get page found a page offset %0[%llx] phys addr %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMDefMapPage">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMDefMapPage" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='map page allocated a new page offset %0[%llx] phys addr %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMDefFound1Page">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMDefFound1Page" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='map page found a page offset %0[%llx] phys addr %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::InvPage">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="InvPage" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+		<field name="field4" type="uint64" />
+	</fields>
+	<k42Format value='invalidated 0x%0[%llx] hi=x%1[%llx] pi=x%2[%llx] a=0x%3[%llx] vw=0x%4[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMPrimGetPage">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMPrimGetPage" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='fcm prim allocated a new page offset %0[%llx] phys addr %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMPrimFoundPage">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMPrimFoundPage" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='get page found a page offset %0[%llx] phys addr %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMPrimMapPage">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMPrimMapPage" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='allocated a new page v-%0[%llx] o-%1[%llx] p-%2[%llx], fcm %3[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMPrimFound1Page">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMPrimFound1Page" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='map page found a page offset %0[%llx] phys addr %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::HatDefDetReg">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="HatDefDetReg" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='detached region %0[%llx] %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::PageDeq">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="PageDeq" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='page deque PC %0[%llx]: found %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::PageDeq1">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="PageDeq1" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='page deque 1 PC %0[%llx]: found %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::PageDealloc">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="PageDealloc" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='deallocating page %0[%llx]/pm %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::RegDefCreate">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="RegDefCreate" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='region default create addr %0[%llx] size %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::RegDefInitFixed">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="RegDefInitFixed" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='region default init fixed %0[%llx] addr %1[%llx] size %2[%llx]' />
+</event>
+
+
+<event name="OS::Mem::RegDefCRWCreateFixLen">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="RegDefCRWCreateFixLen" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='Region default crw created fixlen with address %0[%llx] and size %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::AllocRegHold">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="AllocRegHold" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='alloc region holder addr %0[%llx] size %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::AllocSegment">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="AllocSegment" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='allocating a default segment for vp %0[%lx]' />
+</event>
+
+
+<event name="OS::Mem::MapSegment">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="MapSegment" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint32" />
+		<field name="field2" type="uint32" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='Map Segment %0[%lx] cache %1[%x] slb %2[%x] evicts %3[%lx]' />
+</event>
+
+
+<event name="OS::Mem::DestroyReg">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="DestroyReg" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='Destroying region %0[%llx] region addr %1[%llx] size %2[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMCommonDestroy">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMCommonDestroy" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='ref %0[%llx] TRACE_MEM_FCMCRW_DESTROY' />
+</event>
+
+
+<event name="OS::Mem::FCMCRWCreate">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMCRWCreate" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='TRACE_MEM_FCMCRW_CREATE ref %0[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMComputationCreate">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMComputationCreate" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='TRACE_MEM_FCMComputation_CREATE ref %0[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMDefaultCreate">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMDefaultCreate" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='TRACE_MEM_FCMDefault_CREATE ref %0[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMFixedCreate">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMFixedCreate" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='TRACE_MEM_FCMFixed_CREATE ref %0[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMFrameArrayCreate">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMFrameArrayCreate" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='TRACE_MEM_FCMFrameArray_CREATE ref %0[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMPartitionedTrivialCreate">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMPartitionedTrivialCreate" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='TRACE_MEM_FCMPartitionedTrivial_CREATE ref %0[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMPrimitiveCreate">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMPrimitiveCreate" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='TRACE_MEM_FCMPrimitive_CREATE ref %0[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMPrimitiveKernelCreate">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMPrimitiveKernelCreate" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='TRACE_MEM_FCMPrimitiveKernel_CREATE ref %0[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMSharedTrivialCreate">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMSharedTrivialCreate" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='TRACE_MEM_FCMSharedTrivial_CREATE ref %0[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMDefaultMultiRepMapPageStart">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMDefaultMultiRepMapPageStart" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='FCMDefaultMultiRep::mapPage : START: offset %0[%llx] root %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMDefaultMultiRepMapPageEnd">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMDefaultMultiRepMapPageEnd" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='FCMDefaultMultiRep::mapPage : END: offset %0[%llx] root %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMDefaultMultiRepMapPageRetry">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMDefaultMultiRepMapPageRetry" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='FCMDefaultMultiRep::mapPage : RETRY: offset %0[%llx] root %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMDefaultMultiRepGetPageInternalStart">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMDefaultMultiRepGetPageInternalStart" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='FCMDefaultMultiRep::getPageInternal : START: offset %0[%llx] root %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMDefaultMultiRepGetPageInternalEnd">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMDefaultMultiRepGetPageInternalEnd" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='FCMDefaultMultiRep::getPageInternal : END: offset %0[%llx] root %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FCMCommonMultiRepDestroy">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FCMCommonMultiRepDestroy" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='ref %0[%llx] TRACE_MEM_FCMCRW_DESTROY' />
+</event>
+
+
+<event name="OS::Mem::FRStartFillPage">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FRStartFillPage" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='FR ASYNC startfillpage addr %0[%llx] offset %1[%llx]' />
+</event>
+
+
+<event name="OS::Mem::FRStartWrite">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="FRStartWrite" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='FR ASYNC startwrite addr %0[%llx] offset %1[%llx] size %2[%llx]' />
+</event>
+
+<event name="OS::Mem::EnterPage">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="EnterPage" />
+	<fields>
+		<field name="vaddr" type="uint64" description="virtual address" />
+		<field name="logPageSize" type="uint64" description="log page size" />
+		<field name="paddr" type="uint64" description="physical address" />
+	</fields>
+	<k42Format value='enter page virtual addr 0x%0[%llx] log pagesize 0x%1[%llx] physical addr 0x%2[%llx]' />
+</event>
+
+<event name="OS::Mem::MMap"
+       description="mmap system call">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="MMap" />
+	<fields>
+		<field name="vaddr" type="uint64" description="address" />
+		<field name="length" type="uint64" description="size" />
+		<field name="flags" type="uint64" description="flags" />
+	</fields>
+	<k42Format value='mmap addr 0x%0[%llx] size 0x%1[%llx] flags 0x%2[%llx]' />
+</event>
+
+<event name="OS::Mem::Brk"
+       description="brk system call">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="Brk" />
+	<fields>
+		<field name="vaddr" type="uint64" description="address" />
+		<field name="length" type="uint64" description="size" />
+	</fields>
+	<k42Format value='brk addr 0x%0[%llx] size 0x%1[%llx]' />
+</event>
+
+<event name="OS::Mem::Data"
+       description="loader mapping of data">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="Data" />
+	<fields>
+		<field name="vaddr" type="uint64" description="address" />
+		<field name="length" type="uint64" description="size" />
+	</fields>
+	<k42Format value='data addr 0x%0[%llx] size 0x%1[%llx]' />
+</event>
+
+<event name="OS::Mem::BSS"
+       description="loader mapping of bss">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="BSS" />
+	<fields>
+		<field name="vaddr" type="uint64" description="address" />
+		<field name="length" type="uint64" description="size" />
+	</fields>
+	<k42Format value='bss addr 0x%0[%llx] size 0x%1[%llx]' />
+</event>
+
+<event name="OS::Mem::Stack"
+       description="loader mapping of stack">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="Stack" />
+	<fields>
+		<field name="vaddr" type="uint64" description="address" />
+		<field name="length" type="uint64" description="size" />
+	</fields>
+	<k42Format value='stack addr 0x%0[%llx] size 0x%1[%llx]' />
+</event>
+
+<event name="OS::Mem::MUnmap"
+       description="munmap system call">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="MUnmap" />
+	<fields>
+		<field name="vaddr" type="uint64" description="address" />
+		<field name="length" type="uint64" description="size" />
+	</fields>
+	<k42Format value='munmap addr 0x%0[%llx] size 0x%1[%llx]' />
+</event>
+
+<event name="OS::Mem::ProcessMemoryUsage"
+       description="Computational memory used by process">
+	<layerId value="OS" />
+	<classId value="Mem" />
+	<specifier value="ProcessMemoryUsage" />
+	<fields>
+		<field name="bytesUsed" type="uint64" description="address" />
+	</fields>
+	<k42Format value='Max memory used by process 0x%0[%llx] bytes' />
+</event>
+
+</PEM_Events>

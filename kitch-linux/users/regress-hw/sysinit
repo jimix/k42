@@ -1,0 +1,185 @@
+#!/bin/bash
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# ****************************************************************************/
+#/****************************************************************************
+# * Module Description: System initialization script
+# * **************************************************************************/
+
+# start up trace daemon and set trace mask to none
+#/traceControl --mask NONE
+#/traceControl --start
+function run_regress()
+{
+    cd /
+    for i in 1 2 3 4 5; do
+	echo
+	echo "================================================================"
+	echo "Running K42 regress pass $i of 5"
+	DATE=`date`
+	echo "time $DATE"
+	echo "================================================================"
+
+	touch /tmp/regress-k42-pass-$i
+	# A hang == failure.. right?
+	/kbin/shellServer regress
+    done
+
+    cd /tmp
+    for i in 1 2 3 4 5; do
+	echo
+	echo "================================================================"
+	echo "Running linux regress pass $i of 5"
+	DATE=`date`
+	echo "time $DATE"
+	echo "================================================================"
+
+	touch regress-linux-pass-$i
+
+	# be verbose
+	if ! /tests/linux/regress.sh -vd ; then
+	    echo "*** Linux regress failed on pass $i ***"
+	    # knightly recognizes failure by this script not executing
+	fi
+	if ! /tests/linux/micro_bench.sh -vd ; then
+	    echo "*** Linux micro benchmarks failed on pass $i ***"
+	    # knightly searches for the string
+	fi
+    done
+
+    return 0
+}
+
+: ${SDET_REPEAT:=3}
+
+function run_sdet()
+{
+    local SERIES=$1
+    local OUTPUT=$2
+    echo run_sdet $1 $2
+    cd /home/spec
+    # the sdet line extracts the throughtput number (without the
+    # decimal point).  Since the output is known to have one decimal
+    # digit, this is equivalant to multiplying by 10.
+    bin/runSDET -c 0xf7f -s "`rep 8 $SERIES`" 2>&1 | \
+	tee /dev/tty | \
+	sed -n -e 's/^.*throughput is \(.*\)\.\(.*\) scripts.*$/\1\2 /gp' \
+	> $OUTPUT
+    return 0
+}
+
+function reboot()
+{
+    local CPUS=$1
+    local FLAGS=$2
+    echo "Rebooting to $CPUS cpus, flags $FLAGS"
+    if [ -z "$NOREBOOT" ] ; then
+	sleep 1
+	echo "0|C $FLAGS" > /ksys/console
+	echo "0|X $CPUS" >/ksys/console
+    else
+	exit 0
+    fi
+}
+
+function rep() {
+    for i in `seq 1 $1` ; do
+	echo -n "$2 "
+    done
+    echo
+}
+
+
+/kbin/sysinit
+
+HOME=/home/regress-hw
+PATH=${PATH}:${HOME}/bin:/kbin
+
+export HOME
+
+if [ -f /knfs/tmp/regress-sdet.complete ] ; then
+    rm -f /knfs/tmp/regress-sdet.*
+    rm -f /knfs/tmp/regress-out
+    rm -f /knfs/tmp/status
+    rm -f /knfs/tmp/sdet_cpus
+fi
+
+cpus=`cat /ksys/proccount`
+
+if [ ! -f /knfs/tmp/regress-out ] ; then
+    run_regress
+    touch /knfs/tmp/regress-out
+    reboot 1 0xfff
+fi
+
+output_base=/knfs/tmp/regress-sdet
+for i in `seq 1 $SDET_REPEAT` ; do
+    output=${output_base}.${cpus}.${i}
+    if [ ! -f $output ] ; then
+	run_sdet $cpus $output
+	if [ $i -ne $SDET_REPEAT ]; then
+	    reboot $cpus 0xfff
+	else
+	    # Record that we've run with this many cpus
+	    # Reboot with all cpus running
+	    echo "$cpus" >> /knfs/tmp/sdet_cpus
+	    reboot 64 0xfff
+	fi
+    fi
+done
+
+for j in `cat /knfs/tmp/sdet_cpus` ; do
+    let sum=0
+    let min=0
+    let max=0
+    let count=0
+
+    for i in `cat ${output_base}.${j}.*` ; do
+	let count=$count+1
+	if [ $min -eq 0 ]; then
+	    let min=$i
+	fi
+	if [ $max -lt $i ]; then
+	    let max=$i
+	fi
+	if [ $min -gt $i ]; then
+	    let min=$i
+	fi
+
+	let sum=$sum+$i
+    done
+
+    [ $count == 0 ] && {
+	echo "PANIC: no such files: ${output_base}.${j}.*";
+	break;
+    }
+
+    # This division by 10 is to restore the decimal point lost
+    # in run_sdet(above).  Clean this up at some point.
+    let sum=$sum/$count
+    let sum=$sum/10
+    let min=$min/10
+    let max=$max/10
+    echo SDET RESULTS $j $min $sum $max
+    (echo ""; echo "$j-way") >> /knfs/tmp/status
+    for i in `ls ${output_base}.${j}.*` ; do
+	(tr '\n' ' ' ; echo "") < $i | \
+	    sed -e "s:\([0-9]\)\([0-9]\) :\1.\2:g" >> /knfs/tmp/status
+    done
+done
+
+touch /knfs/tmp/regress-sdet.complete
+echo "Regress Test Complete"
+
+# stops the trace control daemon and writes down the rest of the file
+#/traceControl --stop
+
+# Delay before rebooting to give completion message a chance to get out
+sleep 1
+echo "0|XX" > /ksys/console

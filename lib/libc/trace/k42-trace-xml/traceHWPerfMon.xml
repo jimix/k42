@@ -1,0 +1,282 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceHWPerfMon.xml,v 1.28 2005/08/22 21:48:57 bob Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="HW::HWPerfMon::Periodic" description="hardware performance counter values">
+	<layerId value="HW" />
+	<classId value="HWPerfMon" />
+	<specifier value="Periodic" />
+	<fields>
+		<field name="pc"   type="uint64" description="program counter"/>
+		<field name="sdar" type="uint64" description="sampled data address"/>
+		<field name="ctr1" type="uint64" description="HPM counter 1"/>
+		<field name="ctr2" type="uint64" description="HPM counter 2"/>
+		<field name="ctr3" type="uint64" description="HPM counter 3"/>
+		<field name="ctr4" type="uint64" description="HPM counter 4"/>
+		<field name="ctr5" type="uint64" description="HPM counter 5"/>
+		<field name="ctr6" type="uint64" description="HPM counter 6"/>
+		<field name="ctr7" type="uint64" description="HPM counter 7"/>
+		<field name="ctr8" type="uint64" description="HPM counter 8"/>
+	</fields>
+	<k42Format value='PC %0[%llx] SDAR %1[%llx] pmc1 %2[%lld] pmc2 %3[%lld] pmc3 %4[%lld] pmc4 %5[%lld] pmc5 %6[%lld] pmc6 %7[%lld] pmc7 %8[%lld] pmc8 %9[%lld]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="pc" />
+        <interval type='END' name='HPMPeriodicInterval' pair='HW::HWPerfMon::Periodic' match='' />
+</event>
+
+<event name="HW::HWPerfMon::CPIBreakdown" description="An approximate CPI breakdown">
+	<layerId value="HW" />
+	<classId value="HWPerfMon" />
+	<specifier value="CPIBreakdown" />
+	<fields>
+		<field name="CYC"  type="uint64" description="Cycles Past"/>
+		<field name="INS" type="uint64" description="Instrs Completed"/>
+		<field name="FPU"  type="uint64" description="Stalls due to FPU instrs"/>
+		<field name="FXU"  type="uint64" description="Stalls due to FXU instrs"/>
+		<field name="LSU"  type="uint64" description="Stalls due to FXU instrs"/>
+		<field name="DC"   type="uint64" description="Stalls due to DCache Misses"/>
+		<field name="IC"   type="uint64" description="Stalls due to ICache Misses"/>
+		<field name="BMP"  type="uint64" description="Stalls due to Branch Mispred"/>
+		<field name="RJ"   type="uint64" description="Stalls due to Rejects/Other reasons"/>
+	</fields>
+	<k42Format value='CYC %0[%lld] INS %1[%lld] FPU %2[%lld] FXU %3[%lld] LSU %4[%lld] DC %5[%lld] IC %6[%lld] BMP %7[%lld] RJ %8[%lld]' />
+</event>
+
+<event name="HW::HWPerfMon::RejectCauses" description="A possible list of reasons for rejections">
+	<layerId value="HW" />
+	<classId value="HWPerfMon" />
+	<specifier value="RejectCauses" />
+	<fields>
+		<field name="ATM"  type="uint64" description="A miss happened in address translation"/>
+		<field name="LSQ"  type="uint64" description="LSU issue queue full"/>
+		<field name="FXQ"  type="uint64" description="FXU issue queue full"/>
+		<field name="FPQ"  type="uint64" description="FPU issue queue full"/>
+		<field name="LRB"  type="uint64" description="Load reorder buffer full"/>
+		<field name="SRB"  type="uint64" description="Store reorder buffer full"/>
+		<field name="FPR"  type="uint64" description="FPU rename buffers full"/>
+		<field name="LSR"  type="uint64" description="FXU rename buffers full"/>
+		<field name="GRB"  type="uint64" description="Global reorder buffer full"/>
+	</fields>
+	<k42Format value='ATM %0[%lld] LSQ %1[%lld] FXQ %2[%lld] FPQ %3[%lld] LRB %4[%lld] SRB %5[%lld] FPR %6[%lld] LSR %7[%lld] GRB %8[%lld]' />
+</event>
+
+
+<event name="HW::HWPerfMon::PeriodicAll" description="hardware performance counter values">
+	<layerId value="HW" />
+	<classId value="HWPerfMon" />
+	<specifier value="PeriodicAll" />
+	<fields>
+		<field name="pc"   type="uint64" description="program counter"/>
+		<field name="numberCounters" type="uint64" 
+                       description="number of counters"/>
+		<field name="ctrs" type="list" size="numberCounters"
+                 eltType = "uint64" 
+                 description= "pointer to list of number-of-counter PMU counters"/>
+	</fields>
+	<k42Format value='PC %0[%llx] counter %2[%lld]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="pc" />
+        <interval type='END' name='HPMPeriodicIntervalAll' 
+                  pair='HW::HWPerfMon::PeriodicAll' match='' />
+</event>
+
+<event name="HW::HWPerfMon::AperiodicAll" description="hardware performance counter values">
+	<layerId value="HW" />
+	<classId value="HWPerfMon" />
+	<specifier value="AperiodicAll" />
+	<fields>
+		<field name="pc"   type="uint64" description="program counter"/>
+		<field name="numberCounters" type="uint64" 
+                       description="number of counters"/>
+		<field name="ctrs" type="list" size="numberCounters"
+                 eltType = "uint64" 
+                 description= "pointer to list of number-of-counter PMU counters"/>
+	</fields>
+	<k42Format value='PC %0[%llx] counter %2[%lld]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="pc" />
+        <interval type='END' name='HPMAperiodicIntervalAll' 
+                  pair='HW::HWPerfMon::AperiodicAll' match='' />
+</event>
+
+
+
+<event name="HW::HWPerfMon::Overflow">
+	<layerId value="HW" />
+	<classId value="HWPerfMon" />
+	<specifier value="Overflow" />
+	<fields>
+		<field name="PC" type="uint64" />
+		<field name="counter" type="uint64" />
+	</fields>
+	<k42Format value='PC %0[%llx] counter %1[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="PC" />
+</event>
+
+<event name="HW::HWPerfMon::DataSample">
+	<layerId value="HW" />
+	<classId value="HWPerfMon" />
+	<specifier value="DataSample" />
+	<fields>
+		<field name="PC" type="uint64" />
+		<field name="DATA" type="uint64" />
+	</fields>
+	<k42Format value='PC %0[%llx] DATA %1[%llx]' />
+	<sourceCodeInfo type="ADDR2LINE" pc="PC" />
+</event>
+
+<event name="HW::HWPerfMon::LogPeriod">
+	<layerId value="HW" />
+	<classId value="HWPerfMon" />
+	<specifier value="LogPeriod" />
+	<fields>
+		<field name="ROUND" type="uint64" />
+	</fields>
+	<k42Format value='ROUND %0[%lld] cycles' />
+</event>
+
+<event name="HW::HWPerfMon::DataSamplingDescr">
+	<layerId value="HW" />
+	<classId value="HWPerfMon" />
+	<specifier value="DataSamplingDescr" />
+	<fields>
+		<field name="EVENT" type="uint64" />
+		<field name="FREQ" type="uint64" />
+	</fields>
+	<k42Format value='EVENT %0[%lld] FREQ %1[%lld]' />
+</event>
+
+<event name="HW::HWPerfMon::GroupID" description="HPM group id">
+	<layerId value="HW" />
+	<classId value="HWPerfMon" />
+	<specifier value="GroupID" />
+	<fields>
+		<field name="gid" type="uint64" vtype="uint16" description="HPM group id" />
+	</fields>
+	<k42Format value='group id %0[%lld]' />
+</event>
+
+<event name="HW::HWPerfMon::CounterDescr">
+	<layerId value="HW" />
+	<classId value="HWPerfMon" />
+	<specifier value="CounterDescr" />
+	<fields>
+		<field name="counter"  type="uint64" vtype="uint16" description="HPM counter" />
+		<field name="event"    type="uint64" vtype="uint32"
+                      description="enum constant taken from hwEventList" />
+	</fields>
+	<k42Format value='counter %0[%lld] event %1[%lld]' />
+</event>
+
+
+<hwEventList processor="TRACE_GP970">
+<hwEvent value="UNPROGRAMMED"		description="unprogrammed" />
+<hwEvent value="CYC"               	description="Processor cycles" />
+<hwEvent value="INST_CMPL"         	description="Instructions completed" />
+<hwEvent value="INST_DISP"     		description="Instructions dispatched" />
+<hwEvent value="MINST_CMPL"         	description="Instructions completed for IOPs(all IOPS, one IOP per PPC, ld/store instructions " />
+<hwEvent value="GRP_DISP"		description="Group dispatched" />
+<hwEvent value="GRP_DISP_REJECT"     	description="Group dispatch rejected" />
+<hwEvent value="GRP_DISP_VALID"     	description="Group dispatch valid" />
+<hwEvent value="GRP_CMPL"     		description="Group completed" />
+<hwEvent value="HV_CYC"        		description="Hypervisor cycles" />
+<hwEvent value="BR_ISSUED"       	description="Branches execution issue valid" />
+<hwEvent value="BR_MPRED_CR"    	description="Branch mispredictions due CR bit" />
+<hwEvent value="BR_MPRED_TA"     	description="Branch mispredictions due to target address" />
+<hwEvent value="GRP_EXP_BR_MPRED"   	description="Group experienced a branch misprediction" />
+<hwEvent value="FLUSH_ORG_BR_MPRED"	description="Flush originated by branch mispredication" />
+<hwEvent value="LD_MISS_L1"          	description="L1 D cache load misses" />
+<hwEvent value="ST_MISS_L1"       	description="L1 D cache store misses" />
+<hwEvent value="ST_REF_L1"       	description="L1 D cache store references" />
+<hwEvent value="LD_REF_L1"        	description="L1 D cache load references" />
+<hwEvent value="L1_INV_L2"        	description="L1 D entries invalidated from L2" />
+<hwEvent value="DATA_FROM_L2"        	description="Data fetched from L2" />
+<hwEvent value="DATA_FROM_OTHER_L2_SH"  description="Data fetched from other L2 (shared)" />
+<hwEvent value="DATA_FROM_OTHER_L2_MO"  description="Data fetched from other L2 (modified)" />
+<hwEvent value="DATA_FROM_MEM"          description="Data fetched from memory" />
+<hwEvent value="MARKED_LD_MISS_L1"     	description="Marked L1 D cache load misses" />
+<hwEvent value="INST_FROM_L2"        	description="Instructions fetched from L2" />
+<hwEvent value="INST_FROM_MEM"      	description="Instruction fetched from memory" />
+<hwEvent value="GCT_EMPTY_ICACHE_MISS"	description="Cycles in which the global completion table is empty due to ICache misses (speculative)" />
+<hwEvent value="GCT_EMPTY_BR_MPRED"	description="Cycles in which the global completion table is empty due to branch misprediction (speculative)" />
+<hwEvent value="ITLB_MISS"         	description="Instruction TLB misses" />
+<hwEvent value="DTLB_MISS"        	description="Data TLB misses" />
+<hwEvent value="TLB_MISS"            	description="Total TLB misses" />
+<hwEvent value="ISLB_MISS"            	description="Instruction SLB misses" />
+<hwEvent value="DSLB_MISS"       	description="Data SLB misses" />
+<hwEvent value="SLB_MISS"          	description="Total SLB misses" />
+<hwEvent value="TABLE_WALK_DURATION"  	description="Total cycles in which the tablewalk signal is active" />
+<hwEvent value="L1_PRFTCH"          	description="L1 cache data prefetches" />
+<hwEvent value="L2_PRFTCH"           	description="L2 cache prefetches" />
+<hwEvent value="INST_PRFTCH_REQ"	description="Instruction prefetch requests" />
+<hwEvent value="INST_PRFTCH_INSTL"	description="Instruction prefetches are installed in the prefetch buffer" />
+<hwEvent value="DERAT_MISS"    		description="LSU0 DERAT misses" />
+<hwEvent value="IERAT_MISS"    		description="LSU0 IERAT misses" />
+<hwEvent value="REJECT_ERAT_MISS"	description="LSU Rejects due to ERAT misses" />
+<hwEvent value="REJECT_LMQ_FULL" 	description="Rejects due to LMQ full" />
+<hwEvent value="REJECT_CDF_TAG_COL"	description="LSU Rejects due to CDF or tag collisions" />
+<hwEvent value="GCT_FULL"      	        description="Cycles in which GCT is full" />
+<hwEvent value="FPR_MAPPER_FULL"      	description="Cycles in which FPR mapper is full" />
+<hwEvent value="FPU_ISSUE_QUEUE_FULL"  	description="Cycles in which FPU issue queue full" />
+<hwEvent value="GPR_MAPPER_FULL"      	description="Cycles in which GPR mapper is full" />
+<hwEvent value="CRQ_FULL"        	description="Cycles CR issue queue full" />
+<hwEvent value="LRQ_FULL"  		description="Cycles LRQ full" />
+<hwEvent value="LSU_FLUSH_SRQ"         	description="SRQ flushes" />
+<hwEvent value="LSU_FLUSH_LRQ"     	description="LRQ flushes" />
+<hwEvent value="LSU_FLUSH_ULD"       	description="LRQ unaligned load flushes	" />
+<hwEvent value="LSU_FLUSH_UST"         	description="SRQ unaligned store flushes" />
+<hwEvent value="SRQ_FULL"      	        description="Cycles SRQ full" />
+<hwEvent value="FXU_LSU_ISSUE_QUEUE_FULL" description="Cycles FXU/LSU queue full" />
+<hwEvent value="FLUSH_ORG_LSU"       	description="Flushes originated by LSU" />
+<hwEvent value="FPU_DENORM"        	description="FPU received denormalized data" />
+<hwEvent value="FPU_STALL3"          	description="FPU stalled in pipe3" />
+<hwEvent value="FPU_LOAD"            	description="Floating point loads" />
+<hwEvent value="FPU_STORE"            	description="Floating point stores" />
+<hwEvent value="FPU_ROUND_CONV"         description="Floating point round or convert" />
+<hwEvent value="FPU_ADD_MUL_SUB_CMP_FSEL" description="Floating point add multiply subtract compare or fsel	" />
+<hwEvent value="FPU_MUL_ADD" 		description="Floating point multiply-add" />
+<hwEvent value="FPU_DIV" 		description="Floating point divide" />
+<hwEvent value="FPU_SQRT" 		description="Floating point square root" />
+<hwEvent value="FPU_MOV_EST"		description="Floating point move estimate" />
+<hwEvent value="FPU_EST"		description="Floating point estimate" />
+<hwEvent value="FPU_FINISH"		description="Floating point finished and produced a result" />
+<hwEvent value="SNOOP_M_2_I"		description="Snoop caused transition from M to I"/>
+<hwEvent value="SNOOP_M_2_ES"		description="Snoop caused transition from M to E or S" />
+<hwEvent value="SNOOP_ES_2_RI"		description="Snoop caused transition from E or S to R or I" />
+<hwEvent value="SNOOP_E_2_S"		description="Snoop caused transition from E to S" />
+<hwEvent value="L2_MISS_SHARED"		description="L2 miss, bus response is shared intervention" />
+<hwEvent value="L2_MISS_MODIFIED"	description="L2 miss, bus response is modified intervention" />
+<hwEvent value="FXU_MARKED_INSTR_FIN"	description="FXU marked instruction finish" />
+<hwEvent value="FPU_MARKED_INSTR_FIN"	description="FPU marked instruction finish" />
+<hwEvent value="LSU_MARKED_INSTR_FIN"	description="LSU marked instruction finish" />
+<hwEvent value="MARKED_GROUP_COMPLETE"	description="Marked instruction group complete" />
+<hwEvent value="COMPL_STALL_LSU"	description="Completion Stall by an LSU instruction (speculative)" />
+<hwEvent value="COMPL_STALL_FPU"	description="Completion Stall by an FPU instruction (speculative)" />
+<hwEvent value="COMPL_STALL_LONG_FPU"	description="Completion Stall by a long FPU instruction (speculative)" />
+<hwEvent value="COMPL_STALL_FXU"	description="Completion Stall by an FXU instruction (speculative)" />
+<hwEvent value="COMPL_STALL_LONG_FXU"	description="Completion Stall by a long FXU instruction (speculative)" />
+<hwEvent value="COMPL_STALL_ERAT_MISS"	description="Completion Stall by a reject due to an ERAT miss (speculative)" />
+<hwEvent value="COMPL_STALL_REJECT"	description="Completion Stall by a reject (speculative)" />
+<hwEvent value="COMPL_STALL_DCACHE_MISS" description="Completion Stall by a dcache miss (speculative)" />
+<hwEvent value="FPU0_FIN_PROD_RES" 	description="FPU0 Finished and Produced Result" />
+<hwEvent value="FPU1_FIN_PROD_RES" 	description="FPU0 Finished and Produced Result" />
+<hwEvent value="FXU0_PROD_RES" 		description="FXU0 Finished and Produced Result" />
+<hwEvent value="FXU1_PROD_RES" 		description="FXU1 Finished and Produced Result" />
+<hwEvent value="CYCLES_ICACHE_WRITE_ACTIVE"	description="Cycles in which an Icache write is active" />
+<hwEvent value="ST_REF_L1_0"       	description="L1 D cache side 0 store references" />
+<hwEvent value="ST_REF_L1_1"       	description="L1 D cache side 1 store references" />
+<hwEvent value="LD_REF_L1_0"        	description="L1 D cache side 0 load references" />
+<hwEvent value="LD_REF_L1_1"        	description="L1 D cache side 1 load references" />
+<hwEvent value="DUMMY_LAST"             description="A dummy event that marks the last event to be used to count the events" />
+
+</hwEventList>
+
+</PEM_Events>

@@ -1,0 +1,145 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: os.sgml,v 1.5 2004/12/27 13:42:49 dilma Exp $
+-->
+<!doctype book PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!entity topsrc "../..">
+<!entity % os.ent SYSTEM "os.ent">
+%os.ent;
+]>
+<book id="K42">
+  <chapter id="Over">
+    &osOver;
+
+    <section>
+      &kernelOver;
+      <section>
+	<title>Subsections of kernel overview</title>
+	<section>
+	  &archOver;
+	  <section>
+	    &amd64Over;
+	  </section>
+	  <section>
+	    &generic64Over;
+	  </section>
+	  <section>
+	    &powerpcOver;
+	  </section>
+	</section>
+	<section>
+	  &bilgeOver;
+	</section>
+	<section>
+	  &definesOver;
+	</section>
+	<section>
+	  &exceptionOver;
+	</section>
+	<section>
+	  &initOver;
+	</section>
+	<section>
+	  &memOver;
+	</section>
+	<section>
+	  &procOver;
+	</section>
+	<section>
+	  &traceOver;
+	</section>
+	<section>
+	  &stubtestOver;
+	</section>
+      </section>
+    </section>
+
+    <section>
+      &serversOver;
+      <section>
+	&kfsOver
+      </section>
+      <section>
+	&nfsOver
+      </section>
+      <section>
+	&ptyOver
+      </section>
+    </section>
+
+    <section>
+      &bootOver;
+    </section>
+
+  </chapter>
+  <chapter id="PrgG">
+    &osPrgG;
+
+    <section>
+      &kernelPrgG;
+      <section>
+	<title>Subsections of kernel programming guide</title>
+	<section>
+	  &archPrgG;    
+	  <section>
+	    &amd64PrgG;
+	  </section>
+	  <section>
+	    &generic64PrgG;
+	  </section>
+	  <section>
+	    &powerpcPrgG;
+	  </section>
+	</section>
+	<section>
+	  &bilgePrgG;
+	</section>
+	<section>
+	  &definesPrgG;
+	</section>
+	<section>
+	  &exceptionPrgG;
+	</section>
+	<section>
+	  &initPrgG;
+	</section>
+	<section>
+	  &memPrgG;
+	</section>
+	<section>
+	  &procPrgG;
+	</section>
+	<section>
+	  &tracePrgG;
+	</section>
+	<section>
+	  &stubtestPrgG;
+	</section>
+      </section>
+    </section>
+
+    <section>
+      &serversPrgG;
+      <section>
+	&kfsPrgG
+      </section>
+      <section>
+	&nfsPrgG
+      </section>
+      <section>
+	&ptyPrgG
+      </section>
+    </section>
+
+    <section>
+      &bootPrgG;
+    </section>
+
+  </chapter>
+</book>

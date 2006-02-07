@@ -1,0 +1,240 @@
+#!/bin/bash
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2005.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file
+# LICENSE.html in the top-level directory for more details.
+#
+# This program creates a matrix of performance results by checking out
+# various versions of K42 and Mambo.
+#
+#  $Id: health,v 1.4 2005/05/13 23:31:51 apw Exp $
+# ############################################################################
+
+function do_run_both()
+{
+    local dir=$1;
+    local results=$2;
+
+    [ -f $results/RESULT ] && return 0;
+    [ -f $dir/server/BROKEN -o -f $dir/client/BROKEN ] && return 0;
+
+    local mambo=$PWD/$dir/server/mambo/bin;
+    local k42=$PWD/$dir/client/install/tools/Linux_i686/powerpc;
+
+    cmd="(mkdir -p $results &&
+           cd $dir/client/powerpc/partDeb/os &&
+             PATH=$k42:$mambo:$PATH
+              /usr/bin/time -f '%S %U' -o $PWD/$results/RESULT
+               k42console -v 4 -m mambo -t 3600 -- 
+                MAMBO_DIR=$PWD/$dir/server/mambo
+                 MAMBO_TYPE=percs
+                  K42_PKGROOT=/u/kitchawa/k42/k42-packages/partDeb.Img.3
+                   K42_PKGHOST=9.3.38.30
+                    MAMBO_EXTRA_OPTS=-n
+                     USR_BASE_PORT=44900
+                      K42_INITSCR=/home/regress/sysinit
+                       MAMBO_EXIT=yes) ${V:+&>>log.$$}";
+
+    echo "RU $results"
+
+    (eval $cmd) || touch $dir/client/BROKEN;
+
+    return 0;
+}
+
+function do_build_client()
+{
+    local dir=$1;
+
+    [ -f $dir/BUILT -o -f $dir/BROKEN ] && return 0;
+
+    cmd="(export PATH=$PWD/$dir/install/tools/Linux_i686/powerpc:$PATH &&
+           export GCC3_EXEC=gcc &&
+            export GXX3_EXEC=g++ &&
+             cd $dir/kitchsrc &&
+              make full_snapshot) ${V:+&>>log.$$}";
+
+    echo "MK $dir"
+    (eval $cmd) || { touch $dir/BROKEN; return 0; }
+
+    touch $dir/BUILT;
+
+    return 0;
+}
+
+function do_checkout_client()
+{
+    local dir=$1;
+    local date="$2";
+    local cmd;
+
+    [ -f $dir/CHECKED ] && return 0;
+
+    unset CVS_SERVER;
+    export CVS_RSH=ssh;
+    export CVSROOT=apw@kpitch.watson.ibm.com:/u/kitchawa/cvsroot;
+
+    cmd="(mkdir -p $dir &&
+           cd $dir &&
+            cvs -q export -D'$date' kitchsrc) ${V:+&>>log.$$}";
+
+    echo "CO $dir"
+    (eval $cmd) || return 1;
+
+    touch $dir/CHECKED || return 1;
+
+    return 0;
+}
+
+function do_build_server()
+{
+    local dir=$1;
+
+    [ -f $dir/BUILT -o -f $dir/BROKEN ] && return 0;
+
+    cmd="(cd $dir/mambo &&
+           ./configure && make percs SKIP_IMAGES=true) ${V:+&>>log.$$}";
+
+    echo "MK $dir"
+    (eval $cmd) || { touch $dir/BROKEN; return 0; }
+
+    touch $dir/BUILT;
+
+    return 0;
+}
+
+function do_checkout_server()
+{
+    local dir=$1;
+    local date="$2";
+    local cmd;
+
+    [ -f $dir/CHECKED ] && return 0;
+
+    unset CVS_SERVER
+    export CVS_RSH=ssh
+    export CVSROOT=:ext:apw@arl-cvs.austin.ibm.com:/nas/cvs
+
+    cmd="(mkdir -p $dir &&
+           cd $dir &&
+            cvs -q export -D'$date' mambo) | tee log.$$ ${Q:+>/dev/null}";
+
+    echo "CO $dir"
+    echo "+ $cmd"
+    (eval $cmd) || return 1;
+
+    touch $dir/CHECKED || return 1;
+
+    return 0;
+}
+
+function work()
+{
+    local begin=$(date -u +%s -d $1);
+    local end=$(date -u +%s -d $2);
+    local interval=$3;
+
+    local i; local j; local perf;
+
+    [ -z "$begin" -o -z "$end" -o -z "$interval" ] && {
+	printf "$PROGNAME: date parsing error: $1/$2/$3\n";
+	return 1;
+    }
+
+    [ -f out.dat ] && mv out.dat out.dat.$$;
+
+    for (( i=$begin; i <= $end; i = $[ $i + $interval ] )) {
+	for (( j=$begin; j <= $end; j = $[ $j + $interval ] )) {
+	    sdate=$(date -u -d "$(printf '1970-01-01 UTC %s seconds' $i)");
+	    cdate=$(date -u -d "$(printf '1970-01-01 UTC %s seconds' $j)");
+
+	    do_checkout_server results/$i/server "$sdate" || return 1;
+	    do_build_server results/$i/server || return 1;
+
+	    do_checkout_client results/$i/client "$sdate" || return 1;
+	    do_build_client results/$i/client || return 1;
+
+	    do_run_both results/$i results/$i/$j || return 1;
+
+	    if [ -f results/$i/$j/RESULT ]; then
+		perf=$((tail -1 results/$i/$j/RESULT; echo + p) | dc);
+	    else
+		perf=0;
+	    fi
+
+	    printf "%s %s %s\n" $i $j $perf >> out.dat || return 1;
+	}
+    }
+
+    echo "LS out.dat"
+    return 0;
+}
+
+function help()
+{
+    echo -e "\`$PROGNAME' builds a matrix of results\n" \
+	    "\n" \
+	    "Usage: $PROGNAME BEGIN END\n" \
+	    " -?, --help     Show this help statement.\n" \
+	    "     --version  Show version statement.\n" \
+	    " -v, --verbose  Turn on tracing.\n";
+}
+
+function main()
+{
+    PROGNAME=${PROGNAME:-health};
+    _PROGVERSION="\$Revision: 1.4 $";
+    _PROGVERSION=${_PROGVERSION/\$Revision: /}; 
+    _PROGVERSION=${_PROGVERSION/ $/};
+    PROGVERSION=${PROGVERSION:-$_PROGVERSION};
+
+    Q=1;
+
+    local begin;
+    local end;
+    local interval=86400;
+
+    #parse the command line arguments
+    while [ $# -gt 0 ]; do
+        case $1 in
+        -\? | --help)
+            help; return 1;
+            ;;
+        --version)
+            echo "$PROGNAME $PROGVERSION"; return 1;
+            ;;
+        -v | --verbose)
+            unset Q; shift;
+            ;;
+        -vv | --very-verbose)
+            set -x; shift;
+            ;;
+        -b | --begin)
+            shift; begin=$1; shift;
+            ;;
+        -e | --end)
+            shift; end=$1; shift;
+            ;;
+        *)
+	    help; return 1;
+            ;;
+        esac
+    done
+
+    [ -z "$begin" -o -z "$end" ] && {
+	echo "$PROGNAME: missing arguments"; return 1;
+    }
+
+    work $begin $end $interval || {
+	echo "$PROGNAME: FAIL: bailing out";
+	return 1;
+    }
+
+    return 0;
+}
+
+main "$@"
+exit $?

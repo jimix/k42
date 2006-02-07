@@ -1,0 +1,1371 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: Overview.sgml,v 1.36 2004/01/30 21:07:38 butrico Exp $
+-->
+  <section id="Overview.introduction">
+    <title>Introduction and Goals</title>
+
+    <para>
+      The K42 project is developing a new operating system kernel
+      incorporating innovative mechanisms, policies, and modern programming
+      technologies.
+      Existing
+      operating system kernels are designed with centralized critical code
+      paths, global data structures, and global policies.  We believe that
+      major structural changes, not just incremental modifications to
+      existing systems, are needed to achieve excellent performance in a
+      maintainable and extensible system.
+    </para>
+
+    <para>
+      In designing K42 we have 1) structured the system using modular,
+      object-oriented code, 2) avoided centralized code paths, global data
+      structures, and global locks, and 3) moved system functionality from
+      the kernel to server processes and into application libraries.  While
+      we believe in these design principles, we're willing to make sensible
+      compromises for the sake of performance.  We're not a research project
+      that carries its design philosophies to extremes in order to fully
+      explore their ramifications.
+    </para>
+
+    <para>
+      We don't intend to introduce a new personality that would require the
+      porting of applications, so K42 is Linux API- and
+      ABI-compatible.  Also, we exploit the rich set of device drivers, file
+      systems, and other code available with Linux, and are part of the
+      community that is developing core kernel technology.  That is, we are
+      developing an alternative kernel for Linux, not a new OS. 
+    </para>
+
+    <para>
+      Key goals of the K42 project include: 
+      <itemizedlist spacing="compact">
+	<listitem>
+	  <formalpara> <title>Flexibility/customizability</title>
+	    <para>
+	      A) Policies and Implementations of every system resource
+	         should be customizable to application needs. 
+              B) The System should be able to automatically adapt to
+	         performance and security faults without penalizing
+		 common case behavior. 
+	    </para>
+	  </formalpara>
+	</listitem>
+
+	<listitem>
+	  <formalpara> <title>Maintainability/Extensibility</title>
+	    <para>
+
+	         The System should have an easily modifyable
+		 infrastructure that enables the research community to
+		 easily study new policies, implementations, and HW
+		 features. Parts of the OS that have been
+		 traditionally accessible only to OS experts should
+		 be accessible to problem domain experts trying to
+		 solve specialized problems. 
+
+	    </para>
+	  </formalpara>
+	</listitem>
+
+	<listitem>
+	  <formalpara> <title>Performance</title>
+	    <para>
+	      The System should:
+	      A) scale up to run well on large multiprocessors and support
+		 large-scale applications efficiently,
+	      B) scale down to run as well on small multiprocessors as kernels
+		 that do not scale up,
+	      C) support small-scale applications as efficiently on large
+		 multiprocessors as on small multiprocessors.
+	    </para>
+	  </formalpara>
+	</listitem>
+
+	<listitem>
+	  <formalpara> <title>Functionality/Linux Compatibility</title>
+	    <para>
+	      A) The system should support the huge number of Linux
+	         applications, libraries, device drivers and file
+		 systems without modification.
+	      B) Ideas explored in K42 should be transferable to vanilla Linux. 
+	    </para>
+	  </formalpara>
+	</listitem>
+
+      </itemizedlist>
+    </para>
+
+    <para>
+      In <xref linkend="Overview.overview"> we briefly describe the structure of K42.
+      <xref linkend="Overview.technology"> describes some of the different technologies
+      we employ in K42 and the approaches we have taken in its design and
+      implementation.
+      In subsequent sections we examine two of these key technologies in
+      more detail:  our user-level implementation of system services
+      in <xref linkend="Overview.user"> and our object-oriented model
+      in <xref linkend="Overview.object">.
+      <xref linkend="Overview.imp"> concludes.
+      For more in-depth information on particular subjects see our
+      other white papers:
+      <simplelist type="inline">
+	<member>Clustered Objects in K42</member>
+	<member>K42's Memory Management</member>
+	<member>K42's Filesystems</member>
+	<member>K42's Performance Monitoring and Tracing
+	Infrastructure</member> 
+	<member>The K42 Linux Environment</member>
+	<member>On-The-Fly Object Switching in K42</member>
+	<member>Utilizing Linux Kernel Components in K42</member>
+	<member>Real-Time in K42</member>
+	<member>Scheduling in K42</member>
+      </simplelist>
+
+    </para>
+  </section>
+
+  <section id="Overview.overview">
+    <title>Overview of K42's Structure</title>
+    <para>
+      K42 is structured around a client-server model (see <xref
+      linkend="K42Struct">).  The kernel is one of the core servers.  It
+      currently provides memory management, process management,
+      inter-process communication (IPC) 
+      infrastructure, base scheduling, networking, device support,
+      etc.  
+      	<footnote>
+	  <para>
+	  In the future we plan to move networking and device support
+	  into user-mode servers.  
+	  </para>
+	</footnote>
+      Above the kernel are applications and system
+      servers, including the NFS file server, name server, socket server,
+      pty server, and pipe server.  For flexibility, and to avoid IPC
+      overhead, we implement as much functionality as possible in
+      application-level libraries.  For example, all thread scheduling is
+      done by a user-level scheduler linked into each process.
+    </para>
+
+    <para>
+      All layers of K42, the kernel, system servers, and user-level
+      libraries, make extensive use of object-oriented technology.
+      All IPC is between objects in the
+      client and server address spaces.  We use a <emphasis>stub
+      compiler</emphasis> with  
+      decorations on the C++ class declarations to automatically
+      generate IPC calls from a client to a server, and have optimized
+      these IPC paths to have good performance.  The kernel provides
+      the basic IPC transport and attaches sufficient information for
+      the server to provide authentication on those calls.
+    </para>
+
+    <para>
+      <figure float="1" id="K42Struct">
+	<title>Structural Overview of K42</title>
+	<mediaobject>
+	  <imageobject>
+	    <imagedata fileref="K42Struct.eps" format="eps" 
+	      align="center" scale=50>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="K42Struct.png" format="gif">
+	  </imageobject>
+	</mediaobject>
+      </figure>
+    </para>
+
+    <para>
+      Linux API and ABI compatibility is accomplished by an emulation
+      layer that implements Linux system calls by method invocations on K42
+      objects.  When writing an application to run on K42, it is possible to
+      program to the Linux API or directly to the native K42
+      interfaces.  All applications, including servers, are free to reach
+      past the Linux interfaces and call the K42 interfaces directly.
+      Programming against the native interfaces allows the application to
+      take advantage of K42 optimizations.  The translation of standard
+      Linux system calls is done by intercepting glibc system calls and
+      implementing them with K42 code.  While Linux is the first and
+      currently only personality we support, the base facilities of K42 are
+      designed to be personality-independent.  
+    </para>
+
+    <para>
+      The Linux-kernel <quote>internal personality</quote> is provided
+      by a set of libraries that allow Linux-kernel
+      components such as device drivers, file systems, and network
+      protocols to run inside the kernel or in user mode.  These libraries
+      provide the run-time environment that Linux-kernel components
+      expect. 
+    </para>
+
+    <para>
+      The rest of the paper contains more details on the motivation behind
+      the structure we have outlined here, as well as other technologies
+      and mechanisms utilized in K42.
+    </para>
+  </section>
+
+  <section id="Overview.technology">
+    <title>K42 Technology</title>
+    <para>
+      To engineer an operating system to perform and otherwise behave
+      well, a number of technologies are needed.  These often act in
+      concert, supporting each other.  We list some of the notable
+      examples used in K42.  Many of them are explored in greater
+      detail in other white papers.
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    In K42 much of the functionality traditionally implemented
+	    in the 
+	    kernel or servers is implemented in libraries in
+	    the application's own address space.  This provides for a
+	    large degree of customizability because applications can
+	    implement system functionality using libraries customized
+	    to their needs. Overhead is reduced in many cases by
+	    avoiding crossing address spaces to invoke system
+	    services.  Also, space and time overhead is consumed in
+	    the application and not in the kernel or servers. This is
+	    described in more detail in <xref linkend="Overview.user">.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    We have applied an object-oriented technology to the
+	    entire system, where each virtual (e.g. virtual memory
+	    region, network connection, file, process) and physical
+	    (e.g. memory bank, network card, processor, disk) resource
+	    is managed by a different set of object
+	    instances<citation><xref linkend="Auslander97">,<xref
+	    linkend="Gamsa99">,<xref linkend="Krieger97"></citation>.
+	    Each 
+	    object encapsulates all the meta-data necessary to manage
+	    the resource as well as all the locks necessary to
+	    manipulate the meta data.  We avoid global locks, data
+	    structures, and policies.  Key aspects of this technology
+	    (described in more detail in <xref linkend="Overview.object">)
+	    include:
+	    <itemizedlist spacing="compact">
+	      <listitem>
+		<simpara>
+		  To achieve good performance, the objects used to
+		  implement a service can be customized (by the
+		  application or OS) to the demands on that
+		  service. Moreover (and for high-availability),
+		  objects can be swapped to new implementations
+		  without taking the system down and while they are
+		  in use.
+		</simpara>
+	      </listitem>
+	      <listitem>
+		<simpara>
+		  Good multiprocessor performance is achieved because:
+		  1) independent requests to different resources
+		  proceed independently; no shared data structures
+		  are traversed and no shared locks are
+		  accessed, and 2) good locality is achieved for
+		  resources accessed by a small number of processors,
+		  and 3) our <emphasis>clustered-object</emphasis> 
+		  technology <citation><xref linkend="Gamsa99"></citation>  
+		  lets widely accessed objects be implemented in a
+		  distributed fashion.
+		</simpara>
+	      </listitem>
+	      <listitem>
+		<simpara>
+		  The modular nature of the system makes it
+		  maintainable.  Also, programmers can contribute
+		  code back to the K42 base affecting only
+		  applications that choose to use those
+		  contributions.
+		</simpara>
+	      </listitem>
+	      <listitem>
+		<simpara>
+		  All interaction between applications and servers
+		  are directed to objects.  Stub-compiler technology
+		  we have developed allows new interfaces to be
+		  easily added (for clients that are aware of them)
+		  and allows servers full freedom in the
+		  implementation of an object interface (i.e., there
+		  is no need to derive two implementations of an
+		  interface from a common C++ class). A capability
+		  like authentication service is provided by the
+		  stub-compiled code. 
+		</simpara>
+	      </listitem>
+	    </itemizedlist>
+	  </para>
+	</listitem>
+	
+<!--  	  <listitem> -->
+<!--  	    <para> -->
+<!--  	      We used an object-oriented design in K42 <citation><xref -->
+<!--  	      linkend="Auslander97"></citation> to achieve good -->
+<!--  	      performance.  K42 is composed of individual building blocks, -->
+<!--  	      or object instances, that manage each virtual and physical -->
+<!--  	      resource.  These provide the technology to, in a first-class -->
+<!--  	      manner, customize the infrastructure of K42 to the specific -->
+<!--  	      characteristics of applications to improve their performance. -->
+<!--  	      Often object-oriented programming is viewed as a technique -->
+<!--  	      for improving structure at the cost of performance.  However, -->
+<!--  	      in K42 we used object-oriented programming to achieve better -->
+<!--  	      performance.  The better performance results from the ability -->
+<!--  	      to match the specific characteristics of applications.  In -->
+<!--  	      addition, on a multiprocessor, because different object -->
+<!--  	      instances are used for different instances of physical and -->
+<!--  	      virtual resources, independent requests to proceed in -->
+<!--  	      parallel, resulting in good scalability.  We have used this -->
+<!--  	      technology to explore the performance tradeoffs in some core -->
+<!--  	      objects in our system and have demonstrated we can achieve -->
+<!--  	      better performance by choosing the appropriate objects for -->
+<!--  	      different applications. -->
+<!--  	    </para> -->
+<!--  	  </listitem> -->
+<!--  	  <listitem> -->
+<!--  	    <para> -->
+<!--  	      K42's object-oriented technology provides for good locality. -->
+<!--  	      Each physical and virtual resource is managed by an separate -->
+<!--  	      instance of an object class.  This allows requests on a given -->
+<!--  	      processor to be directed to an object on that processor using -->
+<!--  	      memory allocated from that processor. -->
+<!--  	    </para> -->
+<!--  	  </listitem> -->
+<!--  	  <listitem> -->
+<!--  	    <para> -->
+<!--  	      K42's object-oriented technology provides for good MP -->
+<!--  	      performance for independent requests, but some objects in the -->
+<!--  	      system are truly shared.  For these, K42 uses "clustered -->
+<!--  	      objects" <citation><xref linkend="Gamsa99"></citation> to -->
+<!--  	      distribute the implementation of key building blocks for -->
+<!--  	      varying degrees of parallelism.  Clustered objects provide an -->
+<!--  	      infrastructure to produce, transparently to the user of the -->
+<!--  	      object, an appropriate level of scaling within an instance of -->
+<!--  	      an object. -->
+<!--  	    </para> -->
+<!--  	  </listitem> -->
+<!--  	  <listitem> -->
+<!--  	    <para> -->
+<!--  	      K42 utilizes fine-grained locking.  Because instances of -->
+<!--  	      objects are local (on a specific processor) we have developed -->
+<!--  	      a model of acquiring fine-grained locks within objects -->
+<!--  	      (versus locking an entire data structure).  With this model, -->
+<!--  	      it is likely that when a lock is acquired on a given -->
+<!--  	      processor, that that will have been the processor it was last -->
+<!--  	      acquired on as well.  This means the lock acquisition will be -->
+<!--  	      efficient because no remote references will occur. -->
+<!--  	    </para> -->
+<!--  	  </listitem> -->
+<!--  	  <listitem> -->
+<!--  	    <para> -->
+<!--  	      Building blocks can be swapped dynamically to new -->
+<!--  	      implementations without taking the system down and while they -->
+<!--  	      are in use.  This allows K42's objects to be tuned to the -->
+<!--  	      dynamic characteristics of the applications using them, and -->
+<!--  	      allows the system to be upgraded (e.g., with performance or -->
+<!--  	      security fixes) without bringing the system down.  This could -->
+<!--  	      be used to change the implementation of a file from a small -->
+<!--  	      shared implementation to a large distributed implementation -->
+<!--  	      or to upgrade a TCP/IP stack in light of a discovered -->
+<!--  	      security hole. -->
+<!--  	    </para> -->
+<!--  	  </listitem> -->
+<!--  	  <listitem> -->
+<!--  	    <para> -->
+<!--  	      The building-block model of K42 allows programmers to -->
+<!--  	      contribute code back to the K42 base affecting only -->
+<!--  	      applications that choose to use those contributions.  This -->
+<!--  	      will allow a wider audience to contribute code because -->
+<!--  	      changes will not need to be universally approved, or more -->
+<!--  	      importantly will not have to be needed by the community at -->
+<!--  	      large for it to make sense to have the changes added to the -->
+<!--  	      code base. -->
+<!--  	    </para> -->
+<!--  	  </listitem> -->
+<!--  	  <listitem> -->
+<!--  	    <para> -->
+<!--  	      There are a series of default objects K42 will use for -->
+<!--  	      applications.  In some situations K42 can automatically tune -->
+<!--  	      the performance of the application by statically or -->
+<!--  	      dynamically choosing the right object for the application. -->
+<!--  	      There is no addition burden placed on applications, but this -->
+<!--  	      technology allows knowledgeable applications to take -->
+<!--  	      advantage of the different objects. -->
+<!--  	    </para> -->
+<!--  	  </listitem> -->
+<!-- 	<listitem> -->
+<!-- 	  <para> -->
+<!-- 	    To support Linux applications and kernel components, we -->
+<!-- 	    support the external and internal (device driver/file -->
+<!-- 	    system/IP stack) interfaces and execution models.  We -->
+<!-- 	    expect to run Linux application binaries without -->
+<!-- 	    re-compilation.  We have also developed technology that -->
+<!-- 	    allows Linux components and libraries to be used without -->
+<!-- 	    modification; this is critical to be able to maintain -->
+<!-- 	    compatibility. Also, we do this without for the most part -->
+<!-- 	    compromising K42 goals.  For example, we support the Linux -->
+<!-- 	    device driver model which assumes a non-preemptable -->
+<!-- 	    kernel, while still being fully preemptable. -->
+<!-- 	    <footnote> -->
+<!-- 	      <para> -->
+<!-- 		For an explanation of support of Linux drivers in the -->
+<!-- 		K42, see the -->
+<!-- 		Utilizing Linux Kernel Components in K42 white paper.. -->
+<!-- 	      </para> -->
+<!-- 	    </footnote> -->
+<!-- 	  </para> -->
+<!-- 	</listitem> -->
+<!--  	  <listitem> -->
+<!--  	    <para> -->
+<!--  	      K42 is open source and supports the Linux API and will -->
+<!--  	      support the Linux ABI.  This allows the large base of -->
+<!--  	      programmers, users, and applications that exists to be able -->
+<!--  	      to run on K42 and to take advantage of the improved -->
+<!--  	      performance and increased customizability K42 offers.  The -->
+<!--  	      large base of applications also makes K42 attractive to use -->
+<!--  	      as a basis for performing research. -->
+<!--  	    </para> -->
+<!--  	  </listitem> -->
+<!-- 	<listitem> -->
+<!-- 	  <para> -->
+<!-- 	    K42 is designed to be easily ported to new hardware, and -->
+<!-- 	    then subsequently tuned to exploit architecture-specific -->
+<!-- 	    features of the target hardware platform.  For easy -->
+<!-- 	    portability, default implementations of services are -->
+<!-- 	    provided in a machine-independent fashion.  The default -->
+<!-- 	    implementations depend on a small number of primitives. -->
+<!-- 	    Machine specific implementations of these services can be -->
+<!-- 	    provided to tune the system to an architecture.  Because -->
+<!-- 	    there are no machine-independent data structures that -->
+<!-- 	    machine-specific code must support (e.g., Linux's -->
+<!-- 	    two-level page table), few constraints are imposed on the -->
+<!-- 	    machine-specific implementation.  For example, we are able -->
+<!-- 	    to exploit such machine features such as the PowerPC -->
+<!-- 	    inverted page table, and the MIPS software-controlled TLB, -->
+<!-- 	    without compromising the overall design or the other -->
+<!-- 	    machine implementations. -->
+<!-- 	  </para> -->
+<!-- 	</listitem> -->
+	<listitem>
+	  <para>
+	    Much of the system functionality is implemented in
+	    user-level servers<citation><xref
+	    linkend="Liedtke96"></citation>.  Along with systems such
+	    as L4 <citation><xref linkend="Liedtke95"></citation>, K42
+	    maintains good performance via an efficient IPC mechanism
+	    that has performance comparable to system calls. This
+	    facility requires no kernel storage for messages or
+	    authentication.  In addition to fast IPC, K42 uses shared
+	    memory communications between clients, servers, and the
+	    kernel to further reduce communications cost.The strategy
+	    for moving function from the kernel to servers is
+	    pragmatic and respects performance.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    K42 was designed from the start with scalability in mind. 
+	    Our scalability goal is not only to support large systems
+	    (e.g., 1000 processor NUMA systems), and applications that
+	    may span the entire system, but also to run sequential and
+	    small-scale parallel applications as efficiently as they
+	    run on a small scale multiprocessor.  A major investment
+	    has been made in IPC, locking, and memory allocation
+	    infrastructure to enable the system to exploit locality in
+	    application requests.  In many cases our mechanisms have
+	    fundamentally different designs from facilities designed
+	    for uniprocessor operating systems, but perform just as
+	    well on a single processor as these other facilities, and
+	    achieve better scalability.  To accomplish this, we make
+	    extensive use of <emphasis>processor specific</emphasis>
+	    memory, which is memory where the same virtual range maps
+	    to different physical addresses on different processors.
+	    This allows us to efficiently address local resources.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    K42 was designed to run on 64-bit processors.  The dependence
+	    on 64 bits enables pervasive implementation optimizations.
+	    Examples include the use of large virtual arrays rather than
+	    hash functions, the allocation of memory bits for
+	    distinguishing classes of allocated memory, and exploiting
+	    the fact that we can atomically manipulate 64-bit quantities
+	    efficiently.
+	  </para>
+	</listitem>
+<!--  	  <listitem> -->
+<!--  	    <para> -->
+<!--  	      We use stub-compiler technology to define the interfaces of -->
+<!--  	      the kernel and servers.  The interfaces are implemented via -->
+<!--  	      decorations to our actual C++ class definitions, thus binding -->
+<!--  	      our IPC mechanisms to the C++ interfaces.  The interfaces are -->
+<!--  	      polymorphic in that the user need not be aware of the exact -->
+<!--  	      object instance/implementation when a call is made on a given -->
+<!--  	      object.  For example, a FileObject could be instantiated as a -->
+<!--  	      SmallFileObject instance or a BigFileObject instance.  This -->
+<!--  	      polymorphism is provided by the C++ method invocation rather -->
+<!--  	      than by C function tables.  The stub compiler marshals and -->
+<!--  	      de-marshals arguments for the method calls.  For efficiency -->
+<!--  	      it can take advantage of registers on architectures that have -->
+<!--  	      enough registers.  New services can be easily added with -->
+<!--  	      interfaces specific to the service.  This mechanism provides -->
+<!--  	      the ability to download new objects that extend existing -->
+<!--  	      interfaces. -->
+<!--  	    </para> -->
+
+<!--  	    <para> -->
+<!--  	      The stub compiler in essence creates two objects for each -->
+<!--  	      interface.  The first of these objects, the "Stub" object, -->
+<!--  	      presents the targeted interface to the client application and -->
+<!--  	      marshals calls to the interface over the IPC mechanism.  The -->
+<!--  	      second object, the "X" object, receives IPC messages and -->
+<!--  	      de-marshals them into calls on the actual object that is -->
+<!--  	      exporting the given interface.  The binding between the X -->
+<!--  	      object and the target is resolved at compile time and is -->
+<!--  	      based on method signatures, that is, the X object expects the -->
+<!--  	      target to have a set of methods conforming to a specified -->
+<!--  	      interface.  Thus, there is no need for the target object to -->
+<!--  	      be related by inheritance to the X object and consequently -->
+<!--  	      any object can export any stub-compiled interface that it -->
+<!--  	      conforms to.  This provides a level of polymorphism beyond -->
+<!--  	      that offered by C++; an object can export multiple un-related -->
+<!--  	      interfaces without being derived from any of them. -->
+<!--  	    </para> -->
+<!--  	  </listitem> -->
+	<listitem>
+	  <para>
+	    K42 is fully preemptable and most of the kernel data is
+	    pageable.  Except for low-level interrupt handling and
+	    code for dispatching real-time applications, K42's
+	    threading model allows the kernel to be preempted at any
+	    point.  This provides for low-latency interrupt handling.
+	    Only the kernel code and the data of low-level objects is
+	    pinned.  This significantly reduces the kernel's footprint
+	    and provides more physical memory for applications.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    We are developing a scheduling infrastructure
+	    that can provide quality-of-service guarantees for
+	    processors, memory, and I/O, and that simultaneously supports
+	    real-time, gang-scheduled, regular (time-shared), and
+	    background work.  K42 uses synchronized clocks (hardware or
+	    software) on different processors to allow work to be
+	    scheduled simultaneously for short periods of time on
+	    multiple processors.  This ability to support fine-grained
+	    gang-scheduled applications simplifies the task of scientific
+	    programmers and game developers. This is because they can
+	    write their applications to use a fixed set of resources and
+	    still deploy those applications in a general purpose system
+	    running interactive and real-time applications.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Traditionally, the error of using a "stale" pointer to
+	    deleted storage is avoided by using "existence locks" or
+	    use counts to protect pointers.  Full-scale garbage
+	    collection can also solve this problem, but is not
+	    appropriate for low-level OS code.  K42 uses a new
+	    mechanism, in which deletion of K42 objects is deferred
+	    until all currently running threads have
+	    finished<citation><xref linkend="McKenney01">,<xref
+	    linkend="Gamsa99"></citation> .  This allows a programming
+	    style whereby an object releases its own lock before
+	    making a call on another object, thus improving base
+	    system performance, increasing scalability, and
+	    eliminating the need for complex lock hierarchies and the
+	    resulting complex deadlock avoidance algorithms.  This
+	    last point is critical, because it means that a high level
+	    of sophistication is not needed to develop core OS code.
+	    The technique used is related to <emphasis>type
+	    safe</emphasis> memory <citation><xref
+	    linkend="Greenwald96"></citation>, but minimizes the
+	    amount of time during which the memory is guaranteed to be
+	    type safe.
+	  </para>
+	</listitem>
+      </itemizedlist>
+    </para>
+  </section>
+
+
+  <section id="Overview.user">
+    <title>User-Level Implementation of System Services</title>
+    <para>
+      In K42 much of the functionality traditionally implemented in
+      the kernel or servers is moved to libraries in the application's
+      own address space.  This work has a similar flavor to the
+      Exokernel <citation><xref linkend="Engler95"></citation>, Psyche
+      <citation><xref linkend="Marsh91"></citation>, and Scheduler
+      Activations <citation><xref linkend="Anderson91"></citation>
+      work.  This change allows for a large degree of customization
+      because applications can implement traditional system
+      functionality using libraries customized to their needs.  For
+      example, applications with specialized needs (e.g., games,
+      subsystems, scientific applications) can provide their own
+      libraries, replacing much of the OS functionality that would
+      traditionally be implemented in the kernel or system servers,
+      without sacrificing security and without impacting the
+      performance of other applications.  Overhead is reduced in many
+      cases because crossing address space boundaries to invoke system
+      services can be avoided.  Also, space and time overhead is
+      consumed in the application and not in the kernel or servers.
+      For example, an application can have a large number of threads
+      without consuming any additional kernel pinned memory.  In many
+      cases, we are able to handle common-case critical paths (e.g.,
+      for a non-shared file) efficiently at user-level, while handling
+      more complex situations (e.g., multiple applications accessing
+      the same file) in the kernel or a system server.
+    </para>
+
+    <para>
+      Implementation in the application's address space impacts the
+      design of many operating system services.  The implementation is
+      not necessarily more difficult, but it is different.  So far, we
+      have been able to develop implementations for these services
+      that are as efficient as those of other operating systems.
+      Moreover, in some cases we have found implementations that are
+      more efficient.  In this section we review some of the services
+      that we have implemented largely at user-level, and discuss our
+      experience.
+    </para>
+
+    <section>
+      <title>Thread Scheduling</title>
+      <para>
+	All thread scheduling has been moved to user level.  The kernel is
+	aware only of user processes and maintains one kernel-level entity,
+	which we call a <emphasis>dispatcher</emphasis>, representing that
+	process.
+	<footnote>
+	  <para>
+	    In reality, there is a dispatcher for each processor on which
+	    the application runs, and for each level of service required by
+	    the application.  See white-paper on scheduling in K42.
+	  </para>
+	</footnote>
+	All threads are multiplexed at user level on this dispatcher.
+	Events that would ordinarily block the process are instead
+	reflected back to the scheduler library code running in the
+	application.  This scheduler code can then take the appropriate
+	action, for example blocking the current thread and running another
+	thread.  In this way, any number of threads can be multiplexed on a
+	dispatcher without negative consequences for the user application.
+	This ties up fewer kernel resources, makes the scheduling more
+	efficient, and most importantly, allows flexibility for
+	optimizations at user level.  This user-level scheduling facility
+	provides a framework that has allowed other services to be moved to
+	user level.
+      </para>
+    </section>
+
+    <section>
+      <title>Timer interrupts</title>
+      <para>
+	If an application has thousands of threads, many of those threads
+	may be waiting for timer events (e.g., timeouts on socket
+	operations). With K42, the dispatcher has a single timer request
+	outstanding, for its <emphasis>next</emphasis> timeout, and all
+	subsequent timeouts are maintained in the application's address
+	space.  This in fact results in better performance because
+	most timeouts are to handle exceptional events, and are canceled
+	without ever occurring.  By keeping the state in the application
+	address space, we avoid interaction with the kernel when a timeout
+	is canceled, providing an inexpensive mechanism for the
+	common-path timer operation.
+      </para>
+
+      <para>
+	When a timer event for a dispatcher actually occurs, it is passed
+	up to the dispatcher as an asynchronous notification.  The
+	dispatcher code can unblock any thread or threads that were waiting
+	for event and can then make an informed decision as to whether to
+	resume whatever it was doing or to instead switch to one of the
+	newly-enabled threads.  User-level code, rather than the kernel,
+	makes that decision.
+      </para>
+    </section>
+
+    <section>
+      <title>Page Fault Handling</title>
+      <para>
+	On a page fault, we maintain the state of the faulting thread
+	in the kernel only long enough to determine if the fault was
+	in-core (i.e., the page is already resident in the page cache
+	or just needs to be zero filled, etc.).  If it is in-core, the
+	kernel handles the fault directly.  Otherwise, the fault is
+	reflected back to the dispatcher, the dispatcher schedules
+	another runnable thread or yields. This contrasts with
+	existing systems that use an M on N thread model (having M
+	user level threads multiplexed on N kernel threads), where
+	another kernel-level thread is scheduled when a page fault
+	occurs, and not another user-level thread within the same
+	kernel thread.
+      </para>
+
+      <para>
+	As with timer events, page-fault completions are passed up to the
+	dispatcher as asynchronous notifications, and the dispatcher code
+	can decide whether or not to switch threads when faulting threads
+	become runnable.
+      </para>
+
+      <para>
+	The cost of saving the state in user level is only incrementally
+	greater than the cost of a kernel state save.  This is because we
+	carefully avoid saving or copying registers unnecessarily.
+      </para>
+
+      <para>
+	The user-level functionality provided for page-faults enables
+	customizations.<citation><xref
+	linkend="Hand99"></citation>. For example, applications that don't use
+	floating point registers can avoid saving that state.  More
+	importantly, specialized applications, e.g., work-queue-based
+	scientific applications, can be written efficiently because
+	kernel threads are not blocked without notification.
+      </para>
+    </section>
+
+    <section>
+      <title>IPC Services</title>
+      <para>
+	The IPC services implemented in the K42 kernel are very basic; the
+	kernel hands the processor from the sender to the receiver address
+	space, keeping most registers intact, and giving the receiver an
+	unforgeable identifier for the sender
+	<footnote>
+	  <para>
+	  Note, we only discuss here the standard synchronous IPC services
+	  that are the fast critical operations, other services are
+	  discussed in the scheduling white paper.
+	  </para>
+	</footnote>
+	.  Most of the work of IPC is done in user-level libraries that are
+	responsible for marshaling and de-marshaling arguments into
+	registers, setting up shared regions for transferring bulk data,
+	and authenticating requests.
+      </para>
+      <para>
+	The K42 IPC facility is as efficient as the best kernel IPC facilities
+	in the literature <citation><xref
+	linkend="Liedtke95">,<xref
+	linkend="Haeberlen00"></citation>.  However, because the
+	implementation is in user-level,  
+	it can be customized to, for example, use problem domain specific
+	transports for efficiency, minimize authentication overhead, and/or
+	minimize state saving when communicating between trusted parties.
+      </para>
+    </section>
+
+    <section>
+      <title>I/O Servers</title>
+      <para>
+	In most client/server operating systems, servers maintain state for
+	every outstanding request from a client thread (often, this state
+	is maintained by blocking a server thread).  In K42, as a general
+	policy, if the resources necessary to handle a request are
+	unavailable, the server returns an error, the application blocks
+	the thread in its own address space, and the server notifies the
+	client when a request can be re-issued.  For example, servers that
+	provide services such as sockets, ptys, and pipes maintain
+	information about all the applications attached to a communication
+	port, and notify the applications when new data becomes available.
+	While we first introduced this scheme in order to avoid using up
+	server resources, it turns out that it has two other benefits.
+	First, complete state about the file descriptors an application is
+	accessing is available in its own address space space.  This means
+	that operations like the Posix <command>select()</command> call can
+	be efficiently implemented without any communication with the
+	kernel or servers.  Second, and more importantly, it allows us to
+	use an event rather than a polling (e.g., <command> select()
+	</command>) model for handling I/O requests. This allows more
+	efficient implementations of, for example, web servers
+	<citation><xref linkend="Banga99"></citation>, because there is no
+	need to block threads for long periods of time.  Also, we plan on
+	using event interfaces to better enable real-time tasks by avoiding
+	implicit blocking semantics on I/O requests.
+      </para>
+    </section>
+  </section>
+
+  <section id="Overview.object">
+    <title>Object Model</title>
+
+    <para>
+      K42 uses a modular structure with independent object instances
+      managing each physical and virtual resource in the system.  This
+      <emphasis>building-block</emphasis> technology is our solution
+      to providing customizability and to avoiding global code paths,
+      data structure, and policies. Related work by others includes
+      <citation><xref linkend="Kohler00">.<xref
+      linkend="Mosberger96"><xref linkend="Reid00"></citation>.  In
+      this section we discuss this aspect of our system, providing
+      motivation for using an object-oriented design and describing
+      its advantages from the application writer's perspective.
+    </para>
+
+    <para>
+      When most existing commercial operating systems were designed,
+      object-oriented programming was less mature than it is today.  For
+      these and many other reasons, many operating systems are implemented
+      with global code paths that traverse global data structures and
+      implement global policies.  For example, the memory management of
+      many systems have a critical page fault path that traverses a global
+      page cache and implements the global clock algorithm for controlling
+      paging to disk.  Problems with global policies, code paths, and data
+      structures include:
+
+      <itemizedlist spacing="compact">
+	<listitem>
+	  <para>
+	    The policies implemented by the operating system apply to all
+	    applications including those with specialized needs such as
+	    subsystems like databases or web servers.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Every resource instance is treated the same regardless of
+	    how it is used or its structure. For example, all
+	    files are implemented in the same way irrespective of their
+	    size or if they are being accessed in a read-only fashion.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Applications with special needs are more complex because they
+	    must work around the limitations of the OS policies, e.g.,
+	    databases often perform their own memory/disk management.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Applications with special needs get worse performance than
+	    they would if the OS directly implemented policies that
+	    matched their requirements.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    The addition of special-purpose code or policies for specific
+	    critical programs (e.g., scientific applications, databases)
+	    typically adds extra conditional branches to critical code
+	    paths, negatively impacting the performance of other
+	    applications, and requiring full system test. 
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Global data structures make it difficult to retain the state
+	    needed for special-purpose policies.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    A single implementation of any critical code path implies
+	    that a small team must control it.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Global code paths encourage developers to violate the
+	    modularity between different parts of the system for short
+	    term performance gains resulting in long term maintainability
+	    problems.  For example, many systems entangle the memory
+	    management and file system code to achieve better performance
+	    for paging.  While in the short term this may improve
+	    performance, it makes code more difficult to maintain, and in
+	    the longer term the performance degrades because of the
+	    difficulty of modifying the code to meet new constraints.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    It is difficult to scale global data structures, e.g., a global
+	    hash table results in poor multiprocessor performance.  Global
+	    data structures many times also imply global locks.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Poor locality causes sequential and small-scale parallel
+	    applications to perform poorly on a large-scale multiprocessor
+	    because any overhead needed to make the OS implementation scale
+	    impacts all applications.
+	  </para>
+	</listitem>
+      </itemizedlist>
+      </para>
+
+    <para>
+      An alternative to global code paths, data structures, and
+      policies is to structure an operating system in an
+      object-oriented fashion.  The Unix Vnode interface
+      <citation><xref linkend="Kleiman86"></citation>, streams
+      facility <citation><xref linkend="Ritchie84"></citation>, and
+      device driver interface are all good examples of this.  In each
+      of these cases, a well-defined interface behind which different
+      implementations can be provided has enabled flexibility and
+      innovation, for example there are many Linux file systems that
+      have explored various possible designs.
+    </para>
+
+    <para>
+      In K42 we have applied an object-oriented design to the entire
+      system, where each virtual (e.g. virtual memory region, network
+      connection, file, process) and physical (e.g. memory bank, network
+      card, processor, disk) resource is implemented by a different set
+      of object instances.  For example, instead of having a global page
+      cache, K42 maintains an independent page cache for every file being
+      accessed.  For each resource unit, an object instance of the
+      desired type is instantiated to manage that unit.
+    </para>
+
+    <section>
+      <title>Customizability</title>
+      <para>
+	Per-resource object instances allow multiple policies and
+	implementations to be supported by the system.  Because each
+	resource instance is implemented by an independent object instance,
+	resource management policies and implementations can be controlled
+	on a per virtual resource basis.  This allows, for example, every
+	open file to have a different pre-fetching policy, every memory
+	region to have a different page size, and every process to have a
+	different exception handling policy.
+      </para>
+
+      <para>
+	In specifying building-block compositions, applications choose from a
+	set of building blocks provided by the operating system and (trusted)
+	third party building-block providers, and specify how they are to be
+	connected.  Application writers need not be system programming
+	experts; they do not need to write code, but only need to compose a
+	set of predefined modules.  Safety is not an issue for the same
+	reason and because the building blocks verify type constraints when
+	they are connected.  The modularity of building-block compositions
+	makes the system easy to maintain and extend because building-block
+	compositions are expected to cover the vast majority of customization
+	needs, it is only infrequently necessary to add new building blocks,
+	and such extensions can then be restricted to trusted agents.
+	From a security perspective, this
+	can be viewed as similar to, for example, the installation of new
+	dynamically-loadable device drivers in conventional systems
+	<citation><xref linkend="Rubini01"></citation>.
+      </para>
+      
+<!--       <para> -->
+<!-- 	Building blocks can be hot-swapped to new implementations -->
+<!-- 	without taking the system down and while they are in use. -->
+<!-- 	This allows K42's implementation of resources to be tuned to -->
+<!-- 	the dynamic  -->
+<!-- 	characteristics of the applications using them without -->
+<!-- 	bringing the system down.  This could be used, for example, to -->
+<!-- 	change the implementation of a file when it grows, from one -->
+<!-- 	optimized for small files to one optimized for large files. -->
+<!--       </para> -->
+
+    </section>
+
+    <section>
+      <title>Hot-swapping</title>
+
+      <para>
+       K42 is unique in operating systems in that it supports
+      <emphasis> hot-swapping</emphasis>, which is the dynamic
+      insertion and removal of active code in a running system.  It
+      consists of two pieces: <emphasis> interpositioning</emphasis>
+      where new building-blocks can be inserted between existing ones,
+      and <emphasis>replacement</emphasis>, where building blocks can
+      be replaced with others without taking the system down and while
+      they are in use.
+      </para>
+
+      <para>
+      Hot-swapping provides us with a number of advantages:
+      <itemizedlist spacing="compact">
+	<listitem>
+	  <formalpara> <title>Performance</title>
+	    <para>
+
+	    Hot-swapping allows the building-blocks used to implement
+	    a service to be tuned to the instantaneous demands on that
+	    service. For example, in K42, when a file is accessed
+	    exclusively by one application, an object in the
+	    application's address space handles the file control
+	    structures, allowing it to take advantage of mapped file
+	    I/O, thereby achieving performance benefits of 40% or
+	    more<citation><xref linkend="Krieger94"></citation>.  When
+	    the file becomes shared, a new object dynamically replaces
+	    the old object.  This new object communicates with the
+	    file system to maintain the control information. Other
+	    operating systems always have to pay the cost of the more
+	    expensive (and uncommon) shared case since they can't swap
+	    implementations when a file transitions to a shared state.
+
+	    </para>
+	  </formalpara>
+	</listitem>
+	<listitem>
+	  <formalpara> <title>System monitoring</title>
+	    <para>
+
+	    Monitoring is required to be able to detect security
+	    threats, performance problems, etc.  However, there is a
+	    tradeoff between placing extensive monitoring in the
+	    system and the performance overhead this entails.  With
+	    support for interposition, upon detection of a problem by
+	    broad-based monitoring, it becomes possible to dynamically
+	    insert additional monitoring, tracing, or debugging
+	    without incurring overhead when the more extensive code is
+	    not needed.
+
+	    </para>
+	  </formalpara>
+	</listitem>
+	<listitem>
+	  <formalpara> <title>System Availability</title>
+	    <para>
+
+	    Numerous mission-critical systems require five-nines level
+	    availability, making software upgrades challenging.
+	    Support for hot-swapping allows software to be upgraded
+	    (i.e., for bug fixes, security patches, new features,
+	    performance improvements, etc.)  without having to take
+	    the system down.
+
+	    </para>
+	  </formalpara>
+	</listitem>
+	<listitem>
+	  <formalpara> <title>Testing</title>
+	    <para>
+
+	    Even in existing relatively inflexible systems, testing is
+	    a significant cost that constrains development.
+	    Hot-swapping can ease the burden of testing the system.
+	    Individual building-blocks can be tested by interposing an
+	    object to generate input values and examine results,
+	    thereby improving code coverage.  Delays can be injected
+	    into the system at internal interfaces, allowing the
+	    system to explore potential race conditions.
+
+	    </para>
+	  </formalpara>
+	</listitem>
+      </itemizedlist>
+      </para>
+
+    </section>
+
+    <section>
+      <title>Multiprocessor performance</title>
+      
+      <para>
+	K42's per-resource object instances result in good scalability on
+	multiprocessors.  An object encapsulates all the data necessary
+	to manage a resource, as well as all the locks necessary to access
+	that data; there are no global locks or global data structures in
+	the system.  As long as application requests are to different
+	resources, they are handled by the system entirely in parallel.
+	Moreover, objects accessed on just a single processor
+	have good temporal and spatial locality.
+      </para>
+      
+      <para>
+	Although an object-oriented design can help scalability, some
+	objects, such as the file cache for a widely shared file, may
+	be widely accessed on a large multiprocessor.  We have
+	developed a technology called <emphasis>clustered
+	objects</emphasis> <citation><xref
+	linkend="Gamsa99"></citation> that allows the implementation
+	of such objects to be partitioned or replicated across the
+	multiprocessor.  Clustered objects are a partitioned object
+	model similar to <citation><xref linkend="Homburg00">,<xref
+	linkend="Makpangou94"></citation>.  The distribution of an
+	object incurs no overhead on common-case requests to the
+	object, and is entirely transparent to clients of the object.
+	More details of this approach can be found in the Clustered
+	Objects in K42 white paper.
+      </para>
+      
+      <para>
+	The customizability and hot-swapping described above is
+	critical for our goals of scalability. For sequential and
+	small-scale parallel applications, implementations of
+	resources can be used that have low overhead but do not
+	scale. As an application creates more threads, the system can
+	swap in implementations that can handle the new demands.
+	Hence, the system can on a large scale multiprocessor support
+	both large-scale and sequential applications efficiently.
+      </para>
+    </section>
+
+    <section>
+      <title>Client/Server interaction</title>
+      
+      <para>
+
+        All interaction between applications and servers are directed
+	to objects. That is, there is no fixed system call interface
+	between the OS and the applications.  New objects can be added
+	that implement new services and export new service-specific
+	interfaces; applications aware of these services can then
+	exploit them.  Also, specialized implementations of objects
+	that share policy decisions with the application can be added
+	exporting new interfaces for application interaction.
+
+      </para>
+
+      <para>
+      	We use stub-compiler technology, where interfaces
+	are declared via decorations to our actual C++ class
+	definitions, thus binding our IPC mechanisms to the C++
+	interfaces.  The interfaces are polymorphic in that the user
+	need not be aware of the exact object instance/implementation
+	when a call is made on a given object.  For example, a
+	FileObject could be instantiated as a SmallFileObject instance
+	or a BigFileObject instance.  This polymorphism is provided by
+	the C++ method invocation rather than by C function tables.
+	The stub compiler generated code marshals and de-marshals
+	arguments for the method calls.  For efficiency, it can take
+	advantage of registers on architectures that have enough
+	registers.  New services can be easily added with interfaces
+	specific to the service.  This mechanism provides the ability
+	to download new objects that extend existing interfaces.
+      </para>
+      
+      <para>
+	The stub compiler in essence creates two objects for each
+	interface.  The first of these objects, the "Stub" object,
+	presents the targeted interface to the client application and
+	marshals calls to the interface over the IPC mechanism.  The
+	second object, the "X" object, receives IPC messages and
+	de-marshals them into calls on the actual object that is
+	exporting the given interface.  The binding between the X object
+	and the target is resolved at compile time and is based on
+	method signatures, that is, the X object expects the target to
+	have a set of methods conforming to a specified interface.
+	Thus, there is no need for the target object to be related by
+	inheritance to the X object and consequently any object can
+	export any stub-compiled interface that it conforms to.  This
+	provides a level of polymorphism beyond that offered by C++; an
+	object can export multiple un-related interfaces without being
+	derived from any of them.
+      </para>
+
+      <para>
+	The stub-compiled interface technology includes a model for
+	performing authentication.  Calls across our IPC interface are
+	tagged with a caller identification by the kernel.  Associated
+	with each call is a set of access rights that are verified by
+	the stub-compiler generated code on the callee side of the IPC
+	call prior to the IPC mechanism invoking the method of the
+	class that was called.  A capability-like mechanism is
+	implemented above this service, allowing a client with the
+	correct access rights to provide other clients with access to
+	that same object independent of the type of the specific
+	object.
+      </para>
+
+    </section>
+
+    <section>
+      <title>Other aspects of object-oriented technology</title>
+
+      <para>
+	As with other object-oriented operating systems
+	<citation><xref linkend="Campbell93">,<xref
+	linkend="Hamilton93">,<xref linkend="Yokote93">,<xref
+	linkend="Shapiro89"></citation>, object-oriented technology
+	provides K42 with a high degree of modularity.  All data
+	structures are encapsulated in objects, and even fundamental
+	changes to an object can be made without having to change
+	other parts of the system.  In contrast, there are thousands
+	of lines of code in Linux that understand, for example, the
+	socket data structure, know how to lock it, what it
+	references, ... and must be modified if this data structure is
+	to be modified.  This modularity both makes the system more
+	maintainable and make it a good test bed for exploratory
+	research.  The barrier for problem-domain experts, (e.g.,
+	developers for data bases, web servers, and scientific
+	programs) is reduced because they don't require as much OS
+	expertise to make contributions.
+      </para>
+
+      <para>
+	Groups with specialized needs can develop specialized objects,
+	contribute them back to the system, and have them used by a
+	larger community that has the same needs.  With K42, an object
+	with a different implementation or policy can be introduced
+	without any penalty for applications that don't use it.  With
+	Linux, many interesting policies that have been prototyped have
+	not made it into distributions because they entail extra
+	overhead (e.g., conditional branches) in an operating system
+	structured with global code paths traversing global data
+	structures.
+      </para>
+      
+      <para>
+	The modular structure will facilitate researchers because
+	competing policies can be applied to solve specific problems
+	(rather than impacting all applications), and because multiple
+	policies can be investigated at the same time in the same OS.
+	This will enable a more quantitative approach to OS research.
+	We believe K42 can be attractive as a teaching vehicle, allowing
+	students to rapidly gain skills in OS development.
+      </para>
+      
+      <para>
+	The hot-swapping technology mentioned above is not only useful
+	for customization, it also enables high availability.  Bug
+	patches, security patches, and performance enhancements can be
+	installed without bringing the system down.
+      </para>
+    </section>
+    
+    <section>
+      <title>Challenges</title>
+    
+      <para>
+	Object-oriented technology, because of the additional costs
+	associated with the extra level of indirection, typically
+	results in poor performance.  While it may seem
+	counter-intuitive, in K42 we have used object-oriented
+	technology to achieve better performance.  We buy back the
+	extra costs of an object-oriented design by the ability the
+	extra level of indirection gives us to customize the objects
+	to the application and, on a multiprocessor, by the locality
+	individual object instances provide.  However, we have also
+	found that a pragmatic approach is needed when using C++, for
+	example, using large-grained objects to amortize the overhead,
+	and examining the assembly code generated to discover
+	performance bugs in the compiler.
+      </para>
+      
+      <para>
+	Another challenge is that it can be difficult to achieve a
+	global state if all the data for achieving that understanding
+	is scattered throughout many object instances.  For example,
+	we have many objects each managing the pages for many small
+	files.  However, to effectively use a working set algorithm, a
+	certain minimum number of pages are needed, therefore we can't
+	run such an algorithm on what might be a natural granularity
+	(i.e., that of each object).  As another example, it is
+	difficult to run the globally next highest priority thread when
+	the priorities of threads are distributed throughout a series of
+	user-level schedulers.  Moving to instances of objects for
+	each resource in the system has had tremendous advantages but
+	has also opened interesting research issues that we have had
+	to address.
+      </para>
+
+    </section>
+  </section>
+
+  <section id="Overview.imp">
+    <title>Concluding Remarks</title>
+<!--  	  <para> -->
+<!--  	    K42 enables Linux applications to run well on large SMP and -->
+<!--  	    NUMA platforms.  Moreover, K42 will enhance the overall value -->
+<!--  	    of these large server platforms, allowing them to support -->
+<!--  	    real-time applications, and allowing them to support sequential -->
+<!--  	    and small-scale parallel programs with the same performance as -->
+<!--  	    if they were running on a small-scale multiprocessor. -->
+<!--  	  </para> -->
+<!--  	</listitem> -->
+<!--  	<listitem> -->
+<!--  	  <para> -->
+<!--  	    It is easier to port the system to new platforms and tune it to -->
+<!--  	    exploit features specific to the platform.  This should -->
+<!--  	    encourage more innovative hardware because the barrier to port -->
+<!--  	    the OS is reduced, and new features provided by the hardware -->
+<!--  	    can be more easily exploited.  Applications will be able to -->
+<!--  	    customize how the OS manages resources, enabling better -->
+<!--  	    application performance and reducing complexity.  Moreover, all -->
+<!--  	    the infrastructure (e.g., garbage collection, scalable -->
+<!--  	    high-performance IPC, scalable memory management...)  developed -->
+<!--  	    for the K42 kernel to enhance OS performance can also be -->
+<!--  	    exploited in the application's own address space to improve -->
+<!--  	    performance and/or reduce complexity. -->
+<!--  	  </para> -->
+<!--  	</listitem> -->
+<!--        </itemizedlist> -->
+<!--      </para> -->
+    <para>
+      We have outlined some of the core K42 technology. This
+      technology involves fundamental structural changes, and as a
+      result we were not able to incrementally modify the vanilla
+      Linux kernel.  On the other hand, K42 is not a new operating
+      system.  It provides a Linux personality and supports Linux
+      applications and kernel modules without modification.  That is,
+      it provides an alternative implementation of some of the core
+      Linux-kernel technology, and depends on the much larger
+      remaining Linux code for everything else.
+    </para>
+    <para>
+      We have made K42 available under a LGPL license to enable
+      experimentation and to aid in technology exchange between K42 and
+      vanilla Linux.  The modular structure of the system makes it a great
+      teaching, research, and prototyping vehicle, and we expect that
+      policies and implementations studied in this framework will be
+      transferred into vanilla Linux.  Also, in the long term, we expect
+      that the kind of technologies we are exploring with K42 will be
+      important to Linux.
+    </para>
+    <para>
+      We have developed and validated much of the core infrastructure
+      of K42 and are approaching full functionality.  K42 currently
+      runs on 64-bit Mips (NUMA) and PowerPC (SMP) platforms and is
+      being ported to x86-64 and IA64 systems.  We expect in the near
+      future to achieve self-hosting, demonstrate better base
+      performance for real applications than existing kernels,
+      demonstrate better scalability, and demonstrate that specialized
+      subsystems can customize the OS to achieve better performance at
+      reduced complexity.  However, many of the edge conditions are
+      not yet addressed, with many simplistic object implementations.
+      Many of the features described above, such as the resource
+      management infrastructure, the gang-scheduling feature, and hot
+      swapping are available only in prototype form.
+    </para>
+  </section>
+
+
+<!--
+Local Variables:
+sgml-validate-command: "nsgmls -s %s %s"
+sgml-indent-data: t
+sgml-insert-missing-element-comment: t
+End:
+-->
+<!--  LocalWords:  multiprocessor focuses scalability customizable API ABI IPC
+ -->
+<!--  LocalWords:  incrementally extensible tradeoff prototyped Filesystems NFS
+ -->
+<!--  LocalWords:  pty Struct eps optimizations glibc TCP IP customizability
+ -->
+<!--  LocalWords:  para listitem preemptable PowerPC TLB multiprocessors NUMA
+ -->
+<!--  LocalWords:  uniprocessor atomically callee pageable pinnable Exokernel
+ -->
+<!--  LocalWords:  multiplexed timeouts timeout unblock runnable Customizations
+ -->
+<!--  LocalWords:  unforgeable micro ptys Posix Banga modularity Vnode pre SMP
+ -->
+<!--  LocalWords:  instantiated scalable Bershad Lazowska th ACM Lite Exp wp TJ
+ -->
+<!--  LocalWords:  DocBook ent FileObject SmallFileObject BigFileObject un GPL
+ -->
+<!--  LocalWords:  polymorphism itemizedlist Mips
+ -->
+

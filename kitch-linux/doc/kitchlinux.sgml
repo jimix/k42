@@ -1,0 +1,97 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: kitchlinux.sgml,v 1.1 2001/09/30 21:09:24 bob Exp $
+-->
+<!doctype book PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!entity topsrc "../../..">
+<!entity % kitchlinux.ent SYSTEM "kitchlinux.ent">
+%kitchlinux.ent;
+]>
+<!-- $Id: kitchlinux.sgml,v 1.1 2001/09/30 21:09:24 bob Exp $ -->
+<book id="K42">
+  <chapter id="kitchlinuxOver">
+    &kitchlinuxOver;
+    <section>
+      &binOver;
+      <section>
+	&shOver;
+	<section>
+	  &debianOver;
+	</section>
+      </section>
+    </section>
+    <section>
+      &etcOver;
+    </section>
+    <section>
+      &klibOver;
+      <section>
+	&emuOver;
+      </section>
+      <section>
+	&pthreadOver;
+      </section>
+    </section>
+    <section>
+      &pkgsOver;
+    </section>
+    <section>
+      &testsOver;
+    </section>
+    <section>
+      &usersOver;
+      <section>
+	&specOver;
+      </section>
+    </section>
+  </chapter>
+
+  <chapter id="kitchlinuxPrgG">
+    &kitchlinuxPrgG;
+    <section>
+      &binPrgG;
+      <section>
+	&shPrgG;
+	<section>
+	  &debianPrgG;
+	</section>
+      </section>
+    </section>
+    <section>
+      &etcPrgG;
+    </section>
+    <section>
+      &klibPrgG;
+      <section>
+	&emuPrgG;
+      </section>
+      <section>
+	&pthreadPrgG;
+      </section>
+    </section>
+    <section>
+      &pkgsPrgG;
+    </section>
+    <section>
+      &testsPrgG;
+    </section>
+    <section>
+      &usersPrgG;
+      <section>
+	&specPrgG;
+      </section>
+    </section>
+  </chapter>
+</book>
+
+<!--
+Local Variables:
+mode: sgml
+End:
+-->

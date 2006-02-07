@@ -1,0 +1,142 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: syncOver.sgml,v 1.2 2001/10/25 03:17:09 okrieg Exp $
+-->
+<title>K42 Synchronization facilities</title>
+  <para>
+
+    You have access to all the basic blocking locks by including
+    <ulink url="&topsrc/lib/libc/sync/sys/sysIncs.H">sys/sysIncs.H</ulink>.  The locks all
+    support the following functions, with the obvious meaning:
+
+    <programlisting>
+      <![CDATA[
+      void acquire(void);
+      uval tryAcquire(void); // non zero result on success
+      void release(void);
+      uval isLocked(void);
+      void init(void);
+      ]]>
+    </programlisting>
+
+  </para>
+  <para>
+
+    One variant of locks are the bit locks, which allow you to embed
+    locks anywhere in a 64-bit word.
+
+  </para>
+  <para>
+
+These locks include the following extra calls, which take as an argument:
+
+    <programlisting>
+      <![CDATA[
+      void acquire(BS &bs);
+      uval tryAcquire(BS &bs);
+      void release(BS bs);
+      void init(BS bs);
+      void get(BS &bs);
+      void set(BS bs)
+      ]]>
+    </programlisting>
+
+  </para>
+  <para>
+
+    The variants available are:
+
+  </para>
+  <ItemizedList spacing="compact">
+    <listitem>
+      <simpara>
+
+        <ulink url="&topsrc/lib/libc/sync/Block.H">BLock:</ulink> 
+        A simple fair blocking lock implementation.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+        <ulink url="&topsrc/lib/libc/sync/BLockGeneric.H">BLockGeneric:</ulink>
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/sync/Barrier.H">Barrier:</ulink>
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+        
+	<ulink url="&topsrc/lib/libc/sync/BlockedThreadQueues.H">BlockedThreadQueues:</ulink>
+      
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/sync/FairBLock.H">FairBLock:</ulink>
+      
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	
+	<ulink url="&topsrc/lib/libc/sync/MPMsgHndlr.H">MPMsgHndlr:</ulink>
+      
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/sync/MPMsgHndlrDisabled.H">MPMsgHndlrDisabled:</ulink>
+      
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/sync/MPMsgHndlrEnabled.H">MPMsgHndlrEnabled:</ulink>
+      
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/sync/PtrBLock.H">PtrBLock:</ulink>
+      
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/sync/PtrSLock.H">PtrSLock:</ulink>
+      
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/sync/RequestCount.H">RequestCount:</ulink>
+     
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/sync/SLock.H">SLock:</ulink>
+
+      </simpara>
+    </listitem>
+  </ItemizedList>

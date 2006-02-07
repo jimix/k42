@@ -1,0 +1,82 @@
+/*
+ * K42: (C) Copyright IBM Corp. 2001.
+ *  All Rights Reserved
+ *
+ * This file is distributed under the GNU LGPL. You should have
+ * received a copy of the license along with K42; see the file LICENSE.html
+ * in the top-level directory for more details.
+ *
+ * $Id: KernelBoundary.dot,v 1.1 2002/03/13 21:41:59 jimix Exp $
+ */
+
+digraph KernelBoundary {
+  graph [size="7,3.62", ratio=fill];
+  graph [color=black];
+  node [style=filled, color=black, fillcolor=white];
+
+  subgraph cluster_lk {
+    graph [bgcolor=gray95];
+    graph [label="Linux Kernel\n(K42 User)"];
+
+    syscall [shape=trapezium, label="Systems Call\nInterfaces"];
+
+    subgraph cluster_k42 {
+      graph [label="K42 Kernel"];
+      graph [bgcolor=gray80];
+      MM [label="Memory Manager"];
+      PS [label="Process Manager"];
+      dev [label="Device Management"];
+
+      // This lets us specify an order for layout purposes only
+      MM -> PS -> dev [style=invis, weight=0];
+    };
+
+    subgraph cluster_hw {
+      graph [bgcolor=gray70];
+      graph [label="Hardware"];
+      IDE;
+      Ethernet;
+      SCSI;
+    };
+
+    subgraph cluster_fs {
+      graph [label=""];
+      VFS -> {NFS KFS ext2fs};
+    };
+
+    subgraph cluster_comm {
+      graph [label=""];
+      sockets [label="Communications\n(sockets)"];
+      sockets -> {us nets};
+      us [label="Unix\nSockets"];
+      nets [label="TCP/IP"];
+    };
+  };
+
+  subgraph cluster_lu {
+    graph [label="Linux User"];
+    progs [shape=box, peripheries=3, label="Programs"];
+  };
+
+  progs -> syscall [weight=2];
+  syscall -> sockets [weight=1];
+  syscall -> {VFS MM PS};
+
+  progs -> MM [style=dashed,
+	       arrowtail=normal,
+	       labeldistance=5, labelangle=0,
+	       headlabel="Page Fault"];
+  progs -> PS [style=dashed,
+	       arrowtail=normal,
+	       labeldistance=3, labelangle=45,
+	       headlabel="Scheduling"];
+
+
+  dev -> {IDE SCSI Ethernet};
+  nets -> {Ethernet dev};
+  KFS -> dev;
+  ext2fs -> dev;
+  NFS -> dev;
+  NFS -> nets;
+};
+

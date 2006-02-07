@@ -1,0 +1,69 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: dead-dirs,v 1.43 2005/03/18 19:51:47 rosnbrg Exp $
+# ############################################################################
+
+Directories to delete
+---------------------
+kitch-linux/bin/sh (entire subtree)
+kitch-linux/lib/emu/arch/generic
+kitch-linux/users/bob
+os/servers/resMgr
+os/servers/kfs/os-linux/misc
+
+Directories deleted: November 02 2001
+---------------------
+os/io
+os/kernel/socket
+tools/build/linux
+kitch-linux/pkgs/apache
+doc/papers/hotos
+doc/papers/hostswapping-hotos8
+doc/papers/hostswapping-sosp18
+doc/papers/osdi2000
+doc/papers/sosp2001
+tools/build/shared/toyfs/sys
+tools/build/shared/toyfs
+os/servers/toyfs
+tools/misc/k42mon
+os/io/interrupts
+os/io/NetBSD
+os/kernel/socket
+kitch-linux/bin/fileutils-4.0
+kitch-linux/bin/sh-utils-2.0
+kitch-linux/usr
+os/servers/idle
+os/servers/resource
+doc/xobjects_sgml
+
+Directories deleted
+---------------------
+backup in cvsroot/kitchcore-Jan-26-00 deleted all below:
+os/io/dev/	  
+os/io/include/  
+os/io/net/      
+os/io/netinet
+lib/libc/objtrans/arch
+all x86
+all powerpc32
+
+deleted 05-09-00
+os/servers/thinfs
+lib/libc/objtrans
+lib/libc/arch/mips64
+lib/libc/arch/powerpc
+lib/libc/arch
+tools/build/shared/stubgen/test
+tools/build/win
+tools/etc/lisp
+docbook
+os/boot/docbook
+os/kernel/docbook
+os/kernel/mem/docbook
+

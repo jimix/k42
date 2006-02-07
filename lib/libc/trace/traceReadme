@@ -1,0 +1,194 @@
+/******************************************************************************
+ * K42: (C) Copyright IBM Corp. 2000.
+ * All Rights Reserved
+ *
+ * This file is distributed under the GNU LGPL. You should have
+ * received a copy of the license along with K42; see the file LICENSE.html
+ * in the top-level directory for more details.
+ *
+ * $Id: traceReadme,v 1.5 2005/08/22 14:09:51 dilma Exp $
+ *****************************************************************************/
+/*****************************************************************************
+ * Module Description: readme file for tracing
+ * **************************************************************************/
+
+The below is a how-to description for using the tracing and performance
+monitoring infrastructure of k42.  The motivation for the design is
+described in the Supercomputing paper.  Additional motivation and more
+details on the implementation can be found in the K42 tracing white paper.
+Both are available on the K42 web page www.research.ibm.com/K42.
+
+There are four sections:
+ 1. Adding a new event to an existing major class
+ 2. Creating a new major class
+ 3. Enabling tracing in k42
+ 4. Using the analysis tools to read and examine the trace data
+
+
+1. Adding a new event to an existing major class
+
+This process is straightforward: 1) add the event of interest to the xml
+file, 2) use the new event in your code.
+
+In the kitchsrc/lib/libc/trace/k42-trace-xml/ directory there is one file
+for each major class of events.  These files contain the xml description of
+each event.  Events should be capitalized using camel case syntax and it is
+strongly encouraged to use full explicit names (e.g., VirtualAddress rather
+than VA).  It is also strongly encouraged to fill in an description both
+for the event and for each field.
+
+An example event definition follows: 
+
+<event name="OS::Exception::PPCAsyncRemote"
+    description="remote asynchronous procedure call">
+    <layerId value="OS" />
+    <classId value="Exception" />
+    <specifier value="PPCAsyncRemote" />
+    <fields>
+	<field name="threadPtr" type="uint64"
+             description="kernel thread object pointer" />
+	<field name="commID" type="uint64" description="target commID" />
+	</fields>
+	<k42Format value='PPC_ASYNC_REMOTE, kernel thread %0[%llx],
+             target commID %1[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="0"
+	     description="context switch to kernel comm ID" />
+</event>
+
+This event would then be used in K42 code as below
+
+    TraceOSExceptionPPCAsyncRemote(CurrentThread, targetID);
+
+For completeness below is the definition of the parse language (more useful 
+comments on the implementation of tracing can be found in traceCore.H)
+
+ each entry contains three fields: the minorID and two strings
+ the first string is the packing format of the event - see immediately below
+ the second string is a modified printf string: the standard % arguments
+   are packaged into brackets and follow a % number string indicating the
+   order to print the packed arguments in. e.g.,
+   "32 str"
+   "This is a str %1[%s] and int %0[%ld]"
+   means print the string following str and the integer following int
+
+ the language of the packing format string is:
+
+ token* left-paren token* right-paren
+
+ where
+   token : 8 | 16 | 32 | 64 | str-ident
+   str-ident : str number
+   number : positive integer indicating the length the string including \0
+   left-paren : (
+   right-paren : )
+   tokens are separated by spaces
+
+   example
+
+    { __TR(TRACE_TEST_STR_DATA), "64 str str",
+      "here is data %0[%llx] str1 %1[%s] str2 %2[%s]"},
+
+   also note that strings must be NULL terminated.  If more than one field is
+   present, and if one of them is a string, then the strings must follow the
+   integers.
+
+
+2. Creating a new major class
+
+
+As of May 2005 we have not implemented the full infrastructure to support
+layerIDs, thus all major IDs still come out of one "namespace" (represented
+by a single mask).  The consequence of this is that majorIDs need to be
+unique even if they are from different layers.  Also there is still some
+clunkiness with regards to the files that need modification.  Please be
+understanding we're working on smoothing this process.
+
+To create a new major class edit the traceOSClasses.xml file (also in
+kitchsrc/lib/libc/trace/k42-trace-xml).  Pay attention to the FIXMEs.
+
+Create a new traceXxxYyy.xml file where XxxYyy is the new major class.
+
+Add the new major .h include file to kitchsrc/os/kernel/trace/traceIncs.H
+
+Modify the traceUnified structure in kitchsrc/os/kernel/trace/traceUtils.C
+
+Add the xml file to lib/libc/trace/Makefile
+
+3. Enabling tracing in K42
+
+This section assumes an overall understanding of tracing in K42 which may
+be obtained by reading the supercomputing and tracing white paper.
+
+The traceMask can be dynamically modified at runtime.  It can be set to
+enable tracing of particular majorIDs.  This can accomplished either by
+echoing the mask value of the desired traceMask to /ksys/traceMask or from
+the kernel test prompt by T and then H traceMask.  Example from a shell
+logged into K42:
+
+echo 0x4 > /ksys/traceMask
+
+alternatively from the kernel test prompt: T|H 0x4
+
+The T menu (from the kernel test prompt) provides common tracing masks.  To
+derive a custom mask see the values in
+kitchsrc/lib/libc/trace/k42-trace-xml/traceOSClasses.xml.  Once the desired
+data has been collected, the mask to can reset to 0 so no more data is
+gathered.  Then the tracedServer with the --dump option can be called to
+get the data from memory out to disk in the kitchroot directory.
+
+A common operation would be to 
+
+echo 0x4 > /ksys/traceMask
+run Application
+echo 0x0 > /ksys/traceMask
+
+This will store the tracing data in memory.  Then it can be dumped out to
+disk by executing
+
+/kbin/tracedServer --dump
+
+see /kbin/tracedServer --help for other options off the trace daemon
+
+In the ktchroot directory (KITCHTOP/install/powerpc/XXXDeb/kitchroot) there
+will be a file trace-out.0.trc that contains the binary data from the trace
+file.
+
+There are other modes of collecting trace data.  It can streamed out
+continuously over nfs, over the net, or to disk (refer to other
+/kbin/tracedServer --help for other options).
+
+
+
+4. Using the analysis tools to read and examine the trace data
+
+One the binary trace file has been created there are several tools that may
+be employed to analyze the data.
+
+One is traceTool (us --help for all the option).  traceTool produces an
+ascii readable output from the binary trace file (example output truncated
+to 80 column follow)
+
+21.4747350 TRC_USER_RUN_UL_LOADER       process 6 created new process with id 7 
+21.4747422 TRC_EXCEPTION_PGFLT          PGFLT, kernel thread 80000000c12b0f90, f
+21.4747882 TRC_EXCEPTION_PGFLT_DONE     PGFLT DONE, kernel thread 80000000c12b0f
+21.4748091 TRC_EXCEPTION_PPC_CALL       PPC CALL, commID 0
+21.4748530 TRC_MEM_FCMCOM_ATCH_REG      Region 800000001022cc98 attached to FCM 
+21.4748709 TRC_MEM_FCMCRW_CREATE        TRC_MEM_FCMCRW_CREATE ref e100000000003f
+21.4749142 TRC_EXCEPTION_PPC_RETURN     PPC RETURN, commID 600000000
+21.4749247 TRC_EXCEPTION_PPC_CALL       PPC CALL, commID 0
+21.4749573 TRC_MEM_REG_CREATE_FIX       Region default 10000000 created fixlen a
+21.4749773 TRC_MEM_REG_DEF_INITFIXED    region default init fixed 80000000102b7c
+21.4749873 TRC_MEM_ALLOC_REG_HOLD       alloc region holder addr 10000000 size 1
+
+A second is traceProfile.  traceProfile has the capability to performance
+lock contention analysis, user versus system running time, a break down by
+time by system call, overall run time, and more analysis options are
+available again see traceProfile --help
+
+A third graphics tool is kmon (invoked by saying runkmon) will have been
+built if there was a javac compiler available.  It provides invaluable
+graphical views of the data collected.
+
+A fourth tool that provides considerable detail about how much time is
+spent in each system call, each process, etc is jiggy.  See the script for
+more details about usage.

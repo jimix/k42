@@ -1,0 +1,83 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000, 2003.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Makefile.k42,v 1.5 2005/06/28 19:47:56 rosnbrg Exp $
+# ############################################################################
+
+SUBDIRS = 
+
+# set KERNEL=1 if for kernel
+KERNEL=0
+-include Make.config
+include $(MKKITCHTOP)/lib/Makerules.kitch
+
+default::gorp
+//default:: targets
+
+SERVE += FileSystemKFS
+
+gorp:: 
+	cd ../baseServers/ ; $(MAKE) SEQ=1
+
+fast::
+	$(MAKE) install_targets
+	cd ../.. ; $(MAKE) install_targets
+
+ifdef IN_OBJ_DIR
+# ############################################################################
+#  rules to be made in object directory
+# ############################################################################
+targets:: $(SERVERS) $(UTILS)
+
+# We don't have a kfsServer here because KFS is part of baseServers
+# If baseServers can't start KFS (e.g. running in hardware and the device
+# has not been initialized yet), the user can start kfs using the program
+# kfsServer in kitchsrc/usr
+SERVERS += kfsServer
+#SRCS += main.C
+UTILS += # dfmt direcserver filesystem hcp saveState
+
+
+include $(SRC_DIR_PATH)/Make.files
+#INCPATH += -I$(SRC_DIR_PATH)/include
+
+VPATH    += $(SRC_DIR_PATH)/../kfs-unstable/os-k42
+
+#------------------------- stuff needed for linking to glibc -------------
+# we link to glibc to get time
+
+SERV_LIBS = -lfs
+SERV_DEPS = $(LIB_FS)
+
+#------------------------- stuff needed for linking to glibc -------------
+
+
+# #############################################################################
+#
+# The order of the .o files is important in some cases due to global object
+# initialization dependencies.
+#
+# #############################################################################
+
+# How to install utilities
+INST_PROGS = $(UTILS:%=$(MKKITCHROOT)/kbin/%)
+
+$(MKKITCHROOT)/kbin/%: % $(MKKITCHROOT)/kbin
+	$(INSTALL) --mode 0755 $< $(@D)
+	$(INSTALL_DSK)
+
+install_targets:: $(INST_PROGS)
+
+# Clean up files ignored by regular "clean"
+clean::
+	-$(RM) -f *.o *.dbg *.d $(UTILS)
+
+# ############################################################################
+#  end of object directory rules
+# ############################################################################
+endif

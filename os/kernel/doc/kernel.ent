@@ -1,0 +1,32 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: kernel.ent,v 1.13 2001/08/23 22:22:22 mike Exp $
+-->
+<!entity kernelOver SYSTEM "kernelOver.sgml">
+<!entity kernelPrgG SYSTEM "kernelPrgG.sgml">
+<!entity % arch SYSTEM "../arch/doc/arch.ent">
+%arch;
+<!entity % bilge SYSTEM "../bilge/doc/bilge.ent">
+%bilge;
+<!entity % defines SYSTEM "../defines/doc/defines.ent">
+%defines;
+<!entity % exception SYSTEM "../exception/doc/exception.ent">
+%exception
+<!entity % init SYSTEM "../init/doc/init.ent">
+%init;
+<!entity % mem SYSTEM "../mem/doc/mem.ent">
+%mem;
+<!entity % proc SYSTEM "../proc/doc/proc.ent">
+%proc;
+<!entity % sys SYSTEM "../sys/doc/sys.ent">
+%sys;
+<!entity % trace SYSTEM "../trace/doc/trace.ent">
+%trace;
+<!entity % stubtest SYSTEM "../stubtest/doc/stubtest.ent">
+%stubtest;

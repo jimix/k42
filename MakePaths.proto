@@ -1,0 +1,749 @@
+# -*-makefile-*- #############################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: MakePaths.proto,v 1.134 2005/08/08 10:18:43 butrico Exp $
+# ############################################################################
+
+#######################################################################
+# Make.paths controls the configuration of the build, to specify
+# private values, edit Make.paths. MakePaths.proto is the source of the
+# default values.  to make your modified Make.paths your default,
+# place a copy in your $HOME/.kitchmfinc
+######################################################################
+ifndef HAVE_MFINC
+HAVE_MFINC=1		# prevent doing this file more than once
+
+# Uncomment this if K42TOOLS tools tree is built and installed.
+# Do not forget to also set up TOOLSINC below to point to include
+# subdirectory of the prefix you installed the tools in.
+#
+#K42TOOLS = 1
+
+ifdef K42TOOLS
+TOOLSINC = -I/home/timvail/kitchtools/include
+else
+TOOLBIN_PRE = $(MKTOOLBIN)/
+endif
+
+#######################################################################
+#
+#  First determine the build platform (AIX, IRIX64, Linux, ...)
+
+MATCH=0
+
+ifeq ($(PLATFORM_OS),)
+  export PLATFORM_OS:=$(shell uname -s)
+ifeq ($(PLATFORM_OS),Linux)
+  export PLATFORM:=$(PLATFORM_OS)_$(shell uname -m)
+else
+  export PLATFORM:=$(PLATFORM_OS)
+endif
+endif
+
+#######################################################################
+#
+# Define the Target Architecture (powerpc, mips64, amd64, generic64, ...)
+# and the Debug option level     (fullDeb, partDeb, noDeb)
+#
+# These are (mostly) defined by the platform on which we are building
+#
+ifeq ($(PLATFORM_OS),IRIX64)
+     export OBJDIR_OPT_TYPES ?=fullDeb
+     export OBJDIR_ARCH_TYPES ?=mips64
+     MATCH=1
+endif
+
+ifeq ($(PLATFORM_OS),Linux)
+     export OBJDIR_OPT_TYPES=partDeb
+     export OBJDIR_ARCH_TYPES=powerpc
+     export PPC64_ELF=1
+     MATCH=1
+endif
+ifeq ($(PLATFORM_OS),Darwin)
+     export OBJDIR_OPT_TYPES ?=partDeb
+     export OBJDIR_ARCH_TYPES=powerpc
+     export PPC64_ELF=1
+     MATCH=1
+endif
+
+ifeq ($(PLATFORM_OS),AIX)
+#    export OBJDIR_OPT_TYPES ?=partDeb
+#    export OBJDIR_OPT_TYPES ?=noDeb
+     export OBJDIR_OPT_TYPES ?=fullDeb
+     export OBJDIR_ARCH_TYPES=powerpc
+     MATCH=1
+endif
+
+#
+#  check if we have a platform that we know about.  If not,
+#  the following is the first (default) target, and we exit.
+#  (Notice that these commands are not Makefile variables,
+#   since those are not defined yet).
+#
+ifneq ($(MATCH),1)
+error:
+	@echo No match for platform $(PLATFORM_OS)
+	@exit 1
+endif
+
+#######################################################################
+#
+# check for command-line override of the Architecture and Debug Option
+ifdef ARCHS
+     export OBJDIR_ARCH_TYPES=$(ARCHS)
+endif
+ifdef OPTS
+     export OBJDIR_OPT_TYPES ?=$(OPTS)
+endif
+
+ifndef TARGET_MACHINE
+TARGET_MACHINE=$(OBJDIR_ARCH_TYPES)
+endif
+
+
+#######################################################################
+#
+# Building on linux may imply amd64 OR ppc64; fixup MKSERV_TARGET
+
+ifeq ($(OBJDIR_ARCH_TYPES),amd64)
+  export MKSERV_TARGET=gasLE    
+endif
+
+ifeq ($(OBJDIR_ARCH_TYPES),powerpc)
+  export MKSERV_TARGET=gasBE
+endif
+
+ifeq ($(OBJDIR_ARCH_TYPES),mips64)
+  export MKSERV_TARGET=mips64
+endif
+
+
+#######################################################################
+#
+#  Define the basic paths.
+#  NOTE:  these are all in terms of MKANCHOR, which must be set already!
+#
+# the top of the source tree
+export MKSRCTOP:=$(MKANCHOR)/kitchsrc
+
+# the install tree that includes "include", "lib", "etc", and normally KITCHTOP
+export MKKITCHTOP:=$(MKANCHOR)/install
+
+# the home directory seen on Kitchawan
+export MKTOOLBIN:=$(MKANCHOR)/install/tools/$(PLATFORM)/$(TARGET_MACHINE)
+
+# location of various configuration files
+export MKTOOLLIB:=$(MKKITCHTOP)/tools/lib
+
+#######################################################################
+#
+# Define critical environment variables
+#
+# Ensure that sort and grep are not affected by locale issues 
+export LC_ALL=C
+
+#######################################################################
+#
+#  Define the basic build command names
+
+#    Compile and link on the target, for build tools (32-bit)
+HOST_CC=gcc
+HOST_CXX=g++
+HOST_LINK.c = $(HOST_CC) $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(HOST_LDFLAGS)
+
+
+#     We can use "phony" compilers, compilers that were not configured
+#     for k42 but can be used to build it. Currently we use the AIX
+#     compiler for ppc64 and the IRIX compiler for MIPs.  This is NOT
+#     a permanent situations.. I hope.
+TARGET_IS_PHONY=0
+#     Compile, link and archive tools for the target (64-bit)
+TARGET_CC=gcc
+TARGET_CXX=g++
+TARGET_AS=as
+
+TARGET_LD=ld
+TARGET_AR=ar
+TARGET_NM=nm
+TARGET_STRIP=strip
+TARGET_OBJDUMP=objdump
+
+#     Lex and Yacc
+LEX=flex
+YACC=byacc
+
+#     Make and shell commands
+MAKE=$(MAKE_COMMAND)
+SHELL_CMD=/bin/sh
+SHELL=/bin/bash
+EXIT=exit
+ECHO=echo
+TEST=test
+TOUCH=touch
+TRUE=true
+INSTALL=install
+
+#     General Unix/Posix commands
+AWK=awk
+CAT=cat
+CHMOD=chmod
+CMP=cmp
+CP=cp
+CPIO=cpio
+DD=dd
+EMACS=emacs
+ETAGS=etags
+FIND=find
+LN=ln
+M4=m4
+MV=mv
+PERL=perl
+RM=rm -f
+SED=sed
+SORT=sort
+
+#     Java tools
+JAR=jar
+JAVAC=javac
+
+#     PEM xml tools
+PEM_GEN_HDR_PATH:=$(MKANCHOR)/kitchsrc/tools/misc/pem
+
+# Platform specific overrides
+ifeq ($(PLATFORM_OS),Darwin)
+YACC=yacc
+AWK=gawk
+INSTALL=/sw/bin/install
+endif
+
+STATIC_LINK = $(1)
+
+#######################################################################
+#
+#  Define the command names for our build tools
+
+INSTALL_INC:=$(TOOLBIN_PRE)kinstall
+KNEWEST:=$(TOOLBIN_PRE)knewest
+MKSERV:=$(TOOLBIN_PRE)mkserv -t $(MKSERV_TARGET)
+
+ifdef K42TOOLS
+STUBGEN:=$(GNUPRE)stubgen
+XCOFF_TYPE:=xcoff_type
+else
+STUBGEN:=$(TOOLBIN_PRE)stubgen/stubgen
+XCOFF_TYPE:=$(AWK) -f $(TOOLBIN_PRE)stubgen/xcoff_type.awk
+endif
+
+
+# note: To reliably rebuild a KFS disk do the following:
+#       1) rm <arch>/<debug>/os/DISK0.0.0
+#	2) rm -rf install/<arch>/<debug>/kitchroot
+#       3) use the disk-creation program of the appropriate FS to
+#          re-create DISK0.0.0
+#	4) make install_targets from the top
+# Enable a KFS build
+FILESYS=KFS
+
+# Specifies if you want an unstable version of KFS; default is stable
+#KFS_UNSTABLE=1
+# specifies if we want to have a file system disk image built
+#FILESYS_DISK_IMAGE=1
+# Indicates we have a private subdirectory for server kfs (os/servers/kfs)
+#KFS_PRIVATE=1
+# If you want to build with ext2, uncomment the following
+#EXT2_ENABLED=1
+
+#######################################################################
+#
+#  If the platform requires it, override the definitions above
+#  of the variable for the commands we need to build.
+#
+ifeq ($(PLATFORM_OS),AIX)
+INSTALL=gnuinstall
+SHELL=/usr/gnu/bin/bash
+endif
+
+ifeq ($(PLATFORM_OS),IRIX64)
+INSTALL=ginstall
+endif
+
+ifeq ($(PLATFORM_OS),Linux)
+INSTALL=/usr/bin/install
+EMACS=/usr/bin/emacs
+endif
+
+ifeq ($(PLATFORM_OS),Darwin)
+INSTALL=/usr/bin/install
+EMACS=/sw/bin/emacs
+endif
+
+###########################################################
+# GNUPRE is so you can target an alternate toolchain easily
+
+#######################################################################
+#
+#  Decide how to select the tools to use.  Mostly the tools are
+#  defined by the TARGET_MACHINE.  However, for GENERIC64, we
+#  want to use the tools that are normal for the PLATFORM_OS we are
+#  building on:
+#		AIX -- powerpc
+#		IRIX64 -- mips
+#		Linux -- amd64
+#
+SELECT_TOOLS:=$(TARGET_MACHINE)
+
+ifeq ($(SELECT_TOOLS),generic64)
+  # pick the tools according what is normal for this platform
+  ifeq ($(PLATFORM_OS),AIX)
+    SELECT_TOOLS:=powerpc
+  endif
+  ifeq ($(PLATFORM_OS),IRIX64)
+    SELECT_TOOLS:=mips64
+  endif
+  ifeq ($(PLATFORM_OS),Linux)
+    SELECT_TOOLS:=amd64
+  endif
+endif  # if generic64
+
+
+#######################################################################
+#
+#  Some of the tools above are Target Machine specific --
+#  things like cross-compilers, loaders, and so on.
+#  If so, override them here.
+#
+
+ifeq ($(SELECT_TOOLS),powerpc)
+#--------------- definition of standard powerpc(64) variables ---------
+
+ifneq ($(filter Linux Darwin,$(PLATFORM_OS)),)
+  GCC3=1
+  # gcc3 on RH, gcc-3.2 on Debian
+  GCC3_EXEC:=$(shell test -x /usr/bin/gcc3 && echo gcc3 || echo gcc-3.2)
+  GXX3_EXEC:=$(shell test -x /usr/bin/g++3 && echo g++3 || echo g++-3.2)
+
+  GCC3_EXEC:=$(shell test -x $(GCC3_EXEC) || echo gcc)
+  GXX3_EXEC:=$(shell test -x $(GXX3_EXEC) || echo g++)
+
+ifeq ($(PLATFORM_OS),Darwin)
+  HOST_CC=$(GCC3_EXEC)  -Upowerpc -DGCC3 
+  HOST_CXX=$(GXX3_EXEC)  -Upowerpc -DGCC3 
+  HOST_LINK.c = $(HOST_CC) $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(HOST_LDFLAGS)
+else
+  HOST_CC=$(GCC3_EXEC)  -Upowerpc -DGCC3 
+  HOST_CXX=$(GXX3_EXEC)  -Upowerpc -DGCC3 
+  HOST_LINK.c = $(HOST_CC) $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(HOST_LDFLAGS)
+endif
+  K42_PKGDIR=/u/kitchawa/k42-packages/powerpc.elf/
+endif
+
+# Set our default cross-compiler prefix.
+ifneq ($(PLATFORM),Linux_ppc64)
+GNUPRE=powerpc64-linux-
+GNUPRE32=powerpc-linux-
+endif
+
+# Support distributed compilation.
+ifdef DISTCC_HOSTS
+GNUPRE   := distcc $(GNUPRE)
+HOST_CC  := distcc $(HOST_CC)
+HOST_CXX := distcc $(HOST_CXX)
+endif
+
+TARGET_CC=$(GNUPRE)gcc
+TARGET_CXX=$(GNUPRE)g++
+TARGET_AS=$(GNUPRE)as
+TARGET_LD=$(GNUPRE)ld
+TARGET_AR=$(GNUPRE)ar
+TARGET_NM=$(GNUPRE)nm
+TARGET_STRIP=$(GNUPRE)strip -S
+TARGET_OBJCOPY=$(GNUPRE)objcopy
+TARGET_OBJDUMP=$(GNUPRE)objdump
+
+TARGET32_CC=$(GNUPRE32)gcc
+TARGET32_CXX=$(GNUPRE32)g++
+TARGET32_AS=$(GNUPRE32)as
+TARGET32_LD=$(GNUPRE32)ld
+TARGET32_AR=$(GNUPRE32)ar
+TARGET32_NM=$(GNUPRE32)nm
+TARGET32_STRIP=$(GNUPRE32)strip -S
+TARGET32_OBJCOPY=$(GNUPRE32)objcopy
+TARGET32_OBJDUMP=$(GNUPRE32)objdump
+
+ifneq ($(findstring 3.4,$(shell $(TARGET_CC) -dumpversion)),)
+  GCC34=1
+endif
+
+
+DYNLINK=1
+
+WARN_FLAGS= -Wall
+CONF_FLAGS=  -DTARGET_MACHINE="$(TARGET_MACHINE)" -D__GNU_AS__ -Upowerpc -DGCC3 -MD -Wa,-strip-local-absolute -fPIC -mminimal-toc
+CONF_CXXFLAGS=-fno-rtti -nostdinc++ -fno-exceptions
+
+EXTRACTPROG=ext_elf64
+
+TARGET_IS_PHONY=0
+MEMORY_MODEL=
+#SEQ=1
+
+TARGET_ARCH=
+
+
+endif	# ($(SELECT_TOOLS),powerpc)
+#----------------------------------------------------------------------
+
+
+ifeq ($(SELECT_TOOLS),mips64)
+#----------------- definition of standard mips64 variables ------------
+
+# .....................................................
+ifeq ($(PLATFORM_OS),AIX)
+###########################################################
+# GNUPRE is so you can target an alternate toolchain easily
+GNUPRE=/u/kitchawa/tools/mips64/bin/mips64-unknown-linux-gnu-
+
+TARGET_CC=$(GNUPRE)gcc
+TARGET_CXX=$(GNUPRE)g++
+TARGET_AS=$(GNUPRE)as
+
+TARGET_LD=$(GNUPRE)ld -melf64bmip
+EXTRACTPROG=ext_ppc64
+
+## FIXME the compiler should know this!!
+KLDFLAGS += -Xlinker -melf64bmip
+TARGET_ARCH=
+
+# .....................................................
+else	# ($(PLATFORM_OS),AIX)
+# .....................................................
+TARGET_IS_PHONY=1
+
+###########################################################
+# GNUPRE is so you can target an alternate toolchain easily
+# by default it is blank
+
+TARGET_CC=$(GNUPRE)gcc
+TARGET_CXX=$(GNUPRE)g++
+TARGET_AS=$(GNUPRE)as
+
+TARGET_LD=$(GNUPRE)ld
+EXTRACTPROG=ext_elf64
+
+# Host compiler
+HOST_CC=gcc -mabi=n32
+HOST_CXX=g++ -mabi=n32
+
+KLDFLAGS += -64 -non_shared -LD_MSG:verbose=$(LD_NO_WARN)
+TARGET_ARCH=
+endif	# ($(PLATFORM_OS),AIX)
+# .....................................................
+
+TARGET_AR=$(GNUPRE)ar
+TARGET_NM=$(GNUPRE)nm
+TARGET_STRIP=$(GNUPRE)strip -S
+LD_NO_WARN = 15,84,131,64
+C_LABEL_PREFIX =
+# FIXME: should we be compiling static or not
+# FIXME: should we be compiling pic or not
+WARN_FLAGS= -Wall
+CONF_FLAGS= -mabi=64 -mips3 -DTARGET_MACHINE="$(TARGET_MACHINE)" -nostdinc -MD -fno-pic -fno-PIC -Wa,-non_shared -static
+CONF_CXXFLAGS = -fno-exceptions -fno-rtti -nostdinc++
+
+# a little left-over from Tornado to help with debugging ndebug stuff
+ifeq ($(TORNNDEBUG_G),1)
+ifeq ($(OPTIMIZATION),noDeb)
+OPT += -g
+endif	# ifeq ($(OPTIMIZATION),noDeb)
+endif	# ifeq ($(TORNNDEBUG_G),1)
+
+#----------------------------------------------------------------------
+endif	# ($(SELECT_TOOLS),mips64)
+
+
+ifeq ($(SELECT_TOOLS),amd64)
+#----------------- definition of standard amd64 variables -------------
+
+###########################################################
+# GNUPRE is so you can target an alternate toolchain easily
+# by default it is setup correctly
+GNUPRE=x86_64-linux-
+GNUPRE32=x86_64-linux-
+
+TARGET_CC=$(GNUPRE)gcc
+TARGET_CXX=$(GNUPRE)g++
+TARGET_AS=$(GNUPRE)as
+
+TARGET_LD=$(GNUPRE)ld
+TARGET_AR=$(GNUPRE)ar
+TARGET_NM=$(GNUPRE)nm
+TARGET_STRIP=$(GNUPRE)strip
+TARGET_OBJDUMP=$(GNUPRE)objdump
+
+EXTRACTPROG=ext_elf64
+
+HOST_CC  += -D__LITTLE_ENDIAN__
+HOST_CXX += -D__LITTLE_ENDIAN__
+
+TARGET_ARCH=
+WARN_FLAGS= -Wall
+CONF_FLAGS= -nostdinc -static -nostartfiles -fmessage-length=0 $(MEMORY_MODEL) $(RED_ZONE) -MD -DTARGET_MACHINE="$(TARGET_MACHINE)" -D__GNU_AS__ -DCONFIG_SIMICS
+CONF_CXXFLAGS = -fno-exceptions -fno-rtti -nostdinc++
+
+#MEMORY_MODEL=-mcmodel=medium
+MEMORY_MODEL=-fPIC
+RED_ZONE=-mno-red-zone
+
+endif # ifeq ($(SELECT_TOOLS),amd64)
+#----------------------------------------------------------------------
+
+#######################################################################
+#
+# Now any variables that depend upon the specific programs
+# that we have defined.
+
+
+#######################################################################
+#
+#  Once CC and CXX are defined, we add a #define of exactly one of the
+#  platform #ifdef variables:
+#           PLATFORM_AIX, PLATFORM_IRIX, PLATFORM_Linux
+#
+__DEFINES=-DPLATFORM_$(PLATFORM)=1 
+__DEFINES+= -DPLATFORM_OS_$(PLATFORM_OS)=1 
+__DEFINES+= -DTARGET_MACHINE="$(TARGET_MACHINE)" 
+HOST_CC+= $(__DEFINES)
+HOST_CXX+= $(__DEFINES)
+
+#######################################################################
+#
+# Also for all platforms, we don't want to know about unused
+# variables for the noDeb case (highest optimization, with NDEBUG
+# defined.)  With NDEBUG defined, asserts will go away.  There
+# may be some variables that are defined only for the purpose of
+# asserts, and so they will be unused.  If there are truly
+# unused, we will get warning messages during fullDeb and partDeb
+# compilation.
+#
+# ignore unused variables with noDeb
+ifeq ($(OPTIMIZATION),noDeb)
+WARN_FLAGS += -Wno-unused
+endif	# ($(OPTIMIZATION),noDeb)
+
+
+#######################################################################
+#
+# Optionally build the lmbench package
+#
+# define LMBENCH to have the package built (using default k42 pkg dir)
+# export LMBENCH:=1  
+#
+# *OR*
+#
+# define LMBENCHSRC to refer to your own lmbench directory
+# export LMBENCHSRC:=/u/mostrows/k42/lmbench
+#
+# define BUILD_LMBENCH to have the make process go into LMBENCHSRC
+# and compile lmbench, not just link against existing object files
+# export BUILD_LMBENCH:=1
+
+
+#
+# This is good for all
+#
+WARN_FLAGS= -Wall 
+
+WARN_IS_ERR=1
+ifeq ($(WARN_IS_ERR),1)
+WARN_FLAGS += -Werror
+endif
+
+
+#######################################################################
+#
+# Also for all platforms, we don't want to know about unused
+# variables for the noDeb case (highest optimization, with NDEBUG
+# defined.)  With NDEBUG defined, asserts will go away.  There
+# may be some variables that are defined only for the purpose of
+# asserts, and so they will be unused.  If there are truly
+# unused, we will get warning messages during fullDeb and partDeb
+# compilation.
+#
+# ignore unused variables with noDeb
+ifeq ($(OPTIMIZATION),noDeb)
+WARN_FLAGS += -Wno-unused
+endif	# ($(OPTIMIZATION),noDeb)
+
+#######################################################################
+#######################################################################
+#######################################################################
+#
+#			Site-Wide Settings
+#
+# The variables below need to be set correctly for each site that runs
+# K42.  These setting identify locations of common components that are
+# not build with K42 (e.g. root file system).
+#
+# The values that must be set are:
+# K42_PACKAGES
+# K42_PKGROOTPATH
+# LINUXSRCROOT
+# K42_CONFIG
+# K42_KFS_DISKPATH (only if using KFS)
+
+#
+#######################################################################
+# K42_PACKAGES is the directory in which one can find directories
+# containing the package filesystem images (NFS in directories, KFS in
+# disk image files).
+
+########################################################################
+# K42_PKGROOTPATH is the directory that contains the root file-system 
+# image directory (needed to get glibc header files)
+
+########################################################################
+# LINUXSRCROOT identifies the location of the build K42-linux-kernel tree
+#export LINUXSRCROOT := $(K42_PACKAGES)/src-cvs/linux-016.noDeb
+
+########################################################################
+# K42_KFS_DISKPATH is the location of the KFS image of the root file system
+# This only needs to be defined if you are using KFS
+
+
+########################################################################
+# System wide information for a group of users (where a K42 system
+# gets /etc/files from).
+# This should be a directory which contains: 
+# group, hosts, passwd, profile, resolv.conf
+# (Just like /etc on Linux).
+# Default values can be found in $(K42_PKGROOT)/etc
+#
+
+ifndef K42_SITE
+export K42_SITE=watson
+endif
+
+
+export LINUXVER ?= 029
+export K42_PKGVER ?= 3
+export K42_USER_CONFIG:=~/k42-config
+
+ifeq "$(K42_SITE)" "watson"
+export K42_PACKAGES:=/u/kitchawa/k42-packages
+export K42_PKGROOTPATH := $(K42_PACKAGES)
+export LINUXSRCROOT = $(K42_PACKAGES)/src-cvs/linux-$(LINUXVER)
+export K42_KFS_DISKPATH= $(K42_PACKAGES)
+export K42_PKGHOST:=9.2.224.107
+export K42_CONFIG:=/u/kitchawa/k42-config
+export K42_PKGVER := 4
+
+#######################################################################
+#
+# Define SPEC_PKG to refer to directory that contains SPEC benckmark files
+# If not defined, we try assume it's in a known location under K42_PKGDIR
+# SPEC_PKG=/u/kitchawa/k42-pakcages/powerpc.elf/specdata/ \
+#	    benchspec/057.sdet/$(OPTIMIZATION)/
+# Not everybody has this --- you may need to comment this out
+
+SPECDIR=specdata/benchspec
+SPECVER=057.sdet
+K42_PKGDIR=/u/kitchawa/k42-packages/powerpc.elf
+export SPEC_PKG=$(K42_PKGDIR)/$(SPECDIR)/$(SPECVER)/$(OPTIMIZATION)
+
+
+endif
+
+
+
+ifeq "$(K42_SITE)" "toronto"
+export K42_PKGHOST:=10.1.1.1
+export K42_PACKAGES:=/stumm/d/d0/tornado/k42/powerpc/k42-packages
+export K42_PKGROOTPATH:=/scr/kitchawa/k42-packages
+export LINUXSRCROOT:=$(K42_PACKAGES)/src-cvs/linux-$(LINUXVER)
+export K42_KFS_DISKPATH:=$(K42_PACKAGES)
+# Victim will adhere to hardware flow control of the host.  In other words,
+# victim will wait for its CTS to be asserted before sending data.
+# Affects kitchsrc/os/kernel/bilge/arch/powerpc/thinwire.C.
+TARGET_CXXFLAGS+=-DHW_FLOWCONTROL
+endif
+ifeq "$(K42_SITE)" "rochester"
+export K42_PKGVER:=0
+export K42_PKGHOST:=128.151.67.12
+export K42_PACKAGES:=/home/vax2/p2/k42/image/k42-packages
+export K42_PKGROOTPATH:=/home/vax2/p2/k42/image/k42-packages
+export LINUXSRCROOT:=$(K42_PACKAGES)/linux-$(LINUXVER)
+export K42_KFS_DISKPATH:=$(K42_PACKAGES)
+endif
+ifeq "$(K42_SITE)" "arl"
+export K42_PACKAGES:=/nas/projects/k42/k42-packages
+export K42_PKGROOTPATH := $(K42_PACKAGES)
+export LINUXSRCROOT := $(K42_PACKAGES)/k42.linux
+export K42_KFS_DISKPATH= $(K42_PACKAGES)
+export K42_PKGHOST:=9.3.61.9
+endif
+ifeq "$(K42_SITE)" "torolab"
+export K42_PACKAGES:=/home/kitchawa/k42-packages
+export K42_PKGROOTPATH := $(K42_PACKAGES)
+export LINUXSRCROOT = $(K42_PACKAGES)/src-cvs/linux-$(LINUXVER)
+export K42_KFS_DISKPATH= $(K42_PACKAGES)
+export K42_PKGHOST:=9.26.10.137
+endif
+
+ifeq "$(K42_SITE)" "unsw"
+export K42_PACKAGES:=/home/andrewb/work/k42-packages
+export K42_PKGROOTPATH := $(K42_PACKAGES)
+export LINUXSRCROOT = $(K42_PACKAGES)/src-cvs/linux-$(LINUXVER)
+export K42_KFS_DISKPATH= $(K42_PACKAGES)
+export K42_PKGHOST:=129.94.239.10
+export K42_CONFIG:=$(K42_PACKAGES)/k42-config
+endif
+
+ifeq "$(K42_SITE)" "ozlabs"
+ifndef K42_PACKAGES
+export K42_PACKAGES:=/u/fs/k42-packages
+endif
+export K42_PKGROOTPATH := $(K42_PACKAGES)
+export LINUXSRCROOT = $(K42_PACKAGES)/src-cvs/linux-$(LINUXVER)
+export K42_KFS_DISKPATH= $(K42_PACKAGES)
+export K42_PKGHOST:=10.61.2.2
+SPECDIR=specdata/benchspec
+SPECVER=057.sdet
+K42_PKGDIR=/home/cyeoh/percs/k42-packages/powerpc.elf
+export SPEC_PKG=$(K42_PKGDIR)/$(SPECDIR)/$(SPECVER)/$(OPTIMIZATION)
+endif
+
+# which version of KFS are we running?
+# WARNING! Please do not either 'export' or change '=' to ':=' for either
+#          K42_KFS_DISK_VERSION or K42_KFS_PKGDISK. We need them to be expanded
+#          lazily, as 'kfsgetversion' will only get built later in the build
+#          process.
+K42_KFS_DISK_VERSION=$(shell $(TOOLBIN_PRE)kfsgetversion)
+K42_KFS_PKGDISK=$(K42_KFS_DISKPATH)/KFS$(OPTIMIZATION).Img.$(K42_PKGVER)-$(K42_KFS_DISK_VERSION)
+export K42_PKGROOT:=$(K42_PKGROOTPATH)/$(OPTIMIZATION).Img.$(K42_PKGVER)
+
+#######################################################################
+#
+# Optionally compile to run under the hypervisor.  Uncomment the
+# following line (or HYPE=1 on make command) to build a
+# hypervisor-capable K42.
+#HYPE=1
+ifdef HYPE
+CPPFLAGS += -DHYPE
+export LINUXSRCROOT=/u/kitchawa/k42-packages/src-cvs/linux-027-rhype
+endif
+
+#LINUXSRCROOT=/u/mostrows/linux.k42
+# You can define BOOT_INSTALL to include an extra step for kernel installation
+#export BOOT_INSTALL:=cp chrpboot.tok /u/kitchawa/tftpboot/chrpboot.mostrows 
+
+#This turns on assembler stubs
+ASONLY_FLAGS=-Wa,-gdwarf2
+
+#extra options
+#K42_EXTRAS = PERCS
+endif #HAVE_MFINC

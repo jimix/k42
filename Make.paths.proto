@@ -1,0 +1,30 @@
+# -*-makefile-*- #############################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.paths.proto,v 1.1 2004/06/18 16:54:21 mostrows Exp $
+# ############################################################################
+
+# Any variable that is used by a ":=" assignment in MakePaths.proto
+# Must be defined before the include.
+# Any such variables must also be set using "?=" in MakePaths.proto
+
+# Example:
+# export OBJDIR_OPT_TYPES=partDeb
+
+
+ifdef MKSRCTOP
+-include $(MKSRCTOP)/MakePaths.proto
+else
+-include MakePaths.proto
+endif
+
+#
+# These are probably useful to most, if gcc ver >3.2
+#
+# GCC3_EXEC:=gcc
+# GXX3_EXEC:=g++

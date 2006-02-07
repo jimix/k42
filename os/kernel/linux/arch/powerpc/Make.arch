@@ -1,0 +1,13 @@
+# -*-Makefile-*-#############################################################
+# K42: (C) Copyright IBM Corp. 2000, 2002, 2003, 2004.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.1 2004/02/27 17:14:22 mostrows Exp $
+# ############################################################################
+
+LIBKERNSRCS+=BootInit.C MemoryArch.C ConfigureArch.C LinuxPIC.C
+

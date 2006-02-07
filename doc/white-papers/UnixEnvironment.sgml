@@ -1,0 +1,665 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: UnixEnvironment.sgml,v 1.7 2002/06/19 12:48:35 jimix Exp $
+-->
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+
+<!-- To disable review comments replace INCLUDE with IGNORE -->
+<!ENTITY % review "INCLUDE" >
+
+<!-- CVS gives us these -->
+<!ENTITY user "$Author: jimix $">
+<!ENTITY date "$Date: 2002/06/19 12:48:35 $">
+<!ENTITY revision "$Revision">
+
+<!-- define and read in entities from this file -->
+<!ENTITY % wp.ent SYSTEM "wp.ent">
+%wp.ent;
+
+<!-- I'm always using these reference so define short-hands here. -->
+<!ENTITY clone2 "<citerefentry><refentrytitle><function>clone</function></refentrytitle><manvolnum>2</manvolnum></citerefentry>">
+
+<!ENTITY open2 "<citerefentry><refentrytitle><function>open</function></refentrytitle><manvolnum>2</manvolnum></citerefentry>">
+
+<!ENTITY write2 "<citerefentry><refentrytitle><function>write</function></refentrytitle><manvolnum>2</manvolnum></citerefentry>">
+
+<!ENTITY read2 "<citerefentry><refentrytitle><function>read</function></refentrytitle><manvolnum>2</manvolnum></citerefentry>">
+
+<!ENTITY fork2 "<citerefentry><refentrytitle><function>fork</function></refentrytitle><manvolnum>2</manvolnum></citerefentry>">
+
+<!ENTITY exec2 "<citerefentry><refentrytitle><function>exec</function></refentrytitle><manvolnum>2</manvolnum></citerefentry>">
+
+<!ENTITY dup22 "<citerefentry><refentrytitle><function>dup2</function></refentrytitle><manvolnum>2</manvolnum></citerefentry>">
+
+<!ENTITY fcntl2 "<citerefentry><refentrytitle><function>fcntl</function></refentrytitle><manvolnum>2</manvolnum></citerefentry>">
+
+<!ENTITY strlen3 "<citerefentry><refentrytitle>strlen</refentrytitle><manvolnum>3</manvolnum></citerefentry>">
+
+<!ENTITY memcpy3 "<citerefentry><refentrytitle>memcpy</refentrytitle><manvolnum>3</manvolnum></citerefentry>">
+
+<!ENTITY getenv3 "<citerefentry><refentrytitle>getenv</refentrytitle><manvolnum>3</manvolnum></citerefentry>">
+
+<!ENTITY stdio3 "<citerefentry><refentrytitle>stdio</refentrytitle><manvolnum>3</manvolnum></citerefentry>">
+
+<!ENTITY init8 "<citerefentry><refentrytitle>init</refentrytitle><manvolnum>8</manvolnum></citerefentry>">
+
+]>
+
+<article status="draft" lang="en">
+  <title>The K42 Unix Environment</title>
+  &K42ArtHeader;
+
+  <abstract>
+    <para>
+      <ulink url="&k42.url;">
+	K42
+      </ulink>
+      is often described as a <quote><ulink url="&linux.url;">
+      <trademark class="registered">Linux</trademark></ulink>
+      compatible operating system</quote>.  However, the design goal
+      of the Linux personality is to make K42 a specific target
+      architecture of Linux, in much the same way that <trademark
+      class="registered">Intel</trademark>
+      <trademark>IA64</trademark> and <trademark
+      class="registered">AMD</trademark> <trademark>x86-64</trademark>
+      are target architectures.  K42 and Linux technology will coexist
+      as a single Linux Operating Environment, not only in execution
+      but in development.  In some cases, K42 will adopt Linux source
+      and/or binary images to naturally provide a particular service.
+      There are, however, cases in which K42 will utilize a customized
+      implementation, usually for reasons of performance.
+    </para>
+  </abstract>
+
+  <section id="ue.intro">
+    <title>Introduction</title>
+
+    <para>
+      Linux is a free <trademark>Unix</trademark>-like operating
+      system complete with a robust user environment and a device
+      driver set that is kept up to date with the latest hardware
+      technology available.  K42 is a multi-threaded, multiprocessor
+      operating system.  It supports both the Linux system call and
+      device driver interfaces for maximum compatibility and code
+      reuse.
+    </para>
+
+    <para>
+      A Linux Operating Environment (LOE), as would be defined by any
+      popular distribution, consists of several layers and modes of
+      operation and execution.  As with most Unix-like operating
+      systems, Linux can easily be segmented into a user level and a
+      kernel level.  The user level is the portion of Linux that
+      interacts directly with the user processes, employing the
+      services offered by the kernel level.  The kernel level presents
+      a single system to each user as well as each application run by
+      that user.  It is responsible for managing all resources and
+      securely sharing them amongst all users.
+    </para>
+
+    <para>
+      This paper discusses how the K42 kernel and user environments
+      fit into the Linux monolithic model.
+    </para>
+    <figure float="1" id="kl.kern">
+      <title>Mapping K42 in the Linux Environment</title>
+      <mediaobject>
+	<imageobject>
+	  <imagedata fileref="figures/KernelBoundary.eps" format="eps">
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="figures/KernelBoundary.png" format="gif">
+	</imageobject>
+	<textobject>
+	  <simpara>
+	    Figure showing how the K42 kernel maps in the Linux
+	    Operating Environment.
+	  </simpara>
+	</textobject>
+      </mediaobject>
+    </figure>
+
+  </section>
+  <section id="luser-intro">
+    <title>Linux User Environment</title>
+    <para>
+      Original user level environments are desirable, especially in
+      circumstances where known and popular programming interfaces
+      have clear short comings.  Our user environment strives to
+      present a personality neutral set of interfaces that can take
+      advantage of specific features that K42 provides.
+    </para>
+
+    <para>
+      No matter how well designed K42 native interfaces are, there are
+      a plethora of software available written to the set of Unix Open
+      APIs, specifically the ones implemented in Linux.  These well
+      known and commonly used interface sets can bring a large number
+      of applications and, ultimately, a large user base.  This
+      section will discuss the Linux User Environment that exists
+      above the system call layer that the Linux kernel provides. With
+      K42 in-place, the entire system is functionally identical.
+    </para>
+
+    <para>
+      In order to provide a complete Linux Operating Environment, the user
+      environment must provide a set of interfaces that deliver all
+      system services.  These come in the form of:
+
+      <simplelist type="inline">
+	<member>library functions</member>
+	<member>system calls</member>
+	<member>user commands</member>
+	<member><quote>special</quote> or device files</member>
+	<member>and file formats</member>
+      </simplelist>.
+
+      Though some of these services do not require any kind of kernel
+      support, many of them expose specific functionality exported by
+      the Linux kernel, via system calls and the file systems name
+      space.
+    </para>
+
+    <section>
+      <title>&libc;</title>
+      <para>
+	Library functions are interfaces that a user level program
+	would call in order to use some service or function from the
+	operating environment.  They are packaged in library files
+	that define a particular set and are typically described as
+	the environment's Application Programming Interfaces (or
+	<acronym>API</acronym>).
+      </para>
+
+      <para>
+	These interfaces are usually well defined and documented.
+	Several of these interfaces, such as &strlen3;, &memcpy3;,
+	&getenv3;, etc., are completely defined with in the library.
+	Many more interfaces perform the bulk of there functionality
+	in the library only to make a system call as needed, of which
+	the &stdio3; library interfaces are a prime example.  These
+	interfaces require little, if any support form the OS kernel,
+	and what little support they so require are typically
+	dependence on system calls.
+      </para>
+
+      <para>
+	System calls are a set of interfaces that are available
+	through an architecture specific mechanism to request a
+	service from the kernel level.  Since the mechanism is
+	architecture specific, it is extremely rare for a program to
+	use this mechanism directly.  Fortunately, operating
+	environments provide library functions that export a
+	programming interface for each system call available from the
+	kernel.  These interfaces, for our purposes, are packaged by
+	in the C Library.
+      </para>
+
+      <section>
+	<title>Linux Implementation</title>
+	<para>
+	  Linux utilizes the <ulink
+	  url="&gnu.url;"><acronym>FSF</acronym></ulink> provided
+	  <ulink url="&glibc.url;">&libc;</ulink>.  The &libc; began
+	  as an alternate C Library for several popular Unix brands.
+	  It now almost exclusively supports the Linux kernel which
+	  supplies almost all interfaces of the various Unix branded
+	  operating systems including but not limited to:
+	  <simplelist type="inline">
+	    <member><trademark>ISO C</trademark></member>
+	    <member><trademark>POSIX</trademark></member>
+	    <member><trademark>Berkeley</trademark></member>
+	    <member><trademark>Sys V</trademark></member>
+	    <member>and <trademark>X/OPEN</trademark></member>
+	  </simplelist>.
+
+	  To further its usability as the primary libc of an OS, the C
+	  library has introduced additional GNU extensions, including
+	  the <quote>linux-threads</quote>
+	  <footnote>
+	    <para>
+	      Linux-Threads is a &clone2; based thread library, it is
+	      currently only usable for the supported GNU/Linux
+	      systems.
+	    </para>
+	  </footnote>
+	  implementation of <trademark>pthreads</trademark>.
+	</para>
+      </section>
+
+      <section id="syscall.sec">
+	<title>System Calls</title>
+	<para>
+	  The &libc; has architecture specific code that exploits
+	  Instruction Set Architecture (<acronym>ISA</acronym>)
+	  specific optimizations.  In addition, it provides the
+	  interfaces that allow dynamic linking as defined by the
+	  <citetitle pubwork="book">System V ABI</citetitle>
+	  <citation><xref linkend="SCO99"></citation>.  These
+	  features are inherited naturally by K42 and, with the
+	  exception of process initialization, require little change.
+	</para>
+	<para>
+	  It is the system call, communicating directly with the OS
+	  kernel, that makes it the only Linux user level package that
+	  is requires porting
+	  <footnote>
+	    <para>
+	      Any other packages that are ported would be done more
+	      for performance reasons rather then for functionality.
+	    </para>
+	  </footnote>
+	  directly to K42.
+	</para>
+	<figure pgwide="1" id="syscall.comp">
+	  <title>K42/Linux System Call Comparison</title>
+	  <mediaobject>
+	    <imageobject>
+	      <imagedata fileref="figures/SystemCalls.eps" format="eps">
+	    </imageobject>
+	    <imageobject>
+	      <imagedata fileref="figures/SystemCalls.png" format="gif">
+	    </imageobject>
+	    <textobject>
+	      <phrase>Figure goes here</phrase>
+	    </textobject>
+	  </mediaobject>
+	  </figure>
+
+	<para>
+	  The developers of the &libc; project have made the
+	  interposition of the system calls trivial by creating an
+	  abstraction method that allows each target to specify the
+	  system call mechanism.  Hence, the &write2; (and it's
+	  <emphasis>strong binding</emphasis>
+	  <function>__libc_write()</function>) system call for
+	  Linux-PPC64 on the left becomes the simple function
+	  <emphasis>branch</emphasis> on the right.
+	</para>
+	<programlistingco>
+	  <areaspec units="linecolumn">
+	    <area coords="1 25" id="syscall.plco.sym">
+	    <area coords="2 25" id="syscall.plco.sn">
+	    <area coords="3 25" id="syscall.plco.sc">
+	    <area coords="4 25" id="syscall.plco.ret">
+	    <area coords="2 75" id="syscall.plco.kc">
+	  </areaspec>
+	    
+	  <programlisting>
+__libc_write:                           __libc_write:
+        li      r0,5                            b      __k42_libc_write
+        sc
+        bnslr
+
+	  </programlisting>
+	  <calloutlist>
+	    <callout arearefs="syscall.plco.sym">
+	      <para>
+		The strong binding for the function.
+	      </para>
+	    </callout>
+	    <callout arearefs="syscall.plco.sn">
+	      <para>
+		The kernel defined system call number is loaded into
+		register 3.
+	      </para>
+	    </callout>
+	    <callout arearefs="syscall.plco.sc">
+	      <para>
+		System call instruction which is trapped by the
+		kernel.
+	      </para>
+	    </callout>
+	    <callout arearefs="syscall.plco.ret">
+	      <para>
+		Return to calling function.
+	      </para>
+	    </callout>
+	    <callout arearefs="syscall.plco.kc">
+	      <para>
+		Branch directly to K42 provided function.  Link
+		register not updated so will return directly to the caller.
+	      </para>
+	    </callout>
+	  </calloutlist>
+	</programlistingco>
+	<para>
+	  Every system call stub in libc is replaced with a similar
+	  stub calling functions in the K42 Emulation library (as seen
+	  in <xref linkend="syscall.comp">).  This, however, does not
+	  solve the difficult problem of the supporting the
+	  linux-threads pthread model on top of K42 threads package.
+	</para>
+      </section>
+
+      <section>
+	<title>Posix Threads</title>
+	<para>
+	  Though both provide the same interfaces to a threaded
+	  application, K42 and Linux have fundamentally different
+	  philosophies about threading and scheduling. We will discuss
+	  what these differences are, but the discussion on the
+	  effectiveness of the different models are beyond the scope
+	  of this paper.
+	</para>
+
+	<para>
+	  The linux-thread package, unlike other implementations of
+	  pthreads, provides kernel-level threads only.  Threads are
+	  created with the &clone2; system call and all scheduling  is
+	  done in the kernel.  This is practically the only system
+	  call not supported by K42.  The linux-threads package in
+	  &libc; provides the POSIX 1003.1c compliant interfaces that
+	  use native K42 services instead of calling &clone2;.
+	</para>
+
+	<para>
+	  The &clone2; system call is unsupported in K42 because the
+	  threading model exposed to the user level is essentially
+	  contained within the processes address space.  This is
+	  consistent with keeping more functionality out of the
+	  kernel, which is a fundamental goal of K42.
+	</para>
+
+	<para>
+	  Keeping threads entirely in the address space of the
+	  individual process also involves a user-level scheduler.
+	  Designing K42 to be highly scalable has lead to the decision
+	  that all process are threaded. This includes Linux processes
+	  that were not written to the pthread library.  Therefore, we
+	  have configured the &libc; to always be threaded and
+	  re-entrant in order to take advantage of related performance
+	  enhancements.
+	</para>
+      </section>
+      <section>
+	<title>Binary Compatibility</title>
+	<para>
+	  The binary compatibility of K42 with Linux applications
+	  depends largely on the runtime dynamic linking technologies
+	  provided by the &libc;.  However, we must allow for the rare
+	  possibility that an executable with a statically linked C
+	  library that will invoke the system call mechanism directly.
+	</para>
+
+	<para>
+	  K42 will incorporate <emphasis>trap reflection</emphasis>
+	  technology that is already in use on many systems to provide
+	  Linux binary compatibility.  These other systems depend on
+	  there being a difference in the system call mechanism used
+	  by the kernel.  K42, on all platforms, uses a system call
+	  mechanism for a very small set of services.  Therefore it is
+	  a simple matter of mapping the system call numbers used by
+	  K42 in a known range that does not interfere with Linux.
+	</para>
+
+	<para>
+	  Once the <emphasis>trap</emphasis> has been deflected back
+	  to the original process it can then use the services that
+	  exist for the dynamically linked executable discussed in
+	  <xref linkend="syscall.sec">.
+	</para>
+      </section>
+      <section>
+	<title>Beyond the C Library</title>
+	<para>
+	  A Unix system is more than just a libc.  Services such as:
+	  <simplelist type="inline">
+	    <member>&init8;</member>
+	    <member>terminals and logins</member>
+	    <member>graphical user environments</member>
+	    <member>daemon services</member>
+	    <member>and file systems</member>
+	  </simplelist>
+	  are required to provide a complete system.  Some of these
+	  are provided by user applications, some provide other
+	  libraries that ultimately use the &libc; and some are
+	  special services that the Linux kernel provides that are a
+	  accessible through the standard system call interface.
+	</para>
+      </section>
+    </section>
+    <section>
+      <title>Device Special Files</title>
+      <para>
+	Device files allow the ability for a process to access real
+	and pseudo devices attached to the system in a file-like
+	manner.  There are two modes of device files: character and
+	block.  The character devices have read and write actions that
+	are called directly, implementing a stream of I/O.  The block
+	devices implement a strategy or policy for satisfying I/O
+	requests from the memory management system on behalf of the
+	process.  These files all exist in the <filename
+	class="directory">/dev</filename> directory off the root
+	file-system.
+      </para>
+
+      <para>
+	Traditionally files are created at system configuration time
+	associating a file name with a major and minor number pair
+	that each device registers with the kernel.  An alternative
+	that is gaining popularity is the <application
+	class="software">devfs</application> model where a customized
+	file-system handles registration and naming automatically.
+      </para>
+
+      <para>
+	A <application class="software">devfs</application> like model
+	has been adopted by K42 allowing the name space management of
+	devices to be handled in a distributed fashion as discussed
+	in <xref linkend="fsname.sec">.
+      </para>
+    </section>
+    <section id="fsname.sec">
+      <title>File System Name Space</title>
+      <para>
+	Possibly the most arcane set of interfaces in Linux is the
+	file system.  Normally we think of file systems containing
+	only executable programs and the data files associated with
+	them.  However, the location of specific files that the system
+	uses to customize the operating environment is dynamic and
+	easily changes, resulting in different Linux distributions
+	defining the set differently.  The addition of pseudo file
+	systems that expose kernel data structures (<filename
+	class="directory">/proc</filename>) and devices (<application
+	class="software">devfs</application>) increase this
+	complexity.
+      </para>
+
+      <para>
+	K42 has avoided the single global name space that is part of
+	most operating systems.  Since K42 has moved the file systems
+	outside of the kernel it is possible to have, in the extreme,
+	every instance of a every file system be implemented in a
+	unique process.  As a result the name spaced must be managed
+	in a such a way that a the appropriate file server can be
+	quickly discovered and contacted.  Extending the idea of a
+	distributed name space a little further can give us a system
+	with multiple name spaces where each process within a session
+	has a different view of the entire file systems structure.
+      </para>
+    </section>
+  </section>
+  <section>
+    <title>Linux System Call Behavior</title>
+    <para>
+      The environment discussed in <xref linkend="luser-intro">
+      describes how we <quote>connect</quote> the Linux kernel
+      services to the K42 services by redefining the system call
+      <emphasis>mechanism</emphasis> and intercepting the system call
+      <emphasis>interfaces</emphasis>.  At this point K42 must provide
+      the same inter-system call behavior that the user environment
+      expects.
+    </para>
+
+    <para>
+      The K42 kernel is only concerned with the management of
+      processes, the address space of each process and the
+      communication between processes.  The state and functionality
+      that describe Linux Kernel services are the domain the original
+      <quote>client</quote> process that originated the system call or
+      other processes running on the system (a.k.a. servers) via an
+      Inter Process Communication (<acronym>IPC</acronym>) mechanism.
+    </para>
+
+    <section>
+      <title>Linux I/O and K42</title>
+      <para>
+	Virtually all interaction a process has with the rest of a
+	Unix-like <acronym>OS</acronym> is centered around performing
+	operations on either a <property>path name</property> or a
+	<property>file descriptor</property>.  The path name is an
+	index into the systems Name Space that was touched upon
+	briefly in <xref linkend="fsname.sec"> and will be discussed
+	further, later in this paper.  A file descriptor is a small
+	non-negative integer that represents an object in which I/O
+	operations be performed.
+      </para>
+      <section>
+	<title>File Descriptors</title>
+	<para>
+	  A unique file descriptor (FD) is created in Linux by calling
+	  &open2; with a pathname or using a socket creation
+	  operation.  Creating an FD this way results in a I/O object
+	  that does not share state such as locks, file cursors and
+	  flags with any other.  Duplicating an FD will also result in
+	  a new descriptor, however, the two descriptors may be used
+	  interchangeably and share state.  Additionally, an FD may
+	  remain open across &exec2; or be inherited from the parent
+	  process (via &fork2;), the later case causing state to be
+	  shared between the processes.
+	</para>
+
+	<para>
+	  It is the responsibility of the Linux kernel to track the
+	  file descriptors of each process.  One can imagine an FD to
+	  be an index into a process specific array of pointers to a
+	  global file object that represents the state, shared or not
+	  of a file descriptor.  Since, only one file object is
+	  required per unique state associated with a single I/O
+	  object, duplicating and passing an FD only requires copying
+	  references to the existing file object.
+	  <comment>
+	    Does Linux have another per file object, or does it go to
+	    cache from here? -JX
+	  </comment>
+	</para>
+
+	<para>
+	  K42 has no native support for file descriptors.  Unlike
+	  Linux, which is a kernel of monolithic design, K42 extends
+	  the classic notion of client and server processes by using
+	  the server process to provide, what are traditionally,
+	  kernel services.  In the case of access to a file system, or
+	  any other I/O service, the Linux application becomes a
+	  client process that communicates, both directly and
+	  indirectly, with a server process that represents the file
+	  system.
+	</para>
+
+	<para>
+	  I/O operations are performed on file objects that exist in
+	  the address space of the client process (or
+	  <quote><property>client object</property></quote>).  Each of
+	  these objects is comprised of at least one unique
+	  <quote><property>Object Handle</property></quote> (as
+	  described in the PPC paper) that provides a communication
+	  mechanism that can be used to contact an object in the
+	  server process (or <quote><property>server
+	  object</property></quote>).
+	  <comment>
+	    Are these 1-to-1, multiplexed, both?? -JX
+	  </comment>
+	</para>
+
+	<para>
+	  The client objects are fully customizable so, unlike the
+	  opaque file descriptor, different client objects can exist
+	  for different types of I/O.  This enables many optimizations
+	  and policies that are normally the domain of the kernel and
+	  drivers to be performed in the address space where the
+	  request originated.
+	</para>
+	<para>
+	  Sharing state between client objects, even those in
+	  different address spaces, can now be specific to the type of
+	  I/O service the object represents.  Where necessary, the
+	  server object is capable of tracking client specific state,
+	  especially when read/write atomicity is desirable.
+	</para>
+
+	<bridgehead renderas="sect4">
+	  Creating and Managing File Descriptors
+	</bridgehead>
+	<para>
+	  Linux programs expect to be able to perform I/O on an FD.
+	  This requires the existence of an FD table that is managed
+	  in the clients own process.  Once the name space has been
+	  queried, a customized client object is created according to
+	  the type of I/O the object represents.  A reference to that
+	  client object is typically placed in the FD table ay the
+	  lowest unused entry.  The index to that entry is the FD to
+	  be used for subsequent calls.
+	</para>
+
+	<para>
+	  The File Table must be efficiently managed since it can
+	  become quite large and sparse.  The &dup22; and &fcntl2;
+	  system calls allow the application to specify an FD value
+	  to use when duplicating an FD.  The range of values is
+	  typically 1024, however, the Linux kernel allows the
+	  <quote>Super User</quote> to use
+	  2<superscript>20</superscript> file descriptors, so
+	  something more complex than a simple array is desirable.
+	</para>
+
+	<para>
+	  In K42, the FD table is in the address space of the client 
+	</para>
+      </section>
+      <section>
+	<title>The Name Space</title>
+	<para>
+	  The name space that belongs to a Linux system provides a
+	  means for applications to lookup and attach to a system
+	  service by <quote>name</quote>.  The name space can be
+	  considered as a set of name spaces each with a potentially
+	  different indexing and lookup method.  Popular name spaces
+	  that are generally available in linux describe file systems,
+	  networks, real and pseudo devices, and processes.
+	</para>
+	<section>
+	  <title>ya so..</title>
+	  <para>
+	    yada yada
+	  </para>
+	</section>
+      </section>
+    </section>
+  </section>
+  <section>
+    <title>Conclusions</title>
+    <para>
+      Insert silly/fluffy statement here.
+    </para>
+  </section>
+
+  &bib.sgml;
+</article>
+
+<!--
+Local Variables:
+sgml-validate-command: "nsgmls -s %s %s"
+sgml-indent-data: t
+sgml-insert-missing-element-comment: t
+End:
+-->
+<!--
+  LocalWords:  lang com url www ibm linux ibmr devspecs lxrun atomicity
+ -->

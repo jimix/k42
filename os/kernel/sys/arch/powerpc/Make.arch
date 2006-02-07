@@ -1,0 +1,55 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.24 2004/03/14 14:50:11 mostrows Exp $
+# ############################################################################
+
+
+PWRPCHDR   = $(ARCHINCS)
+
+LIBKERNSRCS+=KernelInfo.C
+
+install_includes::
+	$(INSTALL_INC) $(INCDIR)/sys/arch/powerpc/   arch/powerpc/ $(PWRPCHDR)
+
+ifdef IN_OBJ_DIR
+
+GENHDRS += asmConstants.H
+clean ::
+	-$(RM) genConstants.s genConstants.d
+
+-include genConstants.d
+
+install_genhdrs:: asmConstants.H
+	$(INSTALL_INC) $(MKKITCHTOP)/include/sys/arch/powerpc/ ./ $<
+
+asmConstants.H: genConstants.s
+	$(XCOFF_TYPE) $< > $@
+
+genConstants.s: genConstants.C genConstantsArch.C
+# Generate assembler from the .C file.  If successful, fix up the .d file.
+# Otherwise remove the .s file and .d files.
+	if $(TARGET_CC) -S $(TARGET_CFLAGS) $(CPPFLAGS) -Wno-unused $<;\
+	then\
+	    $(SED) '1s/genConstants.o/genConstants.s/' <genConstants.d >tmp.d;\
+	    $(MV) tmp.d genConstants.d;\
+	else\
+	    $(RM) genConstants.s genConstants.d;\
+	    exit 1;\
+	fi
+
+#	$(SED) '1s/genConstants.o/genConstants.s/' < genConstants.d > tmp.d
+#	$(MV) tmp.d genConstants.d
+
+symdefs.S: symdefs.raw
+	$(AWK) -f $(SRC_DIR_PATH)/arch/powerpc/symdefs.awk < $< > $@
+
+symdefsKern.S: symdefsKern.raw
+	$(AWK) -f $(SRC_DIR_PATH)/arch/powerpc/symdefs.awk < $< > $@
+
+endif

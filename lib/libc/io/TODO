@@ -1,0 +1,15 @@
+/******************************************************************************
+ * K42: (C) Copyright IBM Corp. 2002.
+ * All Rights Reserved
+ *
+ * This file is distributed under the GNU LGPL. You should have
+ * received a copy of the license along with K42; see the file LICENSE.html
+ * in the top-level directory for more details.
+ *
+ ****************************************************************************/
+
+TODO list relatd to lib/libc/io:
+
+- FileLinuxVirtFile should be a specialization of a more general class
+for non-memory-mapped files (maybe this FileLinuxFileNonMapped
+should be a basis for FileLinuxFile, I mean, the mapped case is a generalization?)

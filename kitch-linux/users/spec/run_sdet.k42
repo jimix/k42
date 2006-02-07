@@ -1,0 +1,67 @@
+#!/bin/bash
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2002.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: run_sdet.k42,v 1.3 2005/08/18 01:35:11 butrico Exp $
+# ############################################################################
+
+# equivalent to "cd `dirname $0`"
+cd ${0%/*}
+
+: ${SDETKRNCTL="0xf7f"}
+: ${RUNSERIES="2 4 8"}
+
+export SPECDIR=`pwd`/spec
+export TESTRESULTS=/tmp/sdet.results
+export RUNPLACES=/tmp/sdet.run
+
+
+if test ! -d $SPECDIR ; then
+    if test ! -f spec.tgz  ; then
+	echo "No spec directory and no spec tar-ball";
+	exit -1;
+    fi;
+    tar -xzf spec.tgz
+fi
+
+rm -rf $TESTRESULTS $RUNPLACES
+mkdir $TESTRESULTS $RUNPLACES
+
+
+export THRPUT=$TESTRESULTS/thrp.out
+export ERRFILE=$TESTRESULTS/err.out
+export PATH=$SPECDIR:/usr/bin:$PATH
+export CC=cc
+export WCC=cc
+
+# set k42 control flags
+/kbin/kernelControl $SDETKRNCTL
+echo 1 > /ksys/interceptNFS
+
+make -C  $SPECDIR prepare   -f M.k42 \
+	    RUNSERIES=1 \
+	    RUNPLACES=$RUNPLACES \
+	    TESTRESULTS=$TESTRESULTS \
+	    CC=cc WCC=cc
+
+# disable thinwire polling
+if [ "$DOPOLLING" ] ; then
+    echo 1 > /ksys/wireDaemon
+else
+    echo 0 > /ksys/wireDaemon
+fi
+
+make -C $SPECDIR  -f M.k42 \
+	    RUNSERIES="$RUNSERIES" \
+	    RUNPLACES=$RUNPLACES \
+	    TESTRESULTS=$TESTRESULTS \
+	    CC=cc WCC=cc
+
+# re-enable thinwire polling
+echo 0 > /ksys/interceptNFS
+echo 1 > /ksys/wireDaemon

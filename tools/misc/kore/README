@@ -1,0 +1,194 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2002.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: README,v 1.1 2005/08/20 22:31:07 bseshas Exp $
+# ############################################################################
+
+
+KORE README
+===========
+
+1. Setting up KORE
+2. Running KORE
+3. Components of KORE
+4. Some useful commands
+5. Applications - Object leak and mapping the physical memory
+6. Background
+
+
+1. Setting up KORE
+
+	(i) gdb 6.3 for powerpc (available on kreg)
+	(ii) Tcl version 8.4 or greater (tclsh8.4 on kreg)
+	(iii) (Optional but highly recommended) Setup tclreadline package
+		Download tclreadline from http://tclreadline.sourceforge.net/
+		Install it using ./configure --prefix=<PATH>; make; make install;
+		Then do "gcc -shared -fpic -o libtclreadline.so tclreadline.o -lreadline -lncurses -ltcl8.4", then copy libtclreadline.so to <PATH>/lib
+
+2. Running KORE
+
+	Start /kbin/oisServer on victim machine
+	Make sure gdb is in PATH 
+	Edit kore.sh for the victim's name, TCL_LIBPATH to point to <PATH>
+	Also edit the other variables accordingly
+	run kore.sh
+
+3. Components of KORE
+
+	KORE is modular and consists of tcl scripts. They are: 
+
+	- kore.tcl
+		Loads all other scripts, initializes
+	- cobj.tcl
+		Support for clustered object commands
+	- ois.tcl
+		Support for OIS protocol
+	- obj.tcl
+		More functionality built on ois.tcl
+	- sym.tcl
+		Symbol table support
+	- gdb.tcl
+		Support for gdb commands
+	- gui.tcl
+		Support for a simple gui interface
+	- mem.tcl
+		Support for mapping physical memory
+	- leak.tcl
+		Support for detecting object leaks
+	- pem.tcl
+		PEM support for KORE
+
+4. Some useful commands
+
+	help command_name
+		Help on any command can be obtained by typing help followed by 
+		command name in the prompt. For e.g.,
+
+		kore> help getReps
+		getReps support
+		kore> 
+
+		One can add the help feature to any procedure using 
+		set helpDB(procedure name goes here) "Help text goes here"
+		along with the procedure declaration
+
+	printObjs regexp
+		Prints all the objects currently allocated whose name matches 
+		with a Tcl regexp, with the COID and the root pointers.
+		printObjs .* prints all the objects.
+
+	processObjs regexp procname
+		Executes the procedure procname with each match of regexp on
+		the list of objects.
+
+	reconnect
+		Used to reconnect with the oisServer in case of a forced 
+		disconnect (due to a kernel crash, for example).
+
+	isa ptr class_name
+		Uses the class hierarchy thrown by GDB on an object to 
+		determine which classes it derives from.		
+
+	getReps root
+		Get the reps from a given root. Calls the appropriate 
+		procedure based on the classes the object derives from (using isa).
+
+	getRoot rep
+		Get the root pointer from the rep.
+
+	getInstance ptr type
+		Does "p *(type *)ptr" on gdb and returns the result.
+		
+
+5. Applications
+
+	5.1  Detecting object leaks
+	
+	kore> koreSource leak.tcl
+	kore> monitor_leaks
+	
+	The procedure monitor leaks will periodically (1 sec) read the list 
+	of objects and save them in an array.
+	Now start the benchmark in the victim machine.
+	(Ugly, but works best): once the benchmark finishes, kill the oisServer
+	with ctrl-C. Now the client will stop the periodic loop and start 
+	dumping out the object list collected into files (0, 1, 2, ... )
+	
+	For the post-processing (which requires only tclsh8.4, not even kore),
+	start tclsh8.4
+	% source color.tcl
+	% source diff.tcl
+	% set obj0 [loadfile 0] 
+	
+	The above loads the object list from the file 0 to the variable obj0
+	Similarly,
+	% set obj5 [loadfile 5]
+	% diff $obj0 $obj5 addobj delobj
+
+	# This does a diff between the two lists and saves the added objects 
+	# to addobj and deleted objects to delobj
+
+	% toHtml [histogram $addobj] addobj05.html
+	# This dumps the histogram of addobj to addobj05.html	
+
+	5.2 Mapping physical memory
+	
+	kore> koreSource mem.tcl
+	kore> dumpMem
+	
+	The above dumps the following data structures in the respective files:
+	
+	*FCMComputation, FCMDefault: fcmlist
+	FCM to FR mapping:	fcm2fr
+	FCM to PM mapping:	fcm2pm
+	*Pages in each FCM:	map
+	Processes:			process_details
+	*Regions:			rlist
+	*Region to FCM mapping: r2fcm
+	*Region to Process mapping: r2p
+	FCMStartup:		fcmstartup
+	PMRoot free pages:	pmroot
+
+	(Currently only the starred files are being used in the post-processing 
+	stage to generate the html map)
+
+	The format of each file is as follows:
+	fcmlist: List of roots of various FCMs
+	fcm2fr:	For each element of fcmlist, the root of the corresponding FR
+	fcm2pm:	Same as before with a PM instead of FR
+	map:	Each line has FCM attributes followed by coid, root, type of FCM
+	process_details: Each running process's root, process name, PID
+	rlist:	List of roots of various Regions
+	r2fcm:	For each element of rlist, the root of the corresponding FCM
+	r2p:	Same as above, with a process instead of FCM
+	fcmstartup:
+	pmroot:
+
+	Now in the post-processing stage (i.e., raw tclsh8.4 without kore), make 
+	sure that the above files are in the current directory. Then,
+	tclsh8.4
+	% source cmap.tcl
+	% CreateMap
+
+	This takes a few minutes - to convert all the above data structures into 
+	a single map, called map_test_processed
+
+	% source color.tcl
+	% source map2html.tcl
+	% map2html map_test_processed map.html
+
+	This will generate files map.html, map0.html, map1.html, etc. starting 
+	with map.html and 65536 pages in each html file.
+
+6. Background
+
+	KORE communicates with oisServer for getting the list of objects and to 
+	perform hotswapping. oisServer also has a gdb stub that KORE uses for 
+	reading the contents of the memory. oisServer can also read trace
+	buffers and send the data to KORE. Currently, KORE only processes 
+	object alloc and dealloc.

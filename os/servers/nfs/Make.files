@@ -1,0 +1,18 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000, 2001.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.files,v 1.32 2005/06/28 19:48:01 rosnbrg Exp $
+# ############################################################################
+# base files used for NFS
+SRVSRCS += FileSystemNFS.C NFSHandle.C NFSMount.C NFSClient.C        \
+	   ServerFileBlockNFS.C ServerFileDirNFS.C \
+	   mount_clnt.c mount_xdr.c nfs_clnt.c nfs_xdr.c XFileSystemNFS.C
+
+TARGET_CFLAGS += $($@_CFLAGS)
+mount_xdr.o_CFLAGS	= -Wno-unused -w
+nfs_xdr.o_CFLAGS	= -Wno-unused -w

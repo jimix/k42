@@ -1,0 +1,23 @@
+# #-*-Makefile-*-##############################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.files,v 1.28 2005/06/28 19:48:08 rosnbrg Exp $
+# ############################################################################
+
+SRVSRCS += Login.C SysVSharedMem.C SysVSemaphores.C  SysVMessages.C Util.C \
+	   XLogin.C XSysVSharedMem.C XSysVSemaphores.C XSysVMessages.C \
+	   LinuxPTY.C IOForwarder.C IOForwarderConsole.C printk.C
+
+linux_INCPATH:= -I$(LINUXSRCROOT)/arch/k42/include \
+		-I$(LINUXSRCROOT)/include -I$(MKSRCTOP)/os/kernel
+
+LKINCPATH := $(GCCFIXINC) -I. -I$(SRC_DIR_PATH) -I$(INC_TOP) \
+	$(linux_INCPATH) -I$(INC_GCC) -I$(INC_STBG) $(KITCH_GINC)
+
+Login.o: INCPATH:=$(LKINCPATH)
+LinuxPTY.o: INCPATH:=$(LKINCPATH)

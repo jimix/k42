@@ -1,0 +1,148 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceTest.xml,v 1.6 2004/07/13 14:44:23 bob Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+<event name="OS::Test::Test0">
+	<layerId value="OS" />
+	<classId value="Test" />
+	<specifier value="Test0" />
+	<k42Format value='no data words' />
+</event>
+
+
+<event name="OS::Test::Test1">
+	<layerId value="OS" />
+	<classId value="Test" />
+	<specifier value="Test1" />
+	<fields>
+		<field name="field0" type="uint64" description="this is a descr" /> 
+	</fields>
+	<k42Format value='first data word %0[%llx]' />
+</event>
+
+
+<event name="OS::Test::Test2">
+	<layerId value="OS" />
+	<classId value="Test" />
+	<specifier value="Test2" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='first data word %0[%llx] second data word %1[%llx]' />
+</event>
+
+
+<event name="OS::Test::Test3">
+	<layerId value="OS" />
+	<classId value="Test" />
+	<specifier value="Test3" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='first data word %0[%llx] second data word %1[%llx] third data word %1[%llx]' />
+</event>
+
+
+<event name="OS::Test::Pack">
+	<layerId value="OS" />
+	<classId value="Test" />
+	<specifier value="Pack" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='here is data %0[%llx]' />
+</event>
+
+
+<event name="OS::Test::Gen">
+	<layerId value="OS" />
+	<classId value="Test" />
+	<specifier value="Gen" />
+	<fields>
+		<field name="field0" type="string" />
+	</fields>
+	<k42Format value='here is data str %0[%s]' />
+</event>
+
+
+<event name="OS::Test::StrData">
+	<layerId value="OS" />
+	<classId value="Test" />
+	<specifier value="StrData" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='here is data %0[%llx] str1 %1[%s] str2 %2[%s]' />
+</event>
+
+
+<event name="OS::Test::Pack3232">
+	<layerId value="OS" />
+	<classId value="Test" />
+	<specifier value="Pack3232" />
+	<fields>
+		<field name="field0" type="uint32" />
+		<field name="field1" type="uint32" />
+	</fields>
+	<k42Format value='data for a 32-32 packed event %0[%lx] and second %1[%lx]' />
+</event>
+
+
+<event name="OS::Test::Pack3232Str">
+	<layerId value="OS" />
+	<classId value="Test" />
+	<specifier value="Pack3232Str" />
+	<fields>
+<!--
+		<field name="field0" type="uint32" />
+		<field name="field1" type="uint32" />
+-->
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+	</fields>
+<!---	<k42Format value='data for a 32-32 packed event first %0[%lx] second %1[%lx] and str %2[%s]' />
+-->
+	<k42Format value='data for a 32-32 packed event first %0[%llx] and str %1[%s]' />
+</event>
+
+
+<event name="OS::Test::Str">
+	<layerId value="OS" />
+	<classId value="Test" />
+	<specifier value="Str" />
+	<fields>
+		<field name="field0" type="string" />
+	</fields>
+	<k42Format value='str %0[%s]' />
+</event>
+
+
+<event name="OS::Test::Bytes">
+	<layerId value="OS" />
+	<classId value="Test" />
+	<specifier value="Bytes" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='first %0[%llx] second %1[%llx] third %2[%llx] fourth %3[%llx]' />
+</event>
+
+</PEM_Events>

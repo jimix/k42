@@ -1,0 +1,1366 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  XML event descriptions for MPI operations.
+  Contains MPI events to support UMT2K and rf-cth benchmarks.
+  Other benchmarks might require additional events to be added.
+
+  Assume: default format:
+    int		uint32
+    void*	hex
+
+  MPI documentation URL http://cap.anu.edu.au/cap/projects/mpi/standard/mpi-report/node179.html
+  $Id: traceMPI.xml,v 1.20 2005/08/26 15:49:55 pfs Exp $
+
+  @Author Peter F. Sweeney
+  @date   April 7, 2005
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events traceLayout='opt' version='1.0.0'>
+
+<TypeMap> 
+  <map type="MPI_Aint"          to="uint64" />
+  <map type="MPI_Comm"          to="uint64" description="communicator Handle"/>
+  <map type="MPI_Datatype"      to="uint64" />
+  <map type="MPI_Op"            to="uint64" />
+  <map type="ProcID"            to="uint64" description="processor ID"/>
+  <map type="MPI_Rank"          to="uint32" />
+  <map type="MPI_Request"       to="uint32" />
+  <map type="MPI_Status"        to="uint64" />
+  <map type="MPI_Tag"           to="uint32" description="message tag"/>
+  <map type="MPI_User_function" to="uint64" />
+</TypeMap>
+
+
+<event name="LIB::MPI::Abort_Start" description="Start of a MPI Abort function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Abort_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex'  description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex'  description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Abort_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Abort' pair='LIB::MPI::Abort' fields='*' />
+</event>
+
+<event name="LIB::MPI::Abort" description="Abort all tasks for a given communicator">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Abort" />
+  <fields>
+    <field name="comm"       type="MPI_Comm"
+                description="IN communicator (handle)" />
+    <field name="errorCode"  type="uint32"
+		description="IN error code to return to invoking environment (integer)" />
+    <field name="returnCode" type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Abort: communicator %0 errorCode %1 return code %2' />
+  <interval type='END'   name='Abort' pair='LIB::MPI::Abort_Start' fields='*' /> 
+
+  <inflatedField name="MPI_Abort_Event"  type="uint32" description="occurrence"/> 
+
+</event>
+
+<event name="LIB::MPI::Allgather_Start" description="Start of a MPI Allgather function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Allgather_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Allgather_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Allgather' pair='LIB::MPI::Allgather' fields='*' />
+</event>
+
+<event name="LIB::MPI::Allgather" 
+  description="MPI_Allgather is the gather operation where all processes receive the result, instead of just the root">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Allgather" />
+  <fields>
+    <field name="sendbuf"   type="uint64"  format='hex'
+                 description="IN starting address of send buffer (choice)" />
+    <field name="sendcount" type="uint32"
+                 description="IN number of elements in send buffer (integer)" />
+    <field name="sendtype"  type="MPI_Datatype"
+                 description="IN data type of send buffer elements (handle)" />
+    <field name="recvbuf"   type="uint64"  format='hex'
+                 description="OUT address of receive buffer (choice)" />
+    <field name="recvcount" type="uint32"
+                 description="IN number of elments received from any process (integer)" />
+    <field name="recvtype"  type="MPI_Datatype"
+                 description="IN data type of receive buffer elements (handle)" />
+    <field name="comm"      type="MPI_Comm"
+                 description="IN communicator (handle)" />
+    <field name="returnCode"    type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Allgather: send: buf %0 count %1 type %2; recv: buf %3 count %4 type %5 comm %6 return code %7' />
+  <interval type='END'   name='Allgather' pair='LIB::MPI::Allgather_Start' fields='*' />
+
+  <inflatedField name="MPI_Allgather_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Allreduce_Start" description="Start of a MPI Allreduce function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Allreduce_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex'  description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Allreduce_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Allreduce' pair='LIB::MPI::Allreduce' fields='*' />
+</event>
+
+<event name="LIB::MPI::Allreduce" 
+       description="MPI_Allreduce is the reduce operation where all processes receive the result, instead of just the root">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Allreduce" />
+  <fields>
+    <field name="sendbuf"    type="uint64" format='hex' 
+                 description="IN starting address of send buffer (chioce)" />
+    <field name="recvbuf"    type="uint64" format='hex' 
+                 description="OUT starting address of receive buffer (choice)" />
+    <field name="count"      type="uint32" format='hex' 
+                 description="IN number of elments received from any process (integer)" />
+    <field name="datatype"   type="MPI_Datatype"
+                 description="IN data type of send buffer elements (handle)" />
+    <field name="op"         type="MPI_Op"
+                 description="IN operation (handle)" />
+    <field name="comm"       type="MPI_Comm"
+                 description="IN communicator (handle)" />
+    <field name="returnCode" type="uint32" 
+	         description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Allreduce: send buf %0 recv buf %1 count %2 type %3 op %4 comm %5 return code %6 ' />
+  <interval type='END' name='Allreduce' pair='LIB::MPI::Allreduce_Start' fields='*' />
+
+  <inflatedField name="MPI_Allreduce_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Barrier_Start" description="Start of a MPI Barrier function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Barrier_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Barrier_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Barrier' pair='LIB::MPI::Barrier' fields='*' />
+</event>
+
+<event name="LIB::MPI::Barrier" 
+  description="Barrier blocks the caller until all group members have called it">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Barrier" />
+  <fields>
+    <field name="comm"      type="MPI_Comm"
+	        description="IN communicator (handle)" />
+    <field name="returnCode"    type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Barrier: communicator %0 return code %1' />
+  <interval type='END' name='Barrier' pair='LIB::MPI::Barrier_Start' fields='*' />
+
+  <inflatedField name="MPI_Barrier_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Bcast_Start" description="Start of a MPI Bcast function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Bcast_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Bcast_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Bcast' pair='LIB::MPI::Bcast' fields='*' />
+</event>
+
+<event name="LIB::MPI::Bcast" 
+       description="MPI_Bcast broadcasts a messaged from the process with rank root to all processes in the group">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Bcast" />
+  <fields>
+    <field name="buffer"   type="uint64" format='hex' 
+                           description="INOUT starting address of buffer (chioce)" />
+    <field name="count"    type="uint32" format='hex' 
+                           description="IN number of entries in the buffer (integer)" />
+    <field name="datatype" type="MPI_Datatype"
+                           description="IN data type of send buffer elements (handle)" />
+    <field name="root"     type="MPI_Rank"
+                           description="IN rank of broadcast root" />
+    <field name="comm"     type="MPI_Comm"
+                           description="IN communicator (handle)" />
+    <field name="returnCode"    type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Bcast: buf %0 count %1 type %2 root %3 comm %4 return code %5' />
+  <interval type='END' name='Bcast' pair='LIB::MPI::Bcast_Start' fields='*' />
+
+  <inflatedField name="MPI_Bcast_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Comm_dup_Start" description="Start of a MPI Comm_dup function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Comm_dup_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Comm_dup_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Comm_dup' pair='LIB::MPI::Comm_dup' fields='*' />
+</event>
+
+<event name="LIB::MPI::Comm_dup" 
+  description="Comm_dup duplicates the existing communicator">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Comm_dup" />
+  <fields>
+    <field name="comm"       type="MPI_Comm"
+	        description="IN communicator (handle)" />
+    <field name="newcomm"    type="MPI_Comm"
+	        description="OUT copy of comm (handle)" />
+    <field name="returnCode" type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Comm_dup: communicator %0 new copy %1 return code %2' />
+  <interval type='END' name='Comm_dup' pair='LIB::MPI::Comm_dup_Start' fields='*'/>
+
+  <inflatedField name="processorID"  type="ProcID" value="processorID" description="processor ID"/> 
+  <inflatedField name="MPI_Comm_dup_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Comm_free_Start" description="Start of a MPI Comm_free function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Comm_free_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Comm_free_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Comm_free' pair='LIB::MPI::Comm_free' fields='*' />
+</event>
+
+<event name="LIB::MPI::Comm_free" 
+  description="Comm_free a collective operation that marks the communicator object for deallocation">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Comm_free" />
+  <fields>
+    <field name="comm"       type="MPI_Comm"
+		description="INOUT communicator to be destroyed (handle). Side effect of call is that comm is set to MPI_COMM_NULL." />
+    <field name="returnCode" type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Comm_free: communicator %0 return code %1' />
+  <interval type='END' name='Comm_free' pair='LIB::MPI::Comm_free_Start' fields='*' />
+
+  <inflatedField name="processorID" type="ProcID" description="processor ID" /> 
+  <inflatedField name="MPI_Comm_free_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Comm_rank_Start" description="Start of a MPI Comm_rank function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Comm_rank_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+    <computedField name="distance"    type="uint64" description="distance between parent and grandparent" expr="parent-grandParent" /> 
+  </fields>
+  <printFormat value='MPI.Comm_rank_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Comm_rank' pair='LIB::MPI::Comm_rank' fields='*' /> 
+</event>
+
+<event name="LIB::MPI::Comm_rank" 
+  description="Comm_rank a local operation computes the number of processes in a group specified by a communicator">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Comm_rank" />
+  <fields>
+    <field name="comm"       type="MPI_Comm"
+		description="IN communicator (handle)" />
+    <field name="rank"       type="MPI_Rank"
+		description="OUT rank of calling process in group of comm" />
+  </fields>
+  <printFormat value='MPI.Comm_rank: communicator %0 rank %1' />
+  <interval type='END' name='Comm_rank' pair='LIB::MPI::Comm_rank_Start' fields='*' />
+
+  <inflatedField name="MPI_Comm_rank_Event"  type="uint32" description="occurrence"/> 
+  <inflatedField name="processorID"  type="ProcID" description="processor ID"/> 
+</event>
+
+
+<event name="LIB::MPI::Comm_size_Start" description="Start of a MPI Comm_size function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Comm_size_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex'  description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex'  description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Comm_size_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Comm_size' pair='LIB::MPI::Comm_size' fields='*' />
+</event>
+
+<event name="LIB::MPI::Comm_size" 
+  description="Comm_size a local operation computes the number of processes in a group specified by a communicator (same as Comm_rank?)">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Comm_size" />
+  <fields>
+    <field name="comm"       type="MPI_Comm"
+		description="IN communicator (handle)" />
+    <field name="size"       type="uint32"
+		description="OUT number of processes in the comm communicator group (integer)" />
+    <field name="returnCode" type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Comm_size: communicator %0 size %1 return code %2' />
+  <interval type='END' name='Comm_size' pair='LIB::MPI::Comm_size_Start' fields='*'/>
+
+  <inflatedField name="MPI_Comm_size_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Comm_split_Start" description="Start of a MPI Comm_split function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Comm_split_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Comm_split_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Comm_split' pair='LIB::MPI::Comm_split' fields='*' />
+</event>
+
+<event name="LIB::MPI::Comm_split" 
+  description="Comm_split partitions a group associated with a communicator into disjoint subsets, one for each color">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Comm_split" />
+  <fields>
+    <field name="comm"       type="MPI_Comm"
+		description="IN communicator (handle)" />
+    <field name="color"      type="uint32"
+		description="IN control of subset assignment (integer)" />
+    <field name="key"        type="uint32"
+		description="IN control of rank assignment (integer)" />
+    <field name="newcomm"    type="MPI_Comm"
+		description="OUT new comminicator handle (handle)" />
+    <field name="returnCode" type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Comm_split: communicator %0 color %1 key %2 new communicator %3 return code %4' />
+  <interval type='END' name='Comm_split' pair='LIB::MPI::Comm_split_Start' fields='*' />
+
+  <inflatedField name="MPI_Comm_split_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Error_string_Start" description="Start of a MPI Error_string function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Error_string_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Error_string_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Error_string' pair='LIB::MPI::Error_string' fields='*' />
+</event>
+
+<event name="LIB::MPI::Error_string" 
+  description="Error_string returns the string associated with an error code">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Error_string" />
+  <fields>
+    <field name="errorcode"  type="uint32"
+		description="IN error code returned by an MPI routine (integer)" />
+    <field name="string"     type="string" 
+		description="OUT text that corresponds to the errorcode (string)" />
+    <field name="length"     type="uint32"
+		description="OUT length (in printable characters) of the result returned in string (integer)" />
+    <field name="returnCode" type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Error_string: error code %0 string %1 length %2 return code %3' />
+  <interval type='END' name='Error_string' pair='LIB::MPI::Error_string_Start' fields='*' />
+
+  <inflatedField name="MPI_Error_string_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Finalize_Start" description="Start of a MPI Finalize function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Finalize_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Finalize_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Finalize' pair='LIB::MPI::Finalize' fields='*' />
+</event>
+
+<event name="LIB::MPI::Finalize" 
+  description="Finalize cleans up all MPI state">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Finalize" />
+  <fields>
+    <field name="returnCode"  type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.finalize: return code %0' />
+  <interval type='END' name='Finalize' pair='LIB::MPI::Finalize_Start' fields='*' />
+
+  <inflatedField name="MPI_Finalize_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Gather_Start" description="Start of a MPI Gather function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Gather_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Gather_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Gather' pair='LIB::MPI::Gather' fields='*' />
+</event>
+
+<event name="LIB::MPI::Gather" 
+  description="MPI_Gather each process (including the root) sends the contents of its send buffer to the the root process">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Gather" />
+  <fields>
+    <field name="sendbuf"    type="uint64" format="hex" 
+                description="IN starting address of send buffer (choice)" />
+    <field name="sendcount"  type="uint32"
+                description="IN number of elements in send buffer" />
+    <field name="sendtype"   type="MPI_Datatype"
+                description="IN data type of send buffer elements (handle)" />
+    <field name="recvbuf"    type="uint64" format="hex" 
+                description="OUT address of receive buffer (choice)" />
+    <field name="recvcount"  type="uint32"
+                description="IN number of elments received from any process" />
+    <field name="recvtype"   type="MPI_Datatype"
+                description="IN data type of receive buffer elements (handle)" />
+    <field name="root"       type="MPI_Rank"
+                description="IN rank of receiving process" />
+    <field name="comm"       type="MPI_Comm"
+                description="IN communicator (handle)" />
+    <field name="returnCode" type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Gather: send: buf %0 count %1 type %2; recv: buf %3 count %4 type %5 root %6 comm %7 return code %8' />
+  <interval type='END' name='Gather' pair='LIB::MPI::Gather_Start' fields='*' />
+
+  <inflatedField name="MPI_Gather_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Gatherv_Start" description="Start of a MPI Gatherv function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Gatherv_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Gatherv_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Gatherv' pair='LIB::MPI::Gatherv' fields='*' />
+</event>
+
+<event name="LIB::MPI::Gatherv" 
+  description="MPI_Gatherv each process (including the root) sends the contents of its send buffer to the the root process">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Gatherv" />
+  <fields>
+    <field name="sendbuf"    type="uint64" format="hex" 
+                description="IN starting address of send buffer (choice)" />
+    <field name="sendcount"  type="uint32"
+                description="IN number of elements in send buffer" />
+    <field name="sendtype"   type="MPI_Datatype"
+                description="IN data type of send buffer elements (handle)" />
+    <field name="recvbuf"    type="uint64" format="hex" 
+                description="OUT address of receive buffer (choice)" />
+    <field name="recvcount"  type="uint32"
+                description="IN number of elments received from any process" />
+    <field name="displs"     type="list" eltType='uint32' size='recvcount'
+                description="IN integer array (of length group size) Entry i specifies the index into recvbuf to place the incoming data from process i (significant only at root)" />
+    <field name="recvtype"   type="MPI_Datatype"
+                description="IN data type of receive buffer elements (handle)" />
+    <field name="root"       type="MPI_Rank"
+                description="IN rank of receiving process" />
+    <field name="comm"       type="MPI_Comm"
+                description="IN communicator (handle)" />
+    <field name="returnCode" type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Gatherv: send: buf %0 count %1 type %2; recv: buf %3 count %4 type %6 root %7 comm %8 displs %5 return code %9' />
+  <interval type='END' name='Gatherv' pair='LIB::MPI::Gatherv_Start' fields='*' />
+
+  <inflatedField name="MPI_Gatherv_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Get_processor_name_Start" description="Start of a MPI Get_processor_name function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Get_processor_name_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Get_processor_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Get_processor_name' pair='LIB::MPI::Get_processor_name' fields='*' />
+</event>
+
+<event name="LIB::MPI::Get_processor_name" 
+  description="Get_processor_name returns the name of the processor on which it was called at the moment of the call">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Get_processor_name" />
+  <fields>
+    <field name="name"       type="string" 
+	        description="OUT A unique specifier for the actual (as oppose to virtual) node" />
+    <field name="length"     type="uint32"   
+		description="OUT length (in printable characters) of the result returned in name" />
+    <field name="returnCode" type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Get_processor_name: name %0 length %1 return code %2' />
+  <interval type='END' name='Get_processor_name' pair='LIB::MPI::Get_processor_name_Start' fields='*' />
+
+  <inflatedField name="MPI_Get_processor_name_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Init_Start" description="Start of a MPI Init function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Init_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Init_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Init' pair='LIB::MPI::Init' fields='*' />
+</event>
+
+<event name="LIB::MPI::Init" 
+  description="Init is called before any other MPI routine is called.  Called only once, all subsequent calls are erroneous.">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Init" />
+  <fields>
+    <field name="argc"       type="uint32" 
+	        description="IN A unique specifier for the actual (as oppose to virtual) node" />
+    <field name="argv"       type="list" eltType="string" size="argc"
+		description="IN length (in printable characters) of the result returned in name" />
+    <field name="returnCode" type="uint32" 
+	        description="OUT return code" />
+    <field name="processID"  type="uint64" format="hex" 
+                description="process id of MPI task" />
+    <field name="rank"        type="MPI_Rank" 
+                description="MPI task rank" />
+  </fields>
+  <printFormat value='MPI.Init: task=%4, pid=%3 argc %0 return code %2 command line arguments %2' />
+  <interval type='END' name='Init' pair='LIB::MPI::Init_Start' fields='*' />
+
+  <inflatedField name="MPI_Init_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Initialize_Start" description="Start of a MPI Initialize function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Initialize_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Initialize_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Initialize' pair='LIB::MPI::Initialize' fields='*' />
+</event>
+
+<event name="LIB::MPI::Initialize" 
+  description="Initialize is called before any other MPI routine is called.  Called only once, all subsequent calls are erroneous.">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Initialize" />
+  <fields>
+    <field name="argc"       type="uint32" 
+	        description="IN A unique specifier for the actual (as oppose to virtual) node" />
+    <field name="argv"       type="uint64"   
+		description="IN length (in printable characters) of the result returned in name" />
+    <field name="returnCode" type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Initialize: argc %0 return code %2 command line arguments %2' />
+  <interval type='END' name='Initialize' pair='LIB::MPI::Initialize_Start' fields='*' />
+
+  <inflatedField name="MPI_Initialize_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Irecv_Start" description="Start of a MPI Irecv function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Irecv_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Irecv_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Irecv' pair='LIB::MPI::Irecv' fields='*' />
+</event>
+
+<event name="LIB::MPI::Irecv" 
+  description="MPI_Irecv starts a nonblocking receive">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Irecv" />
+  <fields>
+    <field name="buffer"      type="uint64" format='hex'
+                description="OUT starting address of receive buffer (choice)" />
+    <field name="count"       type="uint32"
+                description="IN number of elements in receive buffer (integer)" />
+    <field name="datatype"    type="MPI_Datatype"
+                description="IN data type of receive buffer elements (handle)" />
+    <field name="source"      type="MPI_Rank"
+                description="IN rank of source" />
+    <field name="tag"         type="MPI_Tag"
+                description="IN mesage tag" />
+    <field name="comm"        type="MPI_Comm"
+                description="IN communicator (handle)" />
+    <field name="request"     type="MPI_Request"
+                description="OUT communicator (handle)" />
+    <field name="returnCode"  type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Irecv: receive: buf %0 count %1 type %2 source %3 tag %4 comm %5 request %6 return code %7' />
+  <interval type='END' name='Irecv' pair='LIB::MPI::Irecv_Start' fields='*' />
+
+  <inflatedField name="MPI_Irecv_Event"  type="uint32" description="occurrence"/> 
+  <inflatedField name="MPI_Rank" type="MPI_Rank" description="rank of MPI task executing this MPI function"/> 
+  <inflatedField name="MPI_RecvDistinct" type="uint32" description="occurrence of request's (tag, source) pair"/> 
+</event>
+
+
+<event name="LIB::MPI::Isend_Start" description="Start of a MPI Isend function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Isend_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Isend_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Isend' pair='LIB::MPI::Isend' fields='*' />
+</event>
+
+<event name="LIB::MPI::Isend" 
+  description="MPI_Isend starts a standard mode nonblocking send">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Isend" />
+  <fields>
+    <field name="buffer"      type="uint64" format="hex"
+                description="IN starting address of send buffer (choice)" />
+    <field name="count"       type="uint32"
+                description="IN number of elements in send buffer (integer)" />
+    <field name="datatype"    type="MPI_Datatype"
+                description="IN data type of send buffer elements (handle)" />
+    <field name="destination" type="MPI_Rank"
+                description="IN rank of destination" />
+    <field name="tag"         type="MPI_Tag"
+                description="IN mesage tag" />
+    <field name="comm"        type="MPI_Comm"
+                description="IN communicator (handle)" />
+    <field name="request"     type="MPI_Request"
+                description="OUT communicator (handle)" />
+    <field name="returnCode"  type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Isend: send: buf %0 count %1 type %2 destination %3 tag %4 comm %5 request %6 return code %7' />
+  <interval type='END' name='Isend' pair='LIB::MPI::Isend_Start' fields='*' />
+
+  <inflatedField name="MPI_Isend_Event"  type="uint32" description="occurrence"/> 
+  <inflatedField name="MPI_Rank" type="MPI_Rank" description="rank of MPI task executing this MPI function"/> 
+  <inflatedField name="MPI_SendDistinct" type="uint32" description="occurrence of request's (tag, destination) pair"/> 
+</event>
+
+
+<event name="LIB::MPI::Op_create_Start" description="Start of a MPI Op_create function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Op_create_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Op_create_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Op_create' pair='LIB::MPI::Op_create' fields='*' />
+</event>
+
+<event name="LIB::MPI::Op_create" 
+  description="Op_create binds a user-defined global operation to an op handle that can be subsequently used in reduction operations">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Op_create" />
+  <fields>
+    <field name="function"      type="MPI_User_function"
+	        description="IN user defined function" />
+    <field name="commute"       type="uint32" 
+	        description="IN true if communtative; false otherwise (boolean)" />
+    <field name="op"            type="MPI_Op"
+	        description="OUT operation (handle)" />
+    <field name="returnCode"    type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Op_create: function %0 commute %1 op %2 return code %3' />
+  <interval type='END' name='Op_create' pair='LIB::MPI::Op_create_Start' fields='*' />
+
+  <inflatedField name="MPI_Op_create_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Op_free_Start" description="Start of a MPI Op_free function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Op_free_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Op_free_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Op_free' pair='LIB::MPI::Op_free' fields='*' />
+</event>
+
+<event name="LIB::MPI::Op_free" 
+  description="Op_free marks a user-defined reduction operation for deallocation and sets op to MPI_NULL_OP">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Op_free" />
+  <fields>
+    <field name="op"            type="MPI_Op"
+	        description="OUT operation (handle)" />
+    <field name="returnCode"    type="uint32"
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Op_free: op %0 return code %1' />
+  <interval type='END' name='Op_free' pair='LIB::MPI::Op_free_Start' fields='*' />
+
+  <inflatedField name="MPI_Op_free_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Recv_Start" description="Start of a MPI Recv function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Recv_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Recv_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Recv' pair='LIB::MPI::Recv' fields='*' />
+</event>
+
+<event name="LIB::MPI::Recv" 
+  description="MPI_Recv starts a blocking receive">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Recv" />
+  <fields>
+    <field name="buffer"      type="uint64" format="hex"
+                description="OUT starting address of receive buffer (choice)" />
+    <field name="count"       type="uint32"
+                description="IN number of elements in receive buffer" />
+    <field name="datatype"    type="MPI_Datatype"
+                description="IN data type of receive buffer elements (handle)" />
+    <field name="source"      type="MPI_Rank"
+                description="IN rank of source" />
+    <field name="tag"         type="MPI_Tag"
+                description="IN mesage tag" />
+    <field name="comm"        type="MPI_Comm"
+                description="IN communicator (handle)" />
+    <field name="status"      type="MPI_Status"
+                description="OUT status object (Status)" />
+    <field name="countRecvd" type="uint32"
+                description="The number of elements actually received, or -1 if status == MPI_STATUS_IGNORE" />
+    <field name="returnCode"  type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Recv: receive: buf %0 count %1 type %2 source %3 tag %4 comm %5 status %6 return code %7' />
+  <interval type='END' name='Recv' pair='LIB::MPI::Recv_Start' fields='*' />
+
+  <inflatedField name="MPI_Recv_Event"  type="uint32" description="occurrence"/> 
+  <inflatedField name="MPI_Rank" type="MPI_Rank" description="rank of MPI task executing this MPI function"/> 
+  <inflatedField name="MPI_RecvDistinct" type="uint32" description="occurrence  of request's (tag, source) pair"/> 
+</event>
+
+
+<event name="LIB::MPI::Recv_init_Start" description="Start of a MPI Recv_init function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Recv_init_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Recv_init_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Recv_init' pair='LIB::MPI::Recv_init' fields='*' />
+</event>
+
+<event name="LIB::MPI::Recv_init" 
+  description="MPI_Recv_init creates a persistent communication request for a receive operation">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Recv_init" />
+  <fields>
+    <field name="buffer"      type="uint64" format="hex"
+                description="OUT starting address of receive buffer (choice)" />
+    <field name="count"       type="uint32"
+                description="IN number of elements in receive buffer" />
+    <field name="datatype"    type="MPI_Datatype"
+                description="IN data type of receive buffer elements (handle)" />
+    <field name="source"      type="MPI_Rank"
+                description="IN rank of source" />
+    <field name="tag"         type="MPI_Tag"
+                description="IN mesage tag" />
+    <field name="comm"        type="MPI_Comm"
+                description="IN communicator (handle)" />
+    <field name="request"    type="MPI_Request"
+                description="OUT request (handle)" />
+    <field name="returnCode"  type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Recv_init: receive: buf %0 count %1 type %2 source %3 tag %4 comm %5 req %6 return code %7' />
+  <interval type='END' name='Recv_init' pair='LIB::MPI::Recv_init_Start' fields='*' />
+
+  <inflatedField name="MPI_Recv_init_Event"  type="uint32" description="occurrence"/> 
+  <inflatedField name="MPI_Rank" type="MPI_Rank" description="rank of MPI task executing this MPI function"/> 
+</event>
+
+
+<event name="LIB::MPI::Reduce_Start" description="Start of a MPI Reduce function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Reduce_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Reduce_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Reduce' pair='LIB::MPI::Reduce' fields='*' />
+</event>
+
+<event name="LIB::MPI::Reduce" 
+  description="MPI_Reduce combines the elements provided in the input buffer of each process in the group, using the operation op, and returns the combined value in the output buffer of the process with rank root">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Reduce" />
+  <fields>
+    <field name="sendbuf"   type="uint64" format="hex" 
+                description="IN starting address of send buffer (choice)" />
+    <field name="recvbuf"   type="uint64" format="hex" 
+                description="OUT address of receive buffer (choice)" />
+    <field name="count" type="uint32"
+                description="IN number of elments in send buffer" />
+    <field name="datatype"  type="MPI_Datatype"
+                description="IN data type of the send buffer's elements (handle)" />
+    <field name="root"      type="MPI_Rank"
+                description="IN rank of root process" />
+    <field name="comm"      type="MPI_Comm"
+                description="IN communicator (handle)" />
+    <field name="returnCode"    type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Reduce: send: buf %0 count %2 type %3; recv: buf %1 root %4 comm %5 return code %6' />
+  <interval type='END' name='Reduce' pair='LIB::MPI::Reduce_Start' fields='*' />
+
+  <inflatedField name="MPI_Reduce_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Request_free_Start" description="Start of a MPI Request_free function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Request_free_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Request_free_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Request_free' pair='LIB::MPI::Request_free' fields='*' />
+</event>
+
+<event name="LIB::MPI::Request_free" 
+  description="MPI_Request_free deallocates a request object.">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Request_free" />
+  <fields>
+    <field name="request"     type="MPI_Request"
+                description="INOUT communication request (handle).  As a side effect, set to MPI_REQUEST_NULL" />
+    <field name="returnCode"  type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Request_free: request %0 return code %1' />
+  <interval type='END' name='Request_free' pair='LIB::MPI::Request_free_Start' fields='*' />
+
+  <inflatedField name="MPI_Request_free_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Rsend_Start" description="Start of a MPI Rsend function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Rsend_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Rsend_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Rsend' pair='LIB::MPI::Rsend' fields='*' />
+</event>
+
+<event name="LIB::MPI::Rsend" 
+  description="MPI_Rsend starts a send in ready mode">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Rsend" />
+  <fields>
+    <field name="buffer"      type="uint64" format="hex"
+                description="IN starting address of send buffer (choice)" />
+    <field name="count"       type="uint32"
+                description="IN number of elements in send buffer" />
+    <field name="datatype"    type="MPI_Datatype"
+                description="IN data type of send buffer elements (handle)" />
+    <field name="destination" type="MPI_Rank"
+                description="IN rank of destination" />
+    <field name="tag"         type="MPI_Tag"
+                description="IN mesage tag" />
+    <field name="comm"        type="MPI_Comm"
+                description="IN communicator (handle)" />
+    <field name="returnCode"  type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Rsend: send: buf %0 count %1 type %2 destination %3 tag %4 comm %5 return code %6' />
+  <interval type='END' name='Rsend' pair='LIB::MPI::Rsend_Start' fields='*' />
+
+  <inflatedField name="MPI_Rsend_Event"  type="uint32" description="occurrence"/> 
+  <inflatedField name="MPI_Rank" type="MPI_Rank" description="rank of MPI task executing this MPI function"/> 
+  <inflatedField name="MPI_SendDistinct" type="uint32" description="occurrence of request's (tag, destination) pair"/> 
+</event>
+
+
+<event name="LIB::MPI::Scan_Start" description="Start of a MPI Scan function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Scan_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Scan_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Scan' pair='LIB::MPI::Scan' fields='*' />
+</event>
+
+<event name="LIB::MPI::Scan" 
+  description="MPI_Scan is used to perform a prefix reduction on data distributed across the group">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Scan" />
+  <fields>
+    <field name="sendbuf"   type="uint64" format="hex" 
+                description="IN starting address of send buffer (choice)" />
+    <field name="recvbuf"   type="uint64" format="hex" 
+                description="OUT address of receive buffer (choice)" />
+    <field name="count" type="uint32"
+                description="IN number of elments in send buffer" />
+    <field name="datatype"  type="MPI_Datatype"
+                description="IN data type of the send buffer's elements (handle)" />
+    <field name="op"        type="MPI_Op"  
+                description="IN operation (handle)" />
+    <field name="comm"      type="MPI_Comm"
+                description="IN communicator (handle)" />
+    <field name="returnCode"    type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Scan: send: buf %0 count %2 type %3; recv: buf %1 op %4 comm %5 return code %6' />
+  <interval type='END' name='Scan' pair='LIB::MPI::Scan_Start' fields='*' />
+
+  <inflatedField name="MPI_Scan_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Send_Start" description="Start of a MPI Send function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Send_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Send_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Send' pair='LIB::MPI::Send' fields='*' />
+</event>
+
+<event name="LIB::MPI::Send" 
+  description="MPI_Send starts a blocking send">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Send" />
+  <fields>
+    <field name="buffer"      type="uint64" format="hex"
+                description="IN starting address of send buffer (choice)" />
+    <field name="count"       type="uint32"
+                description="IN number of elements in send buffer" />
+    <field name="datatype"    type="MPI_Datatype"
+                description="IN data type of send buffer elements (handle)" />
+    <field name="destination" type="MPI_Rank"
+                description="IN rank of destination" />
+    <field name="tag"         type="MPI_Tag"
+                description="IN mesage tag" />
+    <field name="comm"        type="MPI_Comm"
+                description="IN communicator (handle)" />
+    <field name="returnCode"  type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Send: send: buf %0 count %1 type %2 destination %3 tag %4 comm %5 return code %6' />
+  <interval type='END' name='Send' pair='LIB::MPI::Send_Start' fields='*' />
+
+  <inflatedField name="MPI_Send_Event"  type="uint32" description="occurrence"/> 
+  <inflatedField name="MPI_Rank" type="MPI_Rank" description="rank of MPI task executing this MPI function"/> 
+  <inflatedField name="MPI_SendDistinct" type="uint32" description="occurrence of request's (tag, destination) pair"/> 
+</event>
+
+
+<event name="LIB::MPI::Send_init_Start" description="Start of a MPI Send_init function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Send_init_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Send_init_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Send_init' pair='LIB::MPI::Send_init' fields='*' />
+</event>
+
+<event name="LIB::MPI::Send_init" 
+  description="MPI_Send_init creates a persistent communication request for a send operation.  That is, creates a communication port or as a half-channel">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Send_init" />
+  <fields>
+    <field name="buffer"      type="uint64" format="hex"
+                description="IN starting address of send buffer (choice)" />
+    <field name="count"       type="uint32"
+                description="IN number of elements in send buffer" />
+    <field name="datatype"    type="MPI_Datatype"
+                description="IN data type of send buffer elements (handle)" />
+    <field name="destination" type="MPI_Rank"
+                description="IN rank of destination" />
+    <field name="tag"         type="MPI_Tag"
+                description="IN mesage tag" />
+    <field name="comm"        type="MPI_Comm"
+                description="IN communicator (handle)" />
+    <field name="request"     type="MPI_Request"
+                description="OUT communication request (handle)" />
+    <field name="returnCode"  type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Send_init: send: buf %0 count %1 type %2 destination %3 tag %4 comm %5 request %6 return code %7' />
+  <interval type='END' name='Send_init' pair='LIB::MPI::Send_init_Start' fields='*' />
+
+  <inflatedField name="MPI_Send_init_Event"  type="uint32" description="occurrence"/> 
+  <inflatedField name="MPI_Rank" type="MPI_Rank" description="rank of MPI task executing this MPI function"/> 
+</event>
+
+
+<event name="LIB::MPI::Startall_Start" description="Start of a MPI Startall function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Startall_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Startall_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Startall' pair='LIB::MPI::Startall' fields='*' />
+</event>
+
+<event name="LIB::MPI::Startall" 
+  description="MPI_Startall start all communications associated with requests in array_of_requests">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Startall" />
+  <fields>
+    <field name="count"               type="uint32"
+                description="IN lists length" />
+    <field name="array_of_requests"   type="list" eltType='MPI_Request' 
+                size='count'
+                description="INOUT array of requests (array of handles)" />
+    <field name="returnCode"  	      type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Startall: count %0 return code %2 requests %1' />
+  <interval type='END' name='Startall' pair='LIB::MPI::Startall_Start' fields='*' />
+
+  <inflatedField name="MPI_Startall_Event"  type="uint32" description="occurrence"/> 
+  <inflatedField name="array_of_hiddens"   type="list"  eltType="uint32"
+                 size="count"
+                 description="array of corresponding Start_hidden events" />
+  <inflatedField name="MPI_Rank" type="MPI_Rank" description="rank of MPI task executing this MPI function"/> 
+</event>
+
+
+<event name="LIB::MPI::Type_commit_Start" description="Start of a MPI Type_commit function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Type_commit_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Type_commit_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Type_commit' pair='LIB::MPI::Type_commit' fields='*' />
+</event>
+
+<event name="LIB::MPI::Type_commit" 
+  description="MPI_Type_commit commits a datatype, that is, the formal description of a communication buffer, not the content of that buffer">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Type_commit" />
+  <fields>
+    <field name="datatype"    type="MPI_Datatype"
+                description="IN data type of send buffer elements (handle)" />
+    <field name="returnCode"  type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Type_commit: datatype %0 return code %1' />
+  <interval type='END' name='Type_commit' pair='LIB::MPI::Type_commit_Start' fields='*' />
+
+  <inflatedField name="MPI_Type_commit_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Type_contiguous_Start" description="Start of a MPI Type_contiguous function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Type_contiguous_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Type_contiguous_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Type_contiguous' pair='LIB::MPI::Type_contiguous' fields='*' />
+</event>
+
+<event name="LIB::MPI::Type_contiguous" 
+  description="MPI_Type_contiguous creates a new datatype by concatenating count copies of oldtype">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Type_contiguous" />
+  <fields>
+    <field name="count"       type="uint32"		format='int32'
+                description="IN replication count (nonnegative integer)" />
+    <field name="datatype"    type="MPI_Datatype"
+                description="IN data type of send buffer elements (handle)" />
+    <field name="returnCode"  type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Type_contiguous: count %0 datatype %1 return code %2' />
+  <interval type='END' name='Type_contiguous' pair='LIB::MPI::Type_contiguous_Start' fields='*' />
+
+  <inflatedField name="MPI_Type_contiguous_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Type_free_Start" description="Start of a MPI Type_free function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Type_free_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Type_free_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Type_free' pair='LIB::MPI::Type_free' fields='*' />
+</event>
+
+<event name="LIB::MPI::Type_free" 
+  description="MPI_Type_free marks the datatype object associated with datatype for deallocation and sets datatype to MPI_DATATYPE_NULL">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Type_free" />
+  <fields>
+    <field name="datatype"    type="MPI_Datatype"
+                description="IN data type of send buffer elements (handle)" />
+    <field name="returnCode"  type="uint32" 
+                description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Type_free: datatype %0 return code %1' />
+  <interval type='END' name='Type_free' pair='LIB::MPI::Type_free_Start' fields='*' />
+
+  <inflatedField name="MPI_Type_free"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Type_struct_Start" description="Start of a MPI Type_struct function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Type_struct_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Type_struct_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Type_struct' pair='LIB::MPI::Type_struct' fields='*' />
+</event>
+
+<event name="LIB::MPI::Type_struct" 
+  description="MPI_Type_struct constructs a new type">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Type_struct" />
+  <fields>
+    <field name="count"                  type="uint32"	
+                description="IN number of blocks (also number of entries in arrays)" />
+    <field name="array_of_blocklength"   type="list" eltType="MPI_Aint" 
+                size='count'	
+                description="IN number of elements in each block" />
+    <field name="array_of_displacements" type="list" eltType="uint32" 
+                size='count'
+                description="IN byte displacement of each block" />
+    <field name="array_of_types"         type="list" eltType="MPI_Datatype"
+                size='count'
+                description="IN type of elements in each block" />
+    <field name="newType"                type="list" eltType="MPI_Datatype"
+	        size='count'
+                description="OUT new datatype (handle)" />
+    <field name="returnCode"             type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Type_struct: count %0 return code %5 block length %1 displacements %2 types %3 newType %4' />
+  <interval type='END' name='Type_struct' pair='LIB::MPI::Type_struct_Start' fields='*' />
+
+  <inflatedField name="MPI_Type_struct_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Wait_Start" description="Start of a MPI Wait function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Wait_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Wait_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Wait' pair='LIB::MPI::Wait' fields='*' />
+</event>
+
+<event name="LIB::MPI::Wait" 
+  description="MPI_Wait returns when the operation identified by request is complete">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Wait" />
+  <fields>
+    <field name="request"    type="MPI_Request"	
+                description="INOUT request (handle)" />
+    <field name="source"     type="MPI_Rank" 
+                description="source of completed request" />
+    <field name="count"     type="uint32"
+                description="number of data elements received" />
+    <field name="returnCode"  type="uint32" 
+                description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Wait: request %0 source %1 count %2 return code %3' />
+  <interval type='END' name='Wait' pair='LIB::MPI::Wait_Start' fields='*' />
+
+  <inflatedField name="MPI_Wait_Event"  type="uint32" description="occurrence"/> 
+  <inflatedField name="wait_hidden"     type="uint32" description="enumeration index of corresponding Wait_hidden event"/> 
+  <inflatedField name="MPI_Rank" type="MPI_Rank" description="rank of MPI task executing this MPI function"/> 
+</event>
+
+
+<event name="LIB::MPI::Waitall_Start" description="Start of a MPI Waitall function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Waitall_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Waitall_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Waitall' pair='LIB::MPI::Waitall' fields='*' />
+</event>
+
+<event name="LIB::MPI::Waitall" 
+  description="MPI_Waitall blocks until all communication operations associated with active handles in the list complete, and return the status of all these operations">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Waitall" />
+  <fields>
+    <field name="count"             type="uint32"
+                description="IN lists length" />
+    <field name="array_of_request" type="list" eltType="MPI_Request"
+                size="count"
+                description="INOUT array of requests (array of handles)" />
+    <field name="array_of_source"   type="list"  eltType="MPI_Rank" 
+                size="count"
+                description="array of sources of completed requests" />
+    <field name="array_of_count"    type="list"  eltType="uint32"
+                size="count"
+                description="array of number of data elements received" />
+    <field name="returnCode"        type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Waitall: count %0 return code %4 requests %1 sources %2 array_of_recvd_counts %3' />
+  <interval type='END' name='Waitall' pair='LIB::MPI::Waitall_Start' fields='*' />
+
+  <inflatedField name="MPI_Waitall_Event"  type="uint32" description="occurrence"/> 
+  <inflatedField name="array_of_hiddens"   type="list"  eltType="uint32"
+                 size="count"
+                 description="array of corresponding Wait_hidden events" />
+  <inflatedField name="MPI_Rank" type="MPI_Rank" description="rank of MPI task executing this MPI function"/> 
+</event>
+
+
+<event name="LIB::MPI::Waitany_Start" description="Start of a MPI Waitany function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Waitany_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Waitany_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Waitany' pair='LIB::MPI::Waitany' fields='*' />
+</event>
+
+<event name="LIB::MPI::Waitany" 
+  description="MPI_Waitany blocks until all communication operations associated with active handles in the list complete, and return the status of all these operations">
+  <layerId value="LIB" />	<classId value="MPI" />	<specifier value="Waitany" />
+  <fields>
+    <field name="count"             type="uint32"
+                description="IN lists length" />
+    <field name="array_of_requests" type="list" eltType="MPI_Request"	
+                size="count"
+                description="INOUT array of requests (array of handles)" />
+    <field name="index"             type="uint32"	
+                description="OUT index of handle for operation that completed" />
+    <field name="source"            type="MPI_Rank"
+                description="OUT source of completed recv request" />
+    <field name="returnCode"        type="uint32" 
+	        description="OUT return code" />
+  </fields>
+  <printFormat value='MPI.Waitany: count %0 index %2 source %3 return code %4 requests %1' />
+  <interval type='END' name='Waitany' pair='LIB::MPI::Waitany_Start' fields='*' />
+
+  <inflatedField name="MPI_Waitany_Event"  type="uint32" description="occurrence"/> 
+  <inflatedField name="wait_hidden"     type="uint32" description="enumeration index of corresponding Wait_hidden event"/> 
+  <inflatedField name="MPI_Rank" type="MPI_Rank" description="rank of MPI task executing this MPI function"/> 
+</event>
+
+
+<event name="LIB::MPI::Wtick_Start" description="Start of a MPI Wtick function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Wtick_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Wtick_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Wtick' pair='LIB::MPI::Wtick' fields='*' />
+</event>
+
+<event name="LIB::MPI::Wtick" 
+  description="Wtick returns the resolution of MPI_WTIME in seconds">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Wtick" />
+  <fields>
+    <field name="returnCode"    type="uint64" 
+	        description="OUT ticks" />
+  </fields>
+  <printFormat value='MPI.Wtick: ticks %0' />
+  <interval type='END' name='Wtick' pair='LIB::MPI::Wtick_Start' fields='*' />
+
+  <inflatedField name="MPI_Wtick"  type="uint32" description="occurrence"/> 
+</event>
+
+
+<event name="LIB::MPI::Wtime_Start" description="Start of a MPI Wtime function call">
+  <layerId value="LIB" /> <classId value="MPI" /> <specifier value="Wtime_Start" />
+  <fields>
+    <field name="parent"      type="uint64" format='hex' description="address of parent calling the MPI" />
+    <field name="grandParent" type="uint64" format='hex' description="address of grand parent calling the MPI"/>
+    <field name="function"    type="string" description="name of the mpi function called" />
+  </fields>
+  <printFormat value='MPI.Wtime_Start: starting function %2 called from 0x%0, 0x%1' />
+  <interval type='START' name='Wtime' pair='LIB::MPI::Wtime' fields='*' />
+</event>
+
+<event name="LIB::MPI::Wtime" 
+  description="Wtime returns a floating-point number of seconds, representing elapsed wall-clock time since some time in the past">
+  <layerId value="LIB" />  <classId value="MPI" />  <specifier value="Wtime" />
+  <fields>
+    <field name="returnCode"    type="uint64" 
+	        description="OUT wall-clock time in seconds" />
+  </fields>
+  <printFormat value='MPI.Wtime: time (seconds) %0' />
+  <interval type='END' name='Wtime' pair='LIB::MPI::Wtime_Start' fields='*' />
+
+  <inflatedField name="MPI_Wtime_Event"  type="uint32" description="occurrence"/> 
+</event>
+
+<event name="LIB::MPI::TypeSize"
+  description='maps an MPI_Datatype to its size in bytes'>
+  <layerId value='LIB'/> <classId value='MPI' /> <specifier value='TypeSize'/>
+  <fields>
+   <field name='datatype' type='MPI_Datatype' description='the mpi type' />
+   <field name='size' type='uint32' description='actual size in bytes' />
+  </fields>
+  <printFormat value='MPI.TypeSize: data type = %0 has %1 bytes' />
+</event>
+
+<event name="LIB::MPI::LAMWaitany"  description='LAM Waitany internal event'>
+  <layerId value='LIB'/> <classId value='MPI' /> <specifier value='LAMWaitany' />
+  <fields>
+    <field name='messageType'   type='uint32'       description='message type: 0=ISEND, 1=IBSEND, 2=ISSEND, 3=IRSEND, 4=IRECV, 5=IPROBE, 6=IFAKE' />
+    <field name='rank_there'    type='MPI_Rank'     description='IN rank of other end of message' />
+    <field name="tag"           type="MPI_Tag"      description="IN mesage tag" />
+    <field name="comm"          type="MPI_Comm"     description="IN communicator (handle)" />
+    <field name="datatype"      type="MPI_Datatype" description="IN data type of send buffer elements (handle)" />
+    <field name="count"         type="uint32"       description="IN number of elments received from any process (integer)" format='hex'/>
+    <field name="matching_rank" type="MPI_Rank"     description="IN matching rank (in case of wildcard)" />
+    <field name="matching_tag"  type="MPI_Tag"      description="IN matching tag (in case of wildcard)" />
+    <field name="sequence_num"  type="uint32"     description="IN message sequence number" />
+  </fields>
+  <printFormat value='MPI.LAMWaitany: type=%0 rank_there=%1 tag=%2 comm=%3 datatype=%4 count=%5' />
+</event>
+
+</PEM_Events>

@@ -1,0 +1,124 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceScheduler.xml,v 1.4 2004/07/08 17:15:33 gktse Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+<event name="OS::Scheduler::CurThread" description="thread switch event">
+	<layerId value="OS" />
+	<classId value="Scheduler" />
+	<specifier value="CurThread" />
+	<fields>
+		<field name="thread" type="uint64" description="thread ID switched to"/>
+	</fields>
+	<k42Format value='Current thread %0[%llx]' />
+</event>
+
+
+<event name="OS::Scheduler::ThreadCreate" description="create a new thread event">
+	<layerId value="OS" />
+	<classId value="Scheduler" />
+	<specifier value="ThreadCreate" />
+	<fields>
+		<field name="thread" type="uint64" description="thread ID"/>
+		<field name="fct"    type="uint64" description="unknown"/>
+	</fields>
+	<k42Format value='New thread %0[%llx], fct %1[%llx]' />
+</event>
+
+
+<event name="OS::Scheduler::PPCXobjFCT" description="unknown">
+	<layerId value="OS" />
+	<classId value="Scheduler" />
+	<specifier value="PPCXobjFCT" />
+	<fields>
+		<field name="thread" type="uint64" description="remote thread ID"/>
+		<field name="FCT" type="uint64" />
+	</fields>
+	<k42Format value='PPC thread %0[%llx], XObj FCT %1[%llx]' />
+</event>
+
+
+<event name="OS::Scheduler::IPCFault" description="unknown">
+	<layerId value="OS" />
+	<classId value="Scheduler" />
+	<specifier value="IPCFault" />
+	<fields>
+		<field name="IPC_fault" type="uint64" description="unknown"/>
+	</fields>
+	<k42Format value='IPC Fault, reason %0[%llx]' />
+</event>
+
+
+<event name="OS::Scheduler::EnabledMPMsg" description="unknown">
+	<layerId value="OS" />
+	<classId value="Scheduler" />
+	<specifier value="EnabledMPMsg" />
+	<fields>
+		<field name="vtable" type="uint64" description="unknown"/>
+		<field name="data0"  type="uint64" description="unknown"/>
+	</fields>
+	<k42Format value='Enabled MP msg, vtable %0[%llx], data0 %1[%llx]' />
+</event>
+
+
+<event name="OS::Scheduler::DisabledMPMsg" description="unknown">
+	<layerId value="OS" />
+	<classId value="Scheduler" />
+	<specifier value="DisabledMPMsg" />
+	<fields>
+		<field name="vtable" type="uint64" description="unknown"/>
+		<field name="data0"  type="uint64" description="unknown"/>
+	</fields>
+	<k42Format value='Disabled MP msg, vtable %0[%llx], data0 %1[%llx]' />
+</event>
+
+
+<event name="OS::Scheduler::IOCPUMoveOut" description="unknown">
+	<layerId value="OS" />
+	<classId value="Scheduler" />
+	<specifier value="IOCPUMoveOut" />
+	<fields>
+		<field name="thread" type="uint64" description="unknown"/>
+		<field name="ID"     type="uint64" description="unknown"/>
+	</fields>
+	<k42Format value='IO/CPU migrate out, thread %0[%llx], ID %1[%llx]' />
+</event>
+
+
+<event name="OS::Scheduler::IOCPUMoveIn" description="unknown">
+	<layerId value="OS" />
+	<classId value="Scheduler" />
+	<specifier value="IOCPUMoveIn" />
+	<fields>
+		<field name="thread" type="uint64" description="unknown"/>
+		<field name="ID" type="uint64" description="unknown"/>
+	</fields>
+	<k42Format value='IO/CPU migrate in, thread %0[%llx], ID %1[%llx]' />
+</event>
+
+
+<event name="OS::Scheduler::Delay" description="unknown">
+	<layerId value="OS" />
+	<classId value="Scheduler" />
+	<specifier value="Delay" />
+	<fields>
+		<field name="ticks" type="uint64" description="unknown"/>
+		<field name="caller1" type="uint64" description="unknown"/>
+		<field name="caller2" type="uint64" description="unknown"/>
+		<field name="caller3" type="uint64" description="unknown"/>
+		<field name="caller4" type="uint64" description="unknown"/>
+		<field name="caller5" type="uint64" description="unknown"/>
+	</fields>
+	<k42Format value='Delay, ticks %0[%llx], callers: 0x%1[%llx] 0x%2[%llx] 0x%3[%llx] 0x%4[%llx] 0x%5[%llx]' />
+</event>
+
+</PEM_Events>

@@ -1,0 +1,334 @@
+#!/bin/bash
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2002.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: runTest,v 1.3 2004/02/18 18:44:52 butrico Exp $
+# ############################################################################
+
+usage()
+{
+    echo "Usage: runTest [-t TRACE] [-p HWPERF] [-c KRNCTL]"
+    echo "               [-w] [-v] [-n] [-i] [-f] [-a]"
+    echo "-a	   -> abort after initial setup"
+    echo "-n	   -> disable network during test"
+    echo "-w       -> enable thinwire polling"
+    echo "-i       -> enable interception of NFS activity"
+    echo "-v       -> verbose"
+    echo "-r	   -> number of iterations"
+    echo "TRACE = trace mask to be used"
+    echo "HWPERF= if set, hwperf enabled, defines pc sample period"
+    echo "KRNCTL= KernelInfo::controlFlags value to be used (0xffff)"
+    echo 
+    echo "All parameters can be set from command-line or by setting the"
+    echo "environment variables identified above."
+}
+
+fsPrep() {
+(cd / ; /nfs/bin/cpio -p --make-directories --verbose /ram) <<EOF
+/etc/filesystems
+/etc/nsswitch.conf
+/etc/passwd
+/etc/profile
+/etc/ld.so.conf
+/bin/bash
+/bin/cat
+/bin/chmod
+/bin/cp
+/bin/cpio
+/bin/ed
+/bin/grep
+/bin/ln
+/bin/ls
+/bin/mkdir
+/bin/mv
+/bin/rm
+/bin/rmdir
+/bin/sh
+/bin/sort
+/bin/su
+/bin/sync
+/bin/touch
+/etc/group
+/etc/localtime
+/kbin/kernelControl
+/kbin/loadImage
+/kbin/sysctl
+/kbin/traceControl
+/kbin/tracedServer
+/klib/exec.so
+/klib/libk42sys.so
+/klib/libk42sys.so.1
+/lib64/libBrokenLocale.so.1
+/lib64/libanl.so.1
+/lib64/libcrypt.so.1
+/lib64/libdl.so.2
+/lib64/libm.so.6
+/lib64/libnsl.so.1
+/lib64/libnss_compat.so.2
+/lib64/libnss_dns.so.2
+/lib64/libnss_files.so.2
+/lib64/libnss_hesiod.so.2
+/lib64/libnss_nis.so.2
+/lib64/libnss_nisplus.so.2
+/lib64/libresolv.so.2
+/lib64/librt.so.1
+/lib64/libthread_db.so.1
+/lib64/libutil.so.1
+/sbin/ip
+/tmp
+/usr/bin/as
+/usr/bin/awk
+/usr/bin/date
+/usr/bin/diff
+/usr/bin/echo
+/usr/bin/env
+/usr/bin/expr
+/usr/bin/false
+/usr/bin/find
+/usr/bin/gcc
+/usr/bin/groff
+/usr/bin/grotty
+/usr/bin/id
+/usr/bin/ispell
+/usr/bin/ld
+/usr/bin/make
+/usr/bin/nroff
+/usr/bin/powerpc64-linux-gcc
+/usr/bin/pr
+/usr/bin/pwd
+/usr/bin/sed
+/usr/bin/seq
+/usr/bin/sleep
+/usr/bin/spell
+/usr/bin/tail
+/usr/bin/tee
+/usr/bin/test
+/usr/bin/time
+/usr/bin/tr
+/usr/bin/troff
+/usr/bin/true
+/usr/bin/wc
+/usr/bin/who
+/usr/bin/xargs
+/usr/include/_G_config.h
+/usr/include/bits/endian.h
+/usr/include/bits/pthreadtypes.h
+/usr/include/bits/sched.h
+/usr/include/bits/setjmp.h
+/usr/include/bits/sigset.h
+/usr/include/bits/stdio_lim.h
+/usr/include/bits/types.h
+/usr/include/bits/wchar.h
+/usr/include/bits/wordsize.h
+/usr/include/ctype.h
+/usr/include/endian.h
+/usr/include/features.h
+/usr/include/gconv.h
+/usr/include/gnu/stubs.h
+/usr/include/libio.h
+/usr/include/setjmp.h
+/usr/include/sys/cdefs.h
+/usr/include/stdio.h
+/usr/include/wchar.h
+/usr/lib/gcc-lib/powerpc64-linux/3.2.3/cc1
+/usr/lib/gcc-lib/powerpc64-linux/3.2.3/include/stdarg.h
+/usr/lib/gcc-lib/powerpc64-linux/3.2.3/include/stddef.h
+/usr/lib/gcc-lib/powerpc64-linux/3.2.3/include/stdio.h
+/usr/lib/gcc-lib/powerpc64-linux/3.2.3/specs
+/usr/lib/groff/font/devascii/B
+/usr/lib/groff/font/devascii/BI
+/usr/lib/groff/font/devascii/DESC
+/usr/lib/groff/font/devascii/I
+/usr/lib/groff/font/devascii/R
+/usr/lib/groff/tmac/hyphen.us
+/usr/lib/groff/tmac/man.local
+/usr/lib/groff/tmac/tmac.an
+/usr/lib/groff/tmac/tmac.latin1
+/usr/lib/groff/tmac/tmac.safer
+/usr/lib/groff/tmac/tmac.tty
+/usr/lib/groff/tmac/tmac.tty-char
+/usr/lib/groff/tmac/troffrc
+/usr/lib/groff/tmac/troffrc-end
+/usr/lib/ispell/american.hash
+/usr/lib/ispell/americanmed+.hash
+/usr/lib/ispell/americanxlg.hash
+/usr/lib/ispell/british.hash
+/usr/lib/ispell/britishmed+.hash
+/usr/lib/ispell/britishxlg.hash
+/usr/lib/ispell/english.aff
+/usr/lib/ispell/english.hash
+/usr/lib/libgcc_s.so
+/usr/lib/libgcc_s.so.1
+/usr/lib/libstdc++.so.5
+/usr/lib/libstdc++.so.5.0.3
+EOF
+cd /knfs/tmp;
+for i in ld64.so.1 libc.so.6 libpthread.so.0 ; do
+    cp /lib64/$i . ;
+    strip -S $i;
+    cp $i /ram/lib64/ ;
+done
+
+}
+
+: ${KRNCTL="0xffff"}
+
+# MAA - as far as I can tell, the only way to get bash to honor quoted
+# strings in the input is to use "$@" here - you can't assign the string
+# to anything else.
+# using "$@" here lets -s '2 4 6' work.
+
+while getopts awt:p:c:r:o:s:vnif OPT "$@" ; do
+    case $OPT in
+    a)
+	export ABORTEARLY="yes";;
+    t)
+	TRACE=$OPTARG;;
+    p)
+	export HWPERF=$OPTARG;;
+    c)
+	export KRNCTL=$OPTARG;;
+    n)
+	export NONET=1;;
+    r)
+	export REPEAT=$OPTARG;;
+    o)  
+	export OUTPUTNAME=$OPTARG;;
+    s) 
+	export RUNSERIES="$OPTARG";;
+    w)
+        export DOPOLLING=1;;
+    i)
+        export INTERCEPTNFS=1;;
+    v)  
+	export VERBOSE=1;;
+    ?)
+	echo Unknown arg: $OPTIND ;
+	usage;
+	exit 1;;
+    esac
+done
+
+if [ "$VERBOSE" ]; then
+    echo TRACE =$TRACE
+    echo HWPERF=$HWPERF
+    echo KRNCTL=$KRNCTL
+    echo FSIMAGE   =$FSIMAGE
+    echo OUTPUTNAME=$OUTPUTNAME
+    echo RUNSERIES =$RUNSERIES 
+fi
+
+
+: ${INITFLAGS:=0xffff}
+/kbin/kernelControl $INITFLAGS
+
+if [ ! -e /ram/init ] ; then
+    echo Turning nfs revalidation off
+    /knfs/kbin/nfsRevalidation off;
+    /knfs/kbin/discardCachedPages /knfs/kbin/nfsRevalidation ;
+    /knfs/kbin/discardCachedPages /usr/bin/id ;
+    cd /ram
+    fsPrep ;
+    cp -a /klib /ram/
+    cp -a /kbin /ram/
+    mkdir /ram/home
+    mkdir /ram/home/pftest
+    cp -a /knfs/home/pftest/* /ram/home/pftest/
+    cp /knfs/tests/linux/ppCount /ram/kbin/
+    cd /ram/tmp;
+    for i in ld64.so.1 libc.so.6 libpthread.so.0 ; do
+	cp /ram/lib64/$i . ;
+	strip -S $i;
+	cp $i /ram/lib64/ ;
+	rm $i
+    done
+
+    /knfs/kbin/bindFS /ram /;
+    /kbin/discardCachedPages /knfs/kbin/bindFS ;
+    touch /ram/init;
+    exec /kbin/longexec /home/pftest/runTest "$@";
+fi
+
+if [ "$ABORTEARLY" ] ; then
+    exit;
+fi
+
+export PATH=$PATH:/kbin
+
+test -d /ram/tmp && test ! -f /ram/tmp/grepfile && \
+(
+    cd /ram/tmp
+    rm -rf a b
+    echo "This test line is exactly 64 characters long, including newline" > a
+    cat a a a a a a a a > b		# 512 bytes
+    cat b b b b b b b b > a		# 4 kbytes
+    cat a a a a a a a a > b		# 32 kbytes
+    cat b b b b b b b b > a		# 256 kbytes
+    cat a a a a a a a a > b		# 2 mbytes
+    cat b b b b b b b b > a		# 16 mbytes
+    cat a a a a a a a a > b		# 128 mbytes
+    mv b grepfile
+    rm a
+)
+
+kernelControl $KRNCTL
+
+if [ "$TRACE" ] ; then
+    echo 0x00000 >/ksys/traceMask;
+    traceControl --reset --vp 1;
+    export TRACE;
+fi
+
+# disable thinwire polling
+if [ "$DOPOLLING" ] ; then
+    echo 1 > /ksys/wireDaemon
+else
+    echo 0 > /ksys/wireDaemon
+fi
+
+# enable breakpoints on NFS methods so we can intercept NFS activity
+if [ "$INTERCEPTNFS" ] ; then
+# paging in this whole file so that if 
+    echo 1 > /ksys/interceptNFS
+else
+    echo 0 > /ksys/interceptNFS
+fi
+
+if [ "$NONET" ] ; then
+    ip link set eth0 down;
+fi
+
+
+: ${CPUS:=`/knfs/tests/linux/ppCount`}
+cd /home/pftest
+test -f results && rm -f results
+
+
+for i in `seq $REPEAT` ;do 
+    spread -s 5 $CPUS grep "^nomatch" /ram/tmp/grepfile >>results
+done
+
+
+# re-enable thinwire polling
+echo 1 > /ksys/wireDaemon
+
+# disable interception of NFS activity
+echo 0 > /ksys/interceptNFS
+
+grep "cpus:" results
+grep "cpus:" results >>/knfs/home/pftest/results
+
+if [ "$NONET" ] ; then
+    ip link set eth0 up;
+    ip route add default via 9.2.208.2;
+fi
+
+if [ "$TRACE" ] ;then
+    /kbin/tracedServer --dump
+fi
+

@@ -1,0 +1,227 @@
+# K42: (C) Copyright IBM Corp. 2001.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the license along with K42; see the file
+# LICENSE.html in the top-level directory for more details.
+#
+# $Id: config.tcl.src,v 1.1 2001/06/12 21:53:22 peterson Exp $
+
+annotation type pc symbol
+annotation type pre-pc symbol
+annotation type load symbol
+annotation type store symbol
+annotation type cycle num
+annotation type utlb none
+annotation type exc enum {
+    intr  mod  rmiss  wmiss rade  wade  ibe  dbe
+    syscall break  ii  cpu ov  trap  vcei  fpe
+    {}  {}  {}  {} {}  {}  {}  watch
+    {}  {}  {}  {} {}  {}  {}  vced }
+annotation type inst enum {rfe}
+annotation type simos enum  { periodic enter exit sigusr }
+annotation type scache enum { instr read write upg sc_upg }
+
+
+#
+# MACHINE:
+#
+    if {!$SIMOS(RestoringCpt)} {
+	# Number of machines to simulate?
+	set PARAM(MACHINE.Count)   1
+    }
+
+#
+# CPU:
+#
+#   You can dynamically switch between CPU simulators. The model
+#   determines which one you start in.
+#
+    if {!$SIMOS(RestoringCpt)} {
+        # Number of processors to simulate
+        set PARAM(CPU.Count)   $env(K42_SIMOS_CPUS)
+    }
+
+    # Which instruction set architecture... currently only MIPS
+    set PARAM(CPU.ISA)            "PPC"
+
+    # Clock speed in MHz.
+    set PARAM(CPU.Clock)          200
+
+    # Which cpu simulator to start in. (EMBRA_PAGE, EMBRA_CACHE, MIPSY)
+    if {$SIMOS(EmbraPresent)} {
+       set PARAM(CPU.Model)          EMBRA_PAGE
+    } else {
+       set PARAM(CPU.Model)          PPC_SIMPLE
+    }
+
+    if {!$SIMOS(RestoringCpt)} {
+	set PARAM(MEMSYS.MemSize) $env(K42_SIMOS_MEM)
+    }
+
+    set PARAM(CACHE.2Level.L2Line) 128
+
+    set PARAM(MISC.CyclesPerInstruction) 3
+
+
+#
+# CACHE:
+#
+#   2Level is currently the only type of cache model we support. 2Level
+#   consists of separate level 1 instruction and data caches and a
+#   unified level 2 cache. Additionally, there is a configurable write buffer.
+#
+    set PARAM(CACHE.Model)      2Level
+
+  #
+  # 2Level specifics
+  #
+    # Size (in kilobytes) of the 1st level instruction cache
+     set PARAM(CACHE.2Level.ISize)   64
+    # Size (in bytes) of a 1st level instruction cache line
+     set PARAM(CACHE.2Level.ILine)   128
+    # Associativity of 1st level instruction cache
+     set PARAM(CACHE.2Level.IAssoc)   4
+    # Size (in bytes) of a 1st level instruction cache block
+     set PARAM(CACHE.2Level.IBlock)   128
+
+    # Size (in kilobytes) of the 1st level data cache
+     set PARAM(CACHE.2Level.DSize)   64
+    # Size (in bytes) of a 1st level data cache line
+     set PARAM(CACHE.2Level.DLine)   64
+    # Associativity of 1st level data cache
+     set PARAM(CACHE.2Level.DAssoc)   4
+    # Size (in bytes) of a 1st level data cache block
+     set PARAM(CACHE.2Level.DBlock)  32
+
+    # Size (in kilobytes) of the 2nd level unified cache
+     set PARAM(CACHE.2Level.L2Size)  4096
+    # Size (in bytes) of a 2nd level cache line
+     set PARAM(CACHE.2Level.L2Line)   128
+    # Associativity of 2nd level unified cache
+     set PARAM(CACHE.2Level.L2Assoc)     2
+
+    # Time (in nanoseconds) for a 2nd level cache hit
+     set PARAM(CACHE.2Level.L2HitTime)        50
+
+    # The write buffer allows non-blocking writes. 0 turns off the buffer.
+     set PARAM(CACHE.2Level.WriteBufferSize) 0
+
+    #
+     set PARAM(CACHE.2Level.UpgradesOnUP)    0
+
+#
+# CONSOLE:
+#
+#
+     if {!$SIMOS(RestoringCpt)} {
+         # Number of consoles
+         set PARAM(CONSOLE.Count) $env(K42_SIMOS_CPUS)
+     }
+
+     set PARAM(CONSOLE.Port) $env(K42_SIMOS_CONSOLE_PORT)
+     set PARAM(CONSOLE.SlaveTimeOut) 600
+
+#
+# DISK:
+#
+#   We currently support two disk models
+#   * HP - an accurate model of the HP 97560 disk drive
+#   * Fixed - all disk accesses incur a fixed latency
+#
+
+    # set PARAM(DISK.Model) HP
+     set PARAM(DISK.Model) Fixed
+
+  #
+  # HP-disk specifics
+  #
+    # All aspects of the HP disk can be sped up. This value is the
+    # percentage of the original model that latencies should measure.
+      set PARAM(DISK.HP.Scaling)    100
+
+  #
+  # Fixed-disk specifics
+    # All disk accesses take this many milliseconds
+     set PARAM(DISK.Fixed.Latency)    1
+
+  #
+  # "SimpleDisk" due to Sean Lisse -- delay times in usec
+  #
+     set PARAM(DISK.SimpleDisk.DiskSeqMin) 330
+     set PARAM(DISK.SimpleDisk.DiskSeqMax) 360
+     set PARAM(DISK.SimpleDisk.DiskRandMin) 700
+     set PARAM(DISK.SimpleDisk.DiskRandMax) 5000
+
+#
+# ETHERNET:
+#
+#   We only have one model of ethernet right now.
+#
+     if {!$SIMOS(RestoringCpt)} {
+         # Number of ethernet controllers
+         set PARAM(ETHERNET.Count)  1
+     }
+
+      set PARAM(ETHERNET.Model)                  EtherSim
+
+    # Hardware ethernet address. Be sure to have a different address
+    # when two simulations are running.
+     set PARAM(ETHERNET.EtherSim.Address) $env(K42_SIMOS_ETHER_ADDR)
+
+    # The machine that is running ethersim
+     set PARAM(ETHERNET.EtherSim.Hostname) $env(K42_SIMOS_ETHERTAP_HOST)
+
+    # The port to which ethersim will communicate
+     set PARAM(ETHERNET.EtherSim.Port) $env(K42_SIMOS_ETHERTAP_PORT)
+
+    # For determinism you will need to make ethernet inactive. A randomly
+    # arriving packet can skew the run.
+     set PARAM(ETHERNET.EtherSim.Active) $env(K42_SIMOS_ETHER)
+
+#
+# IP:
+#
+
+    # These 4 parameters are used for the simulated ethernet network.
+    # Note: Each running version of SimOS MUST have its own unique IP
+    # address and hostname (though hostname isn't as important since
+    # I don't believe anything currently uses it).
+    set PARAM(IP.Address)       $env(K42_IP_ADDRESS)
+    set PARAM(IP.NetMask)	$env(K42_IP_NETMASK)
+    set PARAM(IP.Default)	$env(K42_IP_ROUTER)
+    set PARAM(IP.Hostname)	$env(K42_IP_HOSTNAME)
+
+#
+# DEBUG:
+#
+    set PARAM(DEBUG.Port) $env(K42_SIMOS_DEBUG_PORT)
+    set PARAM(DEBUG.LoopOnError) 0
+
+#
+# FILES:
+#
+#   Where to find and place simulator related files. You will need
+#   plenty of disk space for taking checkpoints.
+#
+    # When you take a checkpoint, all of the files will end up here.
+     set PARAM(FILES.CptDir)           .
+
+    # The checkpoint files will be named CPT.xxx.count where this is xxx
+     set PARAM(FILES.CptTag)           "NOTAG"
+
+    # Turns compression on for the checkpoint memory file
+     set PARAM(FILES.CptCompress)    no
+
+    # Location from which the
+     set PARAM(FILES.MemFileDir)       .
+
+    # SimOS looks here for DISKn when mounting under SimOS
+     set PARAM(FILES.DevFileDir)       .
+
+    # If this is set, cpu log files will be saved as cpu.log.<number>
+    set PARAM(FILES.SaveOldCPULogs)   no
+
+    #
+     set PARAM(FILES.FPROMFile)       ""
+

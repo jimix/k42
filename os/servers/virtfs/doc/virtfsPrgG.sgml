@@ -1,0 +1,81 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2002.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+-->
+<title>VirtFS Implementation</title>
+
+<para>
+  The management of file information is very simple in VirtFS, since
+  no persistent storage is needed.
+</para>
+
+<para>
+  Classes FileInfoVirtFS and FileInfoVirtFSDir (
+  <ulink url="../FileInfoVirtFS.H"<filename>FileInfoVirtFS.H</filename></ulink>,
+  <ulink url="../FileInfoVirtFS.C"<filename>FileInfoVirtFS.C</filename></ulink>)
+  define the data structures representing files and directories.
+</para>
+
+<para>
+  Class FileSystemVirtFS (
+  <ulink url="../FileSystemVirtFS.H"<filename>FileSystemVirtFS.H
+    </filename></ulink>,
+  <ulink url="../FileSystemVirtFS.C"<filename>FileSystemVirtFS.C
+    </filename></ulink>) implements K42's file system interface (which
+  is VFS-like, as expected). The implementation is very simple.
+  So far methods chmod, chown, utime are not supported (but it's
+  straightforward to implement them).
+</para>
+
+<para>
+  Class ServerFileVirtFS (<ulink url="../ServerFileVirtFS.H"<filename>
+      ServerFileVirtFS.H</filename></ulink>,
+  <ulink url="../ServerFileVirtFS.C"<filename>
+      ServerFileVirtFS.C</filename></ulink>) is very simple. On initialization
+  time, it creates a stub to be used to delegate operations to the server
+  object corresponding to the file. It defines _read(), _write(), _open()
+  to perform the delegation (besides doing other things, like maintaining
+  file offset). It also delegates close() operations (i.e., when a 
+  client of the ServerFileVirtFR object goes away, it invokes the server
+  object close()).
+</para>  
+
+<para>
+Other related files:
+  <itemizedList>
+    <listitem><simpara><ulink url="&topsrc/lib/libc/io/FileLinuxVirtFile.H">
+	  <filename>FileLinuxVirtFile.H</filename></ulink>,
+	<ulink url="&topsrc/lib/libc/io/FileLinuxVirtFile.C">
+	  <filename>FileLinuxVirtFile.C</filename></ulink>:
+	defines the read/write
+	routines for the IO library (in the client space). 
+      </simpara>
+    </listitem>
+    <listitem> <simpara> <ulink url="&topsrc/usr/testVirtFile.C"><filename>
+	    testVirtFile.C</filename></ulink>: test program to create a virtual
+	file (as described in <xref linkend="example">)
+      </simpara>
+    </listitem>
+    <listitem> <simpara>
+	<filename>virtfs-regress.sh</filename> in 
+	<ulink url="&topsrc/kitch-linux/tests/linux/">
+	  <filename>kitch-linux/tests/linux/</filename></ulink>:
+	script for simple
+	testing of virtfs (not intended to become an automatic test, but
+	it is useful as a batch of tests to be run)
+      </simpara>
+    </listitem>
+  </itemizedlist>
+</para>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./virtfs.sgml" "chapter" "title")
+End:
+-->

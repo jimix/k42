@@ -1,0 +1,74 @@
+/*
+ * K42: (C) Copyright IBM Corp. 2001.
+ *  All Rights Reserved
+ *
+ * This file is distributed under the GNU LGPL. You should have
+ * received a copy of the license along with K42; see the file LICENSE.html
+ * in the top-level directory for more details.
+ *
+ * $Id: SystemCalls.dot,v 1.1 2002/03/13 21:41:59 jimix Exp $
+ */
+
+digraph libc {
+  graph [size="6,3"];
+  graph [color=black];
+  node [style=filled, color=black, fillcolor=white];
+
+  subgraph cluster_linux {
+    label="Glibc and Linux";
+    // Nodes
+    subgraph lk_syscalls {
+      lk_open    [label="open(2)"];
+      lk_read    [label="read(2)"];
+      lk_socket  [label="socket(2)"];
+    };
+    subgraph cluster_lk {
+      graph [label="Linux Kernel"];
+      graph [bgcolor=gray95];
+
+      subgraph lk_serv {
+	node [shape=box];
+	lk_vfs     [label="VNodes"];
+	lk_mem     [label="Page\nCache"];
+	lk_net     [label="TCP"];
+      };
+      lk_syscall [label="System Call\nMechanism", shape=trapezium];
+    };
+    lk_open -> lk_syscall;
+    lk_read -> lk_syscall;
+    lk_socket -> lk_syscall;
+    lk_syscall-> lk_vfs;
+    lk_syscall-> lk_mem;
+    lk_syscall-> lk_net;
+
+  };
+
+  subgraph cluster_k42 {
+    label="Glibc and K42";
+    subgraph k42_syscalls {
+      k42_open    [label="open(2)"];
+      k42_read    [label="read(2)"];
+      k42_socket  [label="socket(2)"];
+    };
+    subgraph k42_libc {
+      node [shape=box];
+      _k42_open    [label="__k42_libc_open()"];
+      _k42_read    [label="__k42_libc_read()"];
+      _k42_socket  [label="__k42_libc_socket()"];
+    };
+    subgraph k42_objs {
+      node [shape=house];
+      fl_obj [label="FileLinux"];
+      ip_obj [label="FileLinuxSocket"];
+    };
+    subgraph cluster_k42_kernel {
+      graph [bgcolor=gray95];
+      node [shape=house];
+      label="K42 Kernel";
+      fr_obj [label="File Rep"];
+    };
+    k42_open   -> _k42_open   -> fl_obj;
+    k42_read   -> _k42_read   ->fr_obj;
+    k42_socket -> _k42_socket -> ip_obj;
+  };
+};

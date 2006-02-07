@@ -1,0 +1,19 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.16 2004/03/14 14:50:09 mostrows Exp $
+# ############################################################################
+
+PWRPCHDR  = $(ARCHINCS) elf.H asdef.h trap.h pwrPC.H simSupport.H bits.h
+
+install_includes::
+	$(INSTALL_INC) $(INCDIR)/misc/arch/powerpc/   arch/powerpc/   $(PWRPCHDR)
+
+LIBCSRCS += volatileFrame.S expedient.S fpr_save_restore.S simSupport.C
+LIBKSRCS += volatileFrame.S expedient.S fpr_save_restore.S simSupport.C
+

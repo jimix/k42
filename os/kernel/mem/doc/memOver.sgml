@@ -1,0 +1,76 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: memOver.sgml,v 1.3 2001/11/20 20:48:07 marc Exp $
+-->
+<title>Mem overview guide goes here</title>
+<section><title>Pagout</title>
+  <para>
+    The PM subsystem maintains lists of FCM's that are pageout
+    candidates because they have no users.  The FCM places itself on
+    the list when it has no users, removes itself if it gets a new
+    user, or when it is destroyed.  We call this the pageout candidate
+    list.  For now, its global, but the FCM talks to its own PM to
+    manipulate the list, so we can distribute it in the future.
+    </para>
+  <para>
+    Eventually, we need to page under memory pressure when this list
+    is empty.  Also, we need to avoid freeing everything on this list
+    first since recent arrivals may be sequentially shared files.
+    </para>
+  <para>
+    When an FCM is chosen to be freed, it will free all its frames if
+    it is small, or some if it is large.  In either case, when all the
+    frames are gone, the FCM will inform the FR, which will initiate a
+    destroy of the FR/FCM pair.
+    </para>
+  <para>
+    We also run a cleaning mechanism whose role is to bound the number
+    of dirty pages.  We expect to clean pages for several other goals
+    as well - the 30 sync guarantee of Unix as well as more complete
+    cleaning when no other IO is happening (or maybe we just keep
+    cleaning always).
+    </para>
+  <para>
+    We will not keep a large free list, since we have no reclaim.  If
+    we run out of frames, we will find an FCM which can give us some.
+    This should be reasonably cheap, since we will keep lists of FCM's
+    which are good candidates.
+    </para>
+  <para>
+    It is not clear that bounding the number of dirty frames helps
+    forward progress, but either at the bound or when all frames are
+    dirty page faults start to delay until pages can be freed.  On
+    reason to bound the number of dirty pages is to avoid having
+    kernel allocates of pinned memory for other reasons block.  If we
+    keep a reasonably large pool of clean pages this won't happen.
+    </para>
+</section>
+<!--
+Local Variables:
+sgml-validate-command: "nsgmls -s %s %s"
+gml-indent-data: t
+sgml-insert-missing-element-comment: t
+End:
+-->
+<!--  LocalWords: IOComplete VSID itemizedlist IPC FCM Pagable customizability
+-->
+<!--  LocalWords:  Pageable SegmentHAT Meg VSID SegmentHAT's FCM FR listitem PPC
+ -->
+<!--  LocalWords:  para unmap FR unmapping mmap MMU TLB xref linkend lazyclose
+ -->
+<!--  LocalWords:  creatingregions FRCRW FCMCRW offloaded multiprocessor FCM's
+ -->
+<!--  LocalWords:  scalability interprocess PowerPC unblocks read-only mprotect
+ -->
+<!--  LocalWords:  remapping unmapped LRU PM's deallocate filesystem FR's NFS
+ -->
+<!--  LocalWords:  MMU's subtree HAT's allocator multiprocessors NUMA optimizes
+ -->
+<!--  LocalWords:  attachRegion objectsfigure
+ -->

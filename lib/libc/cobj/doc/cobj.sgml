@@ -1,0 +1,30 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: cobj.sgml,v 1.4 2001/10/30 17:17:05 peterson Exp $
+-->
+<!doctype book PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!entity topsrc "../../../..">
+<!entity % cobj.ent SYSTEM "cobj.ent">
+%cobj.ent;
+]>
+<!-- $Id: cobj.sgml,v 1.4 2001/10/30 17:17:05 peterson Exp $ -->
+<book id="K42">
+  <chapter id="cobjOver">
+    &cobjOver;
+    <section>
+      &sysOver;
+    </section>
+  </chapter>
+  <chapter id="cobjPrgG">
+    &cobjPrgG;
+    <section>
+      &sysPrgG;
+    </section>
+  </chapter>
+</book>

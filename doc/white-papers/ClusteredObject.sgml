@@ -1,0 +1,1296 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: ClusteredObject.sgml,v 1.3 2001/10/18 17:51:05 bob Exp $
+-->
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+
+<!-- To disable review comments replace INCLUDE with IGNORE -->
+<!ENTITY % review "INCLUDE" >
+
+<!-- CVS gives us these -->
+<!ENTITY user "$Author: bob $">
+<!ENTITY date "$Date: 2001/10/18 17:51:05 $">
+<!ENTITY revision "$Revision">
+
+<!-- define and read in entities from this file -->
+<!ENTITY % wp.ent SYSTEM "wp.ent">
+%wp.ent;
+]>
+
+
+<article status="draft" lang="en">
+  <title>K42 Clustered Objects</title>
+  &K42ArtHeader;
+
+  <abstract>
+    <para>
+      The major objects in K42 are implemented as Clustered Objects.  Clustered
+      Objects (COs) are a partitioned object model which supports both shared
+      and distributed implementations.  Transparent to the client of an CO the
+      invocation of methods on a set of processors (or cluster) can be
+      directed to a cluster-unique representative of the CO.  If there is one
+      representative for all processors then the CO,like a standard C++
+      object, is considered to be shared.  At the other extreme is is possible
+      that a Clustered Object has a seperate representative for each
+      processor.  In this case invocations of the object on different
+      processors will be directed to processor specific representatives.
+     </para> 
+
+     <para>
+      This white paper presents the Clustered Object model and briefly
+      describes the infrastructure that enables it.  This includes creation,
+      access and destruction (which utilizes a semi-automatic distributed
+      garbage collection scheme).
+     </para>
+  </abstract>
+
+  <section id="intro">
+    <title>Introduction & Motivation</title>
+    <para>
+      The development of high-performance parallel systems software is a
+      difficult task. The concurrency and locality management needed for
+      good performance can add considerable complexity.  Clustered
+      Objects were developed as a model of {\it partitioned objects} to
+      simplify the task of designing high-performance shared memory
+      multiprocessor (SMP) systems software.  In the partitioned object
+      model, an externally visible object is composed of a set of
+      distributed representative objects.  Each representative object
+      locally services requests, possibly collaborating with one or more
+      other representatives.  Cooperatively all the representatives
+      implement the complete functionality of the Clustered Object. The
+      distributed nature of Clustered Objects make them ideally suited
+      for the design of multiprocessor system software, which often
+      requires a high degree of modularity and yet benefits from the
+      sharing, replicating and partitioning of data on a per-resource
+      (object) basis.  Clustered Objects are similar to other
+      partitioned object models, such as Fragmented Objects
+      <citation>Makpangou-etal94</citation><citation>bruncottan95</citation>
+      and Distributed Shared
+      Objects<citation>SHT97</citation><citation>Homburg95</citation>,
+      although the latter have focused on the requirements of (loosely
+      coupled) distributed environments; Clustered Objects are designed
+      for (tightly coupled) shared memory systems.
+    </para>
+
+    <para>
+      Based on our experience so far, Clustered Objects are able to
+      exploit the advantages of object-oriented technology and yet at
+      the same time can support fine-grain SMP optimizations needed for
+      good performance.  Clustered Object implementations are able to
+      achieve the same performance advantages as hand-optimized
+      implementations.  We found that it is possible to create a family
+      of Clustered Objects consisting of different implementations, each
+      with the same external interface, but each tuned for a different
+      access pattern.
+    </para>
+    <!-- FIXME: Tie this into K42 building block approach} -->
+
+    <para>
+      To fully utilize multi-processor architectures, three issues require
+      special attention:
+      <itemizedlist spacing="compact">
+        <listitem>
+          <formalpara> <title>Concurrency:</title>
+            <para>
+              Software must exploit concurrency to fully utilize the
+              processing resources of an SMP.  Concurrent processes then
+              use shared memory to cooperate.  However, concurrent
+              updates to shared data must be controlled to ensure
+              serialization.  The addition of synchronization in the
+              form of locks and other atomic primitives can be used to
+              control concurrency. Deciding where to add synchronization
+              and what type of synchronization to use can be nontrivial.
+              Too coarse a strategy can lead to highly contended locks
+              and limited concurrency.  On the other hand, too fine a
+              strategy can lead to excessive overheads due to having to
+              acquire and release many locks.  Often, a complete
+              redesign of an algorithm and its data structures can
+              significantly reduce the amount of shared data and hence
+              the need for synchronization.
+	    </para>
+          </formalpara>
+        </listitem>
+          
+        <listitem>
+          <formalpara> <title>Cache Misses:</title>
+            <para>
+              Efficient use of caches is critical to good performance
+              for two reasons.  Firstly, a low cache miss rate ensures
+              that processors do not spend large amounts of time
+              stalling on memory accesses.  Secondly, it reduces the
+              traffic on shared system busses.  With per-processor
+              caches, processors accessing data on the same cache line,
+              either because the data is being shared directly or
+              because it is being shared falsely
+              <footnote>
+                <para>
+                  False sharing is the accessing of different data
+                  elements that happen to reside on the same cache line.
+                </para>
+              </footnote>
+              , causes the line to be replicated into multiple caches.
+              Sharing of cache lines causes an increase in consistency
+              overhead and cache misses
+              <footnote>
+                <para>
+                  To be more precise, invalidation-based cache coherence
+                  protocols require that a processor writing to a line
+                  obtain ownership of the line if it does not already
+                  own it (upgrade miss).  This results in the
+                  invalidation of all copies of the line in other
+                  processors' caches.  Thus all other processors will
+                  suffer a miss (sharing miss) on a subsequent access to
+                  the line.
+                </para>
+              </footnote>
+              . Avoiding shared data and carefully laying out data
+              in memory to avoid false sharing can reduce cache line
+              sharing and the associated increase in overheads
+              substantially.
+	    </para>
+          </formalpara>
+        </listitem>
+        
+        <listitem>
+          <formalpara> <title> Remote Memory Access:</title>
+	    <para>
+              to achieve good performance, the extra costs of remote
+              memory accesses must be avoided.  Caches can help to
+              reduce the cost of remote accesses, but do not eliminate
+              the costs completely.  The first access to a remote data
+              element must pay the extra costs.  Additionally, true and
+              false read/write sharing can force invalidation of locally
+              cached copies of remote data.  Avoiding of shared data and
+              carefully placing data in the memory modules closest to
+              the processors that access the data can reduce the number
+              of remote memory accesses.
+	    </para>
+          </formalpara>
+        </listitem>
+        
+      </itemizedlist>
+    </para>
+    
+    <para>
+      The term <emphasis>locality management</emphasis> refers to the
+      combination of increasing concurrency, reducing cache misses and
+      reducing remote memory accesses. Gamsa et <abbrev>al.</abbrev>
+      have outlined a set of design principles for developing software
+      that manages locality <citation>gkps96</citation>, 
+      the main points of which are:
+      
+      <itemizedlist>
+        
+        <listitem>
+          <para>Concurrency</para>
+          <itemizedlist>
+            <listitem>
+              <para>
+                Replicate read locks and implement write locks as a
+                union of the read locks.  This increases concurrency
+                by making the locks finer grained.
+              </para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+        
+        <listitem>
+          <para>Cache Misses</para>
+          <itemizedlist>
+            <listitem>
+              <para>
+                Segregate read-mostly data from frequently modified data to 
+                reduce misses due to false sharing.
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                Segregate independently accessed data to eliminate
+                false sharing.
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                Replicate write-mostly data to reduce sharing.
+              </para>
+            </listitem>
+            <listitem> 
+              <para>
+                Use per-processor data wherever possible to avoid sharing.
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                Segregate contended locks from their associated,
+                frequently modified data. This avoids lock contenders
+                interfering with the lock holder.
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                Co-locate un-contended locks with their associated
+                data to better utilize spatial locality and reduce the
+                number of cache misses.
+              </para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+        
+        <listitem>
+          <para>Remote Memory Accesses</para>
+          <itemizedlist>
+            <listitem>
+              <para>
+                Ensure read-mostly data is replicated into
+                per-processor memory.
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                Migrate read/write data between per-processor memory
+                if accessed primarily by one processor.
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                Replicate write-mostly data where possible and ensure
+                replicas are in per-processor memory.
+              </para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+        
+        <listitem>
+          <para>Algorithmic</para>
+          <itemizedlist>
+            <listitem>
+              <para>
+                Use Approximate local information rather than exact
+                global information.  
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                Avoid Barriers
+              </para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+        
+      </itemizedlist>
+    </para>
+    
+    <para>
+      Replication, partitioning, migration and data placement are the
+      key techniques advocated to implement these principles.
+      Replication refers to the creation of local copies of data that
+      can be locked and accessed locally.  Partitioning is similar to
+      replication but splits data into local components rather than
+      making copies. Migration allows data to be moved to a location
+      that provides greatest locality.  Data placement refers to the use
+      of padding and custom allocation routines to control where data is
+      placed on cache lines and in the system's memory modules.
+      Applying these techniques to existing software can be non-trivial
+      and substantially increase the complexity of the software.
+
+      </para>
+
+  </section>
+
+  <section id="co">
+    <title>Clustered Objects</title>
+    <section><title>What they are</title>
+      <para>
+        Clustered Objects extend traditional objects so that it is
+        possible to provide multiprocessor optimizations while
+        maintaining a common object-oriented interface and were first
+        described by Parsons et <abbrev>al.</abbrev> in
+        <citation>pgks95</citation>.  While Object Oriented technology
+        provides for clear separation between interface and
+        implementation through encapsulation and information hiding ---
+        it is easy to replace one implementation with another, without
+        affecting the clients of a given object --- traditional Object
+        Oriented approaches do not provide any standard means for
+        implementing multiprocessor optimizations behind a fixed
+        interface.  Clustered Objects provide exactly that.
+      </para>
+
+      <para>
+        A Clustered Object appears externally as a regular (C++ like)
+        object to its clients.  Internally, however, it is constructed
+        out of one or more representative objects, each associated with
+        a specific subset of processors.  Clustered Objects share three
+        important aspects in common with standard objects:
+        <orderedlist>
+          <listitem>
+            <para>
+              a single, well-defined interface;
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              a unique reference for identifying each instance; and
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              an internal structure that is completely hidden from clients.
+            </para>
+          </listitem>
+        </orderedlist>
+        The unique features of Clustered objects are:
+        <orderedlist>
+          <listitem>
+            <para>
+              Internally, the representative objects that implement a
+              Clustered Object cooperate to replicate, partition and/or
+              migrate the data with the goal of increasing locality.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Client accesses to the Clustered Object are transparently
+              directed to a local point of access, namely the internal
+              representative object associated with the processor on
+              which the access is being made.
+            </para>
+          </listitem>
+        </orderedlist>
+      </para>
+
+      <para>
+        The internal <emphasis>representatives</emphasis> objects are
+        standard C++ objects and are typically instantiated on first
+        use. 
+        <footnote>
+          <para>
+            It is also possible to instantiate all reps when the CO is
+            instantiated. 
+          </para> 
+        </footnote>
+        Together, the representatives of a Clustered Object implement
+        the functionality of the Clustered Object.  Representatives are
+        free to share and cooperate by any means available, including
+        the use of shared memory and remote procedure calls.  It is up
+        to the implementor to maximize locality and minimize global
+        interaction whenever possible.
+      </para>
+
+      <para>
+	The next section outlines the details of the Clustered Object
+	model.  It is followed by a section which overviews the internal
+	system mechanisms of K42 that support Clustered Objects.  The
+	last section describes the class representation for the
+	development of Clustered Objects.
+      </para>
+    </section>
+
+    <section id="com">
+      <title>The Clustered Object Model</title>
+      <para>
+        This section describes the general Clustered Object model, which
+        was based on the Tornado operating system's support for
+        partitioning objects within an address space.
+      </para>
+
+
+      <figure float="1" id="oop">
+        <title>Abstract View of an OO System</title>
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="figures/COoop.eps"
+                       format="eps" align="center">
+          </imageobject>
+          <imageobject>
+            <imagedata fileref="figures/COoop.jpg"
+                       format="jpg" align="center">
+          </imageobject>
+          <textobject>
+	    <simpara>Picture not available.</simpara>
+	  </textobject>
+          <caption>
+            <simpara>
+              Abstract view of a traditional object-oriented system.
+            </simpara>
+          </caption>
+        </mediaobject>
+      </figure>
+
+      <para>
+        The Clustered Object model is a partitioned object model for
+        shared memory multiprocessors.  In a traditional,
+        object-oriented model, a software system is designed as a set of
+        well-defined independent objects.  Encapsulation, information
+        hiding and separation between interface and implementation are
+        key features in this model.  Every object exports an
+        <quote>external</quote> interface to the other objects in the system,
+        completely hiding their internal structures.  Figure
+        <xref linkend="oop"/> illustrates an abstract view of a system composed
+        of three objects.  Each object has an external interface which
+        is represented by the shaded portion. The external interface is
+        composed of individual methods that can be invoked by other
+        objects in the system and are represented as the partitions in
+        the shaded portion.  At the core of each object is its internal
+        data, represented by the unshaded part at the center of each
+        object.  The methods of an individual object can access its
+        internal data, but methods of other objects cannot.
+      </para>
+
+      <figure float="1" id="abstractCO">
+        <title>Abstract view of a Clustered Object system</title>
+	<mediaobject>
+	  <imageobject>
+	    <imagedata fileref="figures/COabstract.eps"
+		       format="eps" align="center" scale="40">
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="figures/COabstract.jpg"
+		       format="jpg" align="center">
+	  </imageobject>
+	  <textobject>
+	    <simpara>Picture not available.</simpara>
+	  </textobject>
+	</mediaobject>
+      </figure>
+
+      <figure float="1" id="unrolled">
+        <title>Internal abstract view of a Clustered Object</title>
+	<mediaobject>
+	  <imageobject>
+	    <imagedata fileref="figures/COunrolled.eps"
+		       format="eps" align="center" scale="80">
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="figures/COunrolled.jpg"
+		       format="jpg" align="center">
+	  </imageobject>
+	  <textobject>
+	    <simpara>Picture not available.</simpara>
+	  </textobject>
+          <caption>
+            <simpara>
+              Each dash-lined box represents a cluster of
+              processors. The filled circles represent
+              processors. Unfilled circles are the individual
+              representatives assigned to each cluster. All
+              representatives share a common interface. Invocations of a
+              method of the Clustered Object on a processor indirectly
+              invokes the corresponding method of the representative.
+            </simpara>
+          </caption>
+	</mediaobject>
+      </figure>
+
+      <para>
+        The Clustered Object model also adheres to this object-oriented
+        view, but adds an extra level of structure to accommodate
+        locality issues that arise in SMPs. Traditional object-oriented
+        programming does not guide the internal structuring of objects
+        in any way.  In contrast, Clustered Object programming, suggests
+        structuring the internal data as a collection of representative
+        objects.  Figure <xref linkend="abstractCO"/> illustrates this
+        view.  Each representative is assigned to handle the requests
+        from a subset of processors in the system.  The model advocates
+        that representatives be implemented to handle all invocations of
+        the Clustered Object's externally visible methods.  Requests
+        should be handled locally by the representative whenever
+        possible, and global interaction between representatives should
+        be used only when necessary and done transparently to the
+        clients.  This encourages implementing the internal structures
+        of Clustered Objects in a distributed manner, stressing
+        locality.
+      </para>
+
+      <para>
+        Figure <xref linkend="unrolled"/> illustrates this internal
+        view.  Note that the representatives are illustrated as data
+        instances which are associated with a given cluster of
+        processors, and that all representatives are accessed via an
+        interface composed of methods as defined by the Clustered
+        Object.
+      </para>
+
+      <para>
+        A number of potential organizations and policies for the
+        structuring of representatives within a Clustered Object
+        exist. The next few paragraphs highlight some of the options
+        available and identify which ones we focus on.
+      </para>
+
+      <figure float="1" id="clustering">
+        <title>Clustering/De-Clustering Spectrum of a Clustered Object</title>
+	<mediaobject>
+	  <imageobject>
+	    <imagedata fileref="figures/COclustering.eps"
+		       format="eps" align="center" scale="80">
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="figures/COclustering.jpg"
+		       format="jpg" align="center">
+	  </imageobject>
+	  <textobject>
+	    <simpara>Picture not available.</simpara>
+	  </textobject>
+	</mediaobject>
+      </figure>
+
+      <para>
+        The model makes no restrictions in assigning representatives to
+        processors; as such, a range of potential organizations are
+        possible from one representative per Clustered Object to one
+        representative per processor.  The maximum number of processors
+        assigned to any one representative is called the
+        <emphasis>clustering factor</emphasis> or <emphasis> degree of
+        clustering</emphasis> (see figure <xref linkend="clustering">).  While
+        it is possible to define Clustered Objects with representatives
+        being assigned different numbers of processor this work will
+        focus only on clustered objects with fixed degrees of
+        clustering.
+      </para>
+
+      <figure float="1" id="policies">
+        <title>Three different Data Management Policies</title>
+	<mediaobject>
+	  <imageobject>
+	    <imagedata fileref="figures/COpolicies.eps"
+		       format="eps" align="center" scale="80">
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="figures/COpolicies.jpg"
+		       format="jpg" align="center">
+	  </imageobject>
+	  <textobject>
+	    <simpara>Picture not available.</simpara>
+	  </textobject>
+	</mediaobject>
+      </figure>
+      <para>
+        A natural aspect of the model is the notion of management
+        policies for the data of the Clustered Object. Three obvious
+        policies are: Share, Replicate and Partition, as illustrated in
+        figure <xref linkend="policies"/>.  Many of the locality
+        management optimizations involve the application of these
+        policies.  For example, replication and partitioning can be used
+        to increase concurrency, reduce cache line sharing, localize
+        data and segregate data.
+      </para>
+
+      <para>
+        The Clustered Object model introduces new aspects for a
+        programmer to consider.  The programmer not only has to
+        implement the functionality of the object as defined by its
+        external interface, but must also manage the representatives
+        themselves, including representative creation, keeping the
+        representative data consistent, the mapping of representatives
+        to processors and representative destruction.
+      </para>
+
+      <para>
+        Typically, it is not known how many representatives will be
+        needed when a Clustered Object is instantiated.  It would be
+        wasteful, for example, to instantiate a representative for each
+        processor in the system when the application will only run on
+        four processors.  For this reason, representatives are typically
+        instantiated on demand, when they are first needed.
+      </para>
+
+      <figure float="1" id="abstractwithMH">
+        <title>Abstract view of a Clustered Object with a Root</title>
+	<mediaobject>
+	  <imageobject>
+	    <imagedata fileref="figures/COabstractMH.eps"
+		       format="eps" align="center" scale="60">
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="figures/COabstractMH.jpg"
+		       format="jpg" align="center">
+	  </imageobject>
+	  <textobject>
+	    <simpara>Picture not available.</simpara>
+	  </textobject>
+	</mediaobject>
+      </figure>
+
+      <figure float="1" id="unrolledwithMH">
+        <title>Internal Abstract view with a Root</title>
+	<mediaobject>
+	  <imageobject>
+	    <imagedata fileref="figures/COunrolledMH.eps"
+		       format="eps" align="center" scale="80">
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="figures/COunrolledMH.jpg"
+		       format="jpg" align="center">
+	  </imageobject>
+	  <textobject>
+	    <simpara>Picture not available.</simpara>
+	  </textobject>
+	</mediaobject>
+      </figure>
+
+      <para>
+        In our implementation, each Clustered Object contains a
+        management object that centralizes the management of the
+        representatives.  Using a separate object allows the use of
+        inheritance to simplify the programmer's task, and a class
+        hierarchy of standard management policies can be provided.  In
+        K42's, the management object is called the
+        <emphasis>Root</emphasis> of the Clustered Object.  Figures
+        <xref linkend="abstractwithMH"/> and Figure 
+        <xref linkend="unrolledwithMH"/> illustrate Clustered Objects
+        with their Root represented. In both figures, the object with
+        the lighter-shaded external interface represents the Root.
+        Figure <xref linkend="abstractwithMH"/> shows that the Root
+        is internal to the Clustered Object but is separate from
+        the representatives.  Figure <xref linkend="unrolledwithMH"/>
+        illustrates that the Root is global to the
+        representatives and each representative is associated with the
+        Root.
+      </para>
+
+    </section>
+
+  </section>
+
+  <section id="cos">
+    <title>K42 Clustered Object System</title>
+    <para>
+      Within K42, there exists a number of facilities that allow for
+      the efficient implementation of Clustered Objects.  These are:
+      <itemizedlist>
+        <listitem>
+          <para>
+            a global identification mechanism for Clustered Objects.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            a facility for associating a representative of a Clustered
+            Object to a processor. 
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            a facility for mapping a global Clustered Object identifier
+            to the appropriate local representative, given a specific
+            processor.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            a facility for automating the safe reclamation of the resources
+            associated with a Clustered Object.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            facilities for allocating resources local to a specific
+            processor.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            a facility for sharing and communicating between representatives. 
+          </para>
+        </listitem>
+      </itemizedlist>
+      In K42, the Clustered Object System, provides for the first four
+      facilities and are discussed in the following subsections.  The
+      fifth is provided for by the basic Memory Allocation facilities of
+      K42, see the <emphasis>phantom</emphasis> white paper.  The
+      Intra-process Communications facilities of K42 provides efficient
+      explicit cross processor communications beyond the basic shared
+      memory provided by the hardware, see the Scheduling white paper
+      for details.
+    </para>
+
+
+      <figure float="1" id="Process">
+        <title>A View of a Process in K42</title>
+	<mediaobject>
+	  <imageobject>
+	    <imagedata fileref="figures/COProcess.eps"
+		       format="eps" align="center" scale="80">
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="figures/COProcess.jpg"
+		       format="jpg" align="center">
+	  </imageobject>
+	  <textobject>
+	    <simpara>Picture not available.</simpara>
+	  </textobject>
+	</mediaobject>
+      </figure>
+
+    <para>
+      It is useful to first highlight some of K42's basic
+      components.  The main unit of organization is a process.  A
+      process has associated with it an address space and
+      threads. Threads are the basic units of execution.  All the
+      Threads of a process share the same address space.  An address
+      space can be broken into arbitrary regions.  Each region can have
+      its own memory management policy.  Figure <xref linkend="Process"/>
+      illustrates these components and how they are related.  See other
+      K42 white papers for more details.
+    </para>
+
+    <para>
+      The Clustered Object System provides support for implementing
+      Clustered Objects composed of local representative objects within
+      an address space.  Each representative satisfies method
+      invocations from processes running on a given sub-set of
+      processors.  To understand how this is achieved, we will first
+      look at how a Clustered Object method invocation is translated to
+      the invocation of a specific representative method on one
+      processor.
+    </para>
+
+    <para>
+      The basic technique used, extends the standard C++ model of an
+      object with an extra level of indirection.  A Clustered Object is
+      identified by a pointer to a pointer of a given object type, and
+      thus accesses to the methods of a Clustered Object require two
+      dereferences.  The first dereference abstractly identifies a
+      specific instance of a Clustered Object; in our implementation a
+      <emphasis> Clustered Object Identifier</emphasis> points into a
+      table of pointers, and each pointer in the table identifies a
+      specific representative.  The table of pointers is called an
+      Object Translation Table.  Each processor has its own Object
+      Translation Table, so the pointers therein point to
+      processor-specific representatives for the Clustered Objects.
+      Method invocation is carried out after dereferencing a pointer in
+      this table.  Thus, a Clustered Object method invocation
+      effectively invokes the corresponding method of the identified
+      representative.
+    </para>
+
+    <figure float="1" id="OTTS">
+      <title>
+        Object Translation Table organization, with one representative
+        per processor
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="figures/COOTTS.eps"
+                     format="eps" align="center" scale="60">
+        </imageobject>
+        <imageobject>
+          <imagedata fileref="figures/COOTTS.jpg"
+                     format="jpg" align="center">
+        </imageobject>
+        <textobject>
+          <simpara>Picture not available.</simpara>
+        </textobject>
+      </mediaobject>
+    </figure>
+
+    <figure float="1" id="OTTS2">
+      <title>
+        Object Translation Table organization, with one representative for
+        every two processors.
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="figures/COOTTS2.eps"
+                     format="eps" align="center" scale="50">
+        </imageobject>
+        <imageobject>
+          <imagedata fileref="figures/COOTTS2.jpg"
+                     format="jpg" align="center">
+        </imageobject>
+        <textobject>
+          <simpara>Picture not available.</simpara>
+        </textobject>
+      </mediaobject>
+    </figure>
+
+    <para>
+      To allow Clustered Object invocations on each processor in exactly
+      the same way, the virtual memory capabilities of K42 are
+      exploited.  Processor specific memory regions are used within the
+      address space to give each processor its own unique copy of the
+      Object Translation Table.  Processor specific memory regions back
+      their virtual address by different physical pages on each
+      processor.  This allows the Object Translation Table to identify
+      the local representatives for all Clustered Objects on a given
+      processor, and yet each processor can dereference the table in exactly
+      the same way. Figure \ref{OTTS:fig} illustrates the Object
+      Translation Table organization with one representative per
+      processor, and figure \ref{OTTS2:fig} shows an example in which
+      clusters of two processors share a representative.
+    </para>
+
+    <para>
+      When a Clustered Object is created, the Clustered Object System
+      must be consulted to allocate a new Clustered Object Identifier.
+      The Clustered Object System controls the assignments of Clustered
+      Object Identifiers to ensure that their allocation is unique
+      across all processors.  For example, if a new Clustered Object is
+      created on one processor, the Clustered Object Identifier assigned
+      to it must be considered allocated on all other processors to
+      avoid conflicts.  To achieve this, each processor is assigned a
+      unique portion of the entire range of Clustered Object
+      Identifiers.  Clustered Objects created on a given processor are
+      assigned identifiers from the processor's unique range, ensuring
+      that the assigned identifier will not conflict with allocations on
+      other processors.  This approach avoids the need to explicitly
+      coordinate allocations across processors. 
+      <footnote> 
+        <para>
+          Currently this optimization is not implemented.  Clustered
+          Object Identifiers are managed with shared data structures.
+          </para>
+      </footnote>
+    </para>
+
+    <para>
+      The locality of an access is a key aspect of this design. The
+      approach used to locate representatives avoids accesses to
+      non-local memory in the common case, so a Clustered Object can be
+      accessed without introducing any sharing. As a result, any
+      locality provided by a Clustered Object is not impacted
+      (i.e. negated) by inherent sharing in the Clustered Object
+      System.
+    </para>
+
+    <para>
+      As stated earlier, the pointer to an entry in the Object
+      Translation Table is called a Clustered Object Identifier.  A
+      simple macro performs the dereferences necessary to yield a
+      pointer to the local representative from the Clustered Object
+      Identifier.  Clients of a Clustered Object must use the macro on
+      every access to the Clustered Object. The potential for dynamic
+      allocation, deallocation, and hot swapping, makes it problematic
+      for clients to store direct references to representatives
+      themselves.  Clients, should <emphasis>never</emphasis> make
+      explicit use of a Clustered Object Identifier to access a
+      representative directly.
+    </para>
+
+    <figure float="1" id="OTTSMH">
+      <title>
+        Local and Global Translation Table organization
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="figures/COOTTSMH.eps"
+                     format="eps" align="center" scale="50">
+        </imageobject>
+        <imageobject>
+          <imagedata fileref="figures/COOTTSMH.jpg"
+                     format="jpg" align="center">
+        </imageobject>
+        <textobject>
+          <simpara>Picture not available.</simpara>
+        </textobject>
+      </mediaobject>
+    </figure>
+
+    <para>
+      To avoid excessive resource usage and limit initialization costs,
+      the instantiation of representatives and their assignment to
+      Translation Table entries is done lazily in K42, in that they are
+      instantiated on first use. To support this, the organization in
+      figure \ref{OTTS:fig} is extended to a two level scheme, see
+      Figure \ref{OTTSMH:fig}.  Unlike the Local Translation Table, the
+      Global Translation Table is global and shared by all processors.
+      For every Clustered Object there is a corresponding entry in the
+      Global Translation Table, containing a pointer to the Root of the
+      corresponding Clustered Object.  When a Clustered Object is
+      instantiated, the Root of that Clustered Object (which is a
+      regular C++ object) is instantiated, and a pointer to it is
+      installed in the Global Translation Table entry for the Clustered
+      Object.
+    </para>
+
+    <figure float="1" id="repinst">
+      <title>
+        Miss-handling process as seen on one processor
+      </title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="figures/COrepinstantiation.eps"
+                     format="eps" align="center" scale="60">
+        </imageobject>
+        <imageobject>
+          <imagedata fileref="figures/COrepinstantiation.jpg"
+                     format="jpg" align="center">
+        </imageobject>
+        <textobject>
+          <simpara>Picture not available.</simpara>
+        </textobject>
+      </mediaobject>
+    </figure>
+
+    <!-- FIXME: Tried to use methodname entity but was not recognized -->
+    <para>
+      The Object Translation System initializes Local Translation Table
+      entries to point to a default miss handling object, called the
+      <emphasis>default</emphasis> object.  The
+      <emphasis>default</emphasis> object acts as a trampoline. It
+      directs the first method invocations of a Clustered Object on a
+      processor to the <emphasis>handleMiss</emphasis> method of the
+      target Clustered Object's Root by consulting the Global
+      Translation Table. The <emphasis>handleMiss</emphasis> method then
+      instantiates a new representative if necessary and returns a
+      pointer to the representative responsible for servicing Clustered
+      Object requests on that processor back to the
+      <emphasis>default</emphasis> object.  The
+      <emphasis>default</emphasis> object then replaces the reference to
+      itself in the Local Translation Table entry with the pointer
+      returned by the Root.  The method call to the
+      Clustered Object is then restarted and proceeds as if the
+      representative were previously installed.  Figures 
+      <xref linkend="repinst"/> (a-c) illustrate the miss-handling process.
+      It should be noted, however, that for the miss-handling
+      redirection to work, it is necessary that <emphasis>ALL</emphasis>
+      externally visible methods of a Clustered Object be defined and
+      implemented as C++ virtual methods by the representatives of the
+      Clustered Object.
+    </para>
+
+    <para>
+      The number of Clustered Objects that can exist in an address space
+      is limited by the size of the Translation Tables. The goal of K42
+      is to support very large Object Translation Tables so that a large
+      number of Clustered Objects may exist.  However, large Translation
+      Tables can consume considerable real memory.  To address this
+      problem, K42 treats the Local Translation Tables as caches for the
+      current representatives of a processor.  The physical pages that
+      store the Object Translation Table entries can be reclaimed when
+      needed.  Rather than consuming paging system resources, K42
+      expects the Clustered Objects' Roots to maintain the primary
+      record of which representatives are assigned to which processor.
+    </para>
+
+    <para>
+      Consider what happens when an access is made to a Clustered Object
+      whose Local Translation entry has been reclaimed
+      (<abbrev>i.</abbrev><abbrev>e.</abbrev> the physical memory on
+      which it should be located is not present). The absence of a
+      physical page, when the corresponding virtual page is accessed,
+      results in a page fault.  The page fault handler will subsequently
+      allocate a new physical page.  The page is then initialized to
+      contain Object Translation Table entries that point to the default
+      object.  The default object will, as before, redirect any call to
+      the Root for the specific Clustered Object.  It is the Root's
+      responsibility to recognize, if appropriate, that a representative
+      has already been assigned for this processor and return a
+      reference to it.  This is really just a special case of the
+      miss-handling process described earlier.  Rather than
+      instantiating a new representative, the MissHandler simply returns
+      a pointer to a previously assigned representative.
+    </para>
+
+    <para>
+      A Clustered Object must obtain a new Clustered Object Identifier
+      for itself when it is created.  The base classes from which Roots
+      inherit ensure that this takes place.  A Clustered Object must
+      also destroy itself properly to ensure safe reclamation of its
+      resources.  Concurrency and the distributed nature of Clustered
+      Objects can make this a difficult task.  To alleviate some of the
+      complexity the Clustered Object system provides a semi-automatic
+      garbage collection facility.  Once it has been determined that a
+      Clustered Object is <quote>logically safe</quote> for destruction
+      it can be submitted to the Clustered Object System for final
+      destruction.  By, <quote>logically safe</quote> we mean that the
+      programmer has ensured that there are no valid permanent
+      references to the Clustered Object.  Permanent references are
+      those which exist in statically or dynamically allocated
+      structures (other than thread stacks).  The Clustered Object
+      System's garbage collection facility ensures that representatives
+      are reclaimed only after all threads that may potentially have
+      references to the Clustered Object have terminated.  Further, it
+      only reclaims the Root and the Clustered Object Identifier when
+      processor wide it can be ensured all threads which might have a
+      reference to the Clustered Object have terminated.
+    </para>
+
+    <para>
+      The Clustered Object System in cooperation with the K42 Scheduling
+      infrastructure implements approximate thread life time tracking,
+      in order to implement Clustered Object reclamation.  The
+      techniques are similar in spirit to those described in
+      <citation>Mckenny01</citation>.  Before describing how thread life
+      times are tracked, it is worth emphasizing that Clustered Object
+      execution is event driven nature.  Threads while accessing
+      Clustered Objects, in general, do not block and are short lived.
+      This reflects, the K42 strategy that in general all blocking
+      occurs at use level outside of the core system software (and hence
+      out side of Clustered Objects).<footnote>
+        <para>
+          say something about how even at user-level clustered objects
+          can be used but that long lived threads need to cleanly
+          separate there execution between Clustered Object code and
+          non-Clustered Object code.   This is how our user level
+          library code works.  
+        </para>
+      </footnote>
+    </para>
+    <para>
+      This is a natural execution model given K42's request model of
+      processing. A user request is directed via a Protected Procedure
+      Call (PPC) to an object which represents the resource in question
+      either in the kernel or a system server.  For example, a getpid
+      call results directly in an invocation of a method on the
+      <emphasis>process object</emphasis> in the kernel which represents
+      the calling process.  Each request to the kernel or system server
+      is handled by a separate thread.  The PPC mechanism ensures that
+      each request, in general, is handled on the same CPU and results
+      in efficient hand off scheduling between the user and handling
+      system thread. As such all system activity is event driven in
+      nature and handled by relatively short-lived threads.  Longer-term
+      actions are decomposed into multiple parts such that all long-term
+      blocking occurs outside of the kernel and servers.  See the
+      Scheduling and other white papers for details.
+    </para>
+
+    <para>
+      For the sake of clarity the general approach for thread life
+      tracking will be described with respect to the kernel, but is the
+      same for the servers.  For each CPU the scheduler, 
+      <footnote>
+        <para>
+          In K42, every address space (including the kernel) has its own
+          thread scheduler.
+        </para>
+      </footnote>
+      maintains two thread counters where each counter is called a
+      generation.  At any given time one counter is identified as the
+      current generation.  When a thread is created it is associated
+      with the current generation by incrementing the counter and
+      storing a pointer to the counter in the TCB of the thread.  When
+      the thread terminates the generation which it is associated is
+      decremented.  Periodically, the non-current generation is checked
+      to see if it is zero and hence all threads associated with it have
+      terminated.  If this is the case it is now identified as the
+      current generation.  A separate per-cpu counter called the
+      generation count is incremented every time a new generation is
+      identified as current.  Given such mechanisms, when the generation
+      count has advanced twice we can be assured that all threads in
+      existence prior to the advancement have terminated on the specific
+      CPU.  In order to know when all threads have terminated across all
+      the cpus, a token is circulated.  The token begins on a given cpu
+      and is handed to the next cpu when the generation count has
+      advanced at least by two.  Thus when the token returns to the cpu
+      all threads that were in existence, since the last time the cpu
+      had the token, have terminated.
+    </para>
+
+    <para>
+      When an Clustered Object is destroyed in K42 it is made
+      inaccessible to new requests by ensuring that no new misses can
+      occur on the Clustered Object.  The Clustered Object then utilizes
+      the generation counting and associated token passing mechanisms,
+      to identify when all threads have terminated with respect to when
+      the Clustered Object that was submitted, and then reclaims the
+      associated resources.  The Clustered Object System of K42 is
+      highly distributed and implements a number of optimizations such
+      as batching of object reclamation, distributed reclamation
+      allowing for efficient per-object per-cpu reclamation actions,
+      overlapping of token passing and per-cpu memory reclamation, and
+      others.  Recently, the generation counting mechanism has also been
+      leverage to identify quiescent states so that a Clustered Object
+      can be swapped on the fly (See hot swapping white paper).  Other
+      uses of the generation counting mechanisms to do read-copy updates
+      style algorithms have yet to be explored in K42. To this end a
+      more general facility has been sketched out but is unimplemented.
+    </para>
+  </section>
+  <section id="pgming">
+    <title>Programming with Clustered Objects</title>
+    <para>
+      K42's Clustered Object System places a number of requirements on
+      the implementation and use of Clustered Objects: 
+      <itemizedlist> 
+        <listitem>
+          <para>
+            The external interface of a Clustered Object must be
+            implemented as C++ virtual methods by all representatives.
+          </para>
+        </listitem>
+
+        <listitem>
+            <para>
+              Every Clustered Object must provide a Root object
+              that implements:
+              <itemizedlist>
+                <listitem>
+                  <para>
+                     A {\it handleMiss} method, that is invoked when a
+                     miss occurs on a specific processor.  This method
+                     must return a pointer to the representative that is
+                     to be installed in the Object Translation Table
+                     entry on the target processor.
+                  </para>
+                </listitem>
+                <listitem>
+                  <para>
+                    The instantiation of representatives implementing
+                    the clustering strategy chosen for the target
+                    Clustered Object (<abbrev>eg.</abbrev> how many 
+                    representatives to create).
+                  </para>
+                </listitem>
+                <listitem>
+                  <para>
+                    A record of which representatives have been assigned
+                    to which processors.
+                  </para>
+                </listitem>
+                <listitem>
+                  <para>
+                    The protocol required to correctly interact with the
+                    destruction facility, in order to efficiently be reclaimed.
+                  </para>
+                </listitem>
+              </itemizedlist>
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            The Clustered Object when created must first instantiate
+            its Root and return its Clustered Object
+            Identifier to the client.  A unique Clustered Object
+            Identifier must be obtained from the Object Translation
+            system by invoking the appropriate methods of the Clustered
+            Object System.
+          </para>
+        </listitem>
+        
+        <listitem>
+          <para>
+            All accesses to a Clustered Object must be made using the
+            given Macro and the Clustered Object Identifier.
+          </para>
+        </listitem>
+        
+        <listitem>
+          <para>
+            The Clustered Object must implement its own protocol for
+            achieving logical destruction (see previous section).
+            Object is no longer required.  This method should invoke
+            the appropriate de-assignment function of the Object
+            Translation System.  
+          </para>
+        </listitem>
+      </itemizedlist>
+      A set of classes have been developed to provide (or ease) the
+      satisfaction of all but the last two of the requirements.
+    </para>
+
+  <section id="classes">
+    <title>Clustered Object Classes</title>
+    <para>
+      Draw a picture, annotate main features and present two small
+      examples.  Discuss elevated role of the Root as holder for
+      all shared data and the true identity of the CO.
+    </para>
+  </section>
+  <section id="guide">
+    <title>Design Guidelines</title>
+    <para>
+      We have found that when implementing Clustered Objects, it is
+      generally best to adhere to the following guidelines (described
+      in more detail in some other document): 
+      <itemizedlist>
+        <listitem>
+          <para>
+            One should ensure that the most common operations are
+            optimized for locality.  
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            A family of Clustered Objects should be implemented when
+            different internal policies better support different
+            access patterns.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Representatives that frequently access each other should
+            directly maintain references to the representatives they
+            access.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            If possible factor data structures out into Root and
+            Representative that can be reused in different Clustered Objects.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Internal Padding should be used to control locality within
+            sensitive fields of a Clustered Object.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </para>
+  </section>
+  <section id="sum"> 
+    <title> Summary </title>
+    <para> 
+      The class presented above, provide a base for implementing
+      Clustered Objects according to the Clustered Object model
+      supported by K42.  The two main types of objects that compose
+      a Clustered Object are (i) representatives and (ii)
+      Root objects.  There is one Root per
+      Clustered Object and the Root object is responsible
+      for managing one or more representatives.  It also servers
+      as the central well known portion of a Clustered Object.
+    </para>
+    
+    <para>
+      The representatives define and implement the external
+      interface for the Clustered Object.  The representatives of a
+      Clustered Object are built by implementing a subclass of the
+      {\it ClusteredObject} class.  By convention, an implementor of
+      a Clustered Object must provide a static C++ {\it create}
+      method that creates instances of the Clustered Object.
+    </para>
+    <para>
+      We have implemented two separate types of Roots:
+      <emphasis>CObjRootSingleRep</emphasis> and <emphasis>
+        CObjRootMultiRep</emphasis>.
+      <emphasis>CObjRootSingeRep</emphasis> can be used to create
+      Clustered Objects that only support a shared representative
+      policy, where all requests to a Clustered Object are directed
+      to a single shared representative.  The
+      <emphasis>CObjRootMultiRep</emphasis> class is a base to build
+      more general Clustered objects that support multiple
+      representatives.  The <emphasis>CObjRootMultiRep</emphasis>
+      class supports fixed clustering degrees by ensuring that only
+      one representative is instantiated per cluster of processors.
+      The number of processors in a cluster can be specified as an
+      initialization parameter to the Root.
+    </para>
+    </section>
+  </section>  
+  <section id="conc">
+    <title>Conclusion</title>
+    <para>
+      Even all horrible things must come to an end.
+    </para>
+  </section>
+
+</article>
+
+<!--
+Local Variables:
+sgml-validate-command: "nsgmls -s %s %s"
+sgml-indent-data: t
+sgml-insert-missing-element-comment: t
+End:
+-->
+<!--  LocalWords:  reviewer's
+ -->
+
+

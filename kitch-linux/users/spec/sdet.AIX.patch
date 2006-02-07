@@ -1,0 +1,47 @@
+diff -crd 69954.sdetsetuptmpdir//M.aix 53134.sdetsetuptmpdir/M.aix
+*** 69954.sdetsetuptmpdir//M.aix	Tue Apr  2 11:47:44 2002
+--- 53134.sdetsetuptmpdir/M.aix	Tue Apr  2 11:51:33 2002
+***************
+*** 14,19 ****
+  MACHID = AIX
+  
+  # default workload C compiler
+! WCC=c89
+  
+! include M.common
+\ No newline at end of file
+--- 14,19 ----
+  MACHID = AIX
+  
+  # default workload C compiler
+! WCC=cc
+  
+! include M.common
+diff -crd 69954.sdetsetuptmpdir//bin/cc 53134.sdetsetuptmpdir/bin/cc
+*** 69954.sdetsetuptmpdir//bin/cc	Tue Apr  2 11:47:43 2002
+--- 53134.sdetsetuptmpdir/bin/cc	Tue Apr  2 11:51:56 2002
+***************
+*** 1,4 ****
+! #!/bin/bash
+  test "$1" = "-c" && shift
+  test "$1" = "-lm" && shift
+  
+--- 1,4 ----
+! #!/bin/ksh
+  test "$1" = "-c" && shift
+  test "$1" = "-lm" && shift
+  
+diff -crd 69954.sdetsetuptmpdir//bin/ld 53134.sdetsetuptmpdir/bin/ld
+*** 69954.sdetsetuptmpdir//bin/ld	Tue Apr  2 11:47:43 2002
+--- 53134.sdetsetuptmpdir/bin/ld	Tue Apr  2 11:52:07 2002
+***************
+*** 1,4 ****
+! #!/bin/bash
+  test "$1" = "-r" && shift
+  test "$1" = "-o" && shift
+  
+--- 1,4 ----
+! #!/bin/ksh
+  test "$1" = "-r" && shift
+  test "$1" = "-o" && shift
+  

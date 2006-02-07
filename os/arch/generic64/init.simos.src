@@ -1,0 +1,105 @@
+# K42: (C) Copyright IBM Corp. 2001.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the license along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+# $Id: init.simos.src,v 1.1 2001/06/12 21:53:23 peterson Exp $
+
+####
+#### setup the search path to find scripts
+####
+#
+#lappend simosPath $env(SIMTOOLS)/apps/tcl
+lappend simosPath .
+
+source "config.tcl"
+
+####
+#### turn on instruction dumping
+####
+#instDump all
+#
+####
+#### override any of the default parameters
+####
+#
+#if {!$SIMOS(RestoringCpt)} {
+#    set PARAM(MEMSYS.MemSize) 64
+#}
+#
+####
+#### load your kernel's symbols - required by most scripts
+####
+#set KERNEL ./unix
+#
+#puts -nonewline "Loading kernel symbols from $KERNEL ..."
+#flush stdout
+#puts [symbol load kernel $KERNEL]
+#symbol load kernel $KERNEL
+#puts " done."
+
+# SPECIFY THE waitproc INSTRUCTION RANGE
+set PARAM(MISC.IdleStartAddr) 0x25270
+set PARAM(MISC.IdleEndAddr) 0x25340
+
+# In an MP system, the following parameter controls how often a
+# CPU that is in the waitproc will actually simulate an instruction.
+# A setting of 10 will mean the idle cpu will simulate a waitproc instruction
+# once every 10 passes.
+set PARAM(MISC.IdleInstructionSkipRate) 100
+#set PARAM(MISC.RunRunAddr) [symbol read kernel::runrun]
+set PARAM(MISC.RunRunAddr) 0
+
+#
+#proc loginScript {} {
+## stream anything that you want to run at login time
+#}
+#
+####
+#### the support script has necessary routines in it
+####
+#
+#if {$PARAM(CPU.Model) == "EMBRA_PAGE"} {
+#    set detailLevel 1
+#}
+#
+#
+####
+#### Make sure this is sourced after all parameters are set
+####
+#source "standard.tcl"
+#
+####
+#### catch annotation errors here
+####
+#### this sample prints a backtrace and then goes into interactive mode,
+#### alternatively we could just print a warning message, ignore, or exit
+####
+#
+#handler {
+#    console "TCL ERROR:\n" $errorInfo "\n"
+#    exit
+#}
+#
+#annotation set simos sigusr {
+#    console "sigusr caught, and then ignored\n"
+#}
+#
+#
+####
+#### boot line
+####
+#
+#expect {simosboot (1)> } {
+#    type "b $KERNEL initstate=s\n"
+#}
+#
+#
+####
+#### finally list useful info
+####
+#
+#console "SIMOS: pid [pid]\n"
+#log "[annotation info]\n"

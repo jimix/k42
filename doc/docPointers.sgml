@@ -1,0 +1,180 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: docPointers.sgml,v 1.1 2001/10/23 19:44:11 bob Exp $
+-->
+<!doctype article PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
+<article id="DocBook">
+  <title>Convenience Pointers</title>
+
+  <section>
+  <title>Convenience Pointers</title>
+    <para>
+	Below is a set of (possibly incomplete) pointers for convenience to
+	allow easy access to the html files in various directories.  A make
+	world will create all the html files.
+    </para>
+
+    <itemizedlist spacing="compact">
+      <listitem>
+	<simpara>
+	  <ulink url="../lib/libc/alloc/doc/alloc.html">
+	    lib/libc/alloc/doc/alloc </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../lib/libc/cobj/sys/doc/sys.html">
+	  lib/libc/cobj/sys/doc/sys </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../lib/libc/cobj/doc/cobj.html">
+	  lib/libc/cobj/doc/cobj </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../lib/libc/fslib/doc/fslib.html">
+	  lib/libc/fslib/doc/fslib </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../lib/libc/io/doc/io.html"> lib/libc/io/doc/io
+	  </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../lib/libc/misc/doc/misc.html">
+	  lib/libc/misc/doc/misc </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../lib/libc/scheduler/doc/scheduler.html">
+	  lib/libc/scheduler/doc/scheduler </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../lib/libc/stdlib/doc/stdlib.html">
+	  lib/libc/stdlib/doc/stdlib </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../lib/libc/sync/doc/sync.html">
+	  lib/libc/sync/doc/sync </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../lib/libc/sys/doc/sys.html"> lib/libc/sys/doc/sys
+	  </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../lib/libc/trace/doc/trace.html">
+	  lib/libc/trace/doc/trace </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../lib/libc/usr/doc/usr.html"> lib/libc/usr/doc/usr
+	  </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../lib/libc/doc/libc.html"> lib/libc/doc/libc
+	  </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../lib/doc/lib.html"> lib/doc/lib </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../os/kernel/arch/doc/arch.html">
+	  os/kernel/arch/doc/arch </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../os/kernel/init/doc/init.html">
+	  os/kernel/init/doc/init </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../os/kernel/bilge/doc/bilge.html">
+	  os/kernel/bilge/doc/bilge </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../os/kernel/defines/doc/defines.html">
+	  os/kernel/defines/doc/defines </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../os/kernel/exception/doc/exception.html">
+	  os/kernel/exception/doc/exception </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../os/kernel/mem/doc/mem.html"> os/kernel/mem/doc/mem
+	  </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../os/kernel/proc/doc/proc.html">
+	  os/kernel/proc/doc/proc </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../os/kernel/stubtest/doc/stubtest.html">
+	  os/kernel/stubtest/doc/stubtest </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../os/kernel/sys/doc/sys.html"> os/kernel/sys/doc/sys
+	  </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../os/kernel/trace/doc/trace.html">
+	  os/kernel/trace/doc/trace </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../os/kernel/doc/kernel.html"> os/kernel/doc/kernel
+	  </ulink>
+	</simpara>
+      </listitem>
+      <listitem>
+	<simpara>
+	  <ulink url="../os/doc/os.html"> os/doc/os </ulink>
+	</simpara>
+      </listitem>
+    </itemizedlist>
+  </section>
+</article>

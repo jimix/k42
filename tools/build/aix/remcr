@@ -1,0 +1,8 @@
+#!/bin/sh
+# move the file to __tmp and remove the extra \r and rm __tmp
+mv $1 $1__tmp
+sed s/// $1__tmp > $1
+rm $1__tmp
+
+
+

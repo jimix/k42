@@ -1,0 +1,3 @@
+#!/bin/sh
+#go through each file and call remcr which will remove the \r
+find $1 -type f -exec remcr {} \;

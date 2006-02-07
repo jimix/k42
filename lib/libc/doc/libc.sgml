@@ -1,0 +1,91 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: libc.sgml,v 1.12 2003/03/21 15:12:15 bob Exp $
+-->
+<!doctype book PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!entity topsrc "../../..">
+<!entity % libc.ent SYSTEM "libc.ent">
+%libc.ent;
+]>
+<book id="K42">
+  <chapter id="Over">
+    &libcOver;
+    <section>
+      &syncOver;
+    </section>
+    <section>
+      &libTraceOver;
+    </section>
+    <section>
+      &ioOver;
+    </section>
+    <section>
+      &usrOver;
+    </section>
+    <section>
+      &allocOver;
+    </section>
+    <section>
+      &cobjOver;
+    </section>
+    <section>
+      &fslibOver;
+    </section>
+    <section>
+      &miscOver;
+    </section>
+    <section>
+      &schedulerOver;
+    </section>
+    <section>
+      &stdlibOver;
+    </section>
+    <section>
+      &sysOver;
+    </section>
+  </chapter>
+  <chapter id="PrgG">
+    &libcPrgG;
+    <section>
+      &syncPrgG;
+    </section>
+    <section>
+      &libTracePrgG;
+    </section>
+    <section>
+      &ioPrgG;
+    </section>
+    <section>
+      &usrPrgG;
+    </section>
+    <section>
+      &allocPrgG;
+    </section>
+    <section>
+      &cobjPrgG;
+    </section>
+
+    <section>
+      &fslibPrgG;
+    </section>
+
+    <section>
+      &miscPrgG;
+    </section>
+    <section>
+      &schedulerPrgG;
+    </section>
+    <section>
+      &stdlibPrgG;
+    </section>
+    <section>
+      &sysPrgG;
+    </section>
+  </chapter>
+</book>

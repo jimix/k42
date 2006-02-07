@@ -1,0 +1,15 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2001.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.2 2001/06/19 17:19:30 peterson Exp $
+# ############################################################################
+
+GENERIC64HDR = $(ARCHINCS)
+
+install_includes::
+	$(INSTALL_INC) $(INCDIR)/sys/arch/generic64/   arch/generic64/   $(GENERIC64HDR)

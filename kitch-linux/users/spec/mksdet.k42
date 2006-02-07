@@ -1,0 +1,76 @@
+#!/bin/bash -x
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2002.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: mksdet.k42,v 1.2 2005/07/20 09:38:41 butrico Exp $
+# ############################################################################
+
+# mksdet LIST=listfile SPEC_TAR=spec_tar_file RUNSDET=run_sdet 
+# Arguments are specifed:  NAME=VALUE
+# Note for arguments with spaces, you need e.g "RUNSERIES=\"1 2 4\""
+
+
+CURR=$1
+while shift; do
+    if echo $CURR |egrep -e "^[[:alnum:]_]*=.*" ; then
+	eval export $CURR
+    else 
+	eval $CURR
+    fi
+    CURR=$1
+done
+
+if [ -z "$FSPATH" ] ; then 
+    echo "No FSPATH specified"
+    exit -1;
+fi
+
+if [ -d $FSPATH ] ; then
+  echo target directory already exists;
+fi
+
+mkdir -p $FSPATH
+
+if [ -n "$LIST" -a ! -e $FSPATH/init ]; then
+    case `uname -v` in
+	*#K42*) ;;
+	*) echo "Don't know what to do!"
+	   exit -2
+	;;
+    esac
+
+    cpio -p --make-directories $VERBOSE_CPIO $FSPATH < $LIST 
+    if [ -n "$KLIST" ]; then
+	cpio -p --make-directories $VERBOSE_CPIO $FSPATH < $KLIST 
+    fi
+fi
+
+mkdir $FSPATH/tmp
+
+if [ -n "$RUNSDET" -a -n "$SPEC_TAR" ]; then
+    cp $RUNSDET $SPEC_TAR $FSPATH/tmp/;
+    # ${RUNSDET##*/} == file name part of RUNSDET
+    case `uname -v` in
+        *#K42*) 
+	    if [ -n "$LIST" ]; then
+		if [ ! -e $FSPATH/init ]; then
+		    /knfs/kbin/bindFS $FSPATH /
+		    touch $FSPATH/init
+		fi
+		/tmp/${RUNSDET##*/}
+	    else
+		$FSPATH/tmp/${RUNSDET##*/}
+	    fi
+	    ;;
+
+	*) 
+	    echo "Don't know what to do!"
+            exit -2
+	    ;;
+    esac
+fi

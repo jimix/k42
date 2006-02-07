@@ -1,0 +1,36 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: shared.sgml,v 1.1 2001/09/27 15:27:30 bob Exp $
+-->
+<!doctype book PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!entity topsrc "../../..">
+<!entity % shared.ent SYSTEM "shared.ent">
+%shared.ent;
+]>
+<!-- $Id: shared.sgml,v 1.1 2001/09/27 15:27:30 bob Exp $ -->
+<book id="K42">
+  <chapter id="sharedOver">
+    &sharedOver;
+    <section>
+      &thinwireOver;
+    </section>
+  </chapter>
+  <chapter id="sharedPrgG">
+    &sharedPrgG;
+    <section>
+      &thinwirePrgG;
+    </section>
+  </chapter>
+</book>
+
+<!--
+Local Variables:
+mode: sgml
+End:
+-->

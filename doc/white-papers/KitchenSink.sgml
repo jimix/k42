@@ -1,0 +1,225 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: KitchenSink.sgml,v 1.4 2003/09/22 20:28:39 bob Exp $
+-->
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+
+<!-- To disable review comments replace INCLUDE with IGNORE -->
+<!ENTITY % review "INCLUDE" >
+
+<!-- CVS gives us these -->
+<!ENTITY user "$Author: bob $">
+<!ENTITY date "$Date: 2003/09/22 20:28:39 $">
+<!ENTITY revision "$Revision">
+
+<!-- define and read in entities from this file -->
+<!ENTITY % wp.ent SYSTEM "wp.ent">
+%wp.ent;
+]>
+
+
+<!--
+    In DocBook terms, a white paper is an article.
+-->
+<article status="draft" lang="en">
+    <title>Kitchen Sink Document</title>
+    &K42ArtHeader;
+
+<![%review;[
+  <comment>
+    This is an author's or reviewer's comment, they can be placed
+    almost anywhere in the document and should be initialed. -JX
+  </comment>
+]]>
+
+  <abstract>
+    <para>
+      This document contains DocBook examples to be use by the k42
+      group. It is a living and breathing document that should be used
+      as an example of style and of tags that should be used.
+    </para>
+  </abstract>
+
+  <section id="the.abstract">
+    <title>How the abstract was done</title>
+    <para>
+      The sgml listing for the above abstract looks like this:
+    </para>
+    <programlisting>
+      <sgmltag class="starttag">abstract</sgmltag>
+        <sgmltag class="starttag">para</sgmltag>
+          This document contains DocBook examples ...
+        <sgmltag class="endtag">para</sgmltag>
+      <sgmltag class="endtag">abstract</sgmltag>
+    </programlisting>
+
+    <para>
+      Section contents begin with this paragraph. What follows are
+      examples of tags you may want to use.
+    </para>
+    <para>
+      Sometimes you want to inline some text in quotes to make is seem
+      <quote>special</quote> or a quote a long phrase that conveys
+      something:
+      <blockquote>
+	<attribution>
+	  <author>
+	    <firstname>Anonymous</firstname>
+	    <affiliation>
+	      <jobtitle>English Professor</jobtitle>
+	      <orgname>Ohio University</orgname>
+	    </affiliation>
+	  </author>
+	</attribution>
+	<para>
+	  I am returning this otherwise good typing paper to you
+	  because someone has printed gibberish all over it and put
+	  your name at the top.
+	</para>
+      </blockquote>
+    </para>
+    <para>
+      When showing a simple list of items you can do it inline, as follows:
+      <simplelist type="inline">
+	<member>Member 1</member>
+	<member>Member 2</member>
+	<member>Member 3</member>
+	<member>Member 4</member>
+	<member>and Member 5</member> 
+      </simplelist>
+      , or they can be display <quote>vertically</quote> (default), such as:
+      <simplelist>
+	<member>Member 1</member>
+	<member>Member 2</member>
+	<member>Member 3</member>
+	<member>Member 4</member>
+	<member>Member 5</member> 
+      </simplelist>
+    </para>
+    <para>
+      Other list tags are:
+      <simplelist type="inline">
+	<member><sgmltag class="starttag">ItemizedList</sgmltag></member>
+	<member><sgmltag class="starttag">OrderedList</sgmltag></member>
+	<member><sgmltag class="starttag">SegmentedList</sgmltag></member>
+	<member>and <sgmltag class="starttag">VariableList</sgmltag></member>
+      </simplelist>
+    </para>
+    <section id="subsection-1.1">
+      <title>Subsection Title Goes Here</title>
+      <para>
+	Subsections content begins with this paragraph.
+      </para>
+
+      <section>
+	<title>Third Level Section Title</title>
+	<para>
+	  Here is a figure in our document.
+	  <figure>
+<!--
+    First declare a figure
+-->
+	    <title>Figure Title</title>
+	    <mediaobject>
+<!--
+    Then describe the figure for all types of output.
+-->
+	      <imageobject>
+		<imagedata fileref="figures/XFigSample.eps"
+			   format="eps" align="center">
+	      </imageobject>
+	      <imageobject>
+		<imagedata fileref="figures/XFigSample.jpg"
+			   format="jpg" align="center">
+	      </imageobject>
+<!--
+    Text object is used if the output cannopt display graphics, such as
+    html viewed with lynx.
+-->
+	      <textobject>
+		<simpara>Cheeze!</simpara>
+	      </textobject>
+	      <caption>
+		<simpara>Caption: figure source is xfig.</simpara>
+	      </caption>
+	    </mediaobject>
+	  </figure>
+
+	  <figure>
+	    <title>Figure Title</title>
+	    <mediaobject>
+	      <imageobject>
+		<imagedata fileref="figures/DiaSample.eps"
+			   format="eps" align="left" scale="50">
+	      </imageobject>
+	      <imageobject>
+		<imagedata fileref="figures/DiaSample.png"
+			   format="jpg" align="left" scale="50">
+	      </imageobject>
+	      <textobject>
+		<simpara>Dia Cheeze!</simpara>
+	      </textobject>
+	      <caption>
+		<simpara>Caption: figure source is Dia.</simpara>
+	      </caption>
+	    </mediaobject>
+	  </figure>
+	</para>
+
+<!--
+    Here is a fourth level section
+-->
+	<section>
+<!--
+    Here is an example of using a string from the wp.ent file
+-->
+	  <title>&libc;</title>
+	  <para>
+	    Linux utilizes the <ulink
+	    url="&gnu.url;"><acronym>FSF</acronym></ulink> provided
+	    <ulink url="&glibc.url;">&libc;</ulink>. The &libc; began
+	    as an alternate C Library for several popular Unix
+	    brands.
+<!--
+    Notice the use of the <trademark> tag
+-->
+	    <simplelist type="inline">
+	      <member><trademark>ISO C</trademark></member>
+	      <member><trademark>POSIX</trademark></member>
+	      <member><trademark>Berkeley</trademark></member>
+	      <member><trademark>Sys V</trademark></member> <member>and
+		<trademark>X/OPEN</trademark></member>
+	    </simplelist>
+	    .  You can also footnote
+	    <footnote>
+	      <para>
+		Here is a footnote, its location can be specified to
+		be bottom of page or end of document.
+	      </para>
+	    </footnote>
+	    part of your text as expected.
+	  </para>
+	</section>
+      </section>
+    </section>
+  </section>
+</article>
+
+<!--
+Local Variables:
+sgml-validate-command: "nsgmls -s %s %s"
+sgml-indent-data: t
+sgml-insert-missing-element-comment: t
+mode: flyspell
+End:
+-->
+<!--
+  LocalWords:
+ -->
+

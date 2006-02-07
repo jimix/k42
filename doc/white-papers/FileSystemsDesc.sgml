@@ -1,0 +1,695 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001, 2004.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: FileSystemsDesc.sgml,v 1.3 2004/02/03 18:30:27 dilma Exp $
+-->
+
+
+<!-- This text is being used by different documents, e.g. the file
+     system white paper
+-->
+
+<section id="fsinfra"> <title>K42 File System Infrastructure</title>
+
+    <para> File systems are commonly used to coordinate naming of and
+      access to resources, even those, such as devices, not
+      traditionally treated as files. This section focus on file systems
+      offering the usual notion of UNIX files as an abstraction for a
+      container of data, with the file system allowing users to organize,
+      manipulate, and access different files. The goal of this chapter is
+      to describe how file systems are structured in K42.
+    </para>
+
+    <para>
+    In K42, file system functionality is implemented in user-level
+    servers and libraries in the application's own address space.
+      The basic architecture of K42 file system structure is
+      pictured in <xref linkend="fig-fsstruct">. Applications request file
+    operations through libraries, which interact with servers for carrying
+    out the operation.  The kernel provides IPC and memory management
+    support. The design of file system libraries and servers
+    follows the structural principles of K42<citation>
+    <xref linkend="K42-Overview"></citation>: they
+    make extensive use of object-oriented technology, implement as much
+    functionality as possible in application-level libraries, and avoid
+    global data structures and implementation policies.
+    </para>
+
+    <para>
+    K42's file system infrastructure relies on K42 technology for customization
+    of services to achieve effective implementation of file operations in the
+    presence of differences in file characteristics, file
+    patterns of use, and resource availability.
+    </para>
+
+    <figure float="1" id="fig-fsstruct">
+    	<title>K42 File System Structuring</title>
+	  <mediaobject>	
+	      <imageobject>
+		      <imagedata fileref="figures/FSStructure.eps"
+			format="eps" align="center" scale=60>
+              </imageobject>
+              <caption> <simpara>
+	          File system structuring in K42.
+              </simpara></caption>
+	  </mediaobject>
+    </figure>
+
+    <para>
+    K42's File System Library (fslib) defines the common interface to
+    file-system-specific code. The interface is similar to the
+    <emphasis>Virtual
+    FileSystem</emphasis> (also known as Virtual FileSystem Switch or
+    VFS<citation><xref linkend="Kleiman86"></citation>), so the use
+    of existing file system code in K42 usually requires only a simple interface
+    mapping. It also provides
+    additional services (synchronization guarantees and object
+    destruction support) that can lead to simpler, optimized implementations of
+    new file systems.
+    </para>
+
+    <para>
+      In <xref linkend="fromapp"> we discuss the K42 file system interface from
+	an application point of view and describes K42 support for name
+	space resolution;
+      <xref linkend="fslib"> presents the design of K42's FS library and
+	its interface to file-system-specific code.
+      <xref linkend="sec-linux"> describes how Linux file system code is
+	integrated into K42, and
+      <xref linkend="adaptation-examples"> presents two examples of
+      file services customized to particular file characteristics and
+	  patterns of use.
+    </para>
+
+  <section id="fromapp">
+    <title>Application Viewpoint</title>
+    <para>
+     File operations can be requested through K42 native interfaces
+     available in the K42 I/O library or using the POSIX API.
+    </para>
+
+    <para>
+     K42 I/O library is the <emphasis>Alloc Stream Facility
+     </emphasis>(ASF)<citation><xref linkend="Krieger94"></citation>, an
+     intermediary between the application and the I/O servers in the
+     system. It provides as much functionality as possible in the
+     application layer. It
+     has been designed using a <emphasis>building block</emphasis> 
+     approach<citation><xref linkend="Auslander97"></citation>, minimizing the
+     amount of data copying required as control is passed from one element
+     in the ASF to another. ASF	ensures that most file I/O occurs through
+     mapped files, with clients and servers sharing the same buffers.
+    </para>
+    
+    <para>
+     When the application uses the POSIX API, 
+     the operation and its arguments are mapped by K42's
+     Linux emulation layer into a method invocation on a K42
+     object<citation><xref linkend="K42-Linux-Environment"></citation>
+     maintained by ASF library.
+     </para>
+
+     <para>
+     In terms of file manipulation, the ASF library performs
+     the following tasks:
+     <itemizedlist spacing="compact">
+	<listitem> <para>for operations based on pathnames, it interacts with
+	the <emphasis>Name Server</emphasis> to identify the file system
+	associated with the pathname (see <xref linkend="namespace">),
+	directing
+	the operation to it; </para>
+	</listitem>
+	<listitem> <para>read and write operations on a file instance
+	manipulate the buffer used for mapping the file. This manipulation
+	may result in paging operations (<xref linkend="mm-interaction">
+        discusses the interaction of the memory management and file system
+	elements). If the file has only one client (the one requesting the
+	I/O operation), the file cursor and information about file length,
+	access time (atime) and modification time (mtime) are maintained by
+	the library. For files with multiple clients, read and write
+	operations interact with the file server object representing the
+	file. </para>
+	</listitem>
+	<listitem> <para> for other operations based on a file instance, the
+	operation may be carried out by the corresponding file object in the
+        application space, or it may be directed to the file system
+        object representing the file.</para>
+	</listitem>
+     </itemizedlist>
+
+     </para>
+
+     <section id="namespace">
+     <title>Name Space</title>
+
+     <para>
+     Name space elements are identified by pathnames.
+     Pathnames in K42 are represented through personality
+     neutral data structures
+     designed for efficient manipulation of pathname components. 
+     </para>
+
+     <para>
+     The name space is a single rooted collection of independent subtrees,
+     each of which containing a complete, self-contained file system.
+     A <emphasis>Name Space Server</emphasis> is responsible for
+     maintaining the name space.
+     New locations in the name space are created when file systems are
+     mounted or by associating the new location
+     with an existing point in the name space (as defined by
+     Plan9 <emphasis>bind</emphasis><citation>
+     <xref linkend="Pike93"></citation>). (When a file system is mounted,
+     it is also possible specify if the existence of another mount point
+     above it, i.e., an ancestor in the mount point tree, will hide it or
+     not).
+     </para>
+
+     <para>
+     The information managed by the Name Space Server is also cached by
+     user applications, so identifying the file system associated with a
+     name space element involves crossing address spaces only if the cached
+     information is out of date.
+     </para>
+
+     <para>
+     We expect to enable both global name space as well as per-application
+     name spaces. 
+     </para>
+
+     </section>
+  </section>
+
+  <section id="fslib">
+    <title>The File System Library</title>
+    
+    <para>
+    K42's FS library (fslib) is the part of a File
+    System Server that provides the
+    interface from applications to file-system-specific code. This
+    sections describes its structuring, the
+    file-system-independent functionality it provides, its interaction with
+    the memory management subsystem, and the set of
+    synchronization and object existence guarantees it offers.
+    </para>
+
+    <section>
+    <title>FS library objects </title>
+    
+    <para>
+    There are three types of objects in the FS library: DirObject,
+    ServerFile, and NameTreeFS.
+    </para>
+
+    <para>DirObject instances represent directories. They have three roles in
+    the library: 
+    <itemizedlist>
+    <listitem><para>to represent an open directory being manipulated by client
+    applications. As so, it has a lock to synchronize directory access and
+    instance fields (on a per-client basis) to properly manage a
+    <emphasis>getdents</emphasis> operation;
+    </para></listitem>
+    <listitem><para>to carry out operations on its entries. The FS library
+    implements operations by identifying the directory container and
+    delegating the operation to the corresponding DirObject. For example, 
+    a <emphasis>stat("/usr/include/stdio.h", stat_buffer)</emphasis> involves
+    identifying the DirObject corresponding to "/usr/include" and
+    requesting it to perform <emphasis>stat("stdio.h", stat_buffer)</emphasis>.
+    </para></listitem>
+    <listitem><para>to cache information about parts of the file
+    system name space that have been visited. DirObject instances
+    are organized as a tree that represents the currently know
+    information about cached name space elements and files.
+    At file server initialization this tree is created with
+    an instance of DirObject to represent the file system
+    root directory. This instance is the entrance point for path name
+    resolution inside a file system. A <emphasis>lookup</emphasis>
+    operation proceeds by traversing the tree and interacting with file
+    system specific code to query about directories that are not currently
+    known. Figure <xref linkend="dirobjects"> pictures the tree state at
+    initialization and afterlookups for /usr/include/stdlib.h and for
+    /usr/local/bin. 
+    </para></listitem>
+    </itemizedlist>
+    </para>
+
+    <figure id="dirobjects">
+    	<title>DirObject trees at initialization and after two
+    	lookups</title>
+	  <mediaobject>	
+	      <imageobject>
+		      <imagedata fileref="figures/DirObjects.eps"
+			format="eps" align="center" scale=60>
+              </imageobject>
+	  </mediaobject>
+
+    </figure>
+
+    <para>
+    NameTreeFS is the FS library entry point for any operation based on
+    pathnames (instead of file instances/descriptors). There is only one
+    instance of this object per file system server, and it is created at
+    file system initialization time. Its methods are
+    invoked by the 
+    application library (through the ASF I/O library or directly). The
+    method's arguments are the pathname identifying the file in the
+    file system, and the arguments for the operation. NameTreeFS carries
+    out a given operation through the following steps: (1) acquires
+    credential information for the current process so that permission
+    checking can be done; (2) performs a lookup for the appropriate target
+    DirObject for the operation; and (3) invokes the operation on the
+    target DirObject.
+    </para>
+
+    <para>ServerFile objects are created to represent files being
+    manipulated by applications. Regardless of how many places in the name
+    space refer to this file or how many open instances of the file exist,
+    the FS library maintains a single instance of 
+    this object for each file. These objects act as a synchronization point
+    for file manipulation. References to ServerFile objects are returned to
+    the application on <emphasis>open/creat</emphasis>
+    operations, so that the application can
+    directly request file services. Per-client information
+    is maintained in client-specific data associated with the
+    object. For example, when a client performs an open operation, it is
+    allocated client-specific data to store the file cursor for this
+    particular client. When a dup operation is performed, the management of
+    client specific data guarantees that the file cursor is shared between
+    dup-related clients.
+    </para>
+
+    <para> 
+    DirObject instances keep track of currently known
+    ServerFile instances for the given directory. When it has to perform an
+    operation on a file, the DirObject first looks up among its children for
+    the target ServerFile. If there is no ServerFile for the file, it
+    queries the file system specific code about the file, obtaining back
+    either a ServerFile reference or an unique file identifier (token).
+    This information is cached by the DirObject,
+    and used on subsequent interactions with the File System code (along with
+    other operation arguments) regarding the file.
+    </para>
+
+    </section>
+
+    <section>
+      <title>Locking Protocol</title>
+      <para>
+      K42's FS library guarantees that the file-system-specific code does
+      not receive concurrent requests that conflict, i.e., that operate on
+      a common target. This is achieved by the following
+      protocol:
+      </para>
+
+      <itemizedlist>
+      <listitem><para>For operations with a single target file (e.g. fchown,
+      fstat, fchmod, chown, stat, chmod, utime), if there is a ServerFile
+      (or DirObject) corresponding to it, its lock is used. If not, the
+      directory lock (corresponding DirObject's lock)
+      is hold during the process of creating the necessary ServerFile, and
+      then the lock for the newly created ServerFile object is used.
+      (For files with multiple links, there is always a single
+      ServerFile corresponding to it.)</para> 
+      </listitem>
+      <listitem><para>For the mkdir operation, the directory lock is hold
+      until the operation is finished. For the rmdir operation, both the
+      container directory and the directory to be removed are locked prior
+      to invoking the file system specific code.
+      </para></listitem>
+      <listitem><para>For operations with a directory and a file target
+      (e.g. unlink, link, open/creat), the directory lock is hold. Also, if
+      there is a ServerFile instance corresponding to the file target, it
+      is also locked.
+      </para></listitem>
+      </itemizedlist>
+
+      <para>This protocol doesn't apply to
+      <emphasis>read/write/truncate</emphasis>
+      operations, because they are carried out through an interaction with
+      the memory management. The locking protocol for these operations is
+      discussed in the next section.</para>
+
+    </section>
+
+    <section id="mm-interaction">
+      <title>Interaction with Memory Management</title>
+
+      <para> 
+      K42's I/O library implements read and write operations through memory
+      mapped access to files, so the execution of file system I/O
+      operations is driven by paging.
+      </para>
+
+      <para>The interaction between the memory management and the
+      file system is carried out by a File Representative (FR) object,
+      which represents the kernel realization of a file. A FR object is
+      created by the ServerFile object on demand,
+      and it encapsulates a ServerFile reference so that the FR
+      can request file system read/write operations. When the FR issues a
+      request, the ServerFile is supposed to send an upcall to the FR
+      once the request has been served.
+      </para>
+
+      <para>
+      There are two synchronization scenarios relevant to read/write
+      operations:
+      </para>
+
+      <itemizedlist>
+      <listitem><para> concurrent unlink: an unlinked file with no more links
+      or application clients (and therefore ready to be actually deleted)
+      may still have deferred read/write operations being issued by
+      memory management. We avoid this by interacting with the FR on
+      unlink execution, if deletion is intended. Therefore when unlink
+      completes, the FR does not have any outstanding requests; 
+      </para></listitem>
+      <listitem><para> concurrent truncate: deferred I/O operations may
+      have to be 
+      discarded if a truncate operation is issued. The implementation of
+      truncate interacts with the FR to guarantee that outstanding requests
+      associated with the part of the file being truncated are discarded.
+      </para></listitem>
+      </itemizedlist>
+
+    </section>
+
+    <section>
+      <title>Object Destruction</title>
+      <para>
+      DirObject and ServerFile objects should be destroyed
+      in order to limit the amount of resources used by the file
+      server or when they can't
+      be useful anymore (the entity has been deleted from the file
+      system, or it has become stale on a remove file server).
+      </para>
+
+      <para>
+      The destruction involves the following actions: (1) checking that there
+      are no active clients (beyond the FR associated with it and possible
+      DirObject name space elements holding a reference to it); (2)
+      asynchronous communication with DirObjects caching the reference to 
+      the file; (3) asynchronous communication with FR regarding
+      destruction and (4) check again if there are no active clients.
+      </para>
+
+      <para>
+      The FS library follows the programming style where an object releases
+      its own lock before making a call on another object, for example:
+      <programlisting>
+      DirObject::chmod(char *name, uval namelen, mode_t mode)
+      {
+         lock.acquire();
+         look for file name among cached children;
+         if found a ServerFile object for the file {
+            // FIRST ACQUIRES FINER GRANULARITY LOCK
+            foundNameHolder->lock.acquire(); 
+            lock.release();                 // THEN RELEASES DIRECTORY LOCK
+            invoke object->fchmod(mode);    // THEN INVOKES operation
+         } else {
+            ...
+         }
+      }
+      </programlisting>
+      </para>
+
+      <para>
+      The directory lock is hold only during the lookup operation.
+      (It is a reader-write lock, but this particular lookup may cause
+      a ServerFile object to be created for the file, so DirObject::chmod
+      acquires the directory lock in write-mode). If
+      the intended file is found, another lock representing this found
+      element is acquired. At this point the directory lock can be released,
+      allowing other operations to proceed in the same directory. If a
+      concurrent operation has the same target (for example, an unlink
+      operation on the file resulting in file deletion), it will block
+      on the finer granularity lock.
+      </para>
+
+      <para>
+      K42 supports a mechanism for deferring object deletion
+      until all currently running threads have finished<citation>
+      <xref linkend="McKenney01">,<xref linkend="Gamsa99"></citation>.
+      This simplifies destruction protocols.
+      </para>
+    </section>
+    
+    <section id="servers">
+    <title>File System Servers</title>
+
+    <para> File-system-specific code is encapsulated in a file system
+    object. This object should implement the
+    <emphasis>FileSystem</emphasis>
+    interface specified in  the FS library.
+    </para>
+    <para> The FS library interacts with file-system-specific code by invoking
+    the corresponding <emphasis>FileSystem</emphasis> object method. The
+    <emphasis>FileSystem</emphasis> is 
+    a VFS-like interface. Differently from usual VFS layers
+    implementations, K42 does not require the VFS interface to operate on
+    "<emphasis>struct inode*</emphasis>" data structures. File systems are
+    free in terms of their 
+    choice of data structures, as long as they are able to provide the
+    FS library with an opaque value token that uniquely identifies the
+    file and that can be used as the argument to the VFS-like operations it
+    provides. 
+    </para>
+
+    <para>
+    Besides defining the file system object, the file system implementor
+    should  extend the ServerFile definition in order to provide the
+    implementation of read and write operations. Some file systems types may
+    need to redefine the behavior specified in the FS Library for
+    ServerFile and DirObject instances. The FS Library provides a
+    specialization for DirObject: class DirObjectVolatile. This is intended
+    to represent directories that can change (or disappear) without going
+    through K42's FS control (for example, files on a remote server can be
+    updated or removed). Essentially, DirObjectVolatile defines caching
+    timeouts. It implements its services by invoking the original DirObject
+    method and properly dealing with an error (clean up of cached data
+    followed by a reissue of the operation). For example, our NFS client
+    implementation uses DirLinuxVolatile and also
+    specializes ServerFile behavior to deal with stale NFS handlers.
+    </para>
+
+    <para>
+    KFS is the native K42 file system. It has been derived from the
+    Hurricane File System<citation><xref linkend="Krieger97"></citation>.
+    KFS has been designed for
+    (potentially large-scale) shared-memory multiprocessors. Its
+    architecture is based on the principle that, in order to maximize
+    performance for applications with diverse requirements, a file
+    system must support a wide variety of file structures, file system
+    policies, and I/O interfaces. For example, the prefetching
+    and file meta-data cache management policies can all be chosen to match
+    an application's access pattern. The flexibility of KFS comes with
+    little processing or I/O overhead.
+    <!-- More information about KFS is provided
+         in <xref linkend="sec-kfs">.
+    -->
+    </para>
+
+    </section>
+
+  </section>
+
+
+  <section id="sec-linux">
+    <title>Integration of Linux File Systems</title>
+
+    <para>
+    The general strategy to incorporate Linux-kernel code in K42 involves
+    presenting K42 as an architecture target for Linux
+    and using interfaces that provide
+    the execution environment expected by Linux-kernel code to run<citation>
+    <xref linkend="K42-LKIntern"></citation>.
+    </para>
+
+    <para>
+    The integration of Linux File System code into K42 is done by implementing
+    the <emphasis>FileSystem</emphasis> interface so that it delegates the
+    work to the original file system code in the Linux base. For every
+    method in the <emphasis>FileSystem</emphasis>, we added a corresponding
+    method in the K42 Architecture Emulation Layer in Linux. So the
+    delegation simply involves (1) using K42 machinery that provides the
+    execution environment expected by Linux-kernel code and (2) invoking
+    the corresponding routine in the K42 architecture emulation layer,
+    passing around the token (an opaque value from the point of view of K42
+    FS infrastructure) that identifies the entity being manipulated.
+    For Linux file systems, we use a "struct
+    inode*" as a token for a file, and a "struct dirent *" as a token for
+    directories.
+    </para>
+
+    <para>
+    The FS routines introduced in Linux's K42 Architecture Emulation Layer
+    essentially invoke  Linux original vfs routines. But some
+    preparation for this invocation is needed:
+    </para>
+    <itemizedlist>
+    <listitem><para> Most Linux vfs routines assume they are invoked after
+    executing pathname resolution in the kernel via the
+    <emphasis>path_walk</emphasis> routine.
+     Since in K42 pathname resolution is done by the FS library, prior to
+    invoking vfs routines we have to prepare the data structures
+    (e.g. <emphasis>struct nameidata</emphasis>) and state (in
+    terms of locking and usage counter of internal Linux data structures)
+    expected by the vfs operation as a result of path_walk execution;
+    </para></listitem>
+    <listitem><para> Linux vfs file operation routines assume that
+    information about the specific directory associated with the file
+    operation is available, i.e., it is known which path led to the file
+    being currently manipulated. This is not currently true in K42's FS
+    Library, so we work around it by producing the expected data structure
+    (struct dentry) with the partial information available. This is enough for
+    correct operation behavior, except that we are not able to provide
+    support for Directory Notifications.
+    </para></listitem>
+    <listitem><para> The vfs interface for <emphasis>read, write,</emphasis>
+    and <emphasis>getdents
+    </emphasis> operations rely on a "struct file" data structure that has no
+    direct counterpart in K42's FS library. Our solution is to create this
+     structure (on
+    the K42 side) as needed, using support introduced in the K42
+    Architecture Emulation Layer. The structure is stored in
+    ServerFile/DirObject client-specific data.
+    </para></listitem>
+    <listitem><para> read and write operations interact with the paging
+    cache.
+    </para></listitem>
+    </itemizedlist>
+
+    <para>
+    File System initialization is done by invoking original Linux support
+    for registering and initializing file systems.
+    </para>
+  </section>
+
+  <section id="adaptation-examples">
+    <title>Customization Examples</title>
+
+    <para>To achieve good performance, the objects used to implement a
+    service can be customized to the demands of that service.
+    K42's ASF and FS libraries have been structured to provide for such
+    flexibility.
+    </para>
+
+    <para>Consider the usual implementation of <emphasis>read</emphasis>,
+      <emphasis>write</emphasis>, and <emphasis>ftruncate</emphasis>
+      operations. These services have been designed
+      to manage correctly and efficiently
+      the cases where the open file is shared by multiple clients.
+      This general approach implies on unnecessary overheads for files that
+      are not accessed concurrently. There is evidence that single client,
+      short-lived files play an important role in the file system workload
+      <citation><xref linkend="ousterhout85trace"></citation>,
+      so applying a specialized policy for them can
+      improve overall performance. In K42, the ASF library interacts with
+      the the FS library when performing a open/creat/dup operation, and it
+      receives from the FS library information about sharing level and open
+      flags. This information is used to choose which type (shared or
+      non-shared) ASF 
+      file object to instantiate. In the shared approach, every
+      read/write/ftruncate operation interacts with the ServerFile to
+      maintain file length, file cursor and time attributes for the
+      file. In the non-shared approach, this information in maintained in
+      the ASF library until the closing of the file. If at some point a new
+      client appears to the file, the FS Library interacts with the ASF
+      library so that the non-shared implementation is switched to the
+      shared one.
+    </para>
+
+    <para>
+    Another example of customization based on file characteristics
+    is optimizing I/O operations for small files. In the
+    general case (files of arbitrary size) memory mapping infrastructure
+    for the file is set. For small files (content fits into a few
+    IPC messages),
+    it is more efficient to exchange messages with the server instead of
+    memory mapping the file. If the small file has only one client,
+    the operations are carried out in the application space, and only
+    when the file is closed (or another client initiates use of the same
+    file) the state is transferred to the file system server.
+    </para>
+
+  </section>
+
+  <section id="object-interaction">
+    <title>Examples of Object Interaction</title>
+
+      <para>
+	<xref linkend="fig-chmod-path"> illustrates the
+	  interaction among objects for 
+	  carrying out "chmod(<emphasis>path</emphasis>,
+	  <emphasis>mode,</emphasis>)".
+	 <xref linkend="fig-chmod-fd"> illustrates
+	    "fchmod(<emphasis>fd</emphasis>,
+	    <emphasis>mode</emphasis>)". <xref linkend="fig-chmod-fd">
+	      illustrates 
+	      an <emphasis>open</emphasis> call. 
+	      The figures use a simplified version of the UML notation 
+	      <citation><xref linkend="UML"></citation>
+              for interaction diagrams.
+      </para>
+
+      <figure id="fig-chmod-path">
+	<title>Object interaction for chmod(<emphasis>path</emphasis>,
+	  <emphasis>mode</emphasis>).
+	</title>
+	  <mediaobject>
+	    <imageobject>
+	      <imagedata fileref="figures/Chmod-path.eps"
+		format="ps" align="center" scale=75>
+	    </imageobject>
+	  </mediaobject>
+      </figure>
+
+      <figure id="fig-chmod-fd">
+	<title>Object interaction for chmod(<emphasis>fd</emphasis>,
+	  <emphasis>mode</emphasis>).</title>
+	  <mediaobject>
+	    <imageobject>
+	      <imagedata fileref="figures/Chmod-fd.eps"
+		format="ps" align="center" scale=75>
+	    </imageobject>
+	  </mediaobject>
+      </figure>
+
+      <figure id="fig-open">
+	<title>Object interaction for open(<emphasis>path</emphasis>,
+	  <emphasis>flags...</emphasis>).</title>
+	  <mediaobject>
+	    <imageobject>
+	      <imagedata fileref="figures/Open.eps"
+		format="ps" align="center" scale=75>
+	    </imageobject>
+	  </mediaobject>
+      </figure>
+
+      <para>
+	Notice that the operations proceed without kernel involvement
+	(beyond providing communication services
+	between different address spaces). Server File objects are
+	locked in a per instance basis. The only "global" locks to be
+	found in the FS infrastructure are present in legacy FS
+	implementations integrated into K42, which may use global
+	locks to avoid race conditions. The guarantees provided by the 
+	K42 FS locking protocol eliminates contention on the legacy
+	locks.
+      </para>
+  </section>
+
+</section>
+
+<!--
+Local Variables:
+sgml-validate-command: "nsgmls -s %s %s"
+sgml-indent-data: t
+sgml-insert-missing-element-comment: t
+End:
+-->
+<!--  LocalWords:  reviewer's
+ -->

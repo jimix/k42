@@ -1,0 +1,1675 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: memPrgG.sgml,v 1.5 2004/01/23 19:51:38 marc Exp $
+-->
+<title>Memory Management</title>
+<section>
+  <title>Pinning</title>
+  <para>
+    The memory manager provides interfaces for pinning frames and
+    getting their v-maps-r address.  This is used, for example, by I/O
+    interfaces doing direct I/O from user memory.
+  </para>
+  <para>
+    Pinning a page normally involves three steps, starting with a
+    virtual address and process reference.  Note that this processing
+    must be done one page at a time.  These are:
+    <itemizedlist>
+      <listitem><para>
+          Call the process interface vaddrToRegion to get the region
+          which maps the vaddr.
+        </para></listitem>
+      <listitem><para>
+          Call the region interface vaddrToFCM to get the fcm and
+          offset which backs the page.  Note that this call includes a
+          parameter to distinguish read and write requests.  The call
+          will fail if the address is bad or there would be an access
+          violation caused by writing read-only memory.
+        </para></listitem>
+      <listitem><para>
+          Call the FCM interface getPage to get the v-maps-r address
+          of the frame mapping the offset.
+        </para></listitem>
+      </itemizedlist>
+    Once the I/O is complete, the caller must call the FCM again at
+    its releasePage interface, again passing the offset.  This must be
+    done in all cases, or the kernel will leak frames and FCM's.
+    </para>
+  <para>
+    In programming, care should be taken to distiguish byte and page
+    offsets.  Although the pinning interfaces accept byte virtual
+    addresses, they operate in terms of page alligned frames.  Once a
+    frame v-maps-r address is gotten, the appropriate offset in the
+    page must be applied by the caller.
+    </para>
+  <para>
+    In programming, care must also be taken with operations which span
+    page-frames.  The caller is reponsible for indpendently pinning
+    each page-frame and doing the scatter or gather logic needed to
+    transmit the data.  Contiguous pages in virtual memory are not
+    normally backed by contiguous page-frames.
+    </para>
+  </section>
+<section>
+  <title>Files</title>
+  <para>
+
+    <ulink
+    url="&topsrc/os/kernel/mem/Region.H"><filename>Region:</filename></ulink>
+    Part of a process.  Maps contiguous page-aligned regions of a
+    process' address space to corresponding regions of an FCM.
+
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/os/kernel/mem/RegionDefault.H"><filename>RegionDefault
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/RegionDefault.C"><filename>[.C]</filename></ulink>:
+	The basic implementation common to all Regions.
+     
+      </simpara>
+      <itemizedlist>
+	<listitem>
+	  <simpara>
+
+	    <ulink
+	    url="&topsrc/os/kernel/mem/RegionFSComm.H"><filename>RegionFSComm
+	    [.H]</filename></ulink><ulink
+	    url="&topsrc/os/kernel/mem/RegionFSComm.C"><filename>[.C]</filename></ulink>:
+	    Special region for kernel/file system communication.
+
+	    </simpara>
+	  </listitem>
+	  <listitem>
+	    <simpara>
+	      
+	      <ulink
+	      url="&topsrc/os/kernel/mem/RegionDefaultCRW.H"><filename>RegionDefaultCRW
+	      [.H]</filename></ulink><ulink
+	      url="&topsrc/os/kernel/mem/RegionDefaultCRW.C"><filename>[.C]</filename></ulink>:
+	      A demultiplexing object for use with copy-on-reference
+	      FCM
+
+	    </simpara>
+	  </listitem>
+	  <listitem>
+	    <simpara>
+
+	      <ulink
+	      url="&topsrc/os/kernel/mem/RegionPerProcessor.H"><filename>RegionPerProcessor
+	      [.H]</filename></ulink><ulink
+	      url="&topsrc/os/kernel/mem/RegionPerProcessor.C"><filename>[.C]</filename></ulink>:
+	      On fault, the mapping of pages to the FCM is offset by
+	      VPNum*RegionSize for each processor, giving processor
+	      specific memory
+
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+
+	      <ulink
+	      url="&topsrc/os/kernel/mem/RegionRedZone.H"><filename>RegionRedZone
+	      [.H]</filename></ulink><ulink
+	      url="&topsrc/os/kernel/mem/RegionRedZone.C"><filename>[.C]</filename></ulink>:
+	      Error on any fault, used to make "red zones" to catch
+	      errors, e.g., for the page at address zero.
+
+	  </simpara>
+	</listitem>
+      </itemizedlist>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/os/kernel/mem/RegionList.H"><filename>RegionList
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/RegionList.C"><filename>[.C]</filename></ulink>:
+	The implementation of the list of regions maintained by a
+	process to represent the address space.  This serves as a
+	virtual address allocator for regions as well.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/os/kernel/mem/RegionDefault.H"><filename>RegionReplicated
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/RegionReplicated.C"><filename>[.C]</filename></ulink>:
+	The basic implementation of a replicated region.  Differs from
+	RegionDefault in logic for destruction and variables that are
+	replicated.
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+  <para>
+
+    <ulink url="&topsrc/os/kernel/mem/FCM.H"><filename>FCM
+    [.H]</filename></ulink><ulink
+    url="&topsrc/os/kernel/mem/FCM.C"><filename>[.C]</filename></ulink>
+    (File Cache Manager): Page cache for a file (FR).  Handles
+    requests from a region to map a page into the process through a
+    HAT for the process that is passed as part of the request.  Memory
+    is allocated and deallocated by making requests to the PM, which
+    may be associated with the program, in the case of a private FCM,
+    or a file cache manager (currently just PMRoot) in the case of a
+    shareable file.  Note that in the case of private FCM, it may
+    still be explicitly shared between multiple processes, in which
+    case the PM is taken from one of the Regions that is attached (and
+    changed as needed as regions detach and attach to the FCM).
+
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/os/kernel/mem/FCMFrameArray.H"><filename>FCMFrameArray
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/FCMFrameArray.C"><filename>[.C]</filename></ulink>
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/os/kernel/mem/FCMReal.H"><filename>FCMReal
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/FCMReal.C"><filename>[.C]</filename></ulink>
+	1 to 1 relationship real memory
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+  
+	<ulink
+	url="&topsrc/os/kernel/mem/FCMStartup.H"><filename>FCMStartup
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/FCMStartup.C"><filename>[.C]</filename></ulink>
+	the piece of FCMReal backing servers combined with kernel
+	image
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/os/kernel/mem/FCMPrimitiveKernel.H"><filename>FCMPrimitiveKernel
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/FCMPrimitiveKernel.C"><filename>[.C]</filename></ulink>
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/os/kernel/mem/FCMCommon.H"><filename>FCMCommon
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/FCMCommon.C"><filename>[.C]</filename></ulink>
+	implements functionality needed by most FCMs
+
+      </simpara>
+      <itemizedlist>
+	<listitem>
+	  <simpara>
+        
+	    <ulink
+	    url="&topsrc/os/kernel/mem/FCMFixed.H"><filename>FCMFixed
+	    [.H]</filename></ulink><ulink
+	    url="&topsrc/os/kernel/mem/FCMFixed.C"><filename>[.C]</filename></ulink>
+	    fixed relationship phys memory
+
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+
+	    <ulink
+	    url="&topsrc/os/kernel/mem/FCMPrimitive.H"><filename>FCMPrimitive
+	    [.H]</filename></ulink><ulink
+	    url="&topsrc/os/kernel/mem/FCMPrimitive.C"><filename>[.C]</filename></ulink>
+	    allocates phys page each req
+
+	  </simpara>
+	  <itemizedlist>
+	    <listitem>
+	      <simpara>
+ 
+	    <ulink
+	    url="&topsrc/os/kernel/mem/FCMPrimitiveKernel.H"><filename>FCMPrimitiveKernel
+	    [.H]:</filename></ulink><ulink
+	    url="&topsrc/os/kernel/mem/FCMPrimitiveKernel.C"><filename>[.C]:</filename></ulink>
+	    pinned data structures
+
+	      </simpara>
+	    </listitem>	 
+	    <listitem>
+	      <simpara>
+
+		<ulink
+		url="&topsrc/os/kernel/mem/FCMCRW.H"><filename>FCMCRW
+		[.H]</filename></ulink><ulink
+		url="&topsrc/os/kernel/mem/FCMCRW.C"><filename>[.C]</filename></ulink>
+		copy on reference
+	      </simpara>
+	    </listitem>
+        </itemizedlist>
+	</listitem>
+	<listitem>
+	  <simpara>
+
+	    <ulink
+	    url="&topsrc/os/kernel/mem/FCMDefault.H"><filename>FCMDefault
+	    [.H]</filename></ulink><ulink
+	    url="&topsrc/os/kernel/mem/FCMDefault.C"><filename>[.C]</filename></ulink>
+	    implements functionality for talking to real FR
+	 
+	  </simpara>
+	  <itemizedlist>
+	    <listitem>
+	      <simpara>
+
+		<ulink
+		url="&topsrc/os/kernel/mem/FCMCompuation.H"><filename>FCMComputation
+		[.H]</filename></ulink><ulink
+		url="&topsrc/os/kernel/mem/FCMComputation.C"><filename>[.C]</filename></ulink>
+		special function for computational (swap backed)
+		FCM's.  Also implements fork copy.
+
+	      </simpara>
+	    </listitem>
+	  </itemizedlist>
+	</listitem>
+      </itemizedlist>
+    </listitem>
+    <listitem>
+      <simpara>
+	
+	<ulink
+	url="&topsrc/os/kernel/mem/FCMPartitionedTrivial.H"><filename>FCMPartitionedTrivial
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/FCMFrameArray.C"><filename>[.C]</filename></ulink>
+	Implements a replicated FCM via a partitioned hash table.
+	Hash table needs to be made fully distributed.
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+  <para>
+
+    <ulink url="&topsrc/os/kernel/mem/FCMCache.H"><filename>FCMCache
+    [.H]</filename></ulink>: Container object for
+    FCMPartitionedTrivial.  Contains template for FCM to use generic
+    hash data structure.
+
+  </para>
+  <para>
+
+    <ulink url="&topsrc/os/kernel/mem/FR.H"><filename>FR
+    [.H]</filename></ulink><ulink
+    url="&topsrc/os/kernel/mem/FR.C"><filename>[.C]</filename></ulink>:
+    (File Representative): In-kernel representative of an open file.
+    It handles requests from the FCM to read/write to the
+    corresponding file.  There is a different class for each different
+    type of file system (some aren't really file systems though).
+
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+      
+	<ulink
+	url="&topsrc/os/kernel/mem/FRCommon.H"><filename>FRCommon
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/FRCommon.C"><filename>[.C]</filename></ulink>:
+	implements functionality needed by most FRs
+   
+      </simpara>
+      <itemizedlist>
+	<listitem>
+	  <simpara>
+
+	    <ulink
+	    url="&topsrc/os/kernel/mem/FRComputation.H"><filename>FRComputation
+	    [.H]</filename></ulink><ulink
+	    url="&topsrc/os/kernel/mem/FRComputation.C"><filename>[.C]</filename></ulink>:
+	    for backing computational regions
+
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+
+	    <ulink url="&topsrc/os/kernel/mem/FRPlaceHolder.H"><filename>FRPlaceHolder
+	    [.H]</filename></ulink><ulink
+	    url="&topsrc/os/kernel/mem/FRPlaceHolder.C"><filename>[.C]</filename></ulink>:
+	    returns errors for page faults, is used for various
+	    specialized jobs, e.g., for backing servers combined with
+	    kernel image
+
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+
+	    <ulink url="&topsrc/os/kernel/mem/FRNFS.H"><filename>FRNFS
+	    [.H]</filename></ulink><ulink
+	    url="&topsrc/os/kernel/mem/FRNFS.C"><filename>[.C]</filename></ulink>:
+	    interface to NFS
+	  </simpara>
+	</listitem>
+      </itemizedlist>
+    </listitem>
+  </itemizedlist>
+  <para>
+
+    <ulink url="&topsrc/os/kernel/mem/PM.H"><filename>PM</filename></ulink> (Page
+    Manager): A hierarchy of PMs (with FCMs at the leaves) is used to
+    manage physical memory for related entities: namely processes,
+    shareable files, or the kernel.  In theory, there could be other
+    groupings, such as a user's session.  All requests for more memory
+    from FCMs are intended to go through a PM (there are some
+    exceptions for kernel FCMs).  Summary information is maintained at
+    a given level for all the things below
+  
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/os/kernel/mem/PMRoot.H"><filename>PMRoot
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/PMRoot.C"><filename>[.C]</filename></ulink> Top of
+	hierarchy, also, for now, handles all FCMs that are not
+	private or ones that have no other PM
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/os/kernel/mem/PMLeaf.H"><filename>PMLeaf
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/PMLeaf.C"><filename>[.C]</filename></ulink>
+	Bottom of hierarchy, to which private FCMs are attached
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/os/kernel/mem/PMKern.H"><filename>PMKern
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/PMKern.C"><filename>[.C]</filename></ulink>
+	Special PM for kernel that is pinned and handles the fact that
+	the kernel can ask for memory under special circumstances.
+      
+      </simpara>
+    </listitem>   
+ </itemizedlist>
+  <para>
+    
+    <ulink url="&topsrc/os/kernel/mem/HAT.H"><filename>HAT</filename></ulink> (Hardware
+    Address Translation): The HAT is responsible for managing the
+    hardware address translation structures (generally page tables of
+    some sort).  Address translation is broken into two levels:
+    segment tables and segments.  Segments generally correspond either
+    to hardware segments in such architectures as PowerPC, or to a all
+    the pages mapped by a lower-level page table in systems with
+    hierarchical page table organizations.
+
+  </para>
+  <itemizedlist>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/os/kernel/mem/HATDefault.H"><filename>HATDefault
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/HATDefault.C"><filename>[.C]</filename></ulink>
+	Standard HAT
+      
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/os/kernel/mem/HATKernel.H"><filename>HATKernel
+	[.H]</filename></ulink><ulink
+	url="&topsrc/os/kernel/mem/HATKernel.C"><filename>[.C]</filename></ulink>
+	Kernel handle that is pinned and has extra methods to deal
+	with startup ordering problems
+
+      </simpara>
+    </listitem>   
+  </itemizedlist>
+  <para>
+
+    <ulink
+    url="&topsrc/os/kernel/mem/SegmentTable.H"><filename>SegmentTable</filename></ulink>
+    Machine specific class that handles hardware mapping structures
+    for segments
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/os/kernel/mem/SegmentList.H"><filename>SegmentList</filename></ulink>
+    Support class used by HATDefault to keep track of the segments
+    currently mapped to the address space</para>
+
+  <para>
+
+    <ulink
+    url="&topsrc/os/kernel/mem/SegmentHAT.H"><filename>SegmentHAT</filename></ulink>
+    Machine-specific class that keeps of information data structure
+    the hardware needs to map virtual addresses in a segment to a
+    physical page
+
+  </para> 
+  <para>
+
+    SegmentHATPrivate (<ulink
+    url="&topsrc/os/kernel/mem/arch/powerpc/SegmentHATPrivate.H"><filename>powerpc
+    </filename></ulink> and <ulink
+    url="&topsrc/os/kernel/mem/arch/mips64/SegmentHATPrivate.H"><filename>mips</filename></ulink>)
+    Implementation for specific architectures for Segments that are
+    private to a single process
+
+  </para>
+  <para>
+
+    SegmentHATShared (<ulink
+    url="&topsrc/os/kernel/mem/arch/powerpc/SegmentHATPrivate.H"><filename>
+    powerpc</filename></ulink> and <ulink
+    url="&topsrc/os/kernel/mem/arch/mips64/SegmentHATPrivate.H"><filename>mips</filename></ulink>)
+    Implementation for specific architectures for Segments that are
+    shared across multiple processes and managed by an FCM
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/os/kernel/mem/PageAllocatorKernPinned.H"><filename>PageAllocatorKernPinned
+    [.H]</filename></ulink><ulink
+    url="&topsrc/os/kernel/mem/PageAllocatorKernPinned.C"><filename>[.C]</filename></ulink>:
+    Handles requests for physical memory pages, primarily from PMRoot
+    and from the kernel pinned allocator (but also from other parts of
+    the system that need physical memory, such as for page tables).
+    The global pageout daemon is also part of this object, as it is
+    responsible for physical-memory-oriented page replacement (finding
+    free pages on a certain NUMA node or of a certain color or at a
+    fixed address).  The object also maintains a virtually-mapped
+    table of page descriptors, one per physical page in the system.
+    The descriptors hold an FCM reference for the current FCM owner,
+    and a uval that the FCM can use as it pleases.  There is one rep
+    per NUMA node, using the natural address boundaries of the
+    architecture for the mapping between addresses and NUMA
+    nodes.
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/os/kernel/mem/PageAllocatorKernUnpinned.H"><filename>PageAllocatorKernUnpinned
+    [.H]</filename></ulink><ulink
+    url="&topsrc/os/kernel/mem/PageAllocatorKernUnpinned.C"><filename>[.C]</filename></ulink>
+
+  </para>
+  <para>
+
+    <ulink url="&topsrc/os/kernel/mem/PageDesc.H"><filename>PageDesc</filename></ulink>:
+    Common state about a page stored in a page cache (e.g., PageList
+    or PageSetDense)
+  
+  </para>
+  <para>
+
+    <ulink url="&topsrc/os/kernel/mem/PageList.H"><filename>PageList
+    [.H]</filename></ulink><ulink
+    url="&topsrc/os/kernel/mem/PageList.C"><filename>[.C]</filename></ulink>: (Obsolete)
+    Page cache with pages stored in a simple linked-list.  Also
+    integrates a freelist for storing pages that are unused but
+    valid.
+
+  </para>
+  <para>
+
+    <ulink url="&topsrc/os/kernel/mem/PageSetDense.H"><filename>PageSetDense
+    [.H]</filename></ulink><ulink
+    url="&topsrc/os/kernel/mem/PageSetDense.C"><filename>[.C]</filename></ulink>: Simple
+    page cache with the pages stored in a fixed sized array (also
+    includes freelist).  This could be augmented to at least allow the
+    size of the array to be set at creation time, or better yet, to
+    have the array grow as needed.
+
+  </para>
+  <para>
+
+    <ulink url="&topsrc/os/kernel/mem/PageSet.H"><filename>PageSet
+    [.H]</filename></ulink><ulink
+    url="&topsrc/os/kernel/mem/PageSet.C"><filename>[.C]</filename></ulink>: Pages
+    recorded in an extesible hash table.  Hash uses hash chains for
+    collisions.  The initial table (small) is in the object.  It is
+    extended by allocating a larger table and moving the page
+    descriptors to the new table.
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/os/kernel/mem/PageFaultNotification.H"><filename>PageFaultNotification
+    [.H]</filename></ulink><ulink
+    url="&topsrc/os/kernel/mem/PageFaultNotification.C"><filename>[.C]</filename></ulink>:
+    Object to represent a call back when a page becomes available.
+    Normally, a PFN object is passed to the Region and thus to the
+    FCM.  If the fault cannot be resolved immediately, the PFN is
+    queued on the page descriptor.  When the IO completes, all the
+    queued PFN's are called. The normal PFN signals the process that
+    suffered the fault.  For must be synchronous faults, the FCM
+    creates a PFN that unblocks the waiting kernel thread.
+
+  </para>
+  <para>
+
+    <ulink url="&topsrc/os/kernel/mem/VAllocServicesKern.H"><filename>
+    VAllocServicesKern[.H]</filename></ulink><ulink
+    url="&topsrc/os/kernel/mem/VAllocServicesKern.C"><filename>[.C]</filename></ulink>:
+    This is part of the kernel pinned portion of the block allocator
+    (see <ulink url="&topsrc/os/kernel/mem/../../../lib/libc/alloc/README.html">
+    <filename>here</filename></ulink> for more details).  It provides
+    the miscellaneous functions that are pinned-memory dependent that
+    are needed by the rest of the library allocator.
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/os/kernel/mem/PMallocKern.H"><filename>PMallocKern[.H]</filename></ulink><ulink
+    url="&topsrc/os/kernel/mem/PMallocKern.C"><filename>[.C]</filename></ulink>: This is
+    part of the kernel pinned portion of the block allocator (see
+    <ulink url="&topsrc/os/kernel/mem/../../../lib/libc/alloc/README.html"><filename>
+    here</filename></ulink> for more details).  This is the
+    intermediary between the library GMalloc class that is
+    pinned/paged agnostic, and the pinned-specific kernel
+    AllocRegionManagerKern class (see next).
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/os/kernel/mem/AllocRegionManagerKern.H"><filename>AllocRegionManagerKern[.H]
+    </filename></ulink><ulink
+    url="&topsrc/os/kernel/mem/AllocRegionManagerKern.C"><filename>[.C]</filename></ulink>:
+    This is part of the kernel pinned portion of the block allocator
+    (see <ulink url="&topsrc/os/kernel/mem/../../../lib/libc/alloc/README.html">
+    <filename>here</filename></ulink> for more details).  This manages
+    lists of pages allocated to the pinned allocator (in the form of
+    MemDescKerns, see next) for the different size and type classes of
+    memory.
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/os/kernel/mem/MemDescKern.H"><filename>MemDescKern[.H]</filename></ulink><ulink
+    url="&topsrc/os/kernel/mem/MemDescKern.C"><filename>[.C]</filename></ulink>: This is
+    part of the kernel pinned portion of the block allocator (see
+    <ulink
+    url="&topsrc/os/kernel/mem/../../../lib/libc/alloc/README.html">
+    <filename>here</filename></ulink> for more details).  This
+    provides the interface to managing the descriptors for a page of
+    memory.  It uses the global FrameArray FrameDescs to store the
+    information, and hence is not directly instantiated itself.
+
+  </para>
+</section>
+<section>
+  <title>Orphans (no links to these .H and .C files)</title>
+  <itemizedlist spacing="compact"
+    <listitem>
+      <simpara>
+	<filename>
+	
+	  Access.H
+	
+	</filename>
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	<filename>
+	  
+	  CacheSync.H
+	  
+	</filename>
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	<filename>
+	  
+	  HardwareSpecificRegions.H
+	  
+	</filename>
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	<filename>
+	  
+	  memconst.H
+	  
+	</filename>
+      </simpara>
+    </listitem>    
+  </itemizedlist>
+</section>
+<section>
+  <title>Object Interactions</title>
+  <para>
+
+    A Region created by the user with a contiguous virtual range in
+    Process and given an FR to attach as well as a starting offset in
+    the FR at which the mapping should start.
+
+  </para>
+  <para>
+
+    The FR then provides the Region with the FCM for the Region to
+    attach to.
+
+  </para>
+  <para>
+
+    The Region then attaches to FCM, creating a logical bi-directional
+    link between the two.
+    
+  </para>
+  <para>
+
+    A Page fault in application gets directed to the Region (by way of
+    the Process Region list).  The Region asks the FCM to map the page
+    at the given address by providing a HAT to the FCM.
+
+  </para>
+  <para>
+
+    The FCM looks up the page offset provided.  If it's not found, a
+    PageDesc is allocated and the page is marked <emphasis>doingIO</emphasis>.  The
+    FCM then must acquire a page from the PM and then mark the global
+    page frame array indicating that it now owns the given physical
+    page.  The FCM then sets up a notification structure on the page
+    which will cause the faulting Process to be awaken when the I/O
+    completes so that it can try its request again.  The FCM then asks
+    the FR to start an I/O request for the page.  The FCM then returns
+    a faultID back to the Region which the client Scheduler will use
+    to match the fault completion notification with the thread that is
+    blocked on the fault.
+
+  </para>
+  <para>
+
+    When an I/O completes, the FR is notified by some external
+    mechanism.  It then calls the FCM with the offset and the physical
+    address used for the I/O.  The FCM then updates its page cache
+    information and invokes the notify function for all notifications
+    queued on the page.  If the page is marked <emphasis>freeAfterIO</emphasis> the
+    page is then freed (this is usually used on pageout and
+    destruction for writes)
+
+  </para>
+  <para>
+
+    If the page is found in the page cache on a fault, the FCM calls
+    the HAT to map the page to the given physical address recorded in
+    the pages PageDesc.  If the FCM was mapped using shared segments,
+    the FCM will inform the HAT not to allocate a SegmentHAT if one is
+    not already available.  If that is the case, the HAT will return a
+    NOSEG error back to the FCM.  The FCM will then search its own
+    segmentHATs to find the one for the particular region and
+    requested offset and plug it into the HAT (allocating a new
+    SegmentHAT if necessary).  At that point, the map request to the
+    HAT can be reissued.  The return code from the HAT is returned
+    back to the region indicating overall success of the operation.
+
+  </para>
+  <para>
+
+    The global pageout daemon is responsible for replacement based on
+    physical address characteristics (e.g., to free memory on a NUMA
+    node, or to free a particular page in order to make a large page).
+    It selects a physical page from the global page frame array and
+    contacts the FCM whose reference is stored in the page entry (note
+    that no locking is used on this array, so it's possible that the
+    current owner has changed; the FCM always verifies whether it is
+    the current owner of the page).  The request comes in by way of
+    the <emphasis>giveBackOrUnmap</emphasis> call.  There are a number of
+    constraints that indicate whether the FCM can substitute a
+    different page to give back.  If the FCM has no suitable candidate
+    it can choose just to unmap the page and give it a second chance
+    (unless ordered to give it back by the pageout daemon).
+
+  </para>
+  <para>
+
+    The PM can also request the FCM to give up memory.  It's requests
+    are based on the amount of memory the FCM has and the number of
+    free pages it has (this summary information is kept in the PM and
+    periodically refreshed, but is not considered to be completely
+    accurate at any given time).  The PM only requests the number of
+    pages to get back, but doesn't care what pages it gets.
+
+  </para>
+  <para>
+
+    If the FCM has to get rid of page, it must first unmap it from all
+    Regions by way of both unmap call to the Regions mapping using
+    non-shared-segments, and through unmap calls to any shared
+    segments directly.  The Region unmapPage call is special, in that
+    it only unmaps the page on the current processor; the FCM keeps
+    track of all the processors that might have a mapping to the page
+    and issues the Region <emphasis>unmap</emphasis> request remotely
+    from each processor (the <emphasis>unmapRange</emphasis> call,
+    however unmaps across all processors the region covers, which it
+    too keeps track of).  The segmentHAT unmap call needs the list of
+    regions that are mapping it, since some architectures need
+    process-specific information to properly remove all mappings from
+    all TLBs.  The FCM provides this through an abstract iterator
+    class that allows the segment to step through all the regions it
+    is mapping.  After unmapping the page, if it's dirty it must be
+    written back.  In that case, it is marked as doingIO and also as
+    <emphasis>freeAfterIO</emphasis> so that when the I/O callback
+    completes the page will be given up at that point.  If the page is
+    not dirty, it is removed from the page cache, the global page
+    frame array is cleared to indicate that this FCM no longer owns
+    the page, the page descriptor is destroyed, and the page is given
+    back to the FCM's PM.
+
+  </para>
+</section>
+<section>
+  <title>Locking Protocol</title>
+  <para>
+
+    The locking protocol is unfortunately fairly complex.  It is
+    geared more to performance and simplicity for the common case
+    operations, rather than simplicity in the overall protocol.  We
+    begin with an overview of the locking protocol from each object's
+    perspective, and then proceed to detail the locking protocol in
+    the specific interactions between the objects.
+
+  </para>
+  <para>
+
+    Region: Reader/destruction lock to protect outstanding map
+    requests.  No other locks needed.
+
+  </para>
+  <para>
+
+    FCM: Locks to protect hash table (in the future also lock per
+    page) to ensure existence of page for some operation (page IO bit
+    also does this a bit).  Region list is separately locked, but this
+    should be able to go away once per-page locking is in place.  All
+    calls outside the object are done without any locks held, except
+    for map calls to the HAT, and dealloc page calls to the PM.
+
+  </para>
+  <para>
+
+    PM: no locks held for all calls outside the object
+
+  </para>
+  <para>
+
+    FR: no locks held for all calls outside the object
+
+  </para>
+  <para>
+
+    HAT: <emphasis>FIXME</emphasis>: fill in more details for
+    HAT stuff later
+
+  </para>
+  <para>
+
+    In the following, for each interaction type we list the target
+    method and the locks that are held in the caller during the call,
+    plus any restrictions on the target function.
+
+  </para>
+  <para>
+
+    Region to FCM
+
+  </para>
+
+    <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<emphasis>FCM::mapPage</emphasis>: no locks held in Region,
+	but it does keep a reader-lock that protects the Region from
+	being destroyed while the call is in progress
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+      
+	<emphasis>FCM::detachRegion</emphasis>: no locks held in Region
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+
+    <para>
+
+    FCM to Region
+
+    </para>
+    <itemizedlist spacing="compact">
+      <listitem>
+	<simpara>
+
+	  <emphasis>Region::unmapPage</emphasis>: FCM locks can be
+	  held.  Region can not grab any locks or block the call for
+	  any reason.
+
+	</simpara>
+      </listitem>
+
+    <listitem>
+      <simpara>
+	
+	<emphasis>Region::destroy</emphasis>: The FCM calls this if it
+	is forceably being destroyed (not a common occurrence).  The
+	FCM lock cannot be held, as this call will block in the Region
+	until all outstanding faults have been handled (protected
+	through a reader-lock).  Also, the Region will call back to
+	the FCM to detach, but this is short-circuited by a
+	beingDestroyed flag which causes the FCM to ignore the
+	call.
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+  <para>
+
+    FCM to HAT
+
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<emphasis>HAT::mapPage</emphasis>: Lock must held in the FCM
+	to ensure that there is no race with an unmap call
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+  <para>
+    
+    FCM to PM
+
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<emphasis>PM::alloc*</emphasis>: all of the alloc calls must
+	be made with no FCM locks held to ensure that if there is no
+	memory and a callback to the FCM to free memory is made, the
+	callback will not create a deadlock
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<emphasis>PM::dealloc*</emphasis>: this may be made with the
+	FCM lock held, as this simplifies some common paths that
+	involve deallocation.  As a result, the PM routine can not
+	result in a callback to the FCM; it can block on internal
+	locks though, since no calls out of the PM can be made with
+	the locks held.
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+  <para>
+
+    PM to FCM
+
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<emphasis>FCM::giveBack</emphasis>: This must be called with
+	no PM locks held, as the FCM will be calling back to actually
+	release the memory (and of course, in general, deallocs to the
+	PM can be called with the FCM lock held).
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+  <para>
+
+    FCM to FR
+    
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	FR::startFillPage: This must be called with no FCM locks held
+	since the call may block waiting for previous outstanding
+	calls to complete, which in turn depend on a callback to the
+	FCM.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	FR::startPutPage: Same as startFillPage.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	FR::regionListIsEmpty: This must be called with no locks held
+	since the FR may call back to destroy the FCM based on this
+	information (which can really only be considered up-to-date
+	based on other information the FR has about the possibility of
+	other outstanding attach calls to the FCM).
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+  <para>
+
+    FR to FCM
+
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<emphasis>FCM::fillPageComplete</emphasis>: Must be called
+	with no locks held to simplify the various other protocols
+	that involve calls from the FCM that do involve
+	locks.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	
+	<emphasis>FCM::putPageComplete</emphasis>: Same as
+	fillPageComplete.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<emphasis>FCM::fsync</emphasis>: no FR locks can be held since
+	the FCM will callback with writes to the FR.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<emphasis>FCM::destroy</emphasis>: should only be called from
+	the FR; called without locks held, to allow an outstanding
+	I/Os to complete.
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+  <para>
+
+    PM to higher PM
+
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<emphasis>PM::alloc*</emphasis>: called with no locks held,
+	since upper level may need to call back to PM to free memory
+	to satisfy the call.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<emphasis>PM::dealloc*</emphasis>: may be called with locks
+	held, but assumed not for simplicity.
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+    <para>
+
+    PM to lower PM
+
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<emphasis>PM::collectSummary</emphasis>: not decided
+	yet.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<emphasis>PM::giveBack</emphasis>: will ultimately end up with
+	a call to an FCM, so should not hold any locks, as the FCM
+	will callback to release memory
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+</section>
+<section>
+  <title>Destruction Sequencing</title>
+
+  <para>
+    
+    Destruction of various objects can be triggered by different
+    events.  The ones we are most interested in is the effect of
+    destroying a Region, the effect of destroying an FR, and the
+    effect of destroying a Process.
+
+  </para>
+</section>
+<section>
+  <title>Destroying a region</title>
+  <para>
+
+    When a region is destroyed, it first waits for all outstanding
+    page faults to complete and then marks the Region as being in the
+    process of being destroyed, thus preventing any new faults from
+    being processed.  Next it unmaps itself from the HAT across all
+    processors.  It then detaches itself from the FCM, which may
+    trigger some other actions discussed below.  Finally the Region
+    removes itself from the Process region list.
+
+  </para>
+  <para>
+
+    As just mentioned, the detachment of a Region from an FCM has
+    certain effects.  If the FCM is in the process of being destroyed,
+    it simply ignores the request, since it knows that it is already
+    getting rid of all Region attachments.  Otherwise, it removes the
+    Region from its list of attached regions and checks if the list is
+    now empty.  If so, it notifies the FR of this fact by calling
+    <emphasis>FR::regionListIsEmpty()</emphasis>.  This call must be
+    done with the locks released, since the FR may callback.  In
+    particular, the FR may decide that this is a good time to destroy
+    itself, and issue a destroy call to the FCM (note, at the moment
+    there is no synchronization to ensure there are no races between
+    the FR destroying the FCM and a region attaching to the FCM; there
+    needs to be more control of the FR in the attach process to
+    prevent these races, possibly with its own reference count of
+    Regions with references to the FCM. Alternately, we could make
+    region attach robust in the face of this failure.  It would ask
+    the FR again for an FCM. This would require changing the interface
+    to pass an FR rather than an FCM to region create).  The
+    destruction of the FR that results is covered in the next section.
+    The FCM may then also update its owning PM (if the call to the FR
+    has not already marked it as being destroyed) if it finds that the
+    region that just detached was the one supplying the current PM.
+
+  </para>
+</section>
+<section>
+  <title>Destroying an FR</title>
+  <para>
+
+    When an FR is destroyed, it destroys its FCM along with it.  For a
+    real file, the data is first written back to disk by calling
+    <emphasis>FCM::fsync()</emphasis>.  Then the FCM is destroyed:
+    this may cause any current Regions that are attached (normally
+    there should be none) to be destroyed, which causes them to call
+    back to the FCM to detach.  This in turn would normally cause the
+    FCM to call back to the FR notifying it that the list of regions
+    is empty, but in this case, because it is already being destroyed,
+    the FCM just ignores the Region callbacks and doesn't callback to
+    the FR (this assumes, though, that the FR is the only one that can
+    explicitly destroy an FCM).
+
+  </para>
+</section>
+<section>
+  <title>Destroying a Process</title>
+  <para>
+
+    For our purposes, the only important part of destroying a process
+    is that all the regions are destroyed.
+
+  </para>
+</section>
+<section>
+  <title>Forward Progress</title>
+  <para>
+
+    User-mode page faults are initially processed on a kernel thread,
+    The user dispatcher is marked disabled (if it wasn't already)
+    while the kernel thread exists, so there is never a need for more
+    than one kernel thread per dispatcher.
+
+  </para>
+  <para>
+
+    Kernel-mode page faults should only happen when the kernel is
+    running enabled, on a thread.  All memory references made when the
+    kernel is not on a thread and enabled must be to pinned storage.
+    Violations resulting in page faults lead to panics.
+
+  </para>
+  <para>
+
+    Kernel-mode page faults are handled on the thread that took the
+    fault, so there is no question of running out of threads for
+    handling kernel page faults.  However, we would have to worry
+    about exhausting a thread's stack if page faults were allowed
+    during kernel-page-fault processing.  For that reason we pin all
+    objects that back the kernel's own address space; that is, all
+    objects that might be accessed in resolving a kernel-mode page
+    fault.  We don't currently enforce this rule.  It can be relaxed
+    somewhat if we're willing to make arguments about bounded
+    recursiveness and adequate thread stack space.
+
+  </para>
+  <para>
+
+    The kernel objects backing a user address space do not have to be
+    pinned.  A kernel thread handling a user-mode page fault is
+    allowed to fault.
+
+  </para>
+  <para>
+
+    A thread handling a kernel-mode page fault may or may not be
+    "active" in the clustered object
+    garbage-collection/object-replacement sense.  It's active if and
+    only if it was active when it took the original page fault.  For
+    that reason the objects that back the kernel's own address space
+    cannot be destroyed or replaced on the fly.
+
+  </para>
+</section>
+<section>
+  <title>Paging</title>
+  <para>
+
+    FCMs backed by files page directly to the file.  Initially, we
+    considered backing each computational FCM with a paging file.
+    This approach, although simple, leads to several problems.
+
+  </para>
+  <para>
+
+    The most serious problem with the file approach is in implementing
+    fork.  During fork, FCM contents are in effect moved from one FCM
+    to another (see below).  When those contents are backed by disk,
+    this would involve moving disk blocks from one file to another.
+
+  </para>
+  <para>
+
+    A second problem is in managing paging space across a number of
+    devices.
+
+  </para>
+  <para>
+    
+    A third problem is the efficiency of copy on write and fork copy
+    page lookups.  In the file backed case, we expect that if an
+    offset is not found by the FCM, then the FR will ask the file
+    system for the block.  The meta data is maintained in the file
+    system.  Since IO is expected to be needed anyhow, this is not an
+    inordinate cost.  The FR will "know" the file size so that offsets
+    off the end of the file can be dealt with immediately.
+
+  </para>
+  <para>
+    
+    In the computational case, it is likely that an offset not known
+    to the FCM is to be zero filled, or copied from a copy on write or
+    fork parent.  Thus, going to the file system to discover that the
+    offset is not backed on disk is a significant cost.
+
+  </para>
+  <para>    
+
+    For these reasons, FRComputation, the FR that backs a
+    computational FCM, is implemented to maintain a mapping from
+    backed pages to paging system blocks.  The paging system, FSSwap,
+    provides mapping from ranges of block numbers to files or other
+    swap devices, and does the IO.
+
+</para>
+
+  <para>Subsections:</para>
+  <orderedlist>
+    <listitem>
+      <para>
+	<xref linkend="disk.block.lifetime">
+      </para>   
+    </listitem>
+  </orderedlist>
+</section>
+<section id="disk.block.lifetime">
+  <title>Disk block lifetime</title>
+  <para>
+
+    For now, we allocate disk blocks lazily.  Thus, we can run out of
+    paging space on a page out.  This is controversial.  Some users
+    require that all allocated space is backed.
+
+  </para>
+  <para>
+
+    When we page from a paging block, we retain that block and mark
+    the frame as clean.  This is better if the page is effectively
+    read only, worse if its written.
+    
+  </para>
+</section>
+<section>
+  <title>Fork</title>
+  <para>
+
+    One of the functions required by Unix fork is the "fork" copy of a
+    memory region.  A snapshot of the region must be made, and regions
+    in the parent and child process must both appear to be copies.  It
+    is hopelessly too expensive to implement this by actually copying
+    all the values at the point of fork.
+
+  </para>
+  <para>
+    
+    The normal approach to this problem is to unmap all frames backing
+    the region, and satisfy page faults in the parent and child by
+    providing a copy of the frame to the first user, and the frame
+    itself to the second user.  An additional improvement is copy on
+    write, which uses the original frame, mapped read only, until one
+    of the children insists on write access.
+
+  </para>
+  <para>
+    
+    In addition, frames which are not in memory must be dealt with
+    similarly. Finally, when either the parent or child region is
+    destroyed, the remaining original frames must be merged with the
+    remaining region's frames, thus "collapsing" the fork tree.
+
+  </para>
+  <para>
+
+    It should be noted that the original region might itself be a fork
+    child before the fork copy is made.
+
+  </para>
+  <para>
+
+    In K42 terms, fork is actually an operation on the FR/FCM pair
+    that backs the region.  We will restrict the operation to normal
+    computational FR/FCMs which are only mapped by a single region,
+    since that is sufficient to support Unix fork.  For technical and
+    performance reasons, the operation will be initiated by a request
+    on the region which is mapping the FR/FCM to be fork copied.  This
+    operation will return an Xhandle to the FR of the FR/FCM pair
+    which represents the new (or child) copy.  This is the FR which
+    must be mapped into a region of the child process at the same
+    virtual address as the original parent region.
+
+  </para>
+  <para>
+
+    Elsewhere we deal with the higher level process of creating a fork
+    child process, of which this operation is a supporting primitive.
+
+  </para>
+
+  <para>
+    Subsections:
+  </para>
+  <orderedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<xref linkend="fork.copy">
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<xref linkend="mapPage.requests">
+    
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<xref linkend="fork.parent.disk.blocks">
+      
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<xref linkend="destruction">
+      
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<xref linkend="fork.tree.collapse">
+      
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<xref linkend="copy.on.write">
+  
+      </simpara>
+    </listitem>
+  </orderedlist>
+
+</section>
+<section id="fork.copy">
+  <title>Fork Copy</title>
+  <para>
+
+    Fork copy is initiated by a client call on the process object.
+    The vaddr of the region to be copied is passed.  The process finds
+    the correct region and delivers the fork copy call.
+
+  </para>
+  <para>
+
+    It would be quite tricky, if even possible, to try to make a fork
+    copy while servicing map requests.  For this reason, the region
+    uses an extension of the request counter mechanism to block all
+    new requests while allowing all in flight requests to complete.
+    Once all activity is stopped, the region asks the FCM to make a
+    fork copy.
+
+  </para>
+  <para>
+   
+    The FCM verifies that is is servicing only one region.  It then
+    unmaps all pages.  This will be replaced by copy on write logic
+    which unmaps only the writable pages.  But notice a performance
+    tradeoff.  We could implement very fast unmap all, but unmapping
+    writable must be done page by page.
+
+  </para>
+  <para>
+    
+    We then create two new FR's, and get the associated FCM's.  One
+    becomes the parent FCM, the other becomes the other fork child, to
+    be mapped by another region.  The parent child tree is fixed up.
+    The pages owned by the original FCM, now one of the children, are
+    passed to the new parent. (We do it this way because other objects
+    may "know" about the FCM, specifically if they have established
+    pages in it.  See for example the Process Annex).
+
+  </para>
+  <para>
+
+    As a special case, if an FCM doing a fork copy has a fork parent
+    with it as the only child, we do NOT create a new parent.  We
+    create a second child FCM which the parent "adopts".  We then
+    merge the frames of the creating child with the frames of the
+    parent.  This special case avoids the need to later collapse the
+    fork tree in the dominant case.  Because it is done while requests
+    are stopped, the merge can potentially be done more efficiently
+    that a normal fork collapse merge.
+
+  </para>
+  <para>
+
+    Finally, the call returns the FR for the other child to the
+    region.
+
+  </para>
+</section>
+<section id="mapPage.requests">
+  <title>mapPage requests</title>
+  <para>
+
+    Map page requests can only arrive at the leaves of the fork tree.
+    Their implementation differs from normal requests in that the fork
+    parent may need to participate.  If the child already has the
+    page, in memory or on disk, the operation is normal.  Otherwise,
+    the parent is asked for the page.  The request to the parent
+    differs from a normal mapPage or getPage request in that the
+    parent will never materialize a zero fill page, and will sometimes
+    return a frame or disk block to the child.  This operation is
+    called getForkPage.
+
+  </para>
+  <para>
+
+    Of course, the page may not be available in the immediate parent.
+    Rather, a search of the parent chain is needed.  We do this search
+    iteratively.  Each parent, if it doesn't have the page, returns
+    the ref of its parent.  No locks are held during this search.  If
+    errors such as deleted object indicate that something has changed,
+    we do the search from the top again.
+
+  </para>
+  <para>
+    
+    The leaf must lock out other requests from the same leaf for the
+    same offset while doing this unlocked search.  This is done by
+    creating a page descriptor and marking it doingIO, forkIO, and
+    forkIOLock.  The doingIO bit causes most requests to queue for
+    notification or skip the block.
+
+  </para>
+  <para> 
+   
+    When a parent has the page, but it is doing IO, we queue the fault
+    notification request or block on the parent page.  If we queue, we
+    then leave the leaf page descriptor in the doingIO forkIO state.
+    Eventually (possibly too early, but that's ok) some thread will
+    try again.  This will certainly happen when the parent page
+    notifies the queued requestor.  The first thread to get to the
+    page descriptor will again set the forkIOLock and try again.
+    
+  </para>
+  <para>
+
+    A parent can only return the actual frame/disk block to its caller
+    if it's sure that that's the last request.  This is only true if
+    the caller is an immediate child, and if the other immediate child
+    has already gotten the page or disconnected.
+
+  </para>
+</section>
+<section id="fork.parent.disk.blocks">
+  <title>Fork Parent Disk Blocks</title>
+
+  <para>
+
+    A fork parent may have a disk block associated with a file offset
+    with or without a frame.  If there is a frame, then when the frame
+    is given to an immediate child, if it is clean, the disk block is
+    returned as well.
+
+  </para>
+  <para>
+
+    If there is only a disk block and the request is from an immediate
+    child, the child is given the disk block.
+
+  </para>
+  <para>
+
+    If there is a disk block which can't be give to the requestor, the
+    parent allocates a frame and fills the frame, converting to the
+    case of a clean frame with disk block.  The child request is then
+    retried.
+
+  </para>
+</section>
+<section id="destruction">
+  <title>Destruction</title>
+  <para>
+
+    When a (leaf) child is destroyed, it detaches from its fork
+    parent.  This may cause the parent to destroy if there are no more
+    children.
+
+  </para>
+</section>
+<section id="fork.tree.collapse">
+  <title>Fork Tree Collapse</title>
+  <para>
+    
+    As fork children are destroyed, it is possible to create a string
+    of fork parents with only one child each.  If nothing is done
+    about this, the single branched tree can grow unboundedly.  What
+    is needed is a mechanism to combine two such FCM's, that is to
+    "collapse" the fork tree.
+
+  </para>
+  <para>
+
+    Because k42 does not use global locks, this collapse must occur
+    while requests are in flight.  An in flight request successively
+    searches the FCM's in a fork chain, from child to parent.  If for
+    collapse was done by the apparently natural approach of moving a
+    parent FCM's pages into its remaining child, we would need some
+    mechanism to prevent a page moving "up" the tree from bypassing a
+    request moving "down" the tree.  We avoid this by taking a
+    different approach.
+
+  </para>
+  <para>
+
+    Fork collapse is done in two cases.  The first case, mentioned
+    above, is that a fork copy will reuse an existing (immediate)
+    parent which has only one child.  The second case is the collapse
+    of a non-leaf fork parent into its parent when the lower parent
+    has only one child.  It is this second collapse which must occur
+    while requests are in flight.  This is possible because the search
+    for frames is stateless with respect to intermediate nodes, so the
+    upper parent can be collapsed without affecting requests in
+    flight.  The collapse is triggered by the parent asking its
+    remaining child to collapse.  This request is made without locks.
+
+  </para>
+</section>
+<section id="copy.on.write">
+  <title>Copy on write</title>
+  <para>
+    
+    Copy on write is done by passing down the fork tree the fact that
+    the request can be copy on write - namely that it is a read
+    request and the access mode makes copy on write mapping possible.
+    The parent with the frame decides if a copy on write mapping
+    should be made.  If so, it marks its pagedesc as mapped, updates
+    its page descriptor's ppset, and returns the paddr with a MAPPAGE
+    indication.  Note that the parent is NOT attached to the region
+    and does not region tracking.
+
+  </para>
+  <para>
+
+    On return, the child uses it pagedesc to map the page.  It holds
+    its lock until this is done, so the parent can't unmap the page
+    and free the descriptor until the map operation completes.
+
+  </para>
+  <para>
+    Unmapping is not yet implemented - so we can't page!
+  </para>
+</section>
+<section id="large.page.support">
+  <title>Large Page Support</title>
+  <para>
+    
+    The initial support of large pages is biased towards the PowerPC
+    situation in which a single segment can support only one page
+    size. Use of multiple page sizes in a segment would be done
+    transparently, and would require more complex mechanism and
+    policy.
+    
+  </para>
+  <para>
+
+    The overall approach is to set a page size for each FCM.  This is
+    done by overriding the default page size for the FR before
+    instantiating the FCM.
+
+    Each mapping request from the FCM to the HAT now carries a page
+    size.  If the new segment must be created, it is created to
+    support the page size of the fault.  This strategy requires that
+    the region mapping code does not mix page sizes in a segment.
+    
+  </para>
+  <para>
+
+    Requests for pages from the PM that are not for the default page
+    size will, for now, be sent directly to the pinned allocator to be
+    satisfied.
+  </para>
+</section>
+<!--
+Local Variables:
+sgml-validate-command: "nsgmls -s %s %s"
+gml-indent-data: t
+sgml-insert-missing-element-comment: t
+End:
+-->
+<!--  LocalWords: IOComplete VSID itemizedlist IPC FCM Pagable customizability
+-->
+<!--  LocalWords:  Pageable SegmentHAT Meg VSID SegmentHAT's FCM FR listitem PPC
+ -->
+<!--  LocalWords:  para unmap FR unmapping mmap MMU TLB xref linkend lazyclose
+ -->
+<!--  LocalWords:  creatingregions FRCRW FCMCRW offloaded multiprocessor FCM's
+ -->
+<!--  LocalWords:  scalability interprocess PowerPC unblocks read-only mprotect
+ -->
+<!--  LocalWords:  remapping unmapped LRU PM's deallocate filesystem FR's NFS
+ -->
+<!--  LocalWords:  MMU's subtree HAT's allocator multiprocessors NUMA
+ -->
+<!--  LocalWords:  attachRegion objectsfigure
+ -->

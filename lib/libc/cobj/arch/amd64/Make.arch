@@ -1,0 +1,12 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.2 2002/01/31 19:35:31 peterson Exp $
+# ############################################################################
+
+#CObjRepMediator.o: MEMORY_MODEL=-fPIC -fpic

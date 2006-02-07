@@ -1,0 +1,14 @@
+/******************************************************************************
+ * K42: (C) Copyright IBM Corp. 2003.
+ * All Rights Reserved
+ *
+ * This file is distributed under the GNU LGPL. You should have
+ * received a copy of the license along with K42; see the file LICENSE.html
+ * in the top-level directory for more details.
+ ******************************************************************************/
+
+GLIBC_2.2.5 {
+	global:
+	pthread_mutex_lock;
+	.pthread_mutex_lock;
+};

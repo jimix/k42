@@ -1,0 +1,1471 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: bib.sgml,v 1.15 2004/01/31 22:48:43 dilma Exp $
+-->
+
+<!-- BIBLIO -->
+
+<bibliography>
+  <title>References</title>
+  <!-- A -->
+  <biblioentry id="Anderson91">
+    <abbrev>Anderson91</abbrev>
+    <title>Scheduler Activations: effective kernel support for the
+      user-level management of parallelism</title>
+    <authorgroup>
+      <author>
+	<firstname>Thomas</firstname>
+	<othername>E.</othername>
+	<surname>Anderson</surname>
+      </author>
+      <author>
+	<firstname>Brian</firstname>
+	<othername>N.</othername>
+	<surname>Bershad</surname>
+      </author>
+      <author>
+	<firstname>Edward</firstname>
+	<othername>D.</othername>
+	<surname>Lazowska</surname>
+      </author>
+      <author>
+	<firstname>Henry</firstname>
+	<othername>M.</othername>
+	<surname>Levy</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>October, 1991</confdates>
+      <conftitle>Proceedings of 13th ACM Symposium on Operating Systems
+	Principles</conftitle>
+    </confgroup>
+    <pagenums>95-109</pagenums>
+  </biblioentry>
+
+  <biblioentry id="Auslander97">
+    <abbrev>Auslander97</abbrev>
+    <title>Customization Lite</title>
+    <authorgroup>
+      <author>
+	<firstname>M.</firstname>
+	<surname>Auslander</surname>
+      </author>
+      <author>
+	<firstname>H.</firstname>
+	<surname>Franke</surname>
+      </author>
+      <author>
+	<firstname>B.</firstname>
+	<surname>Gamsa</surname>
+      </author>
+      <author>
+	<firstname>O.</firstname>
+	<surname>Krieger</surname>
+      </author>
+      <author>
+	<firstname>M.</firstname>
+	<surname>Stumm</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <conftitle>Proceedings of the 6th Workshop of Hot Topics in
+	Operating Systems</conftitle>
+      <confdates>1997</confdates>
+    </confgroup>
+    <pagenums>43-48</pagenums>
+  </biblioentry>
+
+  <!-- B -->
+  <biblioentry id="Banga99">
+    <abbrev>Banga99</abbrev>
+    <title>A Scalable and Explicit Event Delivery Mechanism for UNIX</title>
+    <authorgroup>
+      <author>
+	<firstname>Gauruv</firstname>
+	<surname>Banag</surname>
+      </author>
+      <author>
+	<firstname>Jeffrey</firstname>
+	<othername>C.</othername>
+	<surname>Mogul</surname>
+      </author>
+      <author>
+	<firstname>Peter</firstname>
+	<surname>Druschel</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1999</confdates>
+      <conftitle>Usenix Annual Technical Conference</conftitle>
+    </confgroup>
+    <pagenums>253-265</pagenums>
+  </biblioentry>
+
+  <biblioentry id="Barham03">
+    <abbrev>Barham03</abbrev>
+    <title>Xen 2002</title>
+    <authorgroup>
+      <author>
+	<firstname>Paul</firstname>
+	<othername>R.</othername>
+	<surname>Barham</surname>
+      </author>
+      <author>
+	<firstname>Boris</firstname>
+	<surname>Dragovic</surname>
+      </author>
+      <author>
+	<firstname>Keir</firstname>
+	<othername>A.</othername>
+	<surname>Fraser</surname>
+      </author>
+	<author><surname> et al. </surname></author>
+    </authorgroup>
+    <seriesvolnums>ucam-cl-tr-553</seriesvolnums>
+    <date>January 2003</date>
+    <publisher>
+      <publishername>University of Cambridge, Computer Laboratory</publishername>
+    </publisher>
+  </biblioentry>
+
+  <!-- C -->
+  <biblioentry id="Campbell93">
+    <abbrev>Campbell93</abbrev>
+    <title>Designing and Implementing Choices: An Object-Oriented
+      System in C++</title>
+    <authorgroup>
+      <author>
+	<firstname>Roy</firstname>
+	<surname>Campbell</surname>
+      </author>
+      <author>
+	<firstname>Nayeem</firstname>
+	<surname>Islam</surname>
+      </author>
+      <author>
+	<firstname>Peter</firstname>
+	<surname>Madany</surname>
+      </author>
+      <author>
+	<firstname>David</firstname>
+	<surname>Raila</surname>
+      </author>
+    </authorgroup>
+    <SERIesvolnums>36(9)</seriesvolnums>
+    <pagenums>117-126</pagenums>
+    <date>September, 1993</date>
+    <publisher>
+      <publishername>Communications of the ACM</publishername>
+    </publisher>
+  </biblioentry>
+
+  <biblioentry id="CedarFS">
+    <abbrev>CedarFS</abbrev>
+    <title>Reimplementing the Cedar File System using Logging and Group Commit</title>
+    <authorgroup>
+      <author>
+        <firstname>Robert</firstname>
+        <surname>Hagmann</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1987</COnfdates>
+      <conftitle>Proceedings of the 11th Symposium on Operating Systems
+         Principles (SOSP)</conftitle>
+    </confgroup>
+    <volumenum> vol 18:3 </volumenum>
+    <pagenums>155-162</pagenums>
+  </biblioentry>
+
+  <biblioentry id="CellularDisco">
+    <abbrev>CellularDisco</abbrev>
+    <title>Cellular disco: resource management using virtual clusters
+      on shared-memory multiprocessors</title>
+    <authorgroup>
+      <author>
+	<firstname>Kingshuk</firstname>
+	<surname>Govil</surname>
+      </author>
+      <author>
+	<firstname>Dan</firstname>
+	<surname>Teodosiu</surname>
+      </author>
+      <author>
+	<firstname>Huang</firstname>
+	<surname>Yongqiang</surname>
+      </author>
+      <author>
+	<firstname>Mendel</firstname>
+	<surname>Rosenblum</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>2000</confdates>
+      <conftitle>ACM Transactions on Computer Systems</conftitle>
+    </confgroup>
+    <volumenum> vol 18:3 </volumenum>
+    <pagenums>229-262</pagenums>
+  </biblioentry>
+
+  <biblioentry id="Chapin95">
+    <abbrev>Chapin95</abbrev>
+    <title>Hive: Fault containment for shared-memory Multiprocessors</title>
+    <authorgroup>
+      <author>
+	<firstname>John</firstname>
+	<surname>Chapin</surname>
+      </author>
+      <author>
+	<firstname>Mendel</firstname>
+	<surname>Rosenblum</surname>
+      </author>
+      <author>
+	<firstname>Scott</firstname>
+	<surname>Devine</surname>
+      </author>
+      <author>
+	<firstname>Tirthankar</firstname>
+	<surname>Lahiri</surname>
+      </author>
+      <author>
+	<firstname>Dan</firstname>
+	<surname>Teodosiu</surname>
+      </author>
+      <author>
+	<firstname>Anoop</firstname>
+	<surname>Gupta</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1995</COnfdates>
+      <conftitle>Proceedings of the 15th Symposium on Operating Systems
+         Principles (SOSP)</conftitle>
+    </confgroup>
+    <volumenum> vol 18:3 </volumenum>
+    <pagenums>12-25</pagenums>
+  </biblioentry>
+
+  <!-- D -->
+  <biblioentry id="dbench">
+    <abbrev>Dbench</abbrev>
+    <title>The dbench benchmark</title>
+    <publishername>http://samba.org/ftp/tridge/dbench/</publishername>
+  </biblioentry>
+
+  <biblioentry id="Disco">
+    <abbrev>Disco</abbrev>
+    <title>Disco: Running Commodity Operating Systems on Scalable Multiprocessors</title>
+    <authorgroup>
+      <author>
+	<firstname>Edouard</firstname>
+	<surname>Bugnion</surname>
+      </author>
+      <author>
+	<firstname>Scott</firstname>
+	<surname>Devine</surname>
+      </author>
+      <author>
+	<firstname>Kinshuk</firstname>
+	<surname>Govil</surname>
+      </author>
+      <author>
+	<firstname>Mendel</firstname>
+	<surname>Rosenblum</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1997</confdates>
+      <conftitle>ACM Transactions on Computer Systems</CONftitle>
+    </confgroup>
+    <volumenum> vol 15:4 </volumenum>
+    <pagenums>412-447</pagenums>
+  </biblioentry>
+
+  <!-- E -->
+  <biblioentry id="Engler95">
+    <abbrev>Engler95</abbrev>
+    <title>Exokernel: An operating system architecture for
+      application-level resource management</title>
+    <authorgroup>
+      <author>
+	<firstname>Dawson</firstname>
+	<othername>R.</othername>
+	<surname>Engler</surname>
+      </author>
+      <author>
+	<firstname>M.</firstname>
+	<othername>Frans</othername>
+	<surname>Kaashoek</surname>
+      </author>
+      <author>
+	<firstname>James</firstname>
+	<surname>O'Toole</surname>
+	<lineage>Jr.</lineage>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1995</confdates>
+      <conftitle>Proceedings 15th Symposium on Operating Systems
+	Principles</conftitle>
+    </confgroup>
+    <pagenums>251-267</pagenums>
+  </biblioentry>
+
+  <biblioentry id="EXT2">
+    <abbrev>EXT2</abbrev>
+    <title>Journaling the Linux ext2fs Filesystem</title>
+    <authorgroup>
+      <author>
+        <firstname>Stephen</firstname>
+        <surname>Tweedie</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1998</confdates>
+      <conftitle>LinuxExpo</conftitle>
+    </confgroup>
+  </biblioentry>
+
+  <!-- F -->
+  <!-- G -->
+  <biblioentry id="Gamsa99">
+    <abbrev>Gamsa99</abbrev>
+    <title>Tornado: Maximizing Locality and Concurrency in a Shared Memory
+      Multiprocessor Operating System</title>
+    <authorgroup>
+      <author>
+	<firstname>Ben</firstname>
+	<surname>Gamsa</surname>
+      </author>
+      <author>
+	<firstname>Orran</firstname>
+	<surname>Krieger</surname>
+      </author>
+      <author>
+	<firstname>Jonathan</firstname>
+	<surname>Appavoo</surname>
+      </author>
+      <author>
+	<firstname>Micheal</firstname>
+	<surname>Stumm</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1999</confdates>
+      <conftitle>ACM Symposium on Operating Systems Design and
+	Implementation</conftitle>
+    </confgroup>
+  </biblioentry>
+
+  <biblioentry id="ganger94metadata">
+    <abbrev>Ganger94Metadata</abbrev>
+    <title>Metadata Update Performance in File Systems</title>
+    <authorgroup>
+       <author>
+         <firstname>Greg</firstname>
+         <surname>Ganger</surname>
+       </author>
+       <author>
+         <firstname>Y.</firstname>
+         <surname>Patt</surname>
+       </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1994</confdates>
+      <conftitle>In 1st Symposium on Operating Systems Design and
+       Implementation (OSDI '94)</conftitle>
+    </confgroup>
+    <pagenums>49-60</pagenums>
+  </biblioentry>
+
+  <biblioentry id="Greenwald96">
+    <abbrev>Greenwald96</abbrev>
+    <title>The synergy between non-blocking synchronization and operating
+      system structure</title>
+    <authorgroup>
+      <author>
+	<firstname>Michael</firstname>
+	<surname>Greenwald</surname>
+      </author>
+      <author>
+	<firstname>David</firstname>
+	<surname>Cheriton</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>October, 1999</confdates>
+      <conftitle>In 2nd Symposium on Operating Systems Design and
+	Implementation (OSDI '96)</conftitle>
+    </confgroup>
+    <pagenums>123-136</pagenums>
+  </biblioentry>
+
+  <biblioentry id="GPFS-Fast02">
+    <abbrev>GPFS-Fast02</abbrev>
+    <title>GPFS: A Shared-Disk File System for Large Computing Cluster</title>
+    <authorgroup>
+      <author>
+	<firstname>Frank</firstname>
+	<surname>Schmuck</surname>
+      </author>
+      <author>
+	<firstname>Roger</firstname>
+	<surname>Haskin</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>2002</confdates>
+      <conftitle>Proceedings of the Conference on File and Storage 
+                 Technlogoies (FAST'02)</conftitle>
+    </confgroup>
+    <pagenums>231-244</pagenums>
+  </biblioentry>
+
+  <!-- H -->
+  <biblioentry id="Haeberlen00">
+    <abbrev>Haeberlen00</abbrev>
+    <title>Stub-Code Performance is Becoming Important</title>
+    <authorgroup>
+      <author>
+	<firstname>Andreas</firstname>
+	<surname>Haeberlen</surname>
+      </author>
+      <author>
+	<firstname>Jochen</firstname>
+	<surname>Liedtke</surname>
+      </author>
+      <author>
+	<firstname>Yoonho</firstname>
+	<surname>Park</surname>
+      </author>
+      <author>
+	<firstname>Lars</firstname>
+	<surname>Reuther</surname>
+      </author>
+      <author>
+	<firstname>Volkmar</firstname>
+	<surname>Uhlig</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates> October 2000 </confdates>
+      <conftitle>First Workshop on Industrial Experiences with Systems
+	Software (WIESS-00)</conftitle>
+    </confgroup>
+    <pagenums>31-38</pagenums>
+  </biblioentry>
+
+  <biblioentry id="Hamilton93">
+    <abbrev>Hamilton93</abbrev>
+    <title>The Spring Nucleus: A Microkernel for Objects</title>
+    <authorgroup>
+      <author>
+	<firstname>Graham</firstname>
+	<surname>Hamilton</surname>
+      </author>
+      <author>
+	<firstname>Panos</firstname>
+	<surname>Kougiouris</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>June, 1993</confdates>
+      <conftitle>1993 Summer USENIX Conference</conftitle>
+    </confgroup>
+    <pagenums>147-160</pagenums>
+  </biblioentry>
+
+  <biblioentry id="Hand99">
+    <abbrev>Hand99</abbrev>
+    <title>Self-Paging in the Nemesis Operating System</title>
+    <authorgroup>
+      <author>
+	<firstname>Steven</firstname>
+	<surname>Hand</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1999</confdates>
+      <conftitle>ACM Symposium on Operating Systems Design and
+	Implementation</conftitle>
+    </confgroup>
+  </biblioentry>
+
+  <biblioentry id="Homburg00">
+    <abbrev>Homburg00</abbrev>
+    <title>An Object Model for Flexible Distributed Systems</title>
+    <authorgroup>
+      <author>
+	<firstname>P.</firstname>
+	<surname>Homburg</surname>
+      </author>
+      <author>
+	<firstname>L.</firstname>
+	<surname>van Doorn</surname>
+      </author>
+      <author>
+	<firstname>M.</firstname>
+	<surname>van Steen</surname>
+      </author>
+      <author>
+	<firstname>A.</firstname>
+	<othername>S.</othername>
+	<surname>Tanenbaum</surname>
+      </author>
+      <author>
+	<firstname>W.</firstname>
+	<surname>de Jonge</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates> May, 1995 </confdates>
+      <conftitle>First Annual ASCI Conference</conftitle>
+    </confgroup>
+    <pagenums>69-78</pagenums>
+  </biblioentry>
+
+  <!-- I -->
+  <!-- J -->
+  <!-- K -->
+  <biblioentry id="K42-LKIntern" xreflabel="K42 LKIntern">
+      <title>Utilizing Linux Kernel Components in K42</title>
+      <authorgroup>
+	<author><surname> Jonathan Appavoo </surname></author>
+	<author><surname> Marc Auslander </surname></author>
+	<author><surname> Dilma DaSilva </surname></author>
+	<author><surname> David Edelsohn </surname></author>
+	<author><surname> Orran Krieger </surname></author>
+	<author><surname> Michal Ostrowski </surname></author>
+	<author><surname> Bryan Rosenburg </surname></author>
+	<author><surname> Robert W. Wisniewski </surname></author>
+	<author><surname> Jimi Xenidis </surname></author>
+      </authorgroup>
+      <date>October 2001</date>
+      <publisher>
+	<publishername>www.research.ibm.com/K42</publishername>
+      </publisher>
+    </biblioentry>
+  <biblioentry id="K42-Linux-Environment" xreflabel="K42 Linux Environment">
+      <title>K42 Linux Environment</title>
+      <authorgroup>
+	<author><surname> Jonathan Appavoo </surname></author>
+	<author><surname> Marc Auslander </surname></author>
+	<author><surname> Dilma DaSilva </surname></author>
+	<author><surname> David Edelsohn </surname></author>
+	<author><surname> Orran Krieger </surname></author>
+	<author><surname> Michal Ostrowski </surname></author>
+	<author><surname> Bryan Rosenburg </surname></author>
+	<author><surname> Robert W. Wisniewski </surname></author>
+	<author><surname> Jimi Xenidis </surname></author>
+      </authorgroup>
+      <date>October 2001</date>
+      <publisher>
+	<publishername>www.research.ibm.com/K42</publishername>
+      </publisher>
+    </biblioentry>
+  <biblioentry id="K42-Overview" xreflabel="K42 Overview">
+      <title>K42 Overview</title>
+      <authorgroup>
+	<author><surname> Jonathan Appavoo </surname></author>
+	<author><surname> Marc Auslander </surname></author>
+	<author><surname> Dilma DaSilva </surname></author>
+	<author><surname> David Edelsohn </surname></author>
+	<author><surname> Orran Krieger </surname></author>
+	<author><surname> Michal Ostrowski </surname></author>
+	<author><surname> Bryan Rosenburg </surname></author>
+	<author><surname> Robert W. Wisniewski </surname></author>
+	<author><surname> Jimi Xenidis </surname></author>
+      </authorgroup>
+      <date>October 2001</date>
+      <publisher>
+	<publishername>www.research.ibm.com/K42</publishername>
+      </publisher>
+    </biblioentry>
+  <biblioentry id="Kaashoek97">
+    <abbrev>Kaashoek97</abbrev>
+    <title>Application Performance and Flexibility on Exokernel
+      Systems</title>
+    <authorgroup>
+      <author>
+	<firstname>Frans</firstname>
+	<surname>Kaashoek</surname>
+      </author>
+      <author>
+	<firstname>Dawson</firstname>
+	<surname>Engler</surname>
+      </author>
+      <author>
+	<firstname>Gregory</firstname>
+	<surname>Ganger</surname>
+      </author>
+      <author>
+	<firstname>Hector</firstname>
+	<surname>Briceno</surname>
+      </author>
+      <author>
+	<firstname>Russell</firstname>
+	<surname>Hunt</surname>
+      </author>
+      <author>
+	<firstname>David</firstname>
+	<surname>Mazieres</surname>
+      </author>
+      <author>
+	<firstname>Thomas</firstname>
+	<surname>Pinckney</surname>
+      </author>
+      <author>
+	<firstname>Robert</firstname>
+	<surname>Grimm</surname> 
+      </author>
+      <author>
+	<firstname>John</firstname>
+	<surname>Jannotti</surname>
+      </author>
+      <author>
+	<firstname>Kenneth</firstname>
+	<surname>Mackenzie</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1997</confdates>
+      <conftitle>Proceedings of the 16th Symposium on Operating Systems
+	Principles</conftitle>
+    </confgroup>
+  </biblioentry>
+
+  <biblioentry id="Kleiman86">
+    <abbrev>Kleiman86</abbrev>
+    <title>Vnodes: An Architecture for Multiple File System Types in Sun
+      UNIX</title>
+    <authorgroup>
+      <author>
+	<firstname>S.</firstname>
+	<othername>R.</othername>
+	<surname>Kleiman</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>October, 1986</confdates>
+      <conftitle>Proceedings of the Summer 1986 USENIX Technical
+	Conference</conftitle>
+    </confgroup>
+    <pagenums>207-218</pagenums>
+  </biblioentry>
+
+  <biblioentry id="Kohler00">
+    <abbrev>Kohler00</abbrev>
+    <title>The click modular router</title>
+    <authorgroup>
+      <author>
+	<firstname>Eddie</firstname>
+	<surname>Kohler</surname>
+      </author>
+      <author>
+	<firstname>Robert</firstname>
+	<surname>Morris</surname>
+      </author>
+      <author>
+	<firstname>Benjie</firstname>
+	<surname>Chen</surname>
+      </author>
+      <author>
+	<firstname>John</firstname>
+	<surname>Jannotti</surname>
+      </author>
+      <author>
+	<firstname>M.</firstname>
+	<othername>Frans</othername>
+	<surname>Kaashoek</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>2000</confdates>
+      <conftitle>ACM Transactions on Computer Systems</conftitle>
+    </confgroup>
+    <volumenum> vol 18:3 </volumenum>
+    <pagenums>263-297</pagenums>
+  </biblioentry>
+
+  <biblioentry id="Krieger94">
+    <abbrev>Krieger94</abbrev>
+    <title>The Alloc Stream Facility: A Redesign of Application-level
+    Stream I/O</title>
+    <authorgroup>
+      <author>
+	<firstname>O.</firstname>
+	<surname>Krieger</surname>
+      </author>
+      <author>
+	<firstname>M.</firstname>
+	<surname>Stumm</surname>
+      </author>
+      <author>
+	<firstname>R.</firstname>
+	<surname>Unrau</surname>
+      </author>
+    </authorgroup>
+    <seriesvolnums>27(3)</seriesvolnums>
+    <pagenums>75-82</pagenums>
+    <date>March, 1994</date>
+    <publisher>
+      <publishername>IEEE Computer</publishername>
+    </publisher>
+  </biblioentry>
+
+  <biblioentry id="Krieger97">
+    <abbrev>Krieger97</abbrev>
+    <title>HFS: A performance-oriented flexible file system based on
+      building block composition</title>
+    <authorgroup>
+      <author>
+	<firstname>O.</firstname>
+	<surname>Krieger</surname>
+      </author>
+      <author>
+	<firstname>M.</firstname>
+	<surname>Stumm</surname>
+      </author>
+    </authorgroup>
+    <seriesvolnums>15(3)</seriesvolnums>
+    <pagenums>286-321</pagenums>
+    <date>August, 1997</date>
+    <publisher>
+      <publishername>ACM Trans. on Computer Systems</publishername>
+    </publisher>
+  </biblioentry>
+
+  <!-- L -->
+  <biblioentry id="Liedtke95">
+    <abbrev>Liedtke95</abbrev>
+    <title>On micro-kernel construction</title>
+    <authorgroup>
+      <author>
+	<firstname>J.</firstname>
+	<surname>Liedtke</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1995</confdates>
+      <conftitle>Proceedings 15th ACM Symposium on Operating System
+	Principles</conftitle>
+    </confgroup>
+    <pagenums>237-250</pagenums>
+  </biblioentry>
+
+  <biblioentry id="Liedtke96">
+    <abbrev>Liedtke96</abbrev>
+    <title>Toward Real Microkernels</title>
+    <authorgroup>
+      <author>
+	<firstname>Jochen</firstname>
+	<surname>Liedtke</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1996</confdates>
+      <conftitle>Communications of the ACM</conftitle>
+    </confgroup>
+    <volumenum> vol 39:9 </volumenum>
+    <pagenums>70-77</pagenums>
+  </biblioentry>
+
+  <biblioentry id="Linux">
+    <abbrev>Linux</abbrev>
+    <title>Linux Kernel</title>
+    <publishername>www.kernel.org</publishername>
+  </biblioentry>
+
+  <biblioentry id="Lustre">
+    <abbrev>Lustre</abbrev>
+    <title>Lustre</title>
+    <publishername>www.lustre.org</publishername>
+  </biblioentry>
+
+  <!-- M -->
+  <biblioentry id="Makpangou94">
+    <abbrev>Makpangou94</abbrev>
+    <title>Fragmented objects for distributed abstractions</title>
+    <authorgroup>
+      <author>
+	<firstname>Mesaac</firstname>
+	<surname>Makpangou</surname>
+      </author>
+      <author>
+	<firstname>Yvon</firstname>
+	<surname>Gourhant</surname>
+      </author>
+      <author>
+	<firstname>Jean-Pierre</firstname>
+	<surname>Le Narzul</surname>
+      </author>
+      <author>
+	<firstname>Marc</firstname>
+	<surname>Shapiro</surname>
+      </author>
+<!--
+      <editor>
+	<firstname>T.</firstname>
+	<othername>L.</othername>
+	<surname>Casavant</surname>
+      </editor>
+      <editor>
+	<firstname>M.</firstname>
+	<surname>Singhal</surname>
+      </editor>
+-->
+    </authorgroup>
+    <confgroup>
+      <conftitle>Readings in distributed computing systems</conftitle>
+    </confgroup>
+    <pagenums>170-186</pagenums>
+    <date>July, 1994</date>
+    <publisher>
+      <publishername>IEEE Computer Society Press</publishername>
+    </publisher>
+  </biblioentry>
+
+  <biblioentry id="Marsh91">
+    <abbrev>Marsh91</abbrev>
+    <title>First-Class User-Level Threads</title>
+    <authorgroup>
+      <author>
+	<firstname>Brian</firstname>
+	<othername>D.</othername>
+	<surname>Marsh</surname>
+      </author>
+      <author>
+	<firstname>Michael</firstname>
+	<othername>L.</othername>
+	<surname>Scott</surname>
+      </author>
+      <author>
+	<firstname>Thomas</firstname>
+	<othername>J.</othername>
+	<surname>LeBlanc</surname>
+      </author>
+      <author>
+	<firstname>Evangelos</firstname>
+	<othername>P.</othername>
+	<surname>Markatos</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>October, 1991</confdates>
+      <conftitle>Proceedings of 13th ACM Symposium on Operating Systems
+	Principles</conftitle>
+    </confgroup>
+    <pagenums>110-121</pagenums>
+  </biblioentry>
+
+  <biblioentry id="McKenney01">
+    <abbrev>McKenney01</abbrev>
+    <title>Read Copy Update</title>
+    <authorgroup>
+      <author>
+	<firstname>Paul</firstname>
+	<surname>McKenney</surname>
+      </author>
+      <author>
+	<firstname>Jonathan</firstname>
+	<surname>Appavoo</surname>
+      </author>
+      <author>
+	<firstname>Andi</firstname>
+	<surname>Kleen</surname>
+      </author>
+      <author>
+	<firstname>Orran</firstname>
+	<surname>Krieger</surname>
+      </author>
+      <author>
+	<firstname>Rusty</firstname>
+	<surname>Russell</surname>
+      </author>
+      <author>
+	<firstname>Dipankar</firstname>
+	<surname>Sarma</surname>
+      </author>
+      <author>
+	<firstname>Maneesh</firstname>
+	<surname>Soni</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>July 2001</confdates>
+      <conftitle>Ottawa Linux Symposium</conftitle>
+    </confgroup>
+  </biblioentry>
+
+  <biblioentry id="McKusick84Fast">
+    <abbrev>McKusick84Fast</abbrev>
+    <title>Running "fsck" in the Background</title>
+    <authorgroup>
+      <author>
+	<firstname>M</firstname>
+	<surname>McKusick</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>2002</confdates>
+      <conftitle>BSDCon</conftitle>
+    </confgroup>
+  </biblioentry>
+
+  <biblioentry id="Menon2003">
+    <abbrev>Menon2003</abbrev>
+    <title>IBM Storage Tank - A Heterogeneous Scalable SAN File System</title>
+    <authorgroup>
+      <author>
+	<firstname>J.</firstname>
+	<surname>Menon</surname>
+      </author>
+      <author>
+	<firstname>D. A.</firstname>
+	<surname>Pease</surname>
+      </author>
+      <author>
+	<firstname>R.</firstname>
+	<surname>Rees</surname>
+      </author>
+      <author>
+	<firstname>L.</firstname>
+	<surname>Duyanovich</surname>
+      </author>
+      <author>
+	<firstname>B.</firstname>
+	<surname>Hillsberg</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>2003</confdates>
+      <conftitle>IBM Systems Journal</conftitle>
+    </confgroup>
+    <volumenum> vol 42:2 </volumenum>
+    <pagenums>250-267</pagenums>
+  </biblioentry>
+
+  <biblioentry id="Mosberger96">
+    <abbrev>Mosberger96</abbrev>
+    <title>Making Paths Explicit in the Scout Operating System</title>
+    <authorgroup>
+      <author>
+	<firstname>David</firstname>
+	<surname>Mosberger</surname>
+      </author>
+      <author>
+	<firstname>Larry</firstname>
+	<othername>L.</othername>
+	<surname>Peterson</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>October, 1996</confdates>
+      <conftitle>ACM Symposium on Operating Systems Design and
+	Implementation</conftitle>
+    </confgroup>
+  </biblioentry>
+
+  <!-- N -->
+  <biblioentry id="NTFSbook">
+    <abbrev>NTFSBook</abbrev>
+      <title>Inside the Windows NT File System</title>
+      <authorgroup>
+	<author>
+	  <firstname>Helen</firstname>
+	  <surname>Custer</surname>
+	</author>
+      </authorgroup>
+      <copyright>
+	<year>1994</year>
+	<holder> Microsoft Press
+	</holder>
+      </copyright>
+    </biblioentry>
+
+  <!-- O -->
+
+  <biblioentry id="Ousterhout85Trace">
+    <abbrev>Ousterhout85Trace</abbrev>
+    <title>A Trace-Driven Analasys of the UNIX 4.2 BSD File System</title>
+    <authorgroup>
+      <author>
+	<firstname>John</firstname>
+        <othername>K.</othername>
+	<surname>Ousterhout</surname>
+      </author>
+      <author>
+	<firstname>Hervé</firstname>
+	<othername>Da</othername>
+	<surname>Costa</surname>
+      </author>
+      <author>
+	<firstname>David</firstname>
+	<surname>Harrison</surname>
+      </author>
+      <author>
+	<firstname>John</firstname>
+        <othername>A.</othername>
+	<surname>Kunze</surname>
+      </author>
+      <author>
+	<firstname>Mike</firstname>
+	<surname>Kupler</surname>
+      </author>
+      <author>
+	<firstname>James</firstname>
+        <othername>G.</othername>
+	<surname>Thompson</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1989</confdates>
+      <conftitle>Operating Systems Review</conftitle>
+    </confgroup>
+    <pagenums>11-28</pagenums>
+  </biblioentry>
+
+
+  <!-- P -->
+    <biblioentry id="Pike93" xreflabel="Pike93">
+      <title>The Use of Name spaces in Plan 9</title>
+      <authorgroup>
+	<author> <firstname>Rob</firstname> 
+	  <surname>Pike</surname> </author>
+	<author> <firstname>Dave</firstname> 
+	  <surname>Presotto</surname> </author>
+	<author> <firstname>Ken</firstname> 
+	  <surname>Thompson</surname> </author>
+	<author> <firstname>Howard</firstname> 
+	  <surname>Trickey</surname> </author>
+	<author> <firstname>Phil</firstname> 
+	  <surname>Winterbottom</surname> </author>
+      </authorgroup>
+      <seriesvolnums>27(2)</seriesvolnums>
+      <pagenums>72-76</pagenums>
+      <date>April 1993</date>
+      <publisher>
+	<publishername>Operating Systems Review</publishername>
+      </publisher>
+    </biblioentry>
+
+  <biblioentry id="postmark">
+    <abbrev>Postmark</abbrev>
+    <title>Postmark: A new file system benchmark</title>
+    <publishername>Network Appliance TR-3022, 1997</publishername>
+  </biblioentry>
+
+  <biblioentry id="PThreads">
+    <abbrev>PThreads</abbrev>
+    <title>The Single <trademark class="registered">UNIX</trademark>
+      Specification, Version 2</title>
+    <corpauthor>The Open Group</corpauthor>
+    <date>1999</date>
+    <releaseinfo>
+      <ulink url="http://www.opengroup.org/">
+	http://www.opengroup.org/
+      </ulink>
+    </releaseinfo>
+  </biblioentry>
+
+  <!-- Q -->
+  <!-- R -->
+  <biblioentry id="Reid00">
+    <abbrev>Reid00</abbrev>
+    <title>Knit: Component Composition for Systems Software</title>
+    <authorgroup>
+      <author>
+	<firstname>Alastair</firstname>
+	<surname>Reid</surname>
+      </author>
+      <author>
+	<firstname>Matthew</firstname>
+	<surname>Flatt</surname>
+      </author>
+      <author>
+	<firstname>Leigh</firstname>
+	<surname>Stroller</surname>
+      </author>
+      <author>
+	<firstname>Jay</firstname>
+	<surname>Lepreau</surname>
+      </author>
+      <author>
+	<firstname>Eric</firstname>
+	<surname>Eide</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>October, 2000</confdates>
+      <conftitle>4th Symposium on Operating Systems Design and
+	Implementation (OSDI 2000)</conftitle>
+    </confgroup>
+    <pagenums>347-360</pagenums>
+  </biblioentry>
+
+  <biblioentry id="Ritchie84">
+    <abbrev>Ritchie84</abbrev>
+    <title>A Stream Input-Output System</title>
+    <authorgroup>
+      <author>
+	<firstname>D.</firstname>
+	<othername>M.</othername>
+	<surname>Ritchie</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>October, 1984</confdates>
+      <conftitle>AT&amp;T Bell Laboratories Technical Journal</conftitle>
+    </confgroup>
+    <seriesvolnums>63(8)</seriesvolnums>
+    <pagenums>1897-1910</pagenums>
+  </biblioentry>
+
+  <biblioentry id="Roberts89a">
+    <abbrev>Roberts89a</abbrev>
+    <title>WorkCrews: An Abstraction for Controlling
+      Parallelism.</title>
+    <authorgroup>
+      <author>
+	<firstname>E.</firstname>
+	<surname>Roberts</surname>
+      </author>
+      <author>
+	<firstname>M.</firstname>
+	<surname>Vandevoorde</surname>
+      </author>
+    </authorgroup>
+    <publisher>
+      <publishername>Digital Equipment Corporation, Systems Research
+	  Centre</publishername>
+      </publisher>
+      <date>February, 1989</date>
+    </biblioentry>
+
+  <biblioentry id="Rosenblum92Design">
+    <abbrev>Rosenblum92Design</abbrev>
+    <title>The Design and Implementation of a Log-Structured File System</title>
+    <authorgroup>
+      <author>
+	<firstname>Mendel</firstname>
+	<surname>Rosenblum</surname>
+      </author>
+      <author>
+	<firstname>John</firstname>
+        <othername>K.</othername>
+	<surname>Ousterhout</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>October, 1991</confdates>
+      <conftitle>Proceedings of 13th ACM Symposium on Operating Systems
+	Principles</conftitle>
+    </confgroup>
+    <publisher>
+      <publishername>ACM Transactions on Computer Systems</publishername>
+    </publisher>
+    <date>1992</date>
+    <pagenums>26-52</pagenums> 
+  </biblioentry>
+
+  <biblioentry id="Rubini01">
+    <abbrev>Rubini01</abbrev>
+    <title>Linux Device Drivers</title>
+    <authorgroup>
+      <author>
+	<firstname>Alessandro</firstname>
+	<surname>Rubini</surname>
+      </author>
+      <author>
+	<firstname>Jonathan</firstname>
+	<surname>Corbet</surname>
+      </author>
+    </authorgroup>
+    <date>2001</date>
+    <publisher>
+      <publishername>O'Reilly</publishername>
+    </publisher>
+  </biblioentry>
+
+  <!-- S -->
+
+  <biblioentry id="samba">
+    <abbrev>Samba</abbrev>
+    <title>Samba: Integrating UNIX and Windows</title>
+    <authorgroup>
+      <author>
+	<firstname>John</firstname>
+	<surname>Blair</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1998</confdates>
+      <conftitle>http://www.ssc.com/ssc/samba/</conftitle>
+    </confgroup>
+  </biblioentry>
+
+  <biblioentry id="SCO99">
+    <abbrev>SCO96</abbrev>
+    <title>System V Application Binary Interface</title>
+    <edition>4.1</edition>
+    <releaseinfo>
+      <ulink url="http://www.sco.com/developer/devspecs">
+	http://www.sco.com/developer/devspecs
+      </ulink>
+    </releaseinfo>
+    <authorgroup>
+      <corpauthor>
+	The Santa Cruz Operation, Inc.
+      </corpauthor>
+    </authorgroup>
+    <copyright>
+      <year>1990-1996</year>
+      <holder>The Santa Cruz Operation, Inc.</holder>
+    </copyright>
+    <copyright>
+      <year>1990-1992</year>
+      <holder>AT&amp;T</holder>
+    </copyright>
+  </biblioentry>
+
+  <biblioentry id="Seltzer00Journaling">
+    <abbrev>Seltzer00Journaling</abbrev>
+    <title>An Implementation of a Log-Structured File System for UNIX</title>
+    <authorgroup>
+      <author>
+        <firstname>Margo</firstname>
+        <surname>Seltzer</surname>
+      </author>
+      <author>
+        <firstname>Greg</firstname>
+        <surname>Ganger</surname>
+      </author>
+      <author>
+        <firstname>M</firstname>
+        <othername>Kirk</othername>
+        <surname>Seltzer</surname>
+      </author>
+      <author>
+        <firstname>Keith</firstname>
+        <surname>Smith</surname>
+      </author>
+      <author>
+        <firstname>Craig</firstname>
+        <surname>Soules</surname>
+      </author>
+      <author>
+        <firstname>Christopher</firstname>
+        <surname>Stien</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1993</confdates>
+      <conftitle>USENIX Winter</conftitle>
+    </confgroup>
+  </biblioentry>
+  
+
+  <biblioentry id="Shapiro89">
+    <abbrev>Shapiro89</abbrev>
+    <title>SOS: An Object-Oriented Operating system --- Assessment and
+      Perspectives</title>
+    <authorgroup>
+      <author>
+	<firstname>M.</firstname>
+	<surname>Shapiro</surname>
+      </author>
+      <author>
+	<firstname>Y.</firstname>
+	<surname>Gourhant</surname>
+      </author>
+      <author>
+	<firstname>S.</firstname>
+	<surname>Habert</surname>
+      </author>
+      <author>
+	<firstname>L.</firstname>
+	<surname>Mosseri</surname>
+      </author>
+      <author>
+	<firstname>M.</firstname>
+	<surname>Ruffin</surname>
+      </author>
+      <author>
+	<firstname>C.</firstname>
+	<surname>Valot</surname>
+      </author>
+    </authorgroup>
+    <seriesvolnums>2(4)</seriesvolnums>
+    <pagenums>287-337</pagenums>
+    <date>1989</date>
+    <publisher>
+      <publishername>Computing Systems</publishername>
+    </publisher>
+  </biblioentry>
+
+  <biblioentry id="swartz97adding">
+    <abbrev>swartz97adding</abbrev>
+    <title>Adding Response Time Measurement of CIFS File Server Performance to NetBench</title>
+    <authorgroup>
+      <author>
+	<firstname>Karl</firstname>
+	<othername>L.</othername>
+	<surname>Swartz</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>October, 1991</confdates>
+      <conftitle>Proceedings of the USENIX Windows NT Workshop</conftitle>
+    <confdates>1997</confdates>
+    </confgroup>
+    <pagenums>87-94</pagenums>
+  </biblioentry>
+
+  <!-- T -->
+  <biblioentry id="tweedie98journaling">
+    <abbrev>Tweedie98journaling</abbrev>
+    <title>Journaling the Linux ext2fs Filesystem</title>
+    <authorgroup>
+      <author>
+	<firstname>Stephen</firstname>
+	<surname>Tweedie</surname>
+      </author>
+    </authorgroup>
+    <date>1998</date>
+    <publisher>
+      <publishername>LinuxExpo'98</publishername>
+    </publisher>
+  </biblioentry>
+
+  <!-- U -->
+  <biblioentry id="UML">
+    <abbrev>UML</abbrev>
+    <title>Unified Modeling Language</title>
+    <publishername>www.omg.org/uml</publishername>
+  </biblioentry>
+
+  <biblioentry id="unrau95hierarchical">
+    <abbrev>Unrau95hierarchical</abbrev>
+    <title>Hierarchical Clustering: A Structure for Scalable Multiprocessor
+            Operating System Design</title>
+    <authorgroup>
+      <author>
+	<firstname>Ronald</firstname>
+	<othername>C.</othername>
+	<surname>Unrau</surname>
+      </author>
+      <author>
+	<firstname>Orran</firstname>
+	<surname>Krieger</surname>
+      </author>
+      <author>
+	<firstname>Benjamin</firstname>
+	<surname>Gamsa</surname>
+      </author>
+      <author>
+	<firstname>Michael</firstname>
+	<surname>Stumm</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1995</confdates>
+      <conftitle>The Journal of Supercomputing</conftitle>
+    </confgroup>
+    <volumenum> vol 9:1--2 </volumenum>
+    <pagenums>105-134</pagenums>
+  </biblioentry>
+
+  <!-- V -->
+
+  <!-- W -->
+    <biblioentry id="Walsh99">
+    <abbrev>Walsh99</abbrev>
+      <title>DocBook: The Definitive Guide</title>
+      <releaseinfo><ulink url="&db.url;">&db.url;</ulink></releaseinfo>
+      <authorgroup>
+	<author>
+	  <firstname>Norman</firstname>
+	  <surname>Walsh</surname>
+	</author>
+	<author>
+	  <firstname>Leonard</firstname>
+	  <surname>Meullner</surname>
+	</author>
+      </authorgroup>
+      <edition>1st Edition</edition>
+      <copyright>
+	<year>October 1999</year>
+	<holder>
+	  <ulink url="http://www.oreilly.com">
+	    O'Reilly & Associates
+	  </ulink>
+	  , Inc. All rights reserved.
+	</holder>
+      </copyright>
+      <isbn>
+	<ulink url="http://www.oreilly.com/catalog/docbook">
+	  156592-580-7
+	</ulink>
+      </isbn>
+    </biblioentry>
+
+  <biblioentry id="Whitaker02">
+    <abbrev>Whitaker02</abbrev>
+    <title>Denali: Lightweight virtual machines for distributed and
+		networked application</title>
+    <authorgroup>
+      <author>
+	<firstname>A.</firstname>
+	<surname>Whitaker</surname>
+      </author>
+      <author>
+	<firstname>M.</firstname>
+	<surname>Shaw</surname>
+      </author>
+      <author>
+	<firstname>S.</firstname>
+	<surname>Gribble</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>2002</confdates>
+      <conftitle>Proceedings of the USENIX
+    Annual Technical Conference</conftitle>
+    </confgroup>
+  </biblioentry>
+
+  <!-- X -->
+  <!-- Y -->
+  <biblioentry id="Yokote93">
+    <abbrev>Yokote93</abbrev>
+    <title>Kernel Structuring for Object-Oriented Systems: The Apertos
+      Approach</title>
+    <authorgroup>
+      <author>
+	<firstname>Yasuhiko</firstname>
+	<surname>Yokote</surname>
+      </author>
+    </authorgroup>
+    <confgroup>
+      <confdates>1993</confdates>
+      <conftitle>Proceedings of the 1st International Symmposium on Object
+	Technologies for Advanced Software</conftitle>
+    </confgroup>
+    <pagenums>145-162</pagenums>
+  </biblioentry>
+
+  <!-- Z -->
+
+</bibliography>
+
+<!--
+Local Variables:
+sgml-parent-document: ("./Overview.sgml" "bibliography" "article")
+End:
+-->

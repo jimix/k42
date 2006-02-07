@@ -1,0 +1,56 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: wp.ent,v 1.5 2001/10/18 17:00:31 bob Exp $
+-->
+
+<!-- Allow png as a graphical class
+  THIS IS EXPERIMENTAL
+<!ENTITY % local.notation.class "|PNG" >
+<!NOTATION PNG SYSTEM "PNG" >
+-->
+
+<!-- Common file segments -->
+<!ENTITY bib.sgml SYSTEM "bib.sgml">
+
+
+<!-- Phrases I do not want to type over and over again -->
+<!ENTITY libc "GNU C Library">
+
+<!-- URLs in the document -->
+<!ENTITY watson.url	"http://www.watson.ibm.com">
+<!ENTITY k42.url	"http://www.research.ibm.com/k42">
+<!ENTITY linux.url	"http://www.linux.org">
+<!ENTITY gnu.url	"http://www.gnu.org">
+<!ENTITY glibc.url	"&gnu.url/software/libc">
+<!ENTITY emacs.url	"&gnu.url/software/emacs/emacs.html">
+<!ENTITY make.url	"&gnu.url/software/make">
+<!ENTITY genabi.url	"http://www.sco.com/developer/devspecs">
+<!ENTITY lxrun.url	"http://www.ugcs.caltech.edu/~steven/lxrun">
+<!ENTITY xemacs.url	"http://www.xemacs.org">
+<!ENTITY oasis.url	"http://www.oasis-open.org">
+<!ENTITY dbhtml.url	"&oasis.url/docbook/documentation/reference/html" >
+<!ENTITY db.url		"&dbhtml.url/docbook.html"> 
+
+<!entity K42ArtHeader SYSTEM "wp-art.sgml">
+
+<!--
+  ERROR in stylesheet nwalsh-modular/common/dbl1ja.ent
+  Added semicolons to:
+  <!ENTITY nav-prev               "\U-524D\U-306E\U-30DA\U-30FC\U-30B8">
+  <!ENTITY nav-next               "\U-6B21\U-306E\U-30DA\U-30FC\U-30B8">
+
+Why can't I override them here??
+-->
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: Template.sgml
+End:
+-->

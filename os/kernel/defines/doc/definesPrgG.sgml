@@ -1,0 +1,129 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: definesPrgG.sgml,v 1.4 2001/10/30 17:17:07 peterson Exp $
+-->
+<title>Defines</title>
+<section>
+  <title>Files</title>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/os/kernel/defines/MLSStatistics.H"><filename>MLSStatistics.H</filename></ulink>:
+	enables hardware dependant statistics.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/os/kernel/defines/inout.H"><filename>inout.H</filename></ulink>:
+	defines what input output devices should be used.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/os/kernel/defines/mem_debug.H"><filename>mem_debug.H</filename></ulink>:
+	Enables debugging options for memory.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/os/kernel/defines/optimizations.H"><filename>optimizations.H</filename></ulink>:
+	defines varios flags which drive optimizations done for
+	performance measurements.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/os/kernel/defines/paging.H"><filename>paging.H</filename></ulink>:
+	Controls whether paging (pageout/swap) is on and which daemons
+	should be run.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/os/kernel/defines/sim_bugs.H"><filename>sim_bugs.H</filename></ulink>:
+	defines varios flags which drive workarounds for simulators we
+	are currently using.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/os/kernel/defines/template_bugs.H"><filename>template_bugs.H</filename></ulink>:
+	defines various flags which drive workarounds for current
+	compiler bugs involving templates.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/os/kernel/defines/use_expedient.H"><filename>use_expedient.H</filename></ulink>:
+	Controls whether to use expedient or optimized implementations
+	of various Dispatcher- and Exception-level paths.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/os/kernel/defines/linux_support.H"><filename>linux_support.H</filename></ulink>:
+	Controls linux support on K42.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/os/kernel/defines/sched_options.H">
+	  <filename>sched_options.H</filename>
+	</ulink>
+	: Controls scheduling features.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/os/kernel/defines/experimental.H">
+	  <filename>experimental.H</filename>
+	</ulink>
+	: Controls experimental features.
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+</section>
+<section>
+  <title>Overview</title>
+  <para>
+
+    Places to put any conditional compilation flags to get dependacies
+    on real files rather than makefile options
+
+  </para>
+</section>

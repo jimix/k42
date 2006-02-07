@@ -1,0 +1,36 @@
+/******************************************************************************
+ * K42: (C) Copyright IBM Corp. 2005.
+ * All Rights Reserved
+ *
+ * This file is distributed under the GNU LGPL. You should have
+ * received a copy of the license along with K42; see the file LICENSE.html
+ * in the top-level directory for more details.
+ *
+ * $Id: TODO,v 1.1 2005/07/14 21:48:17 dilma Exp $
+ ****************************************************************************/
+/****************************************************************************
+ * Module Description:
+ ****************************************************************************/
+
+(1) Fix authentication scheme
+
+Some preparation work has been done:
+By the time we call getFCL(), we either (1) call it with the uid and gid to
+be used for the nfs server authentication or (2) we have invoked the
+method to acquire credentials, so it's a matter of getting the credentials
+to retrieve uid and gid. So NFSClient can keep a mapping of
+(uid, gid) into authentication objects, setting the NFSClient instance
+to be used accordingly.
+
+This is a small task. Things to keep in mind:
+*   some operations are performed for system initialization from baseServers
+    before baseServers is running in a linux process; at this point cred is
+    NULL and we should use the 'developer' credential (the one we use now
+    for everything)
+*   later on initialization, baseServers has spawn linux process (for example,
+    to read and exec sysinit), but at this point we have 
+    uid and gid as 0 in the credentials for this process
+*   If we run apps on k42 that add users, these users may not have
+    equivalent ones in the nfs server side. This is a rare case, so we
+    probably could add the users. If the user id being created corresponds
+    to an existing, unrelated, user on the other side, we don't care.

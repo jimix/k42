@@ -1,0 +1,48 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2001.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.4 2002/01/23 19:54:47 rosnbrg Exp $
+# ############################################################################
+
+ifdef IN_OBJ_DIR
+
+# ############################################################################
+#  rules to be made in object directory
+# ############################################################################
+
+TARGETS += boot_image config.tcl init.simos
+
+targets :: subdirs_targets
+install_targets :: subdirs_install_targets
+
+
+relink:
+	-$(RM) boot_image
+	$(MAKE) boot_image
+
+kern_INPUTS =	kernel/libkern.INPUT
+
+kern_DEPS =	$(kern_INPUTS)		\
+		servers/bootServers.o	\
+		$(LIBDIR)/libk.a
+
+boot_image: $(kern_DEPS)
+	$(TARGET_LD) -T 0xffffffff80020000 $(KLDFLAGS) \
+	servers/bootServers.o `$(CAT) $(kern_INPUTS)` \
+	-lk -e _start -o $@
+
+config.tcl: config.tcl.src
+	$(CP) -p $< $@
+
+init.simos: init.simos.src
+	$(CP) -p $< $@
+
+# ############################################################################
+#  end of object directory rules
+# ############################################################################
+endif

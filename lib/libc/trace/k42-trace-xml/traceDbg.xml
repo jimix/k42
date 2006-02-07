@@ -1,0 +1,231 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceDbg.xml,v 1.4 2004/10/11 19:28:54 cascaval Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::Dbg::d1A">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="d1A" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='debug event 1A: value 0x%0[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="testTrace.C" line="52" />
+</event>
+
+
+<event name="OS::Dbg::d1B">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="d1B" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='debug event 1B: value 0x%0[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="??" line="??" />
+</event>
+
+
+<event name="OS::Dbg::d2A">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="d2A" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='debug event 2A: values 0x%0[%llx] 0x%1[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="testTrace.C" line="54" />
+</event>
+
+
+<event name="OS::Dbg::d2B">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="d2B" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='debug event 2B: values 0x%0[%llx] 0x%1[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="??" line="??" />
+</event>
+
+
+<event name="OS::Dbg::d3A">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="d3A" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='debug event 3A: values 0x%0[%llx] 0x%1[%llx] 0x%2[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="testTrace.C" line="56" />
+</event>
+
+
+<event name="OS::Dbg::d3B">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="d3B" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='debug event 3B: values 0x%0[%llx] 0x%1[%llx] 0x%2[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="??" line="??" />
+</event>
+
+
+<event name="OS::Dbg::d4A">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="d4A" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='debug event 4A: values 0x%0[%llx] 0x%1[%llx] 0x%2[%llx] 0x%3[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="??" line="??" />
+</event>
+
+
+<event name="OS::Dbg::d4B">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="d4B" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='debug event 4B: values 0x%0[%llx] 0x%1[%llx] 0x%2[%llx] 0x%3[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="??" line="??" />
+</event>
+
+
+<event name="OS::Dbg::Event2Start">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="Event2Start" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='Exp Event: Start %0[%llx] %1[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="testTrace.C" line="50" />
+</event>
+
+
+<event name="OS::Dbg::Event2End">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="Event2End" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='Exp Event: End %0[%llx] %1[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="testTrace.C" line="58" />
+</event>
+
+
+<event name="OS::Dbg::Event2Impulse">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="Event2Impulse" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='Exp Event: Impulse %0[%llx] %1[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="??" line="??" />
+</event>
+
+
+<event name="OS::Dbg::Event4Start">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="Event4Start" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='Exp Event: Start %0[%llx] %1[%llx] %2[%llx] %3[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="??" line="??" />
+</event>
+
+
+<event name="OS::Dbg::Event4End">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="Event4End" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='Exp Event: End %0[%llx] %1[%llx] %2[%llx] %3[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="??" line="??" />
+</event>
+
+
+<event name="OS::Dbg::Event4Impulse">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="Event4Impulse" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='Exp Event: Impulse %0[%llx] %1[%llx] %2[%llx] %3[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="??" line="??" />
+</event>
+
+
+<event name="OS::Dbg::StrA">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="StrA" />
+	<fields>
+		<field name="field0" type="string" />
+	</fields>
+	<k42Format value='debug event str A: value %0[%s]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="??" line="??" />
+</event>
+
+
+<event name="OS::Dbg::BytesA">
+	<layerId value="OS" />
+	<classId value="Dbg" />
+	<specifier value="BytesA" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='debug event bytes A: value of first 64 bits 0x%0[%llx]' />
+	<sourceCodeInfo type="SOURCE_FILE" file="??" line="??" />
+</event>
+
+</PEM_Events>

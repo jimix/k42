@@ -1,0 +1,114 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2002.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+-->
+<title>The VirtFS File System</title>
+
+<section>
+  <title>Overview</title>
+  <para>
+    VirtFS is a framework for procfs-like file systems,
+    where file data is meant to be provided by a process.
+    VirtFS maintains a tree (mounted at initialization time into
+    the name space). Directories can be added/removed through
+    the usual mkdir(2)/rmdir(2) interface (i.e., utilities such
+    as mkdir(1), rmdir(1), rm(1) can be used). Files are added to the tree
+    by specifying a server object to be associated with the file.
+    Read, write, open, and close operations are delegated by
+    the file system to the server object associated with the file.
+    Files are removed through the normal unlink(2) interface (i.e., utilities
+    such as rm() work). VirtFS does not support multiple links, i.e.,
+    the link(2) operation is not available for files associated with
+    data structures.
+  </para>
+</section>
+
+<section>
+  <title>How to associate data with files</title>
+
+  <para>
+    A process that wants to export data as a file needs to
+    implement a server object conforming to the 
+    <ulink url="&topsrc/lib/libc/io/VirtFile.H"><filename>
+	VirtFile.H</filename></ulink>. This interface
+    declares methods to be invoked when read/write/open/close
+    operations are performed on the file. Also, it declares
+    an operation (_getMaxReadSize) that queries the server object about the
+    maximum amount of data to be returned by it on a read
+    operation. For information about how to write Server
+    objects (XObjects), see the clustered object
+    <ulink url="&topsrc/lib/libc/cobj/doc/cobj.html">documentation
+      </ulink>, or look at the VirtFileImp example in <xref linkend="example">.
+  </para>
+  <para>
+    A file associated with an server object specified through its
+    ObjectHandle is created by invoking
+    <programlisting>
+    FileLinuxVirtFile::CreateFile(char *name, mode_t mode, ObjectHandle vfoh);
+    </programlisting>
+  </para>
+</section>
+
+<section>
+  <title>Mounting VirtFS</title>
+
+  <para>
+    In the current code base, VirtFS is mounted at /virtfs on initialization
+    time (see <ulink url="&topsrc/os/servers/baseServers/baseServer.C">
+      <filename>baseServer.C</filename></ulink>). New instances of
+    VirtFS can be created by writing a program that invokes
+    <programlisting>
+    FileSystemVirtFS::ClassInit(VPNum vp, char *mpath, mode_t mode).
+    </programlisting>
+  </para>
+</section>
+
+<section id="example">
+  <title>Example</title>
+
+  <para>
+    The program <ulink url="&topsrc/usr/testVirtFile.C"><filename>
+	testVirtFile.C</filename></ulink>
+    defines a server object and creates a file in the /virtfs/ tree
+    to be associated with it. The program takes as arguments the
+    name of the file to be created and the amount of data to be
+    produced by read operations (so read produces a string describing
+    the current state of the object; if the amount of data to be
+    produced is larger than the size of the string, it adds a sequence
+    of "*" followed by a "#" to fill up the request). The server object
+    state being exported on read operations consists of a piece of data
+    (a char), and counters for executed read/write operations. A
+    write operation updates the piece of data (the char) and the
+    write counter. The open operation only checks for O_TRUNC; if
+    the file is to be truncated if resets the data, and the reader/writer
+    counters. The close operation does not perform any action.
+  </para>
+
+  <para>
+    So if you execute
+    <programlisting>
+      /testVirtFile /virtfs/afile 50 &
+    </programlisting>
+    the file /virtfs/afile is created. You can experiment with
+    it by running things like
+    <programlisting>
+      cat /virtfs/afile
+      echo "?" > /virtfs/afile
+      echo "!" >> /virtfs/afile
+    </programlisting>
+  </para>
+    
+</section>
+
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./virtfs.sgml" "chapter" "title")
+End:
+-->

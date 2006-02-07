@@ -1,0 +1,322 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceIO.xml,v 1.3 2004/07/08 17:15:32 gktse Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::IO::InitASF">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="InitASF" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='program initializing ASF with input ref %0[%llx] out ref %1[%llx]' />
+</event>
+
+
+<event name="OS::IO::WireSignalAvail">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireSignalAvail" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SocketWire::signalavail this %0[%llx]' />
+</event>
+
+
+<event name="OS::IO::WireSignalAvailSignalClnt">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireSignalAvailSignalClnt" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SocketWire::signalavail on client this %0[%llx]' />
+</event>
+
+
+<event name="OS::IO::WireBind">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireBind" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SocketWire::bind this %0[%llx]' />
+</event>
+
+
+<event name="OS::IO::WireListen">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireListen" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SocketWire::listen this %0[%llx]' />
+</event>
+
+
+<event name="OS::IO::WireAccept">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireAccept" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SocketWire::accept this %0[%llx]' />
+</event>
+
+
+<event name="OS::IO::WireReadBlkSrv">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireReadBlkSrv" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SocketWire::readblksrv this %0[%llx]' />
+</event>
+
+
+<event name="OS::IO::WireAcceptBlkSrv">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireAcceptBlkSrv" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SocketWire::acceptblksrv this %0[%llx]' />
+</event>
+
+
+<event name="OS::IO::WireRead">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireRead" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SocketWire::read this %0[%llx]' />
+</event>
+
+
+<event name="OS::IO::WireWrite">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireWrite" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SocketWire::write this %0[%llx]' />
+</event>
+
+
+<event name="OS::IO::WireRecvFrom">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireRecvFrom" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SocketWire::recvfrom this %0[%llx]' />
+</event>
+
+
+<event name="OS::IO::WireSendTo">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireSendTo" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SocketWire::sendto this %0[%llx]' />
+</event>
+
+
+<event name="OS::IO::WireSendToDone">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireSendToDone" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='TRACE_IO_WIRE_SENDTODONE, looped %0[%lld]' />
+</event>
+
+
+<event name="OS::IO::WireConnect">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireConnect" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SocketWire::connect this %0[%llx]' />
+</event>
+
+
+<event name="OS::IO::WireRegisterCallback">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireRegisterCallback" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SocketWire::registercallback this %0[%llx]' />
+</event>
+
+
+<event name="OS::IO::WireGetAvailabilty">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="WireGetAvailabilty" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='SocketWire::getavailabilty this %0[%llx]' />
+</event>
+
+
+<event name="OS::IO::SelNotify">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="SelNotify" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='poll() notified fd: %0[%lld] state:%1[%04llx]' />
+</event>
+
+
+<event name="OS::IO::SelWaker">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="SelWaker" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='poll() blocked thread unblocked id:%0[%llx]' />
+</event>
+
+
+<event name="OS::IO::SelBlock">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="SelBlock" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='poll() blocked id:%0[%llx]' />
+</event>
+
+
+<event name="OS::IO::SelBlockTo">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="SelBlockTo" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='poll() block timeout - %0[%llx] now:%1[%llx] id:%2[%llx]' />
+</event>
+
+
+<event name="OS::IO::SelWoke">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="SelWoke" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='poll() blocked thread awake id:%0[%llx] thr:%1[%llx]' />
+</event>
+
+
+<event name="OS::IO::DidPoll">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="DidPoll" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='did a poll, found %0[%lld] avail' />
+</event>
+
+
+<event name="OS::IO::SetAvail">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="SetAvail" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='IO notification set avail xh:%0[%llx] state:%1[%llx]' />
+</event>
+
+
+<event name="OS::IO::SendAsync">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="SendAsync" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='IO send async xh:%0[%llx] state:%1[%llx]' />
+</event>
+
+
+<event name="OS::IO::GenNotif">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="GenNotif" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='IO generate notification xh:%0[%llx] state:%1[%llx]' />
+</event>
+
+
+<event name="OS::IO::RcvUpcall">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="RcvUpcall" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='IO rcv upcall xh:%0[%llx] state:%1[%llx]' />
+</event>
+
+
+<event name="OS::IO::Update">
+	<layerId value="OS" />
+	<classId value="IO" />
+	<specifier value="Update" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='IO update xh:%0[%llx] state:%1[%llx]' />
+</event>
+
+</PEM_Events>

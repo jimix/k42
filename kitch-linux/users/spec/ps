@@ -1,0 +1,46 @@
+#!/bin/sh
+# echo is a builtin 
+
+exec echo "  PID TTY          TIME CMD
+    1 ?        00:00:04 init
+    2 ?        00:00:00 keventd
+    3 ?        00:00:00 rtasd
+    4 ?        00:00:00 ksoftirqd_CPU0
+    5 ?        00:00:00 ksoftirqd_CPU1
+    6 ?        00:00:00 kswapd
+    7 ?        00:00:00 bdflush
+    8 ?        00:00:00 kupdated
+    9 ?        00:00:00 kreiserfsd
+  238 ?        00:00:00 sshd
+  253 ?        00:00:00 syslogd
+  256 ?        00:00:00 klogd
+  285 ?        00:00:00 portmap
+  314 ?        00:00:00 atd
+  367 ?        00:00:00 lpd
+  438 ?        00:00:00 cron
+  478 ?        00:00:00 nscd
+  479 ?        00:00:00 nscd
+  480 ?        00:00:00 nscd
+  481 ?        00:00:00 nscd
+  482 ?        00:00:00 nscd
+  483 ?        00:00:00 nscd
+  484 ?        00:00:00 nscd
+  502 ?        00:00:00 kdm
+  508 ?        00:00:01 X
+  527 ?        00:00:00 kdm
+  556 tty1     00:00:00 mingetty
+  557 tty2     00:00:00 mingetty
+  558 tty3     00:00:00 mingetty
+  559 tty4     00:00:00 mingetty
+  560 tty5     00:00:00 mingetty
+  561 tty6     00:00:00 mingetty
+  562 ttyS0    00:00:00 agetty
+  568 ?        00:00:00 kdm_greet
+  578 ?        00:00:00 xconsole
+  619 ?        00:00:00 sshd
+  621 pts/0    00:00:00 bash
+  637 pts/0    00:00:01 xemacs
+  638 pts/1    00:00:00 gnuserv
+  639 pts/2    00:00:00 bash
+  651 pts/2    00:00:00 ps
+"

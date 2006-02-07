@@ -1,0 +1,53 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2005.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Makefile.san,v 1.1 2005/09/01 21:27:38 neamtiu Exp $
+# ############################################################################
+
+# Rules for doing static analysis on preprocessed files.
+# Include this file at the end of kitchsrc/lib/Makefile.kitch
+# 
+# One can apply static analysis to individual files, e.g.
+#
+# cd /homes/kix/neamtiu/work/k-newest/powerpc/partDeb/os/kernel/mem
+# make ANALYSIS_TOOL=<path_to_tool> FCMComputation.SAN
+#
+# or to all the files in the directory
+#
+# make  ANALYSIS_TOOL=<path_to_tool> static_analysis
+
+
+# First, find out all .C sources.
+# I prefer it this way, rather than hooking into the %.o : %.C rule
+ALL_SRCS = $(SRCS) \
+      $(TSTSRCS) \
+      $(LIBCSRCS) \
+      $(LIBKSRCS) \
+      $(LIBNATVSRCS) \
+      $(LIBKERNSRCS) \
+      $(LIBEMUSRCS) \
+      $(LIBFSSRCS) \
+      $(LIBVFSSRCS) \
+      $(LIBLKSRCS) \
+      $(LIBSRVSRCS)
+# filter out everything that's not a .C
+PURE_CC_SRCS = $(filter %.C, $(ALL_SRCS))
+
+# Preprocess .C files and pass them to $(ANALYSIS_TOOL)
+# I used .PP instead of .I because .I is used above for some stub compiler files
+%.PP : %.C
+	@$(TARGET_CC)  -E $(TARGET_CXXFLAGS) $($(@:%.E=%)_FLAGS) \
+	$(ASFLAGS) $(CPPFLAGS) $< -o $@
+
+# fake 'static analysis' targets
+%.SAN : %.PP
+	$(ANALYSIS_TOOL) $<
+	@$(RM) $<
+
+SAN_TARGETS = $(addsuffix .SAN,$(basename $(PURE_CC_SRCS)))
+static_analysis : $(SAN_TARGETS)

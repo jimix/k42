@@ -1,0 +1,195 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: k42doc.sgml,v 1.3 2001/10/31 14:53:23 bob Exp $
+-->
+<!doctype article PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
+<article id="DocBook">
+  <title>K42 Documentation Project</title>
+  <para>
+    The reasons behind the K42 documentation effort are: 1) to provide
+    open source developers with a means of understanding K42 and the
+    ability program on and with it, and 2) to provide IBM employees
+    including executives an overview of the operating system.
+  </para>
+
+  <para>
+    Documentation goals for K42 include the ability: 1) to use plain
+    text editors such as Emacs or <citerefentry> <refentrytitle>
+    <command>vi</command></refentrytitle> <manvolnum>1</manvolnum>
+    </citerefentry>, 2) to create several output formats from a given
+    set of files, 3) to produce conference quality papers, 4) to
+    create documents from sub-portions of the tree, and 5) use a means
+    of documentation that is open source.  Using DocBook instead of
+    pure text allows us to include hyper text, figures and graphics,
+    and tables.  We chose DocBook over HTML since DocBook provides an
+    unambiguous tag language and easily allows us to to create a
+    single output image from many files distributed throughout the
+    source tree.
+  </para>
+
+  <para>
+    DocBook is a Document Type Definition (DTD) and supports both SGML
+    and XML.  XML is eXtensible Markup Language and is a restricted
+    form of SGML.  In K42 we have chosen to use SGML, a Standard
+    General Markup Language.  DocBook defines what tags mean and
+    how they are used and structured.  Currently K42 uses DocBook
+    version 3.1 published by OASIS.
+  </para>
+
+  <para>
+    DocBook is well suited to K42's needs since it easily allows
+    infrastructure to be created so that a single output book or file
+    can be generated from the multiple individual files throughout
+    K42's source tree.  The parser, openjade, provides additional help
+    in ensuring accurate documents.  Furthermore the source is easily
+    understood and edited in raw text.  The only current down-side of
+    DocBook is that there is no viewer that directly renders the SGML
+    source files.
+  </para>
+
+  <para>
+    The documentation source is located in a doc sub-directory of each
+    major directory in the system.  For example, <filename
+    class="directory">kernel/doc</filename> contains information about
+    the kernel as a whole, while <filename
+    class="directory">kernel/mem/doc</filename> contains information
+    pertaining the he memory subsystem.  Inside each "doc" directory
+    are files with names derived from the directory they are in:
+    <simplelist type="inline">
+      <member><filename>filename.sgml</filename></member>
+      <member><filename>filename.ent</filename></member>
+      <member><filename>filenameOver.sgml</filename></member>
+      <member><filename>filenamePrgG.sgml</filename></member>
+      <member>and a <filename>Makefile</filename></member>
+      </simplelist>.  The filename matches the name of the directory
+      above the doc directory.  For example, in the <filename
+      class="directory">kernel/mem</filename> directory there exists
+    <simplelist type="inline">
+      <member><filename>mem.sgml</filename></member>
+      <member><filename>mem.ent</filename></member>
+      <member><filename>memOver.sgml</filename></member>
+      <member>and a <filename>memPrgG.sgml</filename></member>
+    </simplelist>.  In the top-level doc directory, kitchsrc/doc there
+    is k42.dsl, the style sheet referenced in the Makefile.
+  </para>
+
+  <para>
+    In K42's documentation we have been careful to separate content
+    from control.  We've accomplished this by only placing information
+    into the content files.  The control files that include the
+    content files can then choose how they put together. This allows
+    us to change the presentation of the data easily.  For example,
+    this would allow us to present all the overview content
+    consecutively followed by all the programming guide content, or to
+    design the book so that each subsection is presented with its
+    overview content followed by the detailed content.
+  </para>
+
+  <para>
+    The content files in K42 are the <filename>Over.sgml</filename>
+    file and the <filename>PrgG.sgml</filename> file.  The
+    <filename>PrgG</filename> (programming guide) file contains
+    information targeted at core developers of the system, while the
+    <filename>Over</filename> (overview) file contains information
+    targeted at users interested in getting a general understand of
+    the purpose of that portion of the system.
+  </para>
+
+  <para>
+    The control files are the <filename>.ent</filename> and the
+    <filename>.sgml</filename> files.  The <filename>.ent</filename>
+    file sets up and defines entities that are included in the
+    <filename>.sgml</filename> file.  These entities are all the other
+    files that will be needed to put together a book at the given
+    position in the tree.  For example, at the <filename
+    class="directory">libc</filename> level, the
+    <filename>.ent</filename> must define entities for each of the
+    sub-directories under <filename class="directory">libc</filename>
+    (<filename class="directory">io</filename>, <filename
+    class="directory">trace</filename>, <filename
+    class="directory">sync</filename>, <filename
+    class="directory">cobj</filename>, <filename
+    class="directory">sys</filename>, etc).  The
+    <filename>.sgml</filename> file includes the necessary content
+    <filename>.sgml</filename> files needed to make a book at a given
+    level.  At a leaf node this implies just the
+    <filename>Over</filename> and <filename>PrgG</filename> files,
+    while at higher internal nodes more files must be included.
+  </para>
+
+  <para>
+    The below examples illustrate how the <filename>.ent</filename>
+    and <filename>.sgml</filename> files coordinate to include the
+    content files.  The <filename>.sgml</filename> file reads in both
+    the <filename>Over.sgml</filename> file, and the
+    <filename>PrgG.sgml</filename> file.  This is done through the use
+    of entities.  The <filename>.ent</filename> file is read in to the
+    <filename>.sgml</filename> file by:
+
+    An example portion from an entity file follows <filename
+    class="directory">(kernel/mem/doc/mem.ent)</filename>
+    <programlisting>
+      <![CDATA[
+      <!entity memOver SYSTEM "memOver.sgml">
+      <!entity memPrgG SYSTEM "memPrgG.sgml">
+      ]]>
+    </programlisting>
+
+    This establishes the keyword <filename>memOver</filename> and
+    <filename>memPrgG</filename> as entities that may be used.  The
+    <filename>mem.sgml</filename> file the includes these files as in
+    the example below.
+
+    <programlisting>
+      <![CDATA[
+      <!entity % mem.ent SYSTEM "mem.ent">
+      %mem.ent;
+      <chapter id="memOver">
+      &memOver;
+      </chapter>
+      ]]>
+    </programlisting>
+  </para>
+
+  <para>
+    The <filename>Makefile</filename> infrastructure is designed to
+    allow for a book to be produced at any level of the tree.  A
+    single book can be produced for the entire kitchsrc tree, at the
+    <filename class="directory">kernel</filename> level, or at the
+    <filename class="directory">mem</filename> leaf directory.  At
+    each level make does not recurse into the sub-directories, rather,
+    through the use of the entity files all the necessary files are
+    included into the single <filename>.sgml</filename> file in the
+    directory of interest.
+  </para>
+
+  <para>
+    K42 documentation has specific style guidelines to increase
+    readability and create a standard across all documents.  Lines are
+    to be less than 80 characters.  Indentation is two spaces per
+    significant tag (with many text editors this can be accomplished
+    automatically).  The divisions of book and chapter are determined
+    by the control files, while the content files determine the
+    sections, paragraphs, etc.  The separation of control and content
+    is used to easily assemble the appropriate book at an given level
+    in the K42 documentation tree.
+  </para>
+
+  <para>
+    The documentation in k42 is hierarchical and mirrors the code
+    directories.  Information regarding each portion of the system is
+    placed in a doc sub-directory in the portion of the code source
+    tree corresponding to the implementation of that portion of the
+    system.  The documentation infrastructure through separation of
+    content and control allows a book to be easily constructed at any
+    level of the system providing both core developers and program
+    developers the ability to gain an understanding of the K42
+    Operating System.
+  </para>
+</article>

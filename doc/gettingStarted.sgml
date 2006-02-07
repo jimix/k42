@@ -1,0 +1,462 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: gettingStarted.sgml,v 1.15 2004/12/27 13:39:48 dilma Exp $
+-->
+<!doctype article PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
+<article id="DocBook">
+  <title>Getting Started with K42</title>
+  <para>
+    This document describe the initial setup for understanding and building
+    K42.
+  </para>
+
+  <section>
+    <title>Necessary Build Tools</title>
+    
+    <itemizedlist spacing="compact">
+      <listitem>
+	<para>
+	  Below are the minimum versions need to run on AIX 4.3.3
+	  <itemizedlist spacing="compact">
+	    <listitem>
+	      <simpara>
+		<ulink url="http://www.gnu.org/software/gcc/gcc.html">
+		  GNU C Compiler </ulink> 3.2
+	      </simpara>
+	    </listitem>
+	    <listitem>
+	      <simpara>
+		<ulink url="http://www.gnu.org/software/make/make.html">
+		  GNU Make </ulink> 3.79
+	      </simpara>
+	    </listitem>
+	    <listitem>
+	      <simpara>
+		<ulink url="http://www.gnu.org/software/bash/bash.html">
+		  GNU BASH </ulink> 2.0
+	      </simpara>
+	    </listitem>
+	  </itemizedlist>
+	</para>
+      </listitem>
+
+      <listitem>
+	<para>
+	  Below are the minimum versions need to run on IRIX 6.5
+	  <itemizedlist spacing="compact">
+	    <listitem>
+	      <simpara>
+		<ulink url="http://www.gnu.org/software/gcc/gcc.html">
+		  GNU C Compiler </ulink> 2.93.12
+	      </simpara>
+	    </listitem>
+	    <listitem>
+	      <simpara>
+		<ulink url="http://www.gnu.org/software/make/make.html">
+		  GNU Make </ulink> 3.76.1 
+	      </simpara>
+	    </listitem>
+	    <listitem>
+	      <simpara>
+		<ulink url="http://www.gnu.org/software/bash/bash.html">
+		  GNU BASH </ulink> 2.0
+	      </simpara>
+	    </listitem>
+	  </itemizedlist>
+	</para>
+      </listitem>
+    </itemizedlist>
+  </section>
+  <section>
+    <title>Build System Bootstrapping</title>
+    
+    <section>
+      <title>Preparing the source</title>
+      <para>
+      We have to get the source code for binutils, gcc, glibc, and the 
+      linux 2.4.18.  The reason why we need linux is so we can use linux's
+      headers, especially for building glibc, and K42 also uses the linux
+      headers too.
+      </para>
+      <variablelist>
+	<varlistentry><term>binutils</term>
+	  <listitem>
+	    <para>
+	    The binutils we need is the current version of cvs from 
+	    :pserver:anoncvs@sources.redhat.com:/cvs/src
+	    </para>
+	    <para><programlisting>
+	    cvs -z9 -d :pserver:anoncvs@sources.redhat.com:/cvs/src co binutils
+	    </programlisting></para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry><term>gcc</term>
+	  <listitem>
+	    <para>
+	    gcc 3.2 branch from CVS.  This is pretty much gcc 3.2.3.
+	    </para>
+	    <para><programlisting>
+	    cvs -z9 -d :pserver:anoncvs@subversions.gnu.org:/cvsroot/gcc co -r gcc-3_2-branch gcc
+	    </programlisting></para>
+	    <para>
+	    After getting the source, it needs to be patched with the latest
+	    patch from 
+	    <ulink url="ftp://ftp.linuxppc64.org/pub/people/amodra/gcc-3.2/">
+	    ftp://ftp.linuxppc64.org/pub/people/amodra/gcc-3.2/</ulink>
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry><term>glibc</term>
+	  <listitem>
+	    <para>
+	    glibc 2.2.5 branch from CVS.
+	    </para>
+	    <para><programlisting>
+	    cvs -z9 -d :pserver:anoncvs@sources.redhat.com/cvs/glibc co -r glibc-2-2-5 glibc
+	    </programlisting></para>
+	    <para>
+	    Patch glibc with the patch for 2.2.5 at 
+	    <ulink url="ftp://ftp.linuxppc64.org/pub/people/sjmunroe/glibc225-ppc64-20021120.patch">ftp://ftp.linuxppc64.org/pub/people/sjmunroe/glibc225-ppc64-20021120.patch</ulink>
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry><term>linux</term>
+	  <listitem>
+	    <para>
+	    For linux, refer to the section below entitled 
+	    "Creating & Building Linux Kernel Code For K42", follow it to
+	    prepare the source code, but stop before doing the "make headers"
+	    step.
+	    </para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+    </section>
+
+
+
+    <section>
+      <title>Building The Toolchain</title>
+      <para>
+      In those instruction, the ${TOOLCHAIN} refers to the location where the
+      entire toolchain will be installed.  We will have to build both a
+      powerpc-linux C cross compiler and a powerpc64-linux C, and C++ cross
+      compiler.  However, building a C++ compiler is a bit tricky, since g++
+      requires some glibc libraries.  On the first pass, a powerpc64-linux
+      glibc binaries are not available yet.  This means that we have to
+      build gcc twice, the first pass is to build just the C compiler.  This
+      compiler will be enough to build glibc.  We only need the C compiler for 
+      ppc32, and if your system already has a ppc32 compiler (like you have a 
+      ppc32 system), then you can skip to the part where we start building
+      ppc64 binutils.  It is also a good idea to put ${TOOLCHAIN}/bin in the 
+      PATH.
+      </para>
+
+      <variablelist>
+	<varlistentry><term>Build ppc32 binutils</term>
+	  <listitem>
+	    <para><programlisting>
+	    configure --prefix=${TOOLCHAIN} --target=powerpc-linux --disable-nls
+	    make
+	    make install
+	    </programlisting></para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry><term>Build ppc32 gcc</term>
+	  <listitem>
+	    <para><programlisting> 
+	    configure --prefix=${TOOLCHAIN} --target=powerpc-linux \
+	    --disable-nls --disable-threads --disable-shared \
+	    --enable-languages=c
+	    make 
+	    make install 
+	    </programlisting></para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry><term>Build ppc64 binutils</term>
+	  <listitem>
+	    <para><programlisting>
+	    configure --prefix=${TOOLCHAIN} --target=powerpc64-linux --disable-nls
+	    make
+	    make install
+	    </programlisting></para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry><term>Build ppc64 gcc</term>
+	  <listitem>
+	    <para><programlisting> 
+	    configure --prefix=${TOOLCHAIN} --target=powerpc64-linux \
+	    --disable-nls --disable-threads --disable-shared \
+	    --enable-languages=c
+	    make 
+	    make install 
+	    </programlisting></para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry><term>Build glibc (2.2.5) for ppc64</term>
+	  <listitem>
+	    <para>
+	    Before building glibc, we need to copy the linux kernel headers
+	    into the ${TOOLCHAIN}/powerpc64-linux/include directory.  At this 
+	    point, there is probably no include subdirectory.  We need the asm
+	    headers, so copy ${LINUXSRC}/include into 
+	    ${TOOLCHAIN}/powerpc64-linux.  Make sure that
+	    ${TOOLCHAIN}/powerpc64-linux/include/asm points to asm-ppc64, not
+	    asm-k42.  We are going to be using our C cross compiler to compile
+	    glibc, and install it into the ${TOOLCHAIN}/powerpc64-linux
+	    directory.  In order to do this, we need to set the CC environment
+	    variable when running configure
+	    </para>
+	    <para><programlisting> 
+	    CC=powerpc64-linux-gcc configure --host=powerpc64-linux \
+	      --prefix=${TOOLCHAIN}/powerpc64-linux \
+	      --enable-add-ons --without-cvs --disable-sanity-checks \
+	      --with-headers=${TOOLCHAIN}/powerpc64-linux/include
+	    make 
+	    make install 
+	    </programlisting></para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry><term>Rebuild ppc64 gcc to get a C++ compiler</term>
+	  <listitem>
+	    <para>
+	      Completely clean out the old build directory, or use a new
+	      one (i.e., build from scratch).
+	      </para>
+	    <para><programlisting> 
+	    configure --prefix=${TOOLCHAIN} --target=powerpc64-linux \
+	    --disable-nls --enable-shared --enable-languages=c,c++
+	    make 
+	    make install 
+	    </programlisting></para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+    </section>
+  </section>
+  
+  <section>
+    <title>Preparing Your Environment</title>
+    <para>
+      <itemizedlist spacing="compact">
+	<listitem>
+	  <simpara>
+	    Update your source tree: "cvs checkout k42tools kitchsrc", or 
+	    "cvs update -d".  Make sure your CVSROOT environment is set
+	    correctly.  
+	  </simpara>
+	</listitem>
+	
+	<listitem>
+	  <simpara>
+	    Building and running K42 requires the installation of
+	    file-system images which become K42's "/" file-system.  These
+	    images must be NFS exported and accessible during the build
+	    process. The directory in which the untarred images (from
+	    partDeb.Img.tgz, and noDeb.Img.tgz) reside is referred to
+	    using the K42_PACKAGES variable.  This variable, and others
+	    are described in the "runningK42" document.
+	  </simpara>
+	  
+	  <simpara>
+	    As part of the site-wide configuration, one must adapt
+	    MakePaths.proto (in kitchsrc) to include your site's
+	    settings.  There are several site-specific sections that
+	    may be found in this file which can be used as templates
+	    for your site's
+	    settings. k42tools/tools/misc/ksitevalues.sh must be
+	    modified in a similar manner to reflect your site's
+	    settings.
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <para>
+	    Set PATH and environment correctly, for example in .bashrc 
+	    <programlisting>
+	    
+     PLATFORM=$(uname -s)
+     export PLATFORM
+
+     if [ "$PLATFORM" = "AIX" ] ; then
+     PATH=/u/kitchawa/local/eabi/bin:$PATH
+     PATH=/u/kitchawa/tools/powerpc64-linux/bin:$PATH
+     else
+     SGITOOLS=/u/kitchawa/tools/sgi 
+     PATH=$SGITOOLS/bin:$SGITOOLS/gdb/bin:$SGITOOLS/emacs/bin:$PATH
+     fi
+	    </programlisting>
+	  </para>
+	  <simpara>
+	    The PATH enviroment should be set so that the GNU version of
+	    make comes before any other, and the compilers and other tools
+	    which build k42 are in the path.
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    The tool kanchor can be used to retrieve the MKANCHOR of the
+	    build containing the current directory. See the use in
+	    kmaketags as an example. If you choose to export a value in
+	    MKANCHOR in your environment, kanchor will return that value if
+	    it cannot find a better answer.
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    K42 uses a separate installation of the GNU libc project for
+	    both headers and GNU/Linux programming environment. The make
+	    variable which describes it, KITCH_LINUX, is set by default in
+	    MakePaths.proto file. More information is can be found
+	    Linux/GNU Emulation.
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <para>
+	    Add an entry for your userid to the file:
+	    
+	    <programlisting>
+     ANCHOR/k42tools/misc/kuservalues.sh
+	    </programlisting>
+	    using the lines for the other userids as examples. This means
+	    that the port numbers you use while running K42 won't conflict
+	    with others.
+	  </para>
+	</listitem>
+
+	<listitem>
+	  <simpara>
+	    Type "make full_snapshot" in the kitchsrc directory.  This
+	    will start a build which will fail (because of
+	    dependencies with the k42.linux module).  You will need to
+	    build the k42.linux module (see "Creating & Building Linux
+	    Kernel Code For K42"), and then retry the build.
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <para>
+	    For emacs, you should load the following in your .emacs file 
+	    
+	    <programlisting>
+	    TOOLSPREFIX/share/kitchawan.elc
+	    ex:
+	    (load  "/u/kitchawa/k42/install/etc/kitchawan.elc")
+	    </programlisting>
+
+	  </para>
+	</listitem>
+      </itemizedlist>
+    </para>
+  </section>
+
+  <section>
+    <title>Compiling the System</title>
+    <para>
+      <programlisting>
+  full_snapshot: 
+       Compile the entire system top to bottom, does a bunch of
+       configuration that must happen at least once.
+
+       Note if you want to have a kernel version with no debugging 
+       information (noDeb) or partial debugging information (partDeb), 
+       you should do the following to override the default
+       (full debugging information (fullDeb)):
+
+       make OBJDIR_OPT_TYPES=partDeb full_snapshot
+       (for partial debugging information), Or
+       make OBJDIR_OPT_TYPES=noDeb full_snapshot 
+       (for no debugging information)
+       
+  default: 
+       Subsequent re-compilations, without tools.... 
+  help: 
+       Not really up-to-date, but tells you a bunch of stuff 
+  install_includes: 
+       Install include files into install tree, note, this is also used to
+       install things like Makefiles that are included by other makefiles 
+  programs: 
+       Makes the local programs 
+  libs: 
+       Creates all the ".o" files for local libraries 
+  install_libs: 
+       Archives the .o files 
+  install_targets: 
+       Install executables into install tree. 
+      </programlisting>
+    </para>
+
+  </section>
+
+  <section>
+    <title>The Directory Structure</title>
+    <para>
+      <programlisting>
+
+   |
+    ---- kitchsrc [MKSRCTOP]-> source tree
+    |
+    ---- Mips, x86 or powerpc
+    |                     |
+    |                 fullDeb or partDeb or noDeb
+    |
+    -----install [MKKITCHTOP] directory everything is installed to
+            |
+            ------- machine - kitchroot [MKKITCHROOT] home directory on Kitchawan
+      </programlisting>
+    </para>
+
+  </section>
+
+
+  <section>
+    <title>Creating & Building Linux Kernel Code For K42</title>
+    <para>
+Here we provide information about building
+linux-026. As you read this document, we may have moved towards
+linux-027, etc. Check the k42-discussion mailing list archive, searching
+for "Linux Module"
+</para>
+
+<programlisting>
+
+You need to make the k42 linux-module source tree.  You can put this
+anywhere convenient. 
+
+bk clone -r1.1651 bk://source.scl.ameslab.gov/linux-2.5 linux-026
+cd linux-026
+wget http://www.eecg.toronto.edu/~tornado/k42-linux-patches/patch25.bz2
+wget http://www.eecg.toronto.edu/~tornado/k42-linux-patches/patch26.bz2
+bzip2 -dc patch25.bz2 | bk receive -a .
+bzip2 -dc patch26.bz2 | bk receive -a .
+bk -r get
+
+
+Now, go to your kitchsrc directory and edit MakePaths.Proto, or
+Make.paths so that during your build, LINUXSRCROOT is set to the full
+path of the linux-026 directory. =20
+
+Attempt to do a "full_snapshot" build.  It will fail -- that's ok.
+
+Go back to linux-026. And do:
+
+make -f Makefile.k42 k42libs MKANCHOR=3D<?>  # you must identify MKANCHOR
+
+Set the value of MKANCHOR to be the directory in which the kitchsrc
+directory resided.
+(FIXME: we need more information here.) For now you can find
+the information about building the necessary linux kernel code
+for K42 in the archives of the K42 discussion list. Search
+for messages with subject "Linux Module Update". The idea is
+to get the tree from a bitkeeper repositoy and apply a patch to
+it).
+</programlisting>
+
+
+  </section>
+
+</article>

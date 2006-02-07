@@ -1,0 +1,344 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceResMgr.xml,v 1.3 2004/07/08 17:15:33 gktse Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::ResMgr::EnterCPUCont">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="EnterCPUCont" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::enter check cpu cont for rd %0[%llx]' />
+</event>
+
+
+<event name="OS::ResMgr::ExitCPUCont">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="ExitCPUCont" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::exit check cpu cont for exit %0[%llx] rd %1[%llx]' />
+</event>
+
+
+<event name="OS::ResMgr::EnterAcceptVP">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="EnterAcceptVP" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::enter accept vp for pid %0[%lld] vp %1[%llx]' />
+</event>
+
+
+<event name="OS::ResMgr::ExitAcceptVP">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="ExitAcceptVP" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::exit accept vp for exit %0[%llx] pid %1[%lld] vp %1[%llx]' />
+</event>
+
+
+<event name="OS::ResMgr::EnterFindpp">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="EnterFindpp" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::enter findpp pid %0[%lld] uid %1[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::ExitFindpp">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="ExitFindpp" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::exit findpp for exit %0[%llx] pid %1[%lld] uid %2[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::EnterUpdate">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="EnterUpdate" />
+	<k42Format value='ResMgr::enter update load estimates' />
+</event>
+
+
+<event name="OS::ResMgr::ExitUpdate">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="ExitUpdate" />
+	<k42Format value='ResMgr::exit update load estimates' />
+</event>
+
+
+<event name="OS::ResMgr::EnterMigrate">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="EnterMigrate" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::enter migrate pid %0[%lld] vp %1[%llx] pp %2[%llx]' />
+</event>
+
+
+<event name="OS::ResMgr::ExitMigrate">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="ExitMigrate" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::exit migrate exit %0[%llx] pid %1[%lld] vp %2[%llx] pp%3[%llx]' />
+</event>
+
+
+<event name="OS::ResMgr::EnterAssign">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="EnterAssign" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::enter assign uid %0[%lld] caller %1[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::ExitAssign">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="ExitAssign" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::exit assign exit %0[%llx] uid %1[%lld] caller %2[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::EnterCreate">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="EnterCreate" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::enter create caller %0[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::ExitCreate">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="ExitCreate" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::exit create exit %0[%llx] caller %1[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::EnterCreateDisp">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="EnterCreateDisp" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::enter create caller %0[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::ExitCreateDisp">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="ExitCreateDisp" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::exit create exit %0[%llx] caller %1[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::EnterExec">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="EnterExec" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::enter create caller %0[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::ExitExec">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="ExitExec" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::exit create exit %0[%llx] caller %1[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::EnterFreed">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="EnterFreed" />
+	<k42Format value='ResMgr::enter being freed' />
+</event>
+
+
+<event name="OS::ResMgr::ExitFreed">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="ExitFreed" />
+	<k42Format value='ResMgr::exit being freed' />
+</event>
+
+
+<event name="OS::ResMgr::EnterXobjFree">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="EnterXobjFree" />
+	<k42Format value='ResMgr::enter xobj free' />
+</event>
+
+
+<event name="OS::ResMgr::ExitXobjFree">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="ExitXobjFree" />
+	<k42Format value='ResMgr::exit xobj free' />
+</event>
+
+
+<event name="OS::ResMgr::EnterRegister">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="EnterRegister" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::enter register caller %0[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::ExitRegister">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="ExitRegister" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::exit register caller %0[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::PIDAdd">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="PIDAdd" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::add pid %0[%lld] ret val %1[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::PIDRemove">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="PIDRemove" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::remove pid %0[%lld] ret val %1[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::AssignDOMAdd">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="AssignDOMAdd" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::assign dom add pp %0[%lld] uid %1[%lld] loc %2[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::AssignDOMSub">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="AssignDOMSub" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='ResMgr::assign dom sub pp %0[%lld] uid %1[%lld] loc %2[%lld]' />
+</event>
+
+
+<event name="OS::ResMgr::Findpp">
+	<layerId value="OS" />
+	<classId value="ResMgr" />
+	<specifier value="Findpp" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+		<field name="field4" type="uint64" />
+	</fields>
+	<k42Format value='findpp pref pp %0[%lld] domains %1[%lld] %2[%lld] %3[%lld] %4[%lld]' />
+</event>
+
+</PEM_Events>

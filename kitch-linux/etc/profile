@@ -1,0 +1,34 @@
+# /etc/profile
+
+# System wide environment and startup programs
+# Functions and aliases go in /etc/bashrc
+
+PATH="/usr/local/bin:${PATH}:/usr/X11R6/bin"
+
+ulimit -c 1000000
+if [ `id -gn` = `id -un` -a `id -u` -gt 14 ]; then
+	umask 002
+else
+	umask 022
+fi
+
+USER=`id -un`
+LOGNAME=$USER
+MAIL="/var/spool/mail/$USER"
+
+HOSTNAME=`/bin/hostname`
+HISTSIZE=1000
+
+if [ -z "$INPUTRC" -a ! -f "$HOME/.inputrc" ]; then
+	INPUTRC=/etc/inputrc
+fi
+
+export PATH USER LOGNAME MAIL HOSTNAME HISTSIZE INPUTRC
+
+for i in /etc/profile.d/*.sh ; do
+	if [ -x $i ]; then
+		. $i
+	fi
+done
+
+unset i

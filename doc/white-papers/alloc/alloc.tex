@@ -1,0 +1,1087 @@
+\documentclass[dvips,11pt]{article}
+
+\usepackage{times}
+\usepackage{doublespace}
+%\usepackage{namednl}
+\usepackage{graphicx}
+\usepackage{fullpage}
+\usepackage{subfigure}
+
+\newcommand\incn[1]{}
+\newcommand\incy[1]{#1}
+\newcommand\fixnote[1]{\emph{[[[ #1 ]]]}}
+
+% sample for including figures
+\incn{
+\begin{figure}[t]
+  \centerline{
+    \includegraphics[width=.4\textwidth]{afile.idraw}
+    }
+  \caption{\small\emph{A caption.}}
+  \label{alabel}
+\end{figure}
+}
+
+% prints current time -- needs \protect in fragile command
+
+\newcount\hour \newcount\minute
+\def\now{\ifnum\time<60       %check to see if it's just after midnight
+          12:\ifnum\time<10 0\fi\number\time am %and act accordingly.
+         \else
+            \ifnum\time>719\chardef\a=`p\else\chardef\a=`a\fi
+          \hour=\time
+                          \minute=\time
+          \divide\hour by 60 %\hour is the result of an integer divide
+          \ifnum\hour>12\advance\hour by -12\advance\minute by-720 \fi
+          \number\hour:%
+          \multiply\hour by 60 %Use is made of the integer divide here.
+          \advance\minute by -\hour
+          \ifnum\minute<10 0\fi\number\minute\a m\fi}
+
+%\setlength{\textwidth}{5.5in}
+%\oddsidemargin 0.5in
+%\evensidemargin \oddsidemargin
+
+\def\floatpagefraction{.8}
+
+\setstretch{1}
+
+\pagestyle{myheadings}
+\markboth{DRAFT \protect\now, \today}{DRAFT \protect\now, \today}
+
+\begin{document}
+
+\sloppy
+
+\title{K42 dynamic memory allocator\\
+\normalsize (Please, someone provide a better title)}
+
+\author{ \em Some Authors }
+
+\date{DRAFT \protect\now, \today}
+%\date{~}
+\begin{singlespace}
+\maketitle
+\end{singlespace}
+
+\bibliographystyle{plain}
+
+%%%
+%%% Break into separate files eventually
+%%%
+
+\fixnote{Some warnings: terminology for layers/levels of the allocator are
+  all over the place; I use the terms structure/object or english
+  expressions inconsistently;  the figures are just a first cut for some of 
+  the more important cases; I haven't managed to excise the numerous lists
+  in the early parts of the paper.}
+
+\fixnote{I think we need more in the issues and in the actual
+  implementation to deal with large secondary cache issues: want to reuse
+  on same CPU, up to several MBs worth of data; may need per-cpu lists of
+  lists, or large max count value, in order to be able to cache enough;
+  note has negative effect on coallescing and general wasted memory; also
+  note that original paper only considered overhead advantages of per-cpu
+  layer, and not reuse issues (very explicitly) so this is a new issue; in
+  general, keep in mind that as soon as we go up a layer we degenerate into 
+  basically a more efficient single heap (per NUMA node) allocator, with
+  all the contention and locality problems that entails (for localstrict,
+  we avoid this by using a more Hoard like scheme).}
+
+\fixnote{Consider (simulation) of CMP/SMT and effects of parameterizing
+  system.} 
+
+\incn{
+\fixnote{Possible changes to implementation discussed in paper:
+  \begin{itemize}
+  \item allow remote localstrict deallocation, possible with different
+    interface, that either goes directly to page, or is queued locally like
+    the NUMA stuff, and then sent as a list; key is how its used and we
+    don't migrate; just explain (and describe options?).
+  \item support non-power-of-2 sizes to reduce internal fragmentation;
+    watch for aligment considerations; wasted space in page as well.
+    Measure, wait and see.
+  \item use gcc extension, __builtin_constant_p, to efficiently support
+    compile-time constant sizes, and non-constant sizes.  Go Ahead.
+  \item use mapping array to map from size to index when size not constant
+    (is 8 bits, 256 sizes, enough?).  Go ahead.
+  \item is 8 bit count field in per-proc structure enough, given that the
+    per-proc list gives not just efficiency but locality (or perhaps we
+    need another layer before the one that is shared across a NUMA node to
+    keep lists of lists locally to improve cache behaviour; maybe make the
+    aux list a list of lists).
+    \begin{itemize}
+    \item add array of lists of lists in gmalloc layer indexed by processor
+      with affinity to allocate, grabbing from near neighbour from end of
+      their list, possibly only if their are long enough.
+    \item size total global layer across all of the mallocids to match
+      secondary cache size
+    \end{itemize}
+  \item use two lists (of lists) in the global layer, like the aux list in
+    per-proc layer, to make it easier to move back the older stuff.
+    However, might make it harder to dynamically adjust list sizes (are
+    we going to want to do that?)
+  \item missing piece for supporting traditional malloc/free interface is
+    the ability to free large blocks given just address; need to know no
+    memdesc; could partition the address space once more, so that a bit
+    indicates if from large pool or not; may make overhead for allocating
+    modest sized blocks (slightly larger than a page) higher if need to
+    search for free blocks in certain ranges.  We also have a problem with
+    being safe to access under migration.
+  \item pinned memory support: removing need for large aligned regions;
+    could use global page frame descriptors for memdescs, and have
+    different user/kernel memdescs and supporting interfaces, as well as
+    separate pmalloc interfaces (one for allocregionmanager, the other for
+    whatever the kernel thing is); one question is number of bits needed,
+    given next/prev info is for a page in entire system (or maybe just in
+    numa node).
+  \item support for pthread applications where you can migrate.
+  \item cache fully freed memdesc state and check if reallocating as same
+    mallocid (actually, same size would be enough to prevent breaking into
+    blocks again).
+  \item reconsider gmalloc layer altogether; maybe treat each processor as
+    numa node; maybe use gmalloc layer for CMP.
+  \end{itemize}
+}
+}
+
+\section{Introduction}
+
+There is increasing recognition of the performance impact of dynamic memory
+allocation (e.g., C-style malloc/free or C++ new/delete) for server
+applications, especially on multiprocessors \fixnote{recent malloc
+  citations}.  Multiprocessor servers tend to have certain allocator
+requirements that in combination set them apart from other applications:
+\begin{itemize}
+\item They tend to make a high number of small and medium sized (e.g., 16 to
+  512 byte) allocations and frees, at a rapid rate, so a very fast
+  allocator for common cases such as these are important;
+\item They are often multithreaded and run on multiprocessors, requiring
+  high concurrency from the allocator;
+\item Their performance is often cache sensitive, so promoting cache
+  locality in the allocator is important;
+\item In multiprocessors, cache line false sharing can be a source of
+  significant performance degradation, requiring support in the allocator
+  to help reduce its accidental incidence due to small block allocations;
+\item New multiprocessors, especially the larger ones, require special
+  attention to NUMA locality---keeping threads close to the physical memory 
+  module where their data is located---and hence such support in the
+  allocator is becoming increasingly important;
+\item Servers tend to run indefinitely, requiring an allocator that can
+  give back memory to the operating system after large, temporary
+  allocation bursts, and that in general keep the memory overhead bounded
+  (fragmentation and wastage cannot slowly increase as the program keeps
+  running).
+\end{itemize}
+
+Because of these requirements, and the growing importance of
+multiprocessors to handle server workloads (as well as the increase in
+multi-threaded workloads of a more general nature), there have been several
+new allocators proposed of late.  Most of this recent work to improve
+the basic malloc-style allocator have used similar techniques:
+\begin{itemize}
+\item The single heap of the traditional allocator is replaced with
+  multiple heaps, generally enough to match the level of concurrency in the 
+  program and system.  Each heap is locked separately, hence reducing
+  contention for concurrent allocations and frees.  The mapping of
+  threads to heaps is effectively random.
+\item With the addition of multiple heaps, they include varying policies
+  concerning which heap freed blocks are returned to (as well as higher
+  level heap management issues), in order to balance the memory between the
+  heaps (e.g., avoiding having excess memory in a heap that is not being
+  used), increase locality, and reduce false sharing.
+\end{itemize}
+More details on the issues raised by multiprocessor servers and the various
+allocators designed to address them can be found in \fixnote{cite Hoard},
+and hence aren't repeated here (an overview of uniprocessor allocators can
+be found here \fixnote{cite overview paper}).  
+
+Although these newer allocators perform significantly better on
+multiprocessor tests than their single-heap counterparts, they still have a 
+number of significant limitations:
+\begin{itemize}
+\item The effectively random assignment of threads to heaps can cause loss of
+  cache locality, contention, and/or high degrees of false sharing, if two
+  threads running on different processors are assigned to the same heap.
+  As the number of threads increased well beyond the number of processors
+  in the system (often used to provide increased concurrency to hide I/O
+  latency) this problem can significantly degrade performance.
+\item Although one of the allocators (Hoard) addresses false sharing
+  through the structure of the allocator and its policies for freeing
+  blocks to heaps, more can be done by expanding the allocator interface to
+  allow information about the intended use of the memory to determine how
+  and what memory is allocated.  In addition, simple support for alignment
+  and padding to reduce false sharing can best be provided within the
+  allocator itself.
+\item Although efficiency for the common case is a concern for all the
+  allocators, more can be done to reduce the base cost while still
+  providing a safe and highly concurrent allocator.
+\item Not enough attention appears to be paid to increasing cache reuse in
+  the way blocks are allocated and freed.
+\item None of the existing systems provide any direct support for improving
+  performance in NUMA systems \fixnote{those that return block to home heap
+    sort of do by default}.
+\end{itemize}
+
+Operating system kernels are another domain where allocator performance is
+important.  There have been several allocators designed for operating
+system kernels that address many of the issues above.  However, despite the
+similarities between kernel and server behaviour and requirements, there
+are still some key differences, some of which make direct application of
+kernel allocators to user-space difficult:
+\begin{itemize}
+\item Kernels are generally constrained by the actual amount of physical
+  memory available, which demands more careful attention to memory usage,
+  and limits flexibility in how that memory is managed.
+\item Because of the physical memory constraint, there is a much stronger
+  need to give back free memory, in the form of pages, back to the general
+  system page pool, as promptly as possible, particularly when memory is
+  low.
+\item Kernels have direct access to, knowledge of, and control of the
+  hardware resources they run on, often making it easier to optimize for
+  physical properties such as cache locality, the number of processors, and
+  other factors.
+\item One final, but significant difference, is that operating system
+  kernels are generally developed by a relatively small, tight-knit
+  community, making it easier to develop and adopt richer allocator
+  interfaces and providing new possibilities for implementation
+  optimizations. 
+\end{itemize}
+The various kernel allocators, although quite varied, have some features in
+common:
+\begin{itemize}
+\item They are generally physical-page-based (sometimes with some fixed
+  multiple of the system page size), to fit in with the general physical page
+  management of the system.
+\item All deal with concurrent accesses, and some more directly on
+  multiprocessor issues, often using per-physical processor structures to
+  increase concurrency and locality.
+\item Many are highly optimized so that common case allocations take just a 
+  few dozen instructions (or less) (this is needed because the allocators
+  are often trying to replace specialized freelists associated with
+  individual subsystems).
+\item Coalescing blocks to page-sized (or multiple-page sized) chunks is
+  part of the key design to ensure free memory can be reused for other
+  purposes. 
+\end{itemize}
+
+Although in many respects the kernel allocators provide a good foundation
+for server allocators, there are certain key areas where existing,
+published allocators, remain weak: namely false sharing, NUMA support, and
+for our purposes, the very fact that they only work in the kernel.
+
+We developed our allocator as part of the development of a new
+multiprocessor operating system.  Since it is microkernel-based, it depends
+on user-level servers more so than monolithic systems, and hence requires a
+user-level allocator with all of the features listed above.  To promote a
+common programming model, and since they had so many requirements in
+common, we aimed to design an allocator that would support both user-level
+and kernel code.  However, since we were designing a new system from
+scratch we were willing to adopt new interfaces in order to gain
+performance or needed features.
+
+Our approach was to start from the kernel perspective where support for
+concurrency, locality, and speed in existing implementations is quite good,
+and extend it to user level, while also providing improved support for NUMA
+systems and for locality and reduced false sharing.  Because our allocator
+was designed for a new operating system (first Tornado and later K42), we
+were able to take advantage of a key new abstraction, the virtual processor
+\fixnote{terminology change necessary throughout for virtual processor},
+which provides an abstraction of a processor's notion of cache and memory
+locality.  However, as we outline later, the aspects of the virtual
+processor used by the allocator could likely be supported in most
+mainstream unix systems.
+
+\fixnote{I suspect that we need to get more about the unique
+  features/design of our allocator in the introduction.}
+
+
+
+\section{Background of K42 Allocator}
+
+When we began our work, most of the recent allocators did not yet exist.
+Since we were designing a new operating system for a NUMA multiprocessor,
+we were particularly concerned about cache and NUMA locality, concurrency,
+as well as raw performance.  Since the operating system was a microkernel
+design, both user-level servers and the kernel would need similar features, 
+and hence the allocator had to deal with a physical memory as well as a
+virtual memory environment.  Finally, because our taget hardware platform
+has relatively large cache lines of 128 bytes (now quite common), false
+sharing was a significant concern.
+
+At the time, the only allocator that came close to meeting our requirements 
+was the Sequent \fixnote{need a name for the rest of the paper} kernel
+allocator.  Some of the enticing features were:
+\begin{itemize}
+\item high levels of concurrency
+\item highly efficient for common-case allocations
+\item good cache locality and reuse
+\item reasonably good memory usage
+\item no need for boundary tags (which can cause significant memory wastage
+  for small blocks and potentially increased false sharing)
+\item gives free pages back to the general pool promptly
+\end{itemize}
+
+Despite this feature list, it was still missing a few key features:
+\begin{itemize}
+\item NUMA support
+\item user-level support
+\item techniques for reducing false sharing with large cachelines
+\item efficient data structures for 64-bit address spaces \fixnote{minor point, and should double check it too}
+\end{itemize}
+
+The final implementation kept much of the original design---per-processor
+freelists for fixed block sizes, shared second layer freelists, page-based
+boundary-tag-less, all described in more detail later---but made some key
+changes to adapt it to our particular requirements, listed above.
+These key changes include:
+\begin{itemize}
+\item The introduction of a virtual processor abstraction that mirrors some
+  of the functionality of physical processors in the kernel implementation,
+  providing a notion of processor/cache/memory locality/affinity for
+  user-level programs.
+\item Efficient lock and lock-free solutions for commonly accessed data
+  structures to replacement the kernel version that relied on disabling
+  interrupts.
+\item Replication of certain data structures along with the introduction of 
+  new policies for handling NUMAness.
+\item Support for both paged and pinned memory in the kernel (our kernel
+  uses both).
+\item Keeping the page descriptor structures for the virtual memory version 
+  within larger virtual memory chunks, simplifying addressing and allowing
+  the system to handle large address spaces without the need for auxiliary
+  structures.
+\item Special interfaces and the segregation of memory to deal with cache
+  line false sharing (for large 128 byte cache lines often seen on large
+  multiprocessors) by either padding and aligning blocks as needed, or
+  segrating blocks that are likely to be widely shared with from those that 
+  are primarily accessed locally \fixnote{somewhere I think we'll need to
+    support localstrict as being useful at least for in-system
+    client-server interactions, where those interactions are mostly on the
+    same processors; this is different from distributed client-server
+    interactions, where locality is partially at the whim of the scheduler, 
+    although it may well try to maintain the same affinity.}
+\item Provides a common interface and mostly common implementation for
+  user-level and kernel versions.
+\end{itemize}
+
+
+
+\section{Overview of Allocator}
+
+\subsection{Overview of Interface}
+
+Because the K42 allocator was developed as part of a new operating research
+project investigating issues of performance and scalability in NUMA
+multiprocessors, we did not feel constrained to stick with the traditional
+C/C++ interfaces.  The first difference is that the size of the memory
+block is passed to the free as well as the allocation call.  This allows a
+number of optimizations, including removing the need for boundary tags,
+which waste space, particularly for blocks that need to be aligned to a
+particular boundary, and which can lead to increased false sharing
+(particularly for allocators that access the boundary tag even when the
+block is in use to try to coalesce it with its neighbours).  Further, if
+the size is provided as a compile-time constant (such as the result of the
+sizeof operator) for either alloc or free calls, the system can inline and
+eliminate much of the lookup code often found in allocation and free
+implementations.  To simplify their use in C++ classes, a number of macros
+that define the appropriate new/delete operators are provided by the
+system.
+
+To deal with false sharing, we provide separate allocation/free
+routines for three types of uses:
+\begin{itemize}
+\item \emph{localstrict}: this is for memory that will only (with very high
+  probability) be accessed in the future on the local processor.  A further
+  requirement is that it be freed on the same (virtual) processor as it was
+  allocated on \fixnote{this could be relaxed, by freeing directly to the
+    page using a different free variant that doesn't require the
+    local-processor guarantee; the cost may not be that great since we've
+    already payed the cost of cache line sharing, and we might well prefer
+    \emph{not} to reuse the block soon on the home processor since it is
+    probably dirty in the other processor's cache.}.  The allocator will
+  ensure that the blocks returned never share a cache line with other
+  blocks accessed by other processors.  \fixnote{It's hard to justify these
+    types of restrictions without understanding the client-server
+    microkernel architecture along with the per-proc clustered object
+    structure and supporting destruction infrastructure.}
+\item \emph{globalpadded}: this is for blocks that are likely to be shared
+  and for which padding and alignment to the cacheline size (i.e., the size
+  of the largest cache line size for multi-level caches) is desired to
+  remove possibility of false sharing.
+\item \emph{global}: this is for everything else, where the data is not
+  highly local and padding and alignment is either not necessary or not
+  desirable.
+\end{itemize}
+
+Because the K42 kernel is pageable, allocations in the kernel must
+select between paged and pinned memory.  To avoid slowing down either
+version with extra checks, separate interfaces are provided for both (for
+all the other variants described above).
+
+Finally, in addition to all the variants listed above, there is one more,
+slightly less efficient, variant that takes a flag to indicate what version
+to use in cases where it is not known at compile time which is needed
+(e.g., in some library code).
+
+
+\subsection{Overview of implementation}
+
+\begin{figure}[t]
+  \centerline{
+    \includegraphics[width=\textwidth,height=.5\textheight]{imp-overview.eps}
+    }
+  \caption{\small\emph{Overview fifgure.}}
+  \label{overview-imp:fig}
+\end{figure}
+
+The basic design is based on the Sequent kernel allocator.  The key to the
+concurrency and locality of the design is the per-processor freelists
+(actually, per-\emph{virtual}-processor freelists, explained in more detail
+in the next section).  Each processor has an array of freelists, logically
+one for each size and type of allocation.  In the common case an allocation
+is just a dequeue from the appropriate local freelist, while a deallocation
+is just an enqueue to the front of the freelist.  \footnote{Allocation
+  requests for a page or more are rounded up to the next page size and
+  allocated from a general purpose page allocator (similar both in the user
+  and kernel) that uses the Stephenson fast first fit algorithm.}
+
+Each freelist holds a limited number of blocks of a given size; coalescing
+of blocks to allow their reuse for other block sizes is postponed in order
+to reduce overhead for the common case (especially in servers) where blocks 
+are allocated and then freed in rapid succession, as well as to promote
+locality by ensuring that recently freed blocks (and hence, likely recently 
+accessed blocks) are the most likely to be reallocated.
+
+To allow free blocks to move from heavy deallocators back to heavy
+allocators (when the two are not on the same processor), the per-processor
+freelists are backed by a shared layer of lists of lists.  Whole lists of
+free blocks are moved up to this layer when the per-processor layer is
+full, and acquired from this layer when the per-processor layer is empty.
+
+Coalescing is done by moving the lists of lists from the previous layer up 
+to the next layer.  This last layer maintains information about whole pages 
+of memory (where a page is some multiple of the system base page size), as
+well as regions of pages (for the paged case, discussed more in the next
+section).  Each page is always broken into chunks of a given size and type, 
+based on the need from the layers below.  Coalescing is just a matter of
+mapping the free blocks to their pages, linking the blocks on to a per-page 
+freelist, and updating the count of allocated blocks in the page.  When the 
+count is zero, the page is completely free and may be reclaimed.
+Allocation is just a matter of walking the list of pages for a given size
+and type, removing lists of blocks until the amount needed to satisfy the
+previous layer has been met.  Hence both allocation and coalescing are
+simple and efficient.
+
+As described so far, the design essentially follows the original Sequent
+design.  Our additions are primarily in the details to support user-level
+allocations (discussed in the next section), in the multiple types of
+allocations to deal with false sharing and pinned memory (discussed in the
+previous section), and perhaps most importantly in the support for NUMA
+systems.
+
+There can be a tension between optimizing for NUMA locality and optimizing
+for cache reuse.  Cache reuse is a short term property, in that as soon as
+the block is evicted from the cache, any previous efforts to promote reuse
+are rendered moot.  NUMA locality however remains a factor as long as the
+block is in use.  Hence there is sometimes a tradeoff between short term
+gains through cache reuse, and long term gains from NUMA locality.  Because 
+the penalty for loss of NUMA locality is potentially unbounded, we chose to 
+slant the design towards increasing NUMA locality rather than cache reuse.
+
+To support NUMA systems, the layers above the per-processor layer are only
+shared between processors in the same NUMA node; i.e., the layers are
+replicated per-NUMA node.  The page and region management layer only
+handles pages from the local NUMA node, with the virtual address
+partitioned so that pages allocated from a given NUMA node only come from a
+select part of the address space, and so that specific bits in the address
+can be used to determine which NUMA node the address was allocated from.
+To ensure that memory cached in any of the layers is always from the local
+NUMA node (and hence allocations will always receive local blocks),
+deallocated blocks are always freed back to their home node.  However,
+rather than freeing them directly to the remote node and incurring several
+remote data accesses and cache misses, the blocks are queue locally until
+enough have been collected and then freed as group.
+
+\section{Implementation details}
+
+We now take a more detailed look at the data structures and associated
+algorithms at each level of the system.
+
+
+\subsection{Per-VP Layer: Base case}
+
+One of the keys to the design is the virtual processor abstraction (for the
+kernel we use the same abstraction but using a fixed one-to-one mapping
+with physical processors).  Virtual processors (vps) are a new K42
+abstraction \fixnote{originally from Tornado}, that provide a notion of
+parallelism as well as affinity between threads and the memory hierarchy.
+In the virtual processor model, threads are scheduled on to virtual
+processors which in turn are scheduled on to physical processors.  Memory
+mappings can be shared across all virtual processors in a program (the
+default) or aliased so that each virtual processor has a private mapping.
+These aliased mappings allow independent per-vp data structures, all
+appearing at the same virtual address.  Hence, in the case of the
+allocator, each vp has its own array of freelists (each mapped at the same
+virtual address), along with some other per-vp data structures discussed
+later, so that all threads scheduled to the same vp automatically use the
+same (local) freelists, independent of the freelists for other vps.
+
+(In many ways this is similar to the pthreads support in many systems
+(Sun?, SGI?, IBM?), that map user-level threads to a (typically) smaller
+number of (kernel) processes to match the available parallelism in the
+system and the application.  In these systems all the processes share a
+single address space, but allow process-private mappings as well.  This
+could be leveraged, with some support from the underlying pthread run-time
+system, to provide process-specific memory for the allocator freelists
+providing the same functionality as the K42 vp-specific memory.)
+
+The per-vp array contains one freelist structure per size and allocation
+type, but with some overlap as will be explained shortly.  The size classes
+currently selected are powers of two, with the minimum being two words
+(needed internally for linking the blocks into lists of lists) and the
+maximum being half an allocator page.  However, there is no fundamental
+requirement for power-of-two sizes, and any arbitrary set of sizes can be
+accommodated.\footnote{There is a need to preserve certain alignment
+  constraints to reduce false sharing, but these are easily accommodated.}
+The main concern is balancing wastage from internal fragmentation against
+wastage from large numbers of partly filled freelists.
+
+Locating the correct freelist given the allocation type and size is done
+using a set of inlined functions, and where available, taking advantage of
+a useful gcc extension.  This gcc extension, the intrinsic
+\_\_builtin\_constant\_p(), allows one to take advantage of compile-time
+constants without penalizing the case where the value is not a constant.
+The intrinsic evaluates as a compile-time true value if the argment is a
+compile-time constant, and false otherwise.  This allows the mapping of the
+size to a freelist structure array index (the first part of the mapping
+processor) to be done as follows: 
+{\footnotesize
+\begin{verbatim}
+MapSizeToIndex(size_t size) {
+    if (__builtin_constant_p(size)) {
+        /* constant size, so just use simple compile-time reducible ifs */
+        if (size <= (MINSIZE*1))       return 0;
+        else if (size <= (MINSIZE*2))  return 1;
+        else if (size <= (MINSIZE*4))  return 2;
+        else if (size <= (MINSIZE*8))  return 3;
+        /* etc... */
+        else return -1; /* larger than max size supported through freelists */
+    } else {
+        /* not compile-time constant, so use table lookup */
+        if (size > MAXSIZE) return -1;
+        else                return map[size >> LOGMINSIZE];
+    }
+}
+\end{verbatim}
+} 
+As a result, if the size is a constant, the inlined code reduces to
+just a constant index value, and if not, it reduces to just the compare and
+array index lookup (all the dead code is eliminated by the
+compiler).\fixnote{Not actually done this way}
+
+The second part of the lookup is mapping the index returned above to the
+actual freelist.  In the case of localstrict (the most optimized case since
+cache locality is expected to be good making the allocator overhead more
+noticeable) the index is used directly to index the per-vp freelist
+structure array.  In the case of global and globalpadded, rather than
+simply duplicating the localstrict array, we chose to use an extra level of
+indirection and share as many of the freelists as possible.  This is
+possible, because, for properly aligned and sized blocks, anything larger
+than the largest cache block size cannot cause false sharing, so all of the
+interfaces can use the same set of blocks.  However, since the cacheline
+size is not known at compile time, we use an indirection array for global
+and globalpadded with each entry pointing to the appropriate freelist
+entry.  Specifically, the global entries for blocks strictly less than the
+cacheline size point to separate freelist entries, with all larger entries
+pointing to the same entries (for the given block size) as localstrict.
+For globalpadded, all entries less than the cacheline size point to the
+(shared) entry for cacheline sized blocks (effectively padding the
+request), with larger requests going to the corresponding localstrict
+entries, just as for the global case.
+
+\begin{figure}[t]
+  \centerline{
+    \includegraphics[]{freelist-array.eps}
+    }
+  \caption{\small\emph{Freelist structure array and indirection pointers,
+      for power-of-2 block sizes, with 4KB page size, and 128B cache line
+      size.}}
+  \label{freelist-array:fig}
+\end{figure}
+
+
+Each entry in the array is a structure containing the following elements:
+{\footnotesize
+\begin{verbatim}
+    SyncedCellPtr  freeList;            // Combined counter and list pointer
+    SyncedCellPtr  auxList;             // auxilliary list
+    GMalloc       *gMalloc;             // layer above
+    uval           nodeID;              // identifies "my" memory
+    uval           nodeIDMask;          // mask for addr giving nodeId for mem
+    uval16         maxCount;            // maximum size of list
+\end{verbatim}
+} 
+
+The key is the \emph{freeList} field: this 64-bit word combines the address
+of the first free block of the list with an 8 bit count field, along with a
+couple of optional lock bits in the least significant bits (guaranteed
+unused since blocks are always aligned on 64-bit boundaries).  The 8-bit
+count field is located in some part of the address which is known to be all
+zeroes (with a 64 bit address space, it is relatively easy to ensure that
+all pages of memory assigned to the allocator come from a region with the
+given address constraints).  This allows us to maintain a freelist and its
+length in a single word, and thus use efficient lock-free algorithms to
+enqueue and dequeue elements from the list while keeping the count of the
+number of items in the list up-to-date.  Even for those systems that do not
+provide sufficiently powerful primitives to implement (efficient) lock-free
+lists, a very efficient lock-based implementation is still possible (using
+the optional lock bits).  Both versions have been implemented in our
+system.
+
+The \emph{next} field that is stored in the free blocks to chain them
+together is also stored in the same format.  As a result, dequeuing and
+decrementing the count is just a matter of storing the \emph{next} field in
+the head block in \emph{freeList} (for the lock-based version, this also
+releases the lock).  Of course, adding an element does require extracting
+the current count from \emph{freeList}, incrementing it, and combining it
+with the address of the new block.  However, memory accesses are kept to a
+minimum, so these operations can be performed very efficiently.
+
+Two other key fields are the \emph{nodeIDMask} and the \emph{nodeID}.
+These are used to quickly test whether the block to be freed is from the
+local NUMA node; a simple mask and compare of the freed block to the
+\emph{nodeID} is sufficient (and can be done in parallel with other work on
+most superscalar processors).\footnote{In the case of localstrict where the 
+  programmer is guaranteeing the block is local, these checks are omitted.}
+
+Taken together, a common-case allocation and free (assuming small blocks
+and compile-time constant size), essentially consists of the following
+pseudo-asm code:
+
+{\footnotesize
+\begin{verbatim}
+allocate(index):
+    freeListStruct = freeListStructArray[index];
+    DoAtomically {
+        r1 = freeListStruct->freeList;
+        if r1 == NULL goto empty;
+        r2 = mask off count in r1;
+        r3 = read next field in block pointed at by r2;
+        freeListStruct->freeList = r3;
+        return r2;
+    }
+    empty: call empty-freelist handler;
+
+free(block):
+    freeListStruct = freeListStructArray[index];
+    r1 = freeListStruct->nodeIDMask;
+    r2 = freeListStruct->nodeID;
+    r3 = block & r1;
+    if block == r2 goto remoteFree;
+    DoAtomically {
+        r4 = freeListStruct->freeList;
+        r5 = extract count from r4;
+        r7 = extract next pointer from r4    
+        r6 = r6 + 1;
+        r7 = merge r6 and block;
+        r8 = freeListStruct->maxCount;
+        if r6 > r8 goto listFull;
+        block->next = r4;
+        freeListStruct->freeList = r7;
+    }
+    remoteFree: call remoteFree handler;
+    listFull:   call listFull handler;
+\end{verbatim}
+}
+  
+The actual implementation of the \emph{DoAtomically} constructs depends on
+the particular platform.  For PowerPC, it is just a matter of replacing the
+first load within the DoAtomically construct with \emph{load-reserved}, the
+last store with \emph{store-conditional}, and adding a branch back to the
+top if the the store-conditional failed.  
+
+For MIPS, which has similar load-linked/store-conditional instructions but
+with greater constraints that preclude their use in this context, we use
+lock bits, but highly optimized for the uncontended case.  As a result, the 
+common-case code is only slightly less efficient than the PowerPC version.
+For example, the core part of the allocation code looks like:
+{\footnotesize
+\begin{verbatim}
+allocate(index):
+    freeListStruct = freeListStructArray[index];
+    /* begin atomic sequence */
+        r1 = load-linked(freeListStruct->freeList);
+        if r1 == NULL goto general;
+        if (r1 & lock_bit) != 0 goto general;
+        store-conditional(freeListStruct->freeList = r1|1);
+        if store-conditional-failed goto general;
+        r2 = mask off count in r1;
+        r3 = read next field in block pointed at by r2;
+        r1 = load-linked(freeListStruct->freeList);
+        if (r1 & waiting_bit) != 0 goto lockCleanup; /* check for waiters */
+        store-conditional(freeListStruct->freeList = r3);
+        if store-conditional-failed goto lockCleanup;
+        return r2;
+    /* end atomic sequence */
+    general: call general-case handler;
+    lockCleanup: call lockCleanup handler;
+\end{verbatim}
+}
+
+The astute reader will notice that there has been no mention of memory
+barriers, sync, or fence instructions in the previous code sequences.  This
+is because the freelists are per-processors, and are only ever accessed by
+the local processor.  Hence there is no need to be concerned about memory
+consistency, resulting in a significant savings on some architectures
+\fixnote{can we be more precise?}.
+
+The typical cycle counts for a \fixnote{global or localstrict} alloc and
+free \fixnote{if localstrict, this excludes the NUMA checks, but this is
+  only covered in a footnote at the moment} for a PowerPC ZZZ
+are XXX and YYY, while for a MIPS R4400\footnote{The MIPS R4400 is a 6 year
+  old non-superscalar processor.  It is of interest to us since our home
+  grown NUMA multiprocessor uses it.} is AAA and BBB, which are comparable
+to the best case uniprocessor, non-concurrent allocators.
+
+
+\subsection{Per-VP Layer: Other cases}
+
+Up to this point we have only considered the common case where the alloc
+call finds the freeList non-empty, and the free call finds the list
+non-full.  In addition, we have not considered the case where the block
+being freed is from a remote node.
+
+For the case where an alloc call finds the freeList empty, the
+\emph{auxList} is consulted.  If it is non-empty, the entire list is
+swapped into the freeList, and the allocation is retried.  If the auxList
+is empty as well, the call is passed on to the next layer (discussed in the
+next section).  On free, if the freeList is full it is moved into the
+auxList.  If the auxList is non-empty, it's previous contents are moved to
+the next layer.  The auxiliary list thus provides a simple form of
+hysteresis.
+
+
+\begin{figure}[t]
+  \centerline{
+    \includegraphics[]{freeremote-array.eps}
+    }
+  \caption{\small\emph{This figure illustrates some of the data structure
+      for handling remotely freed blocks.  In the figure Processor 1 has
+      locally queued up 3 blocks from remote node 1, and 2 from remote node
+      4.  The two processors in NUMA node 0 both share a reference to a
+      list of list of blocks freed from remote nodes that they have not yet
+      added back to their local freelists.  Processor 2 in NUMA node 1 has
+      a full list for NUMA node 0 and is about to transfer the list to the
+      list of lists to NUMA node 0.}}
+  \label{freeremote-array:fig}
+\end{figure}
+
+For the case where the block being freed is from a remote NUMA node, the
+home node is computed from its address, its freeList index is stored in the
+second word of the block (the first word is used for chaining), and it is
+put on a separate free list, indexed by the target NUMA node.  This array
+of freelists is also per-vp, but with only one freelist for all sizes and
+types for a given remote NUMA node (this is why the freelist index is
+stored in the block).  When this freelist becomes full, it is chained onto
+a list of lists of blocks at the target NUMA node.  The target node is then
+responsible for actually freeing the blocks locally.
+
+With this design each block that is to be freed back to its home node is
+only touched (remotely) at the time it is freed (when it is likely already
+in the cache).  The operations involved are just a local enqueue (the same
+as for a regular local free), and one remote enqueue for the whole list
+when it is full (this is done atomically using just compare-and-swap), one
+atomic dequeue on the target NUMA node of the list of lists of blocks,
+followed by a local free for each block on the lists.  Hence remote
+accesses are kept to a minimum, and only to data that is likely already in
+the cache.
+
+
+
+\subsection{per-NUMA Node Layer \fixnote{need to choose names}}
+
+This next layer is quite simple.  It's primary purpose to allow efficient
+transfer of free blocks from processors with high deallocation rates to
+processors with allocation rates.  There is one instance of this object per
+size/class combination (matching the ones at the per-processor layer) and
+per NUMA node.  It maintains a list of lists of free blocks (each sublist
+being the size of the maximum list size of the previous layer).  It also
+maintains an auxiliary list, just as for the per-processor layer.
+\fixnote{actually, it uses just one list now, but is there any reason not
+  to use two with list swapping as for the per-vp layer? it would make
+  things simpler and improve locality}.  When the list (of lists) reaches
+its maximum size, it is moved to the auxiliary list, and the previous
+contents of the auxiliary list, if not empty, are moved to the next layer.
+When the freelist is empty, it is replaced with the auxiliary list.  If the 
+auxiliary list is empty, and new set of list of lists is acquired from the
+next layer.
+
+Allocation requests from the layer below simply remove one of the sublists, 
+while deallocations simply add the sublist to the freelist.
+
+
+\subsection{Page/Region Layer}
+
+The final layer deals with pages and contiguous regions of virtual memory
+(for paged memory).  The structure is slightly different for the paged vs.
+pinned case, so we begin with the paged case and then present the
+differences required to support pinned memory (which is only supported in
+the kernel).
+
+\subsubsection{Paged Memory}
+
+For paged memory, this layer manages contiguous naturally aligned
+power-of-2-sized regions of virtual memory, broken into pages, with the
+pages in turn broken into equal sized blocks as requests arrive from the
+previous layer (see Figure~\ref{allocregions:fig}).  Each region's first
+page is an array of one word descriptors, one for each of the pages in the
+region.  The first descriptor, which would normally describe the first page
+(which actually contains the descriptors themselves), actually points to a
+region descriptor, allocated separately.  
+
+\begin{figure}[t]
+  \centerline{
+    \includegraphics[]{allocregions.eps}
+    }
+  \caption{\small\emph{This figure illustrates some of the data structures
+      used in the page and region layer.  The figure shows three regions,
+      linked together through external descriptors.  The first page of the
+      region is shown to hold an array of 64-bit descritors of the rest of the
+      pages in the region.  The 64-bit descriptor consists of a number of
+      bitfields as illustrated in the figure.  Each of the subsequent
+      pages, either contains a set of blocks of given size, some previously 
+      allocated (as shown), or unallocated pages.}}
+  \label{allocregions:fig}
+\end{figure}
+
+The region descriptors are chained together in a simple circular linked
+list.  New regions and descriptors are allocated as needed and freed when
+all the pages in the region are completely free.  The region descriptor
+maintains an array of pointers to the pages for the different size/type
+combinations that have already been allocated (but still have some
+unallocated blocks).  The pages are kept in a circular list, with the
+region descriptor pointing to the next page to allocate from for each
+size/type combination.  The region descriptor also maintains a free list of 
+pages not currently allocated.
+
+A seperate region manager structure points to the list of regions
+descriptors.  It also maintains an array of pointers to the regions,
+indexed by the size/type index, that points to the first region to try to
+allocate blocks from for the given size/type combinations.  The previous
+layer objects point to the appropriate manager for their NUMA node (and
+allocation type, see below).
+
+For a given NUMA node, there is one region manager per processor for the
+private localstrict blocks (those less than a cacheline size), and one
+shared across all processors (in the NUMA node) for the rest.  This is
+necessary to ensure that blocks that are localstrict are only ever
+allocated to a single processor by keeping the pages (and by necessity,
+regions) separate for each processor.
+
+Given this structure, an allocation follows the following steps.  A request
+arrives for a set of blocks (enough to refill the list of lists from the
+previous layer) of a given size and type.  The region manager walks the
+list of regions, and for each region, the list of pages for the given
+request type, and asks each page to append to the working list the number
+of blocks needed, until the amount requested has been met or no more
+non-empty pages for the given request type remain.  Each page that is
+emptied in the process is removed the from the list so that it won't be
+searched needlessly int he future.  If there are not enough existing free
+blocks, free pages from the regions are broken into the appropriate sized
+blocks and added to the list.  If all the free pages are exhausted from all
+of the regions, a new region is allocated.
+
+In the case of deallocation, a list of blocks to be freed is provided.
+However, since in general each block will come from a different page and
+region, each must be handled independently.  We therefore just consider the 
+case of a single block to be freed.
+
+For each block, its address is used to compute its page descriptor (which
+is possible since pages and regions are powers-of-2 in size and naturally
+aligned, with the page descriptors located at the beginning of the region).
+The block is then enqueued on the page's freelist and the count of
+allocated blocks for the page is decremented.  If this is the first block
+returned to an empty page, the page is put back on the list of pages for
+its size/type.  If this is the last block to be freed, making the page
+completely free, the page is put on the free list for the region and the
+count of allocated pages is decremented.  If this is the last page for the
+region to be freed, making the region completely free, the region's virtual
+address range is returned to the system and its descriptor freed.
+
+\fixnote{There are some interesting issues with locking protocols, but it
+  is likely too detailed for the paper.}
+
+\fixnote{Note that with this design, freeing a block without knowing its
+  size can be easily accommodated by simply looking up the block's page
+  descriptor and getting the appropriate freelist index from there
+  \fixnote{for blocks as big as a page or larger, is there anything we can
+    do, short of another partitioning of the address space?}.}
+
+
+\subsubsection{Pinned Memory}
+
+For kernel pinned memory, the physical memory constraints both remove
+certain options and 
+open up others.  In particular, the constrained physical memory space means
+that managing pages in large aligned regions is impractical, but it also
+provides the possibility of pre-allocating page descriptors for all
+physical pages.  In particular, K42 provides a couple of words per page
+that any subsystem that owns a page can use, and that can be located
+directly from the page's address.  \fixnote{Some discussion of
+  how we could use these for the allocator page descriptors, or use them as 
+  pointers to the page descriptors (which of course would need to be
+  dynamically allocated somehow); some constraints since next/prev fields
+  must now be page addresses, not just region offsets.}
+
+Instead of lists of regions with lists of pages, we just have a list of
+pages for each allocation size and type.  Allocations walk the list of
+pages allocating blocks as before, requesting new pages from the general
+system pool when it runs out, while deallocations look up the page's
+descriptor in the system table and free the block as before, giving the
+page back to the general pool when it is completely free.
+
+\subsection{Miscellaneous}
+
+It is worth noting that the various per-vp and per-NUMA-node structures are 
+all allocated on demand, as the program creates new virtual processors.
+This removes the need to guess the appropriate degree of parallelism needed 
+for a given application, as it automatically adapts.
+
+
+
+\section{Results}
+
+\fixnote{This section, and the following ones, still need a lot of work.}
+
+A disclaimer of some sort that this is a new research system, allocator
+targeted primarily at server side with expanded interfaces, so can't run
+standard applications.
+
+Discussion of two experimental platforms:
+\begin{itemize}
+\item mips: NUMA, latencies (in cycles) represent current systems
+\item powerpc: lock free, real commercial systems, more balanced system
+\end{itemize}
+
+\fixnote{Make sure to check size of lists and lists of lists to see if they 
+  make sense; I suspect they're a little too low.}
+
+Begin with simple experiment to measure best and worst case uniprocessor
+cost.  Simple alloc/free of small block in pairs for best case, and alloc
+of 16MB of small blocks, followed by free of 16MB small blocks; perhaps
+also measure time to read first word of each block after allocating all, to
+measure simple data access cost independent of allocator cost.  Do we use
+global or localstrict or both?  Probably both, either to show that extra
+overhead for global is minimal, or to show tradeoff in costs (only
+meaningfull for best case of course).
+
+A simple UMA experiment, we allocate small/large amount on one processor
+and then free on another.  We then allocate the same amount from the first
+and free to back on the first.  We should attempt to isolate the cost of
+touching the data on the remote processors, which we assume is not an
+allocator cost but a use cost, but does factor into the potential relative
+overheads of the allocator.  For small amounts, this measures various base
+overheads for sharing, and shows the benefits for freeing locally on remote 
+processor, since second allocation should be relatively cheap (at least
+compared to Hoard).  In the case of large amounts, actually not sure what
+this would measure that is useful; however, if we instead on the second
+phase go back to the first processor to do the allocation, it measures
+producer/consumer type overheads for balancing memory (this works for small 
+or large amounts, if repeated a number of times, although smaller amounts
+repeated might still make more sense).
+
+Repeat same experiments above, but configure so that each processor is
+considered to be a separate NUMA node, so that we can compare the overheads 
+of the two schemes and performance tradeoffs.  Note, that we expect the
+NUMA stuff to be useful for long term effects, so maybe the next test that
+shows NUMA tradeoffs should come before this test.
+
+As above, but with real NUMA nodes.  Consider the extra overhead of the
+NUMA stuff, and the cost of the lost opportunity for reuse, against the
+extra cost for a remote cache miss over a local cache miss.
+
+Basic cost of concurrent allocation, with 1 thread per proc, small
+alloc/free pairs.  Same test with lots of threads per proc, yielding every
+Nth alloc/free pair, or possibly between alloc and free of a set of blocks.
+
+Same but with lots of allocs followed by frees, stressing contention and
+sharing at the upper levels.  Configure with different ``NUMA node'' size,
+to show use of NUMA infrastructure for other types of tradeoffs.
+
+Concurrent 2 proc test with one thread allocating data, placing in an
+array, and the other freeing the blocks, with shared arrays and full/empty
+bits.  Can also vary amount of data to stress lower or upper levels.
+Compare to earlier similar test without concurrency effects.
+
+\begin{itemize}
+\item memory wastage test; likely will not show system in good light as we
+  use power-of-2 size blocks.
+\item general OS workloads that stress allocator; not sure what this should
+  be; since most of the allocator is actually not inlined, may be able to
+  measure, at least with simulator, the average costs or other factors
+\item perhaps consider some of the hoard benchmarks (have the source)
+\item Hoard:
+  \begin{itemize}
+  \item base cost with no contention
+  \item microbenchmarks with lots of threads to show weakness
+  \item run on O2000 to see NUMA effects (see Courtney or Paul)
+  \item Repeat some of the above, K42 experiments, to show tradeoffs
+  \end{itemize}
+\end{itemize}
+
+\section{Related work}
+
+Focus mostly on Hoard, as recent, MP, and already compares itself to
+others, favourably (except maybe in base allocator cost).
+
+Also include some discussion of kernel allocators, and their various
+features (some of which we could adopt, like the slab cache colouring
+stuff) and failings.
+
+\begin{itemize}
+\item 4.2 BSD allocator: power-of-2, no coalescing
+\item BSD kernel allocator
+\item Slab (Sun): caches inited objects, cache colouring, coalesce to slab, 
+  mp issues from Solaris Internals book
+\item Linux: Basically Slab, lock per cache (object type)
+\item CustoMalloc: specialized to usage, fast, space efficient
+\item Sequent: MP, coalesce to page
+\item Microsoft paper: MP, hash on thread key
+\item Hoard: MP, hash on thread key, coalesce to superblock, mem balancing
+\item PTMalloc (glibc): MP, search for free heap, cache in thread-specific
+\end{itemize}
+
+\incn{
+\fixnote{Just some rambling that probably needs to go somewhere.}  Note the
+combination of the policy of freeing NUMA-local blocks to the local
+processors freelist with this layers block sharing design has a number of
+properties, some potentially positive, some potentially negative:
+\begin{itemize}
+\item + efficient movement of blocks from deallocator back to allocator for
+  balancing memory usage
+\item + can bound contention by adjusting NUMA size if necessary for very
+  large UMA systems
+\item + can increase locality per re-using blocks on processor where they
+  were recently freed and hence likely touched
+\item - reduces locality by allowing any processor to allocate from memory
+  that may previously have been used by any other processor (problem in
+  part because our per-vp freelists are relatively small).
+\item - may reduce locality by delaying coalescing
+\item - may increase false sharing both by delaying coallescing and
+  allowing a block to be allocated at different times by lots of different
+  processors 
+\end{itemize}
+}
+
+\section{Concluding remarks}
+
+Various tradeoffs; possible future porting of system to Unix; combination
+of ideas from existing systems may be appropriate.
+
+\begin{singlespace}
+\bibliography{alloc}
+\end{singlespace}
+
+\end{document}
+

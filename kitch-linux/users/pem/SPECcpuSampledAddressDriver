@@ -1,0 +1,234 @@
+#! /usr/bin/env bash
+ 
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# ****************************************************************************/
+# $Id: SPECcpuSampledAddressDriver,v 1.1 2005/03/21 03:03:33 pfs Exp $
+#
+# Automatically generate PEM data sample traces for SPECcpu2000 CFP benchmarks
+# Invoked on k42 boot
+#  Must keep all state in files: Benchmark
+#
+# Environment variables defined:
+#   K42_INITSCR		actions to take when k42 boots
+#
+# Constraint: not reentrant: no simultaneous runs per k42 build
+#
+# @author Peter F. Sweeney
+# @date   3/05/2004
+
+# boot strap
+benchmarkNameFile="/home/pem/.SPECcpuSampledAddress.BenchmarkName"
+
+if [[ ! -a $benchmarkNameFile ]]; then 
+    echo ""
+    echo "***benchmarkNameFile, $benchmarkNameFile, does not exist!***"
+    echo ""
+    exit -9999
+fi
+
+benchmark=`cat $benchmarkNameFile`
+if [[ -z $benchmark ]]; then
+  echo ""
+  echo "***SPECcpuSampledAddressDriver: benchmark undefined!***"
+  echo ""
+  exit -8888
+fi
+
+statusFile="/home/pem/.SPECcpuSampledAddress.status"
+STATUS=`cat $statusFile`
+if [[ -z $STATUS ]]; then
+  echo ""
+  echo "***SPECcpuSampledAddressDriver: STATUS undefined!***"
+  echo ""
+  exit -8888
+fi
+
+# set up variables
+iteration=0
+MODE=-user
+
+echo "SPECcpuSampledAddressDriver enter with benchmark $benchmark STATUS $STATUS $user $iteration"
+
+# benchmarks
+if [[ $benchmark == "Wupwise" ]]; then
+  echo "SPECcpuSampledAddressDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+  echo "Galgel" > $benchmarkNameFile
+
+  if [[ -a $statusFile ]]; then 
+     rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+  /home/pem/SPECcpuSampledAddress $benchmark $iteration $MODE
+fi
+if [[ $benchmark == "Swim" ]]; then
+  echo "SPECcpuSampledAddressDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+  echo "Mgrid" > $benchmarkNameFile
+
+  if [[ -a $statusFile ]]; then 
+     rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+  /home/pem/SPECcpuSampledAddress $benchmark $iteration $MODE
+fi
+if [[ $benchmark == "Mgrid" ]]; then
+  echo "SPECcpuSampledAddressDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+  echo "Applu" > $benchmarkNameFile
+
+  if [[ -a $statusFile ]]; then 
+     rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+  /home/pem/SPECcpuSampledAddress $benchmark $iteration $MODE
+fi
+if [[ $benchmark == "Applu" ]]; then
+  echo "SPECcpuSampledAddressDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+  echo "Mesa" > $benchmarkNameFile
+ 
+  if [[ -a $statusFile ]]; then 
+     rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+  /home/pem/SPECcpuSampledAddress $benchmark $iteration $MODE
+fi
+if [[ $benchmark == "Mesa" ]]; then
+  echo "SPECcpuSampledAddressDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+  echo "Galgel" > $benchmarkNameFile
+ 
+  if [[ -a $statusFile ]]; then 
+     rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+  /home/pem/SPECcpuSampledAddress $benchmark $iteration $MODE
+fi
+if [[ $benchmark == "Galgel" ]]; then
+  echo "SPECcpuSampledAddressDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+  echo "Art" > $benchmarkNameFile
+ 
+  if [[ -a $statusFile ]]; then 
+     rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+  /home/pem/SPECcpuSampledAddress $benchmark $iteration $MODE
+fi
+if [[ $benchmark == "Art" ]]; then
+  echo "SPECcpuSampledAddressDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+  echo "Equake" > $benchmarkNameFile
+ 
+  if [[ -a $statusFile ]]; then 
+     rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+  /home/pem/SPECcpuSampledAddress $benchmark $iteration $MODE
+fi
+if [[ $benchmark == "Equake" ]]; then
+  echo "SPECcpuSampledAddressDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+  echo "Done" > $benchmarkNameFile
+ 
+  if [[ -a $statusFile ]]; then 
+     rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+  /home/pem/SPECcpuSampledAddress $benchmark $iteration $MODE
+fi
+if [[ $benchmark == "Facerec" ]]; then
+  echo "SPECcpuSampledAddressDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+#  echo "Ammp" > $benchmarkNameFile
+  echo "Done" > $benchmarkNameFile
+ 
+  if [[ -a $statusFile ]]; then 
+     rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+  /home/pem/SPECcpuSampledAddress $benchmark $iteration $MODE
+fi
+if [[ $benchmark == "Ammp" ]]; then
+  echo "SPECcpuSampledAddressDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+  echo "Lucas" > $benchmarkNameFile
+ 
+  if [[ -a $statusFile ]]; then 
+     rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+  if [[ $STATUS == 2000 ]]; then
+    nextStatus=1000
+  elif [[ $STATUS == 1000 ]]; then
+    nextStatus=500
+  elif [[ $STATUS == 500 ]]; then
+    nextStatus=100
+  elif [[ $STATUS == 100 ]]; then
+    nextStatus=50
+   fi      
+  if [[ -a $statusFile ]]; then 
+    rm $statusFile
+  fi
+  echo $nextStatus > $statusFile
+
+  /home/pem/SPECcpuSampledAddress $benchmark $iteration $MODE
+fi
+if [[ $benchmark == "Lucas" ]]; then
+  echo "SPECcpuSampledAddressDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+  echo "Fma3d" > $benchmarkNameFile
+ 
+  if [[ -a $statusFile ]]; then 
+     rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+  /home/pem/SPECcpuSampledAddress $benchmark $iteration $MODE
+fi
+if [[ $benchmark == "Fma3d" ]]; then
+  echo "SPECcpuSampledAddressDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+  echo "Sixtrack" > $benchmarkNameFile
+ 
+  if [[ -a $statusFile ]]; then 
+     rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+  /home/pem/SPECcpuSampledAddress $benchmark $iteration $MODE
+fi
+if [[ $benchmark == "Sixtrack" ]]; then
+  echo "SPECcpuSampledAddressDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+#  echo "Apsi" > $benchmarkNameFile
+  echo "Done" > $benchmarkNameFile
+ 
+  if [[ -a $statusFile ]]; then 
+     rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+  /home/pem/SPECcpuSampledAddress $benchmark $iteration $MODE
+fi
+if [[ $benchmark == "Apsi" ]]; then
+  echo "SPECcpuSampledAddressDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+  echo "Done" > $benchmarkNameFile
+
+  if [[ -a $statusFile ]]; then 
+     rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+  /home/pem/SPECcpuSampledAddress $benchmark $iteration $MODE
+fi
+
+
+exit -1
+
+

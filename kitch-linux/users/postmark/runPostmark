@@ -1,0 +1,458 @@
+#!/bin/bash
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2002.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: runPostmark,v 1.1 2004/06/11 15:28:40 dilma Exp $
+# ############################################################################
+
+# Control flags
+#    bit  0 [0x0001] (RUN_SILENT)
+#    bit  1 [0x0002] (DISABLE_IO_CPU_MIGRATION)
+#    bit  2 [0x0004] (SLOW_THINWIRE_POLLING)
+#    bit  4 [0x0010] (DISABLE_CYCLIC_ASSIGNMENT)
+#    bit  5 [0x0020] (PAGING_OFF)
+#    bit  6 [0x0040] (NON_SHARING_FILE_OPT)
+#    bit  7 [0x0080] (USE_MULTI_REP_FCMS)
+#    bit  8 [0x0100] (NO_ALLOC_SANITY_CHECK)
+#    bit  9 [0x0200] (SMALL_FILE_OPT)
+#    bit 10 [0x0400] (DBG_FLAG)
+#
+# We want to run our postmark experiments always with:
+#   RUN_SILENT on
+#   DISABLE_IO_CPU_MIGRATION on
+#   SLOW_THINWIRE_POLLING) on
+#   DISABLE_CYCLIC_ASSIGNMENT : off
+#   PAGING_OFF on
+#   NO_ALLOC_SANITY_CHECK on
+#   DBG_FLAG off
+#
+# Dilma believes we need different experiments with:
+# - NON_SHARING_FILE_OPT off, SMALL_FILE_OPT off, USE_MULTI_REP_FCMS  OFF
+# - NON_SHARING_FILE_OPT on, SMALL_FILE_OPT off, USE_MULTI_REP_FCMS  OFF
+# - NON_SHARING_FILE_OPT on, SMALL_FILE_OPT on, USE_MULTI_REP_FCMS  OFF
+# - NON_SHARING_FILE_OPT off, SMALL_FILE_OPT off, USE_MULTI_REP_FCMS  on
+# - NON_SHARING_FILE_OPT on, SMALL_FILE_OPT off, USE_MULTI_REP_FCMS  on
+# - NON_SHARING_FILE_OPT on, SMALL_FILE_OPT on, USE_MULTI_REP_FCMS  on
+#
+# Previous results indicate the best numbers are achieved with
+# NON_SHARING_FILE_OPT on, SMALL_FILE_OPT on, USE_MULTI_REP_FCMS  off
+
+
+# Run with various control flag settings, corresponding to:
+# - NON_SHARING_FILE_OPT off, SMALL_FILE_OPT off, USE_MULTI_REP_FCMS  OFF
+# - NON_SHARING_FILE_OPT on, SMALL_FILE_OPT off, USE_MULTI_REP_FCMS  OFF
+# - NON_SHARING_FILE_OPT on, SMALL_FILE_OPT on, USE_MULTI_REP_FCMS  OFF
+# - NON_SHARING_FILE_OPT off, SMALL_FILE_OPT off, USE_MULTI_REP_FCMS  on
+# - NON_SHARING_FILE_OPT on, SMALL_FILE_OPT off, USE_MULTI_REP_FCMS  on
+# - NON_SHARING_FILE_OPT on, SMALL_FILE_OPT on, USE_MULTI_REP_FCMS  on
+
+
+
+# Print usage information
+usage()
+{
+    echo "Usage: runPostmark [-k OSNAME] [-s RUNSERIES] [-R REPEATRUN]"
+    echo "         [-d RAMDISKPATH] [-c POSTMARKKRNCTL] [-o OUTPUTDIR]"
+    echo "         [-p POSTMARKEXEC]"
+    echo "         [-v] [-w] [-n] [-i] [-a]"
+    echo "-v       -> verbose"
+    echo "-w       -> enable thinwire polling"
+    echo "-n	   -> disable network during test"
+    echo "-i       -> enable interception of NFS activity"
+    echo "-a	   -> abort after initial setup"
+    echo "OSNAME    = [k42|linux] (default k42)"
+    echo "RUNSERIES = Series of PostMark instances to run"
+    echo "            (default '1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18"
+    echo "                      19 20 21 22 23 24')"
+    echo "REPEATRUN = For each instance of the series, run this many times"
+    echo "            (default 3)"
+    echo "RAMDISKPATH   = path to ramdisk (default /ram)"
+    echo "POSTMARKKRNCTL= set of KernelInfo::controlFlags values to be used"
+    echo "               (default '0x012f 0x016f 0x036f 0x01af 0x01ef 0x03ef')"
+    echo "OUTPUTDIR     = Permanent directory to deposit results directory"
+    echo "                (default /knfs/home/postmark/output)"
+    echo "POSTMARKEXEC  = path to the postmark executable (default"
+    echo "               /usr/bin/postmark)"
+    echo 
+    echo "All parameters can be set from command-line or by setting the"
+    echo "environment variables identified above."
+#
+# Dead parameters
+#    echo "[-r FSIMAGE] [-p POSTMARKHWPERF] [-t POSTMARKTRACE]"
+#    echo ""
+#    echo "FSIMAGE   = archive from which ramfs is populated (/ramfsFiles)"
+#    echo "POSTMARKHWPERF= if set, hwperf enabled, defines pc sample period"
+#    echo "POSTMARKTRACE = trace mask to be used"
+#
+}
+
+# Files to copy to ram disk
+fsPrep() {
+(cd / ; /nfs/bin/cpio -p --make-directories --verbose /ram) <<EOF
+/etc/filesystems
+/etc/nsswitch.conf
+/etc/passwd
+/etc/profile
+/etc/ld.so.conf
+/bin/bash
+/bin/cat
+/bin/chmod
+/bin/cp
+/bin/cpio
+/bin/ed
+/bin/grep
+/bin/ln
+/bin/ls
+/bin/mkdir
+/bin/mv
+/bin/rm
+/bin/rmdir
+/bin/sh
+/bin/sync
+/bin/touch
+/etc/group
+/etc/localtime
+/kbin/kernelControl
+/kbin/loadImage
+/kbin/sysctl
+/kbin/traceControl
+/kbin/tracedServer
+/klib/exec.so
+/klib/libk42sys.so
+/klib/libk42sys.so.1
+/lib64/libBrokenLocale.so.1
+/lib64/libanl.so.1
+/lib64/libcrypt.so.1
+/lib64/libm-2.3.2.so
+/lib64/libm.so.6
+/lib64/libnsl.so.1
+/lib64/libnss_compat-2.3.2.so
+/lib64/libnss_compat.so.2
+/lib64/libnss_dns-2.3.2.so
+/lib64/libnss_dns.so.2
+/lib64/libnss_files-2.3.2.so
+/lib64/libnss_files.so.2
+/lib64/libnss_hesiod-2.3.2.so
+/lib64/libnss_hesiod.so.2
+/lib64/libnss_nis-2.3.2.so
+/lib64/libnss_nis.so.2
+/lib64/libnss_nisplus-2.3.2.so
+/lib64/libnss_nisplus.so.2
+/lib64/libresolv-2.3.2.so
+/lib64/libresolv.so.2
+/lib64/librt.so.1
+/lib64/libthread_db.so.1
+/lib64/libutil.so.1
+/lib64/libncurses.so.5
+/lib64/libncurses.so.5.3
+/sbin/ip
+/tmp
+/usr/bin/env
+/usr/bin/expr
+/usr/bin/id
+/usr/bin/seq
+/usr/bin/test
+/lib64/libdl-2.3.2.so
+/lib64/libdl.so.2
+/lib64/libgcc_s_64.so
+/lib64/libgcc_s.so.1
+/lib64/libgcc_s_64_nof.so
+/lib64/libgcc_s_nof.so.1
+/lib64/libstdc++.so.5
+/lib64/libstdc++.so.5.0.5
+EOF
+cd /knfs/tmp;
+for i in ld64.so.1 libc.so.6 libpthread.so.0 ; do
+    cp /lib64/$i . ;
+    strip -S $i;
+    cp $i /ram/lib64/ ;
+done
+
+}
+
+
+# Execute if variables are not defined?
+: ${OSNAME="k42"}
+: ${RAMFSOUTPUTDIR="/results"}
+: ${OUTPUTDIR="/knfs/home/postmark/output"}
+: ${RAMDISKPATH="/ram"}
+: ${RUNSERIES="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24"}
+: ${POSTMARKKRNCTL="0x012f 0x016f 0x036f 0x01af 0x01ef 0x03ef"}
+: ${REPEATRUN=3}
+: ${POSTMARKEXEC="/usr/bin/postmark"}
+
+#
+#: ${FSIMAGE="/ramfsFiles"}
+#
+
+# Grab input parameters.
+# MAA - as far as I can tell, the only way to get bash to honor quoted
+# strings in the input is to use "$@" here - you can't assign the string
+# to anything else.
+# using "$@" here lets -s '2 4 6' work.
+#while getopts awk:d:t:p:c:r:o:s:R:vnif OPT "$@" ; do
+while getopts awk:d:t:c:o:s:R:p:vni OPT "$@" ; do
+    case $OPT in
+    a)
+	export ABORTEARLY="yes";;
+    k)
+	export OSNAME=$OPTARG;;
+    d)
+	export RAMDISKPATH=$OPTARG;;
+    t)
+	export POSTMARKTRACE=$OPTARG;;
+    c)
+	export POSTMARKKRNCTL="$OPTARG";;
+    p)
+        export POSTMARKEXEC="$OPTARG";;
+    n)
+	export NONET=1;;
+    o)  
+	export OUTPUTDIR=$OPTARG;;
+    s) 
+	export RUNSERIES="$OPTARG";;
+    w)
+        export DOPOLLING=1;;
+    i)
+        export INTERCEPTNFS=1;;
+    v)  
+	export VERBOSE=1;;
+    R)
+	export REPEATRUN=$OPTARG;;
+#
+#    p)
+#	export POSTMARKHWPERF=$OPTARG;;
+#
+#    r)
+#	export FSIMAGE=$OPTARG;;
+#
+    ?)
+	echo Unknown arg: $OPTIND ;
+	usage;
+	exit 1;;
+    esac
+done
+
+# Echo configuration if verbosity is requested
+if [ "$VERBOSE" ]; then
+    echo OSNAME=$OSNAME
+    echo RAMDISKPATH=$RAMDISKPATH
+    echo POSTMARKKRNCTL=$POSTMARKKRNCTL
+    echo OUTPUTDIR=$OUTPUTDIR
+    echo RUNSERIES=$RUNSERIES 
+    echo REPEATRUN=$REPEATRUN
+    VERBOSE_CPIO=--verbose
+#
+#    echo FSIMAGE       =$FSIMAGE
+#    echo POSTMARKTRACE =$POSTMARKTRACE
+#    echo POSTMARKHWPERF=$POSTMARKHWPERF
+#
+fi
+
+# Check if root
+if [ "`id -u`" -ne "0" ] ; then
+    echo "runPostmark: runPostmark must be run as root"
+    exit 1
+fi
+
+# Take operating system specific actions
+if [[ $OSNAME = "linux" ]]
+then
+    POSTMARKKRNCTL="linux"
+    KERNCTRL="echo"
+
+    # setup ramdisk
+    umount /dev/ramdisk
+    mkdir $RAMDISKPATH
+    if ! mount -t ramfs /dev/ramdisk $RAMDISKPATH 
+    then
+        echo "ERROR:  Could not mount ramdisk!!!!"
+        exit 1
+    fi
+
+else
+
+    # Handle unknown operating system
+    if [[ $OSNAME != "k42" ]]
+    then
+        echo "ERROR: $OSNAME not supported"
+        exit 1
+    fi
+
+    # Execute K42-specific tasks
+    # ==========================
+    # ==========================
+
+    echo "Test if 1st or 2nd time through runPostmark script"
+
+    # Execute only if first time through this script
+    if [ ! -e $RAMDISKPATH/init ] ; then
+        echo "First time through runPostmark script. Setting up things for"
+        echo "ram disk."
+
+        cd /home/postmark
+
+        # Check if postmark executable is available
+        if [ ! -x $POSTMARKEXEC ] ; then
+            echo "Executable $POSTMARKEXEC has not been found"
+            exit 1
+        fi
+
+        # Disable tracing
+        echo 0 > /ksys/traceMask
+        /kbin/traceControl --reset --vp 1;
+
+        # Copy files to RAM disk
+        cp -f $POSTMARKEXEC $RAMDISKPATH/postmark
+        cp -f input.txt $RAMDISKPATH
+        cp -f runtest.sh $RAMDISKPATH
+        cp -f runPostmark $RAMDISKPATH
+        cp -f /tests/linux/runprog $RAMDISKPATH
+
+        # Run benchmark in RAM disk
+        cd $RAMDISKPATH
+        echo "Running PostMark from $RAMDISKPATH"
+
+        echo Turning nfs revalidation off
+        /knfs/kbin/nfsRevalidation off;
+
+        # Flush cache
+        /knfs/kbin/discardCachedPages /knfs/kbin/nfsRevalidation ;
+        /knfs/kbin/discardCachedPages /usr/bin/id ;
+
+        # The all important copy to ram disk task!!!!
+	echo "going to invoke fsPrep";
+        fsPrep ;
+        # Make the ram disk the root of the file system
+        /knfs/kbin/bindFS /ram /;
+
+        # Flush cache
+        /knfs/kbin/discardCachedPages /knfs/kbin/bindFS ;
+
+        mkdir /usr/tmp;
+
+        # Set flag
+        touch $RAMDISKPATH/init;
+
+        # Execute long version of exec, says Bob.
+        # Run this script all over again. 2nd time through should cause it to
+        # skip this section.
+        exec /knfs/kbin/longexec $RAMDISKPATH/runPostmark "$@";
+    fi
+
+    echo "Second time through runPostmark script. About to execute benchmark."
+
+    # This is required so the script knows the new value of pwd.
+    # I think it gets confused when we bind ramfs to /.
+    cd /
+
+    KERNCTRL=/kbin/kernelControl
+
+    # setup ramdisk
+    # nothing to do here
+
+    # I don't know what this does
+    if [ ! -d /sys ] ; then
+        /kbin/sysctl
+    fi
+
+fi
+
+
+# Abort early if requested
+if [ "$ABORTEARLY" ] ; then
+    exit;
+fi
+
+# Take K42-specific actions
+if [[ $OSNAME = "k42" ]]
+then
+    # Delete old output directory on ram disk
+    if [ -d $RAMFSOUTPUTDIR ] ; then
+        rm -rf $RAMFSOUTPUTDIR;
+    fi
+
+    # disable thinwire polling
+    if [ "$DOPOLLING" ] ; then
+        echo 1 > /ksys/wireDaemon
+    else
+        echo 0 > /ksys/wireDaemon
+    fi
+
+    # enable breakpoints on NFS methods so we can intercept NFS activity
+    if [ "$INTERCEPTNFS" ] ; then
+        # paging in this whole file so that if 
+        echo 0 > /ksys/interceptNFS
+        cat runPostmark > /dev/null
+        echo 1 > /ksys/interceptNFS
+    else
+        echo 0 > /ksys/interceptNFS
+    fi
+
+    if [ "$NONET" ] ; then
+        ip link set eth0 down;
+    fi
+fi
+
+
+# Run the benchmark here
+# Run for different control flag settings
+for CTRL_FLAG in $POSTMARKKRNCTL;
+do
+    # Set control flags
+    $KERNCTRL $CTRL_FLAG
+
+    # Run 1 to $RUNSERIES instances of PostMark
+    for i in $RUNSERIES;
+    do
+        # Run $i instances $REPEATRUN times
+        for (( j=1 ; $j<=$REPEATRUN ; j++ ));
+        do
+            echo "Running PostMark: ctrl_flag=$CTRL_FLAG, instances=$i, run=$j"
+
+            # Create directory to store results of current run
+            mkdir -p ${RAMFSOUTPUTDIR}/ctrl${CTRL_FLAG}/${i}instances/run$j
+
+            # Invoke script to run PostMark
+            ./runtest.sh $i
+            # Move results from K42 RAM disk temporary location
+            mv /results*.txt \
+               ${RAMFSOUTPUTDIR}/ctrl${CTRL_FLAG}/${i}instances/run${j}/
+            mv /stderr*.txt \
+               ${RAMFSOUTPUTDIR}/ctrl${CTRL_FLAG}/${i}instances/run${j}/
+        done
+    done
+done
+
+
+# Take K42-specific actions
+if [[ $OSNAME = "k42" ]]
+then
+    # re-enable thinwire polling
+    echo 1 > /ksys/wireDaemon
+
+    # disable interception of NFS activity
+    echo 0 > /ksys/interceptNFS
+fi
+
+# copy output directory from ramfs to $OUTPUTDIR
+cp -r $RAMFSOUTPUTDIR $OUTPUTDIR;
+
+# summarize output into file summary
+
+# Take K42-specific actions
+if [[ $OSNAME = "k42" ]]
+then
+    if [ "$NONET" ] ; then
+        ip link set eth0 up;
+        # 9.2.208.2 is site-specific!!!!!
+        ip route add default via 9.2.208.2;
+    fi
+fi
+
+echo "The results are in $OUTPUTDIR$RAMFSOUTPUTDIR."

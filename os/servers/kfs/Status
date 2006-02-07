@@ -1,0 +1,473 @@
+/******************************************************************************
+ * K42: (C) Copyright IBM Corp. 2005.
+ * All Rights Reserved
+ *
+ * This file is distributed under the GNU LGPL. You should have
+ * received a copy of the license along with K42; see the file LICENSE.html
+ * in the top-level directory for more details.
+ *
+ * $Id: Status,v 1.3 2005/08/01 18:12:14 dilma Exp $
+  *****************************************************************************/
+/*****************************************************************************
+ * Module Description:
+ * **************************************************************************/
+
+6/28/05 - SDET numbers running on k1 with KFS, 1-way
+680.4
+675.8
+675.1
+674.5
+679.9
+677.1
+675.0
+675.4
+
+========================================================
+
+7/8/05 - dbench-3.03 fullDeb, 1-way on k1 (with 1 client)
+[kix:/u/dilma/ak42] rlogin k1 -l dilma
+Starting '/bin/bash' on /dev/pts/1
+-bash-2.05b$ cd /dbench-3.03
+cd /dbench-3.03
+-bash-2.05b$ ./dbench -D /kkfs -c ./client.txt 1 -t 60
+./dbench -D /kkfs -c ./client.txt 1 -t 60
+dbench version 3.03 - Copyright Andrew Tridgell 1999-2004
+
+Running for 60 seconds with load './client.txt' and minimum warmup 12 secs
+1 clients started
+   1        50     2.10 MB/sec  warmup   1 sec   
+   1       214     4.16 MB/sec  warmup   2 sec   
+   1       444     5.18 MB/sec  warmup   3 sec   
+   1       978     5.45 MB/sec  warmup   4 sec   
+   1      2332     5.54 MB/sec  warmup   5 sec   
+   1      3763     6.60 MB/sec  warmup   6 sec   
+   1      4896     6.21 MB/sec  warmup   7 sec   
+   1      6449     6.46 MB/sec  warmup   8 sec   
+   1      7727     6.54 MB/sec  warmup   9 sec   
+   1      9117     6.44 MB/sec  warmup  10 sec   
+   1     10448     6.63 MB/sec  warmup  11 sec   
+   1     13017     5.01 MB/sec  execute   1 sec   
+   1     14405     8.43 MB/sec  execute   2 sec   
+   1     15695     7.41 MB/sec  execute   3 sec   
+   1     17108     7.40 MB/sec  execute   4 sec   
+   1     18435     7.29 MB/sec  execute   5 sec   
+   1     19939     6.99 MB/sec  execute   6 sec   
+   1     21129     7.23 MB/sec  execute   7 sec   
+   1     22391     7.15 MB/sec  execute   8 sec   
+   1     23781     6.93 MB/sec  execute   9 sec   
+   1     25081     7.40 MB/sec  execute  10 sec   
+   1     26352     7.21 MB/sec  execute  11 sec   
+   1     27765     7.17 MB/sec  execute  12 sec   
+   1     29091     7.18 MB/sec  execute  13 sec   
+   1     30564     7.06 MB/sec  execute  14 sec   
+   1     31772     7.17 MB/sec  execute  15 sec   
+   1     33031     7.13 MB/sec  execute  16 sec   
+   1     34431     7.04 MB/sec  execute  17 sec   
+   1     35717     7.27 MB/sec  execute  18 sec   
+   1     37101     7.17 MB/sec  execute  19 sec   
+   1     38423     7.18 MB/sec  execute  20 sec   
+   1     39835     7.17 MB/sec  execute  21 sec   
+   1     41363     7.13 MB/sec  execute  22 sec   
+   1     42504     7.22 MB/sec  execute  23 sec   
+   1     43681     7.12 MB/sec  execute  24 sec   
+   1     45085     7.07 MB/sec  execute  25 sec   
+   1     46444     7.22 MB/sec  execute  26 sec   
+   1     47800     7.16 MB/sec  execute  27 sec   
+   1     49122     7.16 MB/sec  execute  28 sec   
+   1     50551     7.16 MB/sec  execute  29 sec   
+   1     52022     7.13 MB/sec  execute  30 sec   
+   1     53168     7.22 MB/sec  execute  31 sec   
+   1     54421     7.13 MB/sec  execute  32 sec   
+   1     55847     7.09 MB/sec  execute  33 sec   
+   1     57220     7.20 MB/sec  execute  34 sec   
+   1     58627     7.15 MB/sec  execute  35 sec   
+   1     60101     7.20 MB/sec  execute  36 sec   
+   1     61360     7.17 MB/sec  execute  37 sec   
+   1     62669     7.12 MB/sec  execute  38 sec   
+   1     64079     7.24 MB/sec  execute  39 sec   
+   1     65329     7.20 MB/sec  execute  40 sec   
+   1     66772     7.19 MB/sec  execute  41 sec   
+   1     68095     7.19 MB/sec  execute  42 sec   
+   1     69609     7.15 MB/sec  execute  43 sec   
+   1     70764     7.19 MB/sec  execute  44 sec   
+   1     71844     7.15 MB/sec  execute  45 sec   
+   1     73221     7.10 MB/sec  execute  46 sec   
+   1     74343     7.13 MB/sec  execute  47 sec   
+   1     75610     7.12 MB/sec  execute  48 sec   
+   1     77010     7.09 MB/sec  execute  49 sec   
+   1     78424     7.18 MB/sec  execute  50 sec   
+   1     79753     7.14 MB/sec  execute  51 sec   
+   1     81002     7.14 MB/sec  execute  52 sec   
+   1     82386     7.14 MB/sec  execute  53 sec   
+   1     83826     7.11 MB/sec  execute  54 sec   
+   1     85047     7.15 MB/sec  execute  55 sec   
+   1     86311     7.13 MB/sec  execute  56 sec   
+   1     87683     7.10 MB/sec  execute  57 sec   
+   1     89060     7.17 MB/sec  execute  58 sec   
+   1     90330     7.14 MB/sec  execute  59 sec   
+   1     91642     7.14 MB/sec  cleanup  60 sec   
+   1     91642     7.11 MB/sec  cleanup  61 sec   
+
+Throughput 7.14156 MB/sec 1 procs
+-bash-2.05b$ 
+
+
+Running for 12 seconds with load './client.txt' and minimum warmup 2 secs
+1 clients started
+   1        50     2.10 MB/sec  warmup   1 sec   
+   1       452     7.26 MB/sec  execute   1 sec   
+   1      1042     7.11 MB/sec  execute   2 sec   
+   1      2332     6.38 MB/sec  execute   3 sec   
+   1      3638     7.48 MB/sec  execute   4 sec   
+   1      4769     6.69 MB/sec  execute   5 sec   
+   1      6156     6.57 MB/sec  execute   6 sec   
+   1      7438     7.21 MB/sec  execute   7 sec   
+   1      8764     6.96 MB/sec  execute   8 sec   
+   1     10198     7.03 MB/sec  execute   9 sec   
+   1     11581     7.03 MB/sec  execute  10 sec   
+   1     12986     6.94 MB/sec  execute  11 sec   
+   1     14318     7.27 MB/sec  cleanup  12 sec   
+   1     14318     7.02 MB/sec  cleanup  12 sec   
+
+Throughput 7.26692 MB/sec 1 procs
+
+Now with 2 clients
+-bash-2.05b$ ./dbench -D /kkfs -c ./client.txt 2 -t 12
+./dbench -D /kkfs -c ./client.txt 2 -t 12
+dbench version 3.03 - Copyright Andrew Tridgell 1999-2004
+
+Running for 12 seconds with load './client.txt' and minimum warmup 2 secs
+2 clients started
+   2        72     6.27 MB/sec  warmup   1 sec   
+   2       281     7.28 MB/sec  execute   1 sec   
+   2       395     7.14 MB/sec  execute   2 sec   
+   2       508     7.21 MB/sec  execute   3 sec   
+   2       692     7.19 MB/sec  execute   4 sec   
+   2      1206     6.82 MB/sec  execute   5 sec   
+   2      2235     6.81 MB/sec  execute   6 sec   
+   2      2964     7.42 MB/sec  execute   7 sec   
+   2      3443     7.40 MB/sec  execute   8 sec   
+   2      4037     7.38 MB/sec  execute   9 sec   
+   2      4640     6.93 MB/sec  execute  10 sec   
+   2      5558     7.13 MB/sec  execute  11 sec   
+   2      6181     7.14 MB/sec  cleanup  12 sec   
+   2      6181     6.54 MB/sec  cleanup  13 sec   
+   2      6181     6.49 MB/sec  cleanup  13 sec   
+
+Throughput 7.13682 MB/sec 2 procs
+-bash-2.05b$ 
+
+-bash-2.05b$ ./dbench -D /kkfs -c ./client.txt 32 -t 12
+./dbench -D /kkfs -c ./client.txt 32 -t 12
+dbench version 3.03 - Copyright Andrew Tridgell 1999-2004
+
+Running for 12 seconds with load './client.txt' and minimum warmup 2 secs
+32 clients started
+  32         0     0.00 MB/sec  warmup   2 sec   
+  32         4     0.00 MB/sec  warmup   5 sec   
+  32        11     0.72 MB/sec  warmup   6 sec   
+  32        20     1.91 MB/sec  warmup   7 sec   
+  32        26     3.18 MB/sec  warmup   8 sec   
+  32        34     3.11 MB/sec  execute   1 sec   
+  32        35     1.58 MB/sec  execute   2 sec   
+  32        35     1.27 MB/sec  execute   3 sec   
+  32        36     1.25 MB/sec  execute   4 sec   
+  32        37     1.40 MB/sec  execute   5 sec   
+  32        39     1.50 MB/sec  execute   6 sec   
+  32        43     2.19 MB/sec  execute   8 sec   
+  32        46     2.48 MB/sec  execute   9 sec   
+  32        49     2.72 MB/sec  execute  10 sec   
+  32        52     2.98 MB/sec  execute  11 sec   
+  32        54     2.93 MB/sec  execute  12 sec   
+  32        56     3.03 MB/sec  cleanup  13 sec   
+  32        56     2.70 MB/sec  cleanup  14 sec   
+  32        56     2.48 MB/sec  cleanup  16 sec   
+  32        56     2.33 MB/sec  cleanup  17 sec   
+  32        56     2.19 MB/sec  cleanup  18 sec   
+  32        56     2.05 MB/sec  cleanup  19 sec   
+  32        56     1.78 MB/sec  cleanup  22 sec   
+  32        56     1.65 MB/sec  cleanup  24 sec   
+  32        56     1.57 MB/sec  cleanup  25 sec   
+  32        56     1.51 MB/sec  cleanup  26 sec   
+  32        56     1.51 MB/sec  cleanup  26 sec   
+
+Throughput 3.04476 MB/sec 32 procs
+-bash-2.05b$ 
+
+More numbers:
+-bash-2.05b$ ./dbench -D /kkfs -c ./client.txt 64 -t 12
+Throughput 1.3429 MB/sec 64 procs
+
+-bash-2.05b$ ./dbench -D /kkfs -c ./client.txt 128 -t 12
+Throughput 0.488731 MB/sec 128 procs
+(and it took 910 seconds to cleanup!!!)
+
+For 512 the paging kick in and things got stuck.
+
+============= With Michal's fix for Timer.C race
+noDeb on k1:
+
+-bash-2.05b$ cd /dbench-3.03
+cd /dbench-3.03
+-bash-2.05b$ ./dbench -D /kkfs -c ./client.txt 1 -t 12;./dbench -D /kkfs -c ./client.txt 8 -t 12;./dbench -D /kkfs -c ./client.txt 128 -t 12;
+<lient.txt 8 -t 12;./dbench -D /kkfs -c ./client.txt 128 -t 12;
+dbench version 3.03 - Copyright Andrew Tridgell 1999-2004
+
+Running for 12 seconds with load './client.txt' and minimum warmup 2 secs
+1 clients started
+   1        90     4.19 MB/sec  warmup   1 sec   
+   1       600     9.49 MB/sec  execute   1 sec   
+   1      2390     8.22 MB/sec  execute   2 sec   
+   1      4437     9.71 MB/sec  execute   3 sec   
+   1      6333     9.88 MB/sec  execute   4 sec   
+   1      8168     9.91 MB/sec  execute   5 sec   
+   1     10096    10.03 MB/sec  execute   6 sec   
+   1     11979    10.00 MB/sec  execute   7 sec   
+   1     13997    10.13 MB/sec  execute   8 sec   
+   1     15748    10.10 MB/sec  execute   9 sec   
+   1     17816    10.33 MB/sec  execute  10 sec   
+   1     19818    10.04 MB/sec  execute  11 sec   
+   1     21663    10.33 MB/sec  cleanup  12 sec   
+   1     21663    10.19 MB/sec  cleanup  12 sec   
+
+Throughput 10.3274 MB/sec 1 procs
+dbench version 3.03 - Copyright Andrew Tridgell 1999-2004
+
+Running for 12 seconds with load './client.txt' and minimum warmup 2 secs
+8 clients started
+   8        30     8.39 MB/sec  warmup   1 sec   
+   8        75    11.53 MB/sec  execute   1 sec   
+   8        96     9.96 MB/sec  execute   2 sec   
+   8       119     9.34 MB/sec  execute   3 sec   
+   8       155     9.08 MB/sec  execute   4 sec   
+   8       195     9.19 MB/sec  execute   5 sec   
+   8       234     9.34 MB/sec  execute   6 sec   
+   8       274     9.53 MB/sec  execute   7 sec   
+   8       311     9.44 MB/sec  execute   8 sec   
+   8       351     9.40 MB/sec  execute   9 sec   
+   8       385     9.37 MB/sec  execute  10 sec   
+   8       422     9.35 MB/sec  execute  11 sec   
+   8       459     9.41 MB/sec  cleanup  12 sec   
+   8       459     8.72 MB/sec  cleanup  13 sec   
+
+Throughput 9.42488 MB/sec 8 procs
+dbench version 3.03 - Copyright Andrew Tridgell 1999-2004
+
+Running for 12 seconds with load './client.txt' and minimum warmup 2 secs
+128 clients started
+ 128         1     0.22 MB/sec  warmup   5 sec   
+ 128        13     3.99 MB/sec  warmup  11 sec   
+ 128        16     4.73 MB/sec  warmup  12 sec   
+ 128        20     6.25 MB/sec  warmup  13 sec   
+ 128        26     7.29 MB/sec  warmup  15 sec   
+ 128        30     8.15 MB/sec  warmup  17 sec   
+ 128        33     8.50 MB/sec  warmup  18 sec   
+ 128        35     8.70 MB/sec  warmup  19 sec   
+ 128        36     1.02 MB/sec  execute   1 sec   
+ 128        36     1.01 MB/sec  execute   2 sec   
+ 128        36     0.67 MB/sec  execute   3 sec   
+ 128        36     0.76 MB/sec  execute   4 sec   
+ 128        37     0.81 MB/sec  execute   5 sec   
+ 128        37     0.84 MB/sec  execute   6 sec   
+ 128        37     0.72 MB/sec  execute   7 sec   
+ 128        37     0.63 MB/sec  execute   8 sec   
+ 128        37     0.67 MB/sec  execute   9 sec   
+ 128        37     0.60 MB/sec  execute  10 sec   
+ 128        37     0.64 MB/sec  execute  11 sec   
+ 128        37     0.59 MB/sec  cleanup  12 sec   
+ 128        37     0.54 MB/sec  cleanup  14 sec   
+ 128        37     0.50 MB/sec  cleanup  15 sec   
+ 128        37     0.47 MB/sec  cleanup  16 sec   
+ 128        37     0.44 MB/sec  cleanup  17 sec   
+ 128        37     0.42 MB/sec  cleanup  18 sec   
+ 128        37     0.39 MB/sec  cleanup  19 sec   
+ 128        37     0.37 MB/sec  cleanup  20 sec   
+ 128        37     0.35 MB/sec  cleanup  21 sec   
+ 128        37     0.34 MB/sec  cleanup  22 sec   
+ 128        37     0.32 MB/sec  cleanup  23 sec   
+ 128        37     0.31 MB/sec  cleanup  24 sec   
+ 128        37     0.30 MB/sec  cleanup  25 sec   
+ 128        37     0.28 MB/sec  cleanup  26 sec   
+ 128        37     0.27 MB/sec  cleanup  27 sec   
+ 128        37     0.26 MB/sec  cleanup  28 sec   
+ 128        37     0.25 MB/sec  cleanup  29 sec   
+ 128        37     0.24 MB/sec  cleanup  30 sec   
+ 128        37     0.24 MB/sec  cleanup  31 sec   
+ 128        37     0.23 MB/sec  cleanup  32 sec   
+ 128        37     0.22 MB/sec  cleanup  33 sec   
+ 128        37     0.22 MB/sec  cleanup  34 sec   
+ 128        37     0.21 MB/sec  cleanup  35 sec   
+ 128        37     0.20 MB/sec  cleanup  36 sec   
+ 128        37     0.20 MB/sec  cleanup  37 sec   
+ 128        37     0.19 MB/sec  cleanup  38 sec   
+ 128        37     0.19 MB/sec  cleanup  39 sec   
+ 128        37     0.18 MB/sec  cleanup  40 sec   
+ 128        37     0.18 MB/sec  cleanup  41 sec   
+ 128        37     0.17 MB/sec  cleanup  42 sec   
+ 128        37     0.17 MB/sec  cleanup  43 sec   
+ 128        37     0.17 MB/sec  cleanup  44 sec   
+ 128        37     0.16 MB/sec  cleanup  45 sec   
+ 128        37     0.16 MB/sec  cleanup  46 sec   
+ 128        37     0.15 MB/sec  cleanup  48 sec   
+ 128        37     0.15 MB/sec  cleanup  49 sec   
+ 128        37     0.15 MB/sec  cleanup  50 sec   
+ 128        37     0.14 MB/sec  cleanup  51 sec   
+ 128        37     0.14 MB/sec  cleanup  52 sec   
+ 128        37     0.14 MB/sec  cleanup  53 sec   
+ 128        37     0.14 MB/sec  cleanup  54 sec   
+ 128        37     0.13 MB/sec  cleanup  55 sec   
+ 128        37     0.13 MB/sec  cleanup  56 sec   
+ 128        37     0.13 MB/sec  cleanup  57 sec   
+ 128        37     0.13 MB/sec  cleanup  58 sec   
+ 128        37     0.12 MB/sec  cleanup  60 sec   
+ 128        37     0.12 MB/sec  cleanup  61 sec   
+ 128        37     0.12 MB/sec  cleanup  62 sec   
+ 128        37     0.12 MB/sec  cleanup  63 sec   
+ 128        37     0.11 MB/sec  cleanup  64 sec   
+
+Throughput 0.588612 MB/sec 128 procs
+-bash-2.05b$ 
+
+For 512 it got stuck on the warmup
+
+Now numbers from fullDeb on k1, same system image:
+
+
+Running for 12 seconds with load './client.txt' and minimum warmup 2 secs
+1 clients started
+   1        50     2.10 MB/sec  warmup   1 sec   
+   1       444     6.99 MB/sec  execute   1 sec   
+   1       978     6.62 MB/sec  execute   2 sec   
+   1      2363     6.41 MB/sec  execute   3 sec   
+   1      3765     7.77 MB/sec  execute   4 sec   
+   1      5016     7.29 MB/sec  execute   5 sec   
+   1      6449     7.20 MB/sec  execute   6 sec   
+   1      7757     7.22 MB/sec  execute   7 sec   
+   1      9176     7.01 MB/sec  execute   8 sec   
+   1     10449     7.20 MB/sec  execute   9 sec   
+   1     11715     7.13 MB/sec  execute  10 sec   
+   1     13150     7.01 MB/sec  execute  11 sec   
+   1     14572     7.37 MB/sec  cleanup  12 sec   
+   1     14572     7.14 MB/sec  cleanup  12 sec   
+
+Throughput 7.36927 MB/sec 1 procs
+dbench version 3.03 - Copyright Andrew Tridgell 1999-2004
+
+Running for 12 seconds with load './client.txt' and minimum warmup 2 secs
+8 clients started
+   8         2     0.00 MB/sec  warmup   1 sec   
+   8        51     7.79 MB/sec  execute   1 sec   
+   8        71     7.99 MB/sec  execute   2 sec   
+   8        88     7.76 MB/sec  execute   3 sec   
+   8       110     7.83 MB/sec  execute   4 sec   
+   8       137     7.71 MB/sec  execute   5 sec   
+   8       168     7.61 MB/sec  execute   6 sec   
+   8       200     7.65 MB/sec  execute   7 sec   
+   8       232     7.68 MB/sec  execute   8 sec   
+   8       263     7.68 MB/sec  execute   9 sec   
+   8       294     7.69 MB/sec  execute  10 sec   
+   8       323     7.65 MB/sec  execute  11 sec   
+   8       353     7.59 MB/sec  cleanup  12 sec   
+   8       353     7.02 MB/sec  cleanup  13 sec   
+   8       353     6.49 MB/sec  cleanup  14 sec   
+   8       353     6.10 MB/sec  cleanup  15 sec   
+
+Throughput 7.6262 MB/sec 8 procs
+
+For 128, we asserted on Timer.C (on the new code that Michal has fixed)
+
+================================================================
+July 22nd, 2005
+
+running sdet fullDeb with partDeb.Img.3, k1:
+
+- with kfs
+1186.1 1178.7 1190.9 1193.8 1192.6 1186.3 1184.3 1182.1 1177.5 1183.4 1182.3
+1171.4 1175.2 1177.7 1182.2 1178.4
+
+================================================================
+Aug 1st, 2005
+
+running sdet noDeb (with assertions on) Img.3 on k4:
+(4-way all sequence in a single boot)
+2227.5
+2335.7
+2374.5
+2371.6
+2423.5
+2422.3
+2367.3
+2232.5
+2224.2
+2224.6
+2280.5
+2268.8
+2286.3
+2209.4
+2154.9
+2231.5
+2227.7
+2225.2
+2242.7
+2211.3
+2220.7
+2164.4
+2146.0
+2177.5
+2074.7
+2152.1
+2141.8
+2163.8
+2045.4
+2132.6
+2104.6
+
+Running dbench, same machine and build tree, now 1-way:
+-bash-2.05b# ./dbench -D /kkfs -c ./client.txt -t 30 1
+./dbench -D /kkfs -c ./client.txt -t 30 1
+dbench version 3.03 - Copyright Andrew Tridgell 1999-2004
+
+Running for 30 seconds with load './client.txt' and minimum warmup 6 secs
+1 clients started
+   1       180     7.32 MB/sec  warmup   1 sec   
+   1       500     8.60 MB/sec  warmup   2 sec   
+   1      1850     8.67 MB/sec  warmup   3 sec   
+   1      3894     9.89 MB/sec  warmup   4 sec   
+   1      5898     9.29 MB/sec  warmup   5 sec   
+   1     10015    11.65 MB/sec  execute   1 sec   
+   1     11859    10.17 MB/sec  execute   2 sec   
+   1     13998    10.89 MB/sec  execute   3 sec   
+   1     16233    10.71 MB/sec  execute   4 sec   
+   1     18077    11.26 MB/sec  execute   5 sec   
+   1     20145    10.55 MB/sec  execute   6 sec   
+   1     22323    10.91 MB/sec  execute   7 sec   
+   1     24239    10.99 MB/sec  execute   8 sec   
+   1     26128    10.74 MB/sec  execute   9 sec   
+   1     28220    10.89 MB/sec  execute  10 sec   
+   1     30195    10.81 MB/sec  execute  11 sec   
+   1     32172    11.03 MB/sec  execute  12 sec   
+   1     34298    10.73 MB/sec  execute  13 sec   
+   1     36389    10.89 MB/sec  execute  14 sec   
+   1     38398    10.91 MB/sec  execute  15 sec   
+   1     40151    10.80 MB/sec  execute  16 sec   
+   1     42401    10.90 MB/sec  execute  17 sec   
+   1     44418    10.85 MB/sec  execute  18 sec   
+   1     46354    10.99 MB/sec  execute  19 sec   
+   1     48478    10.80 MB/sec  execute  20 sec   
+   1     50483    10.88 MB/sec  execute  21 sec   
+   1     52465    10.87 MB/sec  execute  22 sec   
+   1     54394    10.83 MB/sec  execute  23 sec   
+   1     56583    10.90 MB/sec  execute  24 sec   
+   1     58636    10.87 MB/sec  execute  25 sec   
+   1     60533    10.96 MB/sec  execute  26 sec   
+   1     62662    10.82 MB/sec  execute  27 sec   
+   1     64688    10.89 MB/sec  execute  28 sec   
+   1     66646    10.88 MB/sec  execute  29 sec   
+   1     68578    10.85 MB/sec  cleanup  30 sec   
+   1     68578    10.82 MB/sec  cleanup  30 sec   
+
+Throughput 10.8528 MB/sec 1 procs
+Throughput 8.51036 MB/sec 2 procs
+Throughput 6.48744 MB/sec 8 procs
+Throughput 8.74343 MB/sec 32 procs
+Throughput 6.25654 MB/sec 64 procs

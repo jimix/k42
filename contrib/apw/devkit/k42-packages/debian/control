@@ -1,0 +1,12 @@
+Source: k42-packages
+Section: devel
+Priority: optional
+Maintainer: Amos Waterland <apw@us.ibm.com>
+Build-Depends-Indep: debhelper
+Standards-Version: 3.6.1.0
+
+Package: k42-packages
+Architecture: any
+Description: K42 packages
+ 'k42-packages' provides the packages necessary to build the
+ K42 research operating system.

@@ -1,0 +1,37 @@
+OUTPUT_FORMAT(elf32-powerpc)
+
+PHDRS
+{
+       /* set the physical address to load the text and data segment */
+       text PT_LOAD AT (0x110000); /**/
+       data PT_LOAD AT (0x150000); /**/
+}
+
+SECTIONS
+{   
+  .text  ALIGN(0x1000) :
+  {
+    *(.text)
+     ___CTOR_LIST__ = .; __CTOR_LIST__ = . ; 
+			LONG (-1); *(.ctors); *(.ctor); LONG (0); 
+     ___DTOR_LIST__ = .; __DTOR_LIST__ = . ; 
+			LONG (-1); *(.dtors); *(.dtor);  LONG (0); 
+
+  } :text
+              
+  .rodata :
+  {
+    *(.rodata)
+  }:text
+              
+  .sdata2 :
+  {
+    *(.sdata2)
+  }:text
+
+  .data ALIGN(0x1000) :
+  {
+    *(.data)
+  }:data
+
+}

@@ -1,0 +1,352 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2004.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: StatusOtherBenchs,v 1.1 2004/06/11 15:28:17 dilma Exp $
+# ############################################################################
+
+
+We have performance numbers for SDET in file Status.
+This file is meant as a repository of performance data for other
+workloads, such as postmark and dbench.
+
+This is the structure of this file:
+
+Section 1: General info about running workloads
+Section 2: How to run postmark
+Section 3: How to run dbench
+
+Rest of the file: entries with performance results from either
+postmark or dbench, with information about changes in the system.
+
+
+
+--------------------- Section 1: General info about running workloads
+
+Not all the 270's work well.  Numbers
+should come from k4 or an equivalent
+	fast machines k4
+	(as of 8/28/2003 MAA cannot reproduce k4 numbers on k8)
+	known slow machines k3, k9
+
+--------------------- Section 1: How to run postmark
+
+The experiment is:
+
+Boot noDeb 1 and 4 way
+at test prompt:
+
+0
+C0xfff
+
+rlogin -l root to system (runPostmark depends on doing asetuid for each script) 
+(the following experiments take a while to run)
+on 1 way: /knfs/home/postmark/runPostmark -c 0xf7f -R 4 -s "1"
+on 4 way: /knfs/home/postmark/runPostmark -c 0xf7f -R 4 -s "4"
+on 24 way we could get two sort of numbers:
+    /knfs/home/postmark/runPostmark -c 0xf7f -R 4 -s "24"
+    /knfs/home/postmark/runPostmark -c 0xf7f -R 4 -s "1 2 4 8 12 16 20 24"
+
+WHICH RESULTS TO PASTE IN THIS FILE:
+The output of postmark experiments are available in 
+kitchroot/home/postmark/output, but it's a lot of stuff.
+Let's paste in here just a summary, which can be obtained
+by running grep for "useconds" on the file. The problem with
+running this on K42 after the experiment is that the setup for
+running postmark (with every library needed) on /ram makes
+find, xarg to be unavailable. (We could add to our /ram image, but
+these leaves less memory space to run large experiments). So
+I suggested you go to the machine hosting your kitchroot tree,
+and run:
+find <yourkitchroot>/home/postmark/ouptut | xargs -e grep useconds > postmark-results-summary
+
+You can now paste the file file postmark-results-summary here.
+
+If you change the "best" flags story, update the above instructions when
+you post the performance change that goes with the flag change.
+
+--------------------- Section 3: How to run dbench
+
+This has to be written
+
+######################## Rest of the file: Performance data #################
+
+Dilma, 6/9/2004
+Current floor system as of June 9th, 2004, ~ 10am. Notice that we're running
+the experiments with NON_SHARING_FILE_OPT on, but the floor system doesn't
+have this optimization enabled (because it's failing on SDET; it will
+be fixed eventually).
+
+
+from k4 (1-way), 4 repetitions, 1 script
+/ctrl0xf7f/1instances/run2/results0.txt:	67381222 useconds total
+/ctrl0xf7f/1instances/run2/results0.txt:	56477978 useconds of transactions (1770.60 per second)
+/ctrl0xf7f/1instances/run3/results0.txt:	68116759 useconds total
+/ctrl0xf7f/1instances/run3/results0.txt:	57176555 useconds of transactions (1748.97 per second)
+/ctrl0xf7f/1instances/run1/results0.txt:	66224453 useconds total
+/ctrl0xf7f/1instances/run1/results0.txt:	55262977 useconds of transactions (1809.53 per second)
+/ctrl0xf7f/1instances/run4/results0.txt:	68101215 useconds total
+/ctrl0xf7f/1instances/run4/results0.txt:	57112210 useconds of transactions (1750.94 per second)
+
+from k4 (4-way), 4 repetitions, 4 scripts
+./output/ctrl0xf7f/4instances/run2/results2.txt:	71024164 useconds total
+./output/ctrl0xf7f/4instances/run2/results2.txt:	59126398 useconds of transactions (1691.29 per second)
+./output/ctrl0xf7f/4instances/run2/results0.txt:	71201428 useconds total
+./output/ctrl0xf7f/4instances/run2/results0.txt:	59334728 useconds of transactions (1685.35 per second)
+./output/ctrl0xf7f/4instances/run2/results3.txt:	71199000 useconds total
+./output/ctrl0xf7f/4instances/run2/results3.txt:	59462634 useconds of transactions (1681.73 per second)
+./output/ctrl0xf7f/4instances/run2/results1.txt:	70661102 useconds total
+./output/ctrl0xf7f/4instances/run2/results1.txt:	58938822 useconds of transactions (1696.67 per second)
+./output/ctrl0xf7f/4instances/run3/results2.txt:	71885282 useconds total
+./output/ctrl0xf7f/4instances/run3/results2.txt:	59862258 useconds of transactions (1670.50 per second)
+./output/ctrl0xf7f/4instances/run3/results0.txt:	71747758 useconds total
+./output/ctrl0xf7f/4instances/run3/results0.txt:	59854063 useconds of transactions (1670.73 per second)
+./output/ctrl0xf7f/4instances/run3/results3.txt:	71531096 useconds total
+./output/ctrl0xf7f/4instances/run3/results3.txt:	59673494 useconds of transactions (1675.79 per second)
+./output/ctrl0xf7f/4instances/run3/results1.txt:	71084070 useconds total
+./output/ctrl0xf7f/4instances/run3/results1.txt:	59266929 useconds of transactions (1687.28 per second)
+./output/ctrl0xf7f/4instances/run1/results2.txt:	70650907 useconds total
+./output/ctrl0xf7f/4instances/run1/results2.txt:	58748487 useconds of transactions (1702.17 per second)
+./output/ctrl0xf7f/4instances/run1/results0.txt:	70479181 useconds total
+./output/ctrl0xf7f/4instances/run1/results0.txt:	58440375 useconds of transactions (1711.15 per second)
+./output/ctrl0xf7f/4instances/run1/results3.txt:	70262866 useconds total
+./output/ctrl0xf7f/4instances/run1/results3.txt:	58342394 useconds of transactions (1714.02 per second)
+./output/ctrl0xf7f/4instances/run1/results1.txt:	70490404 useconds total
+./output/ctrl0xf7f/4instances/run1/results1.txt:	58620357 useconds of transactions (1705.89 per second)
+./output/ctrl0xf7f/4instances/run4/results2.txt:	72756267 useconds total
+./output/ctrl0xf7f/4instances/run4/results2.txt:	60657252 useconds of transactions (1648.61 per second)
+./output/ctrl0xf7f/4instances/run4/results0.txt:	72026093 useconds total
+./output/ctrl0xf7f/4instances/run4/results0.txt:	60053449 useconds of transactions (1665.18 per second)
+./output/ctrl0xf7f/4instances/run4/results3.txt:	72024416 useconds total
+./output/ctrl0xf7f/4instances/run4/results3.txt:	60089609 useconds of transactions (1664.18 per second)
+./output/ctrl0xf7f/4instances/run4/results1.txt:	70968730 useconds total
+./output/ctrl0xf7f/4instances/run4/results1.txt:	59216074 useconds of transactions (1688.73 per second)
+
+On k0, running as /knfs/home/postmark/runPostmark -s '24' -c 0xf7f -R 1
+./output/ctrl0xf7f/24instances/run1/results7.txt:	56495597 useconds total
+./output/ctrl0xf7f/24instances/run1/results7.txt:	43830646 useconds of transactions (2281.51 per second)
+./output/ctrl0xf7f/24instances/run1/results20.txt:	56044468 useconds total
+./output/ctrl0xf7f/24instances/run1/results20.txt:	43690045 useconds of transactions (2288.85 per second)
+./output/ctrl0xf7f/24instances/run1/results13.txt:	57310203 useconds total
+./output/ctrl0xf7f/24instances/run1/results13.txt:	44706033 useconds of transactions (2236.83 per second)
+./output/ctrl0xf7f/24instances/run1/results2.txt:	55871975 useconds total
+./output/ctrl0xf7f/24instances/run1/results2.txt:	44016426 useconds of transactions (2271.88 per second)
+./output/ctrl0xf7f/24instances/run1/results23.txt:	54703359 useconds total
+./output/ctrl0xf7f/24instances/run1/results23.txt:	42363643 useconds of transactions (2360.51 per second)
+./output/ctrl0xf7f/24instances/run1/results16.txt:	57015399 useconds total
+./output/ctrl0xf7f/24instances/run1/results16.txt:	44561121 useconds of transactions (2244.11 per second)
+./output/ctrl0xf7f/24instances/run1/results5.txt:	56242935 useconds total
+./output/ctrl0xf7f/24instances/run1/results5.txt:	44466130 useconds of transactions (2248.90 per second)
+./output/ctrl0xf7f/24instances/run1/results19.txt:	56903246 useconds total
+./output/ctrl0xf7f/24instances/run1/results19.txt:	44873384 useconds of transactions (2228.49 per second)
+./output/ctrl0xf7f/24instances/run1/results11.txt:	56267163 useconds total
+./output/ctrl0xf7f/24instances/run1/results11.txt:	43537479 useconds of transactions (2296.87 per second)
+./output/ctrl0xf7f/24instances/run1/results8.txt:	56546418 useconds total
+./output/ctrl0xf7f/24instances/run1/results8.txt:	43690813 useconds of transactions (2288.81 per second)
+./output/ctrl0xf7f/24instances/run1/results0.txt:	57429413 useconds total
+./output/ctrl0xf7f/24instances/run1/results0.txt:	43763494 useconds of transactions (2285.01 per second)
+./output/ctrl0xf7f/24instances/run1/results21.txt:	55696036 useconds total
+./output/ctrl0xf7f/24instances/run1/results21.txt:	43298903 useconds of transactions (2309.53 per second)
+./output/ctrl0xf7f/24instances/run1/results14.txt:	56329979 useconds total
+./output/ctrl0xf7f/24instances/run1/results14.txt:	44117769 useconds of transactions (2266.66 per second)
+./output/ctrl0xf7f/24instances/run1/results3.txt:	57576810 useconds total
+./output/ctrl0xf7f/24instances/run1/results3.txt:	46064310 useconds of transactions (2170.88 per second)
+
+I don't understand the following numbers ... It varies between
+~2880 and ~1400 transactions per second. I ran a few times and I
+reproduced the scenario below. I need to run the numbers again, but
+after an update on June 11th 11am, I can't boot on k0 anymore.
+Here are the numbers for future reference (I think this numbers
+have the non-shared optimization on and the above don't. I will
+run numbers again and clean up this file).
+./output/ctrl0xf7f/4instances/run1/results2.txt:	41733410 useconds total
+./output/ctrl0xf7f/4instances/run1/results2.txt:	34660419 useconds of transactions (2885.14 per second)
+./output/ctrl0xf7f/4instances/run1/results0.txt:	84895882 useconds total
+./output/ctrl0xf7f/4instances/run1/results0.txt:	70739151 useconds of transactions (1413.64 per second)
+./output/ctrl0xf7f/4instances/run1/results3.txt:	41946169 useconds total
+./output/ctrl0xf7f/4instances/run1/results3.txt:	34791376 useconds of transactions (2874.28 per second)
+./output/ctrl0xf7f/4instances/run1/results1.txt:	84756841 useconds total
+./output/ctrl0xf7f/4instances/run1/results1.txt:	70798593 useconds of transactions (1412.46 per second)
+./output/ctrl0xf7f/12instances/run1/results7.txt:	45658008 useconds total
+./output/ctrl0xf7f/12instances/run1/results7.txt:	37890455 useconds of transactions (2639.19 per second)
+./output/ctrl0xf7f/12instances/run1/results2.txt:	46191100 useconds total
+./output/ctrl0xf7f/12instances/run1/results2.txt:	38489550 useconds of transactions (2598.11 per second)
+./output/ctrl0xf7f/12instances/run1/results5.txt:	45239473 useconds total
+./output/ctrl0xf7f/12instances/run1/results5.txt:	37333186 useconds of transactions (2678.58 per second)
+./output/ctrl0xf7f/12instances/run1/results11.txt:	45770570 useconds total
+./output/ctrl0xf7f/12instances/run1/results11.txt:	37721878 useconds of transactions (2650.98 per second)
+./output/ctrl0xf7f/12instances/run1/results8.txt:	46308172 useconds total
+./output/ctrl0xf7f/12instances/run1/results8.txt:	38133691 useconds of transactions (2622.35 per second)
+./output/ctrl0xf7f/12instances/run1/results0.txt:	90007598 useconds total
+./output/ctrl0xf7f/12instances/run1/results0.txt:	74737119 useconds of transactions (1338.02 per second)
+./output/ctrl0xf7f/12instances/run1/results3.txt:	45752425 useconds total
+./output/ctrl0xf7f/12instances/run1/results3.txt:	37732588 useconds of transactions (2650.23 per second)
+./output/ctrl0xf7f/12instances/run1/results6.txt:	44621023 useconds total
+./output/ctrl0xf7f/12instances/run1/results6.txt:	36951176 useconds of transactions (2706.27 per second)
+./output/ctrl0xf7f/12instances/run1/results9.txt:	45602306 useconds total
+./output/ctrl0xf7f/12instances/run1/results9.txt:	37362542 useconds of transactions (2676.48 per second)
+./output/ctrl0xf7f/12instances/run1/results1.txt:	89395468 useconds total
+./output/ctrl0xf7f/12instances/run1/results1.txt:	74183829 useconds of transactions (1348.00 per second)
+./output/ctrl0xf7f/12instances/run1/results4.txt:	45643844 useconds total
+./output/ctrl0xf7f/12instances/run1/results4.txt:	37904672 useconds of transactions (2638.20 per second)
+./output/ctrl0xf7f/12instances/run1/results10.txt:	45680030 useconds total
+./output/ctrl0xf7f/12instances/run1/results10.txt:	37543492 useconds of transactions (2663.58 per second)
+./output/ctrl0xf7f/20instances/run1/results7.txt:	52328206 useconds total
+./output/ctrl0xf7f/20instances/run1/results7.txt:	43157163 useconds of transactions (2317.11 per second)
+./output/ctrl0xf7f/20instances/run1/results13.txt:	50669547 useconds total
+./output/ctrl0xf7f/20instances/run1/results13.txt:	41390008 useconds of transactions (2416.04 per second)
+./output/ctrl0xf7f/20instances/run1/results2.txt:	51719746 useconds total
+./output/ctrl0xf7f/20instances/run1/results2.txt:	42791480 useconds of transactions (2336.91 per second)
+./output/ctrl0xf7f/20instances/run1/results16.txt:	50840744 useconds total
+./output/ctrl0xf7f/20instances/run1/results16.txt:	40903735 useconds of transactions (2444.76 per second)
+./output/ctrl0xf7f/20instances/run1/results5.txt:	52013590 useconds total
+./output/ctrl0xf7f/20instances/run1/results5.txt:	43024584 useconds of transactions (2324.25 per second)
+./output/ctrl0xf7f/20instances/run1/results19.txt:	51411504 useconds total
+./output/ctrl0xf7f/20instances/run1/results19.txt:	41517471 useconds of transactions (2408.62 per second)
+./output/ctrl0xf7f/20instances/run1/results11.txt:	51417773 useconds total
+./output/ctrl0xf7f/20instances/run1/results11.txt:	42024777 useconds of transactions (2379.55 per second)
+./output/ctrl0xf7f/20instances/run1/results8.txt:	51868144 useconds total
+./output/ctrl0xf7f/20instances/run1/results8.txt:	42709703 useconds of transactions (2341.39 per second)
+./output/ctrl0xf7f/20instances/run1/results0.txt:	52818613 useconds total
+./output/ctrl0xf7f/20instances/run1/results0.txt:	42109301 useconds of transactions (2374.77 per second)
+./output/ctrl0xf7f/20instances/run1/results14.txt:	51747291 useconds total
+./output/ctrl0xf7f/20instances/run1/results14.txt:	42304547 useconds of transactions (2363.81 per second)
+./output/ctrl0xf7f/20instances/run1/results3.txt:	52340639 useconds total
+./output/ctrl0xf7f/20instances/run1/results3.txt:	43220124 useconds of transactions (2313.74 per second)
+./output/ctrl0xf7f/20instances/run1/results17.txt:	51746611 useconds total
+./output/ctrl0xf7f/20instances/run1/results17.txt:	42193716 useconds of transactions (2370.02 per second)
+./output/ctrl0xf7f/20instances/run1/results6.txt:	51367262 useconds total
+./output/ctrl0xf7f/20instances/run1/results6.txt:	42161835 useconds of transactions (2371.81 per second)
+./output/ctrl0xf7f/20instances/run1/results12.txt:	51140652 useconds total
+./output/ctrl0xf7f/20instances/run1/results12.txt:	41760810 useconds of transactions (2394.59 per second)
+./output/ctrl0xf7f/20instances/run1/results9.txt:	51539118 useconds total
+./output/ctrl0xf7f/20instances/run1/results9.txt:	42163650 useconds of transactions (2371.71 per second)
+./output/ctrl0xf7f/20instances/run1/results1.txt:	51792518 useconds total
+./output/ctrl0xf7f/20instances/run1/results1.txt:	43188569 useconds of transactions (2315.43 per second)
+./output/ctrl0xf7f/20instances/run1/results15.txt:	51292260 useconds total
+./output/ctrl0xf7f/20instances/run1/results15.txt:	41715672 useconds of transactions (2397.18 per second)
+./output/ctrl0xf7f/20instances/run1/results4.txt:	52004772 useconds total
+./output/ctrl0xf7f/20instances/run1/results4.txt:	42823843 useconds of transactions (2335.15 per second)
+./output/ctrl0xf7f/20instances/run1/results18.txt:	51332996 useconds total
+./output/ctrl0xf7f/20instances/run1/results18.txt:	41948118 useconds of transactions (2383.90 per second)
+./output/ctrl0xf7f/20instances/run1/results10.txt:	51062016 useconds total
+./output/ctrl0xf7f/20instances/run1/results10.txt:	41719491 useconds of transactions (2396.96 per second)
+./output/ctrl0xf7f/8instances/run1/results7.txt:	43772795 useconds total
+./output/ctrl0xf7f/8instances/run1/results7.txt:	36195826 useconds of transactions (2762.75 per second)
+./output/ctrl0xf7f/8instances/run1/results2.txt:	43494158 useconds total
+./output/ctrl0xf7f/8instances/run1/results2.txt:	36187714 useconds of transactions (2763.37 per second)
+./output/ctrl0xf7f/8instances/run1/results5.txt:	43405688 useconds total
+./output/ctrl0xf7f/8instances/run1/results5.txt:	35868586 useconds of transactions (2787.95 per second)
+./output/ctrl0xf7f/8instances/run1/results0.txt:	87336839 useconds total
+./output/ctrl0xf7f/8instances/run1/results0.txt:	72721073 useconds of transactions (1375.12 per second)
+./output/ctrl0xf7f/8instances/run1/results3.txt:	44380084 useconds total
+./output/ctrl0xf7f/8instances/run1/results3.txt:	36890400 useconds of transactions (2710.73 per second)
+./output/ctrl0xf7f/8instances/run1/results6.txt:	43368389 useconds total
+./output/ctrl0xf7f/8instances/run1/results6.txt:	35879523 useconds of transactions (2787.11 per second)
+./output/ctrl0xf7f/8instances/run1/results1.txt:	87101146 useconds total
+./output/ctrl0xf7f/8instances/run1/results1.txt:	72447272 useconds of transactions (1380.31 per second)
+./output/ctrl0xf7f/8instances/run1/results4.txt:	44249122 useconds total
+./output/ctrl0xf7f/8instances/run1/results4.txt:	36386958 useconds of transactions (2748.24 per second)
+./output/ctrl0xf7f/16instances/run1/results7.txt:	49104732 useconds total
+./output/ctrl0xf7f/16instances/run1/results7.txt:	40554868 useconds of transactions (2465.80 per second)
+./output/ctrl0xf7f/16instances/run1/results13.txt:	48705900 useconds total
+./output/ctrl0xf7f/16instances/run1/results13.txt:	39359655 useconds of transactions (2540.67 per second)
+./output/ctrl0xf7f/16instances/run1/results2.txt:	49216532 useconds total
+./output/ctrl0xf7f/16instances/run1/results2.txt:	40443478 useconds of transactions (2472.59 per second)
+./output/ctrl0xf7f/16instances/run1/results5.txt:	48489089 useconds total
+./output/ctrl0xf7f/16instances/run1/results5.txt:	40001429 useconds of transactions (2499.91 per second)
+./output/ctrl0xf7f/16instances/run1/results11.txt:	48665065 useconds total
+./output/ctrl0xf7f/16instances/run1/results11.txt:	39911671 useconds of transactions (2505.53 per second)
+./output/ctrl0xf7f/16instances/run1/results8.txt:	48253096 useconds total
+./output/ctrl0xf7f/16instances/run1/results8.txt:	39691207 useconds of transactions (2519.45 per second)
+./output/ctrl0xf7f/16instances/run1/results0.txt:	49908340 useconds total
+./output/ctrl0xf7f/16instances/run1/results0.txt:	40290768 useconds of transactions (2481.96 per second)
+./output/ctrl0xf7f/16instances/run1/results14.txt:	47902050 useconds total
+./output/ctrl0xf7f/16instances/run1/results14.txt:	38537561 useconds of transactions (2594.87 per second)
+./output/ctrl0xf7f/16instances/run1/results3.txt:	48971624 useconds total
+./output/ctrl0xf7f/16instances/run1/results3.txt:	40485901 useconds of transactions (2470.00 per second)
+./output/ctrl0xf7f/16instances/run1/results6.txt:	48230943 useconds total
+./output/ctrl0xf7f/16instances/run1/results6.txt:	39724823 useconds of transactions (2517.32 per second)
+./output/ctrl0xf7f/16instances/run1/results12.txt:	48526847 useconds total
+./output/ctrl0xf7f/16instances/run1/results12.txt:	39579058 useconds of transactions (2526.59 per second)
+./output/ctrl0xf7f/16instances/run1/results9.txt:	48834298 useconds total
+./output/ctrl0xf7f/16instances/run1/results9.txt:	40222316 useconds of transactions (2486.18 per second)
+./output/ctrl0xf7f/16instances/run1/results1.txt:	48948040 useconds total
+./output/ctrl0xf7f/16instances/run1/results1.txt:	40366034 useconds of transactions (2477.33 per second)
+./output/ctrl0xf7f/16instances/run1/results15.txt:	48555553 useconds total
+./output/ctrl0xf7f/16instances/run1/results15.txt:	39652508 useconds of transactions (2521.91 per second)
+./output/ctrl0xf7f/16instances/run1/results4.txt:	49153429 useconds total
+./output/ctrl0xf7f/16instances/run1/results4.txt:	40648240 useconds of transactions (2460.13 per second)
+./output/ctrl0xf7f/16instances/run1/results10.txt:	48342347 useconds total
+./output/ctrl0xf7f/16instances/run1/results10.txt:	39679619 useconds of transactions (2520.19 per second)
+./output/ctrl0xf7f/1instances/run1/results0.txt:	39310319 useconds total
+./output/ctrl0xf7f/1instances/run1/results0.txt:	32617902 useconds of transactions (3065.80 per second)
+./output/ctrl0xf7f/24instances/run1/results7.txt:	53602109 useconds total
+./output/ctrl0xf7f/24instances/run1/results7.txt:	43668401 useconds of transactions (2289.99 per second)
+./output/ctrl0xf7f/24instances/run1/results20.txt:	52272458 useconds total
+./output/ctrl0xf7f/24instances/run1/results20.txt:	41732467 useconds of transactions (2396.22 per second)
+./output/ctrl0xf7f/24instances/run1/results13.txt:	52275986 useconds total
+./output/ctrl0xf7f/24instances/run1/results13.txt:	42313198 useconds of transactions (2363.33 per second)
+./output/ctrl0xf7f/24instances/run1/results2.txt:	54515237 useconds total
+./output/ctrl0xf7f/24instances/run1/results2.txt:	44738245 useconds of transactions (2235.22 per second)
+./output/ctrl0xf7f/24instances/run1/results23.txt:	51795351 useconds total
+./output/ctrl0xf7f/24instances/run1/results23.txt:	41409255 useconds of transactions (2414.92 per second)
+./output/ctrl0xf7f/24instances/run1/results16.txt:	52134828 useconds total
+./output/ctrl0xf7f/24instances/run1/results16.txt:	42315071 useconds of transactions (2363.22 per second)
+./output/ctrl0xf7f/24instances/run1/results5.txt:	52770738 useconds total
+./output/ctrl0xf7f/24instances/run1/results5.txt:	43399949 useconds of transactions (2304.15 per second)
+./output/ctrl0xf7f/24instances/run1/results19.txt:	52105400 useconds total
+./output/ctrl0xf7f/24instances/run1/results19.txt:	42200539 useconds of transactions (2369.64 per second)
+./output/ctrl0xf7f/24instances/run1/results11.txt:	53864092 useconds total
+./output/ctrl0xf7f/24instances/run1/results11.txt:	43903365 useconds of transactions (2277.73 per second)
+./output/ctrl0xf7f/24instances/run1/results8.txt:	53221705 useconds total
+./output/ctrl0xf7f/24instances/run1/results8.txt:	43398510 useconds of transactions (2304.23 per second)
+./output/ctrl0xf7f/24instances/run1/results0.txt:	54492367 useconds total
+./output/ctrl0xf7f/24instances/run1/results0.txt:	42940240 useconds of transactions (2328.82 per second)
+./output/ctrl0xf7f/24instances/run1/results21.txt:	52060497 useconds total
+./output/ctrl0xf7f/24instances/run1/results21.txt:	41687481 useconds of transactions (2398.80 per second)
+./output/ctrl0xf7f/24instances/run1/results14.txt:	53036615 useconds total
+./output/ctrl0xf7f/24instances/run1/results14.txt:	43297969 useconds of transactions (2309.58 per second)
+./output/ctrl0xf7f/24instances/run1/results3.txt:	53466707 useconds total
+./output/ctrl0xf7f/24instances/run1/results3.txt:	43926029 useconds of transactions (2276.55 per second)
+./output/ctrl0xf7f/24instances/run1/results17.txt:	52945573 useconds total
+./output/ctrl0xf7f/24instances/run1/results17.txt:	43344257 useconds of transactions (2307.11 per second)
+./output/ctrl0xf7f/24instances/run1/results6.txt:	52106271 useconds total
+./output/ctrl0xf7f/24instances/run1/results6.txt:	42845770 useconds of transactions (2333.95 per second)
+./output/ctrl0xf7f/24instances/run1/results12.txt:	53688983 useconds total
+./output/ctrl0xf7f/24instances/run1/results12.txt:	43366793 useconds of transactions (2305.91 per second)
+./output/ctrl0xf7f/24instances/run1/results9.txt:	53700527 useconds total
+./output/ctrl0xf7f/24instances/run1/results9.txt:	44012911 useconds of transactions (2272.06 per second)
+./output/ctrl0xf7f/24instances/run1/results1.txt:	52886677 useconds total
+./output/ctrl0xf7f/24instances/run1/results1.txt:	43804236 useconds of transactions (2282.88 per second)
+./output/ctrl0xf7f/24instances/run1/results22.txt:	53224004 useconds total
+./output/ctrl0xf7f/24instances/run1/results22.txt:	41623924 useconds of transactions (2402.46 per second)
+./output/ctrl0xf7f/24instances/run1/results15.txt:	53115036 useconds total
+./output/ctrl0xf7f/24instances/run1/results15.txt:	43385643 useconds of transactions (2304.91 per second)
+./output/ctrl0xf7f/24instances/run1/results4.txt:	53787894 useconds total
+./output/ctrl0xf7f/24instances/run1/results4.txt:	43914682 useconds of transactions (2277.14 per second)
+./output/ctrl0xf7f/24instances/run1/results18.txt:	52919482 useconds total
+./output/ctrl0xf7f/24instances/run1/results18.txt:	43245753 useconds of transactions (2312.37 per second)
+./output/ctrl0xf7f/24instances/run1/results10.txt:	52635273 useconds total
+./output/ctrl0xf7f/24instances/run1/results10.txt:	42694925 useconds of transactions (2342.20 per second)
+./output/ctrl0xf7f/2instances/run1/results0.txt:	41427406 useconds total
+./output/ctrl0xf7f/2instances/run1/results0.txt:	34669283 useconds of transactions (2884.40 per second)
+./output/ctrl0xf7f/2instances/run1/results1.txt:	41146628 useconds total
+./output/ctrl0xf7f/2instances/run1/results1.txt:	34100762 useconds of transactions (2932.49 per second)
+
+
+--------------------------------------------------------------------------
+
+	         
+
+****************************************************************************
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+****************************************************************************
+----------- KEEP THIS AT BOTTOM --------------------------------------------
+HOW TO RUN EXPERIMENT IS AT BEGINNING OF FILE. IF YOU CHANGE EXPERIMENT
+FLAGS, PLEASE CHANGE THE INSTRUCTIONS IN THE BEGINNING OF FILE!!!!!
+----------- KEEP THIS AT BOTTOM --------------------------------------------

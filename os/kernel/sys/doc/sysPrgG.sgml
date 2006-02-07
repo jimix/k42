@@ -1,0 +1,192 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: sysPrgG.sgml,v 1.2 2001/08/23 22:22:28 mike Exp $
+-->
+<title>Sys includes</title>
+<section>
+  <title>Files</title>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/os/kernel/sysDispatcher.H"><filename>Dispatcher</filename></ulink>:
+	defines the base interface between the kernel and a user-mode
+	dispatcher
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+  
+	<ulink
+	url="&topsrc/os/kernel/sysKernelInfo.H"><filename>KernelInfo</filename></ulink>:
+	a shared structure by which the kernel publishes information
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+  
+	<ulink
+	url="&topsrc/os/kernel/sysSoftIntr.H"><filename>SoftIntr</filename></ulink>:
+	defines the interrupts that can be sent to an application
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+  
+	<ulink
+	url="&topsrc/os/kernel/sysVolatileState.H"><filename>VolatileState</filename></ulink>:
+	No idea what this is, help Bryan
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+  
+	<ulink
+	url="&topsrc/os/kernel/sysentryPoints.H"><filename>entryPoints</filename></ulink>:
+	Defines the entry points that a an application can be invoked
+	at
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+  
+	<ulink
+	url="&topsrc/os/kernel/sysgenConstants.C"><filename>genConstants</filename></ulink>:
+	A C program for generating constants to be used by assembly
+	for offsets... in structures
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+  
+	<ulink
+	url="&topsrc/os/kernel/sysgenSymdefs.C"><filename>genSymdefs</filename></ulink>:
+	???? Bryan???
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+  
+	<ulink
+	url="&topsrc/os/kernel/sysmemoryMap.H"><filename>memoryMap</filename></ulink>:
+	defines how memory is partitioned between various structures
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+  
+	<ulink
+	url="&topsrc/os/kernel/syssyscalls.H"><filename>syscalls</filename></ulink>:
+	enumeration of the system calls (machine specific)
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+  
+	<ulink
+	url="&topsrc/os/kernel/systhinwire.H"><filename>thinwire</filename></ulink>:
+	bunch of infromation for communicating over a serial line
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+</section>
+<section>
+  <title>Overview</title>
+  <para>
+
+    This directory publishes various information about the kernel to
+    application level.
+
+  </para>
+</section>
+<section>
+  <title>Notes on Dispatcher/async message buffers</title>
+  <para>
+
+    Async messages are used when a client doesn't trust the
+    server. Typically, the message is immediately enqueued in a async
+    message buffer and the server process resumed. If space is not
+    available, an error is returned to the sender, and the sender is
+    responsible for re-trying the operation later.
+
+  </para>
+  <para>
+
+    We have two separate buffers for storing async messages in the
+    Dispatcher, one for local and one for remote messages, with very
+    different implementations.
+
+  </para>
+  <para>
+
+    In both cases, the buffer is a circular producer consumer
+    structure, with a separate delivered and accepted flag.  Delivered
+    and Accepted are both 64-bit offsets, where the index used is the
+    value mod the capacity of the buffer, avoiding the need to handle
+    wrapping. The only consumer is the dispatcher code running
+    disabled in the application address space on the target vp. We use
+    a circular buffer to avoid any locking between the application and
+    kernel.
+
+  </para>
+  <para>
+
+    In the local case, which we expect to be the common case, the
+    message is always enqueued by the kernel at exception level on the
+    same processor, guaranteeing that there is a single producer.
+    Since the consumer and producer are on the same processor, we
+    don't need to worry about weak consistency models, avoiding any
+    sync operations, and resulting in a very efficient implementation.
+    One interesting optimization is, whenever the producer finds that
+    delivered == accepted, it resets both to zero, causing most
+    messages to be enqueued in the first cache line of the buffer,
+    hopefully keeping this cache line hot.  Since this means that both
+    the producer and consumer are updating the accepted flag, we
+    carefully order the loading of the delivered and accepted flag in
+    the consumer to ensure that it will never think that a message is
+    available when one is not there.
+
+  </para>
+  <para>
+
+    In the remote case, we enqueue the message from the remote
+    processor rather than sending an MP message to enqueue it on the
+    local processor.  The reason for doing this is that it allows us
+    to unblock the sender of the asynchronous message as soon as the
+    message has been enqueued.  Once the message has been enqueued, we
+    send an asynchronous remote interrupt to the target processor to
+    get it to be scheduled if it was not previously running.  Since
+    the remote message is used only to send an interrupt, it requires
+    no space on the target side, and hence the sending process can be
+    unblocked immediately.
+
+  </para>
+  <para>
+
+    In the remote case, we do not do the zeroing of the delivered and
+    accepted flags, since we would prefer that different messages use
+    different cache lines.  To ensure that there is only one producer
+    at a time, the producers synchronize on a per-vp lock in the
+    process object. We also require SyncAfterAcquire() (i.e., isync on
+    PowerPC) and SyncBeforeRelease (sync on PowerPC) for weakly
+    consistent machines.
+
+  </para>
+</section>

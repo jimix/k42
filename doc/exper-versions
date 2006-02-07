@@ -1,0 +1,35 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: exper-versions,v 1.2 2002/07/30 20:47:58 jimix Exp $
+# ############################################################################
+
+versions of different packages used for k42:
+
+2002-05-28
+  gcc 2.95.3 19991030 (prerelease)
+  glibc 2.1.2
+  linux-kern-mod 2.4.14 linux-012
+
+
+----
+
+directory structure guideline for saving k42 experimental results
+
+top-level: /u/kitchawa/data
+             README - decsribes what's in sub-directories
+             sdet/ - experiements for sdet runs
+
+sub-level:
+
+ directory labels
+  yyyy-mm-dd-exp-machine-os-rev-your-choice
+  ex: 2002-05-28-sdet-s85-k42-r1
+
+ content
+  this README file commented at top with anything about the experiment

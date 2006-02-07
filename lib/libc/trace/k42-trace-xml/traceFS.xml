@@ -1,0 +1,856 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceFS.xml,v 1.5 2005/08/24 14:54:16 dilma Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::FS::Test">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="Test" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='File system test object 0x%0[%llx]' />
+</event>
+
+
+<event name="OS::FS::Debug1Uval">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="Debug1Uval" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='0x%0[%llx]' />
+</event>
+
+
+<event name="OS::FS::Debug1Uval1Str">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="Debug1Uval1Str" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+	</fields>
+	<k42Format value='0x%0[%llx] %1[%s]' />
+</event>
+
+
+<event name="OS::FS::Debug2Uval1Str">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="Debug2Uval1Str" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='0x%0[%llx] 0x%1[%llx] %2[%s]' />
+</event>
+
+
+<event name="OS::FS::Debug1Uval2Str">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="Debug1Uval2Str" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='0x%0[%llx] %1[%s] %2[%s]' />
+</event>
+
+
+<event name="OS::FS::Debug2Uval2Str">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="Debug2Uval2Str" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+		<field name="field3" type="string" />
+	</fields>
+	<k42Format value='0x%0[%llx] 0x%1[%llx] %2[%s] %3[%s]' />
+</event>
+
+
+<event name="OS::FS::StubAcquire">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="StubAcquire" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='ref 0x%0[%llx] pid 0x%1[%llx] t 0x%2[%llx]' />
+</event>
+
+
+<event name="OS::FS::StubAccess">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="StubAccess" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="string" />
+	</fields>
+	<k42Format value='ref 0x%0[%llx] pid 0x%1[%llx] t 0x%2[%llx] op %3[%s]' />
+</event>
+
+
+<event name="OS::FS::StubRelease">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="StubRelease" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='ref 0x%0[%llx] pid 0x%1[%llx] t 0x%2[%llx]' />
+</event>
+
+
+<event name="OS::FS::NameTreeAccess">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NameTreeAccess" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="string" />
+	</fields>
+	<k42Format value='ref 0x%0[%llx] t 0x%1[%llx] nc %2[%ld] op %3[%s]' />
+</event>
+
+
+<event name="OS::FS::GetObjRet">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="GetObjRet" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='ref 0x%0[%llx] t 0x%1[%llx] useType %2[%ld]' />
+</event>
+
+
+<event name="OS::FS::FullFileName">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="FullFileName" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+	</fields>
+	<k42Format value='ref 0x%0[%llx] name %1[%s]' />
+</event>
+
+
+<event name="OS::FS::DirectoryPurge">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="DirectoryPurge" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='dirInfo 0x%0[%llx]  ref purged 0x%1[%llx]' />
+</event>
+
+
+<event name="OS::FS::FilePurge">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="FilePurge" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='File (mod on server) has been purged: token 0x%0[%llx]' />
+</event>
+
+
+<event name="OS::FS::ServerFileCreated">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="ServerFileCreated" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+		<field name="field4" type="string" />
+	</fields>
+	<k42Format value='name %4[%s] ref 0x%0[%llx] tk 0x%1[%llx] dtk 0x%2[%llx] t 0x%3[%llx]' />
+</event>
+
+
+<event name="OS::FS::DirCreated">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="DirCreated" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='name %2[%s] ref 0x%0[%llx] token 0x%1[%llx]' />
+</event>
+
+
+<event name="OS::FS::ServerFileBlockDestroy">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="ServerFileBlockDestroy" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='object 0x%0[%llx]' />
+</event>
+
+
+<event name="OS::FS::DirLinuxFSVolatileDestroy">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="DirLinuxFSVolatileDestroy" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='object  0x%0[%llx]' />
+</event>
+
+
+<event name="OS::FS::NFSLookupComp">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSLookupComp" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+	</fields>
+	<k42Format value='dirinfo 0x%0[%llx] name %1[%s]' />
+</event>
+
+
+<event name="OS::FS::NFSSetAttribute">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSSetAttribute" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='finfo  0x%0[%llx]' />
+</event>
+
+
+<event name="OS::FS::NFSGetFileTokenOrServerFile">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSGetFileTokenOrServerFile" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='dirinfo  0x%0[%llx]' />
+</event>
+
+
+<event name="OS::FS::NFSCreate">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSCreate" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='dirinfo  0x%0[%llx] name %2[%s] finfo 0x%1[%llx]' />
+</event>
+
+
+<event name="OS::FS::NFSRead">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSRead" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='finfo  0x%0[%llx] nbytes 0x%1[%llx] offset 0x%2[%llx]' />
+</event>
+
+
+<event name="OS::FS::NFSWriteSynchronous">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSWriteSynchronous" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='finfo  0x%0[%llx] len 0x%1[%llx] offset 0x%2[%llx]' />
+</event>
+
+
+<event name="OS::FS::NFSWriteSynchFinished">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSWriteSynchFinished" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='finfo  0x%0[%llx] st_mtime 0x%1[%llx] modtime 0x%2[%llx]' />
+</event>
+
+
+<event name="OS::FS::NFSStartWrite">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSStartWrite" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='finfo 0x%0[%llx] len 0x%1[%llx] offset 0x%2[%llx]' />
+</event>
+
+
+<event name="OS::FS::NFSMkdir">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSMkdir" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+	</fields>
+	<k42Format value='dinfo 0x%0[%llx] name %1[%s]' />
+</event>
+
+
+<event name="OS::FS::NFSRmdir">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSRmdir" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+	</fields>
+	<k42Format value='dinfo 0x%0[%llx] %1[%s]' />
+</event>
+
+
+<event name="OS::FS::NFSLink">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSLink" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='newDirInfo 0x%0[%llx] oldFileInfo 0x%1[%llx] newname %2[%s]' />
+</event>
+
+
+<event name="OS::FS::NFSRename">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSRename" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+		<field name="field3" type="string" />
+	</fields>
+	<k42Format value='oldDirIn 0x%0[%llx] oldname %2[%s] newDirIn 0x%1[%llx] newname %3[%s]' />
+</event>
+
+
+<event name="OS::FS::NFSRenameFinalDirMtime">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSRenameFinalDirMtime" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='oldDir 0x%0[%llx] modtime 0x%1[%llx] newDir 0x%2[%llx] modt 0x%3[%llx]' />
+</event>
+
+
+<event name="OS::FS::NFSUnlink">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSUnlink" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='dinfo 0x%0[%llx] finfo 0x%1[%llx] name %2[%s]' />
+</event>
+
+
+<event name="OS::FS::NFSUnlinkFinalDirMtime">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSUnlinkFinalDirMtime" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='dinfo  0x%0[%llx] modtime  0x%1[%llx]' />
+</event>
+
+
+<event name="OS::FS::NFSGetDents">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSGetDents" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='dinfo 0x%0[%llx] cookie 0x%1[%llx]' />
+</event>
+
+
+<event name="OS::FS::NFSRevalidate">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSRevalidate" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='token 0x%0[%llx] forceRev %1[%ld] st_mtime 0x%2[%llx] modt 0x%3[%llx]' />
+</event>
+
+
+<event name="OS::FS::NFSStaleFileDetachment">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSStaleFileDetachment" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='obj 0x%0[%llx] dir obj 0x%1[%llx]' />
+</event>
+
+
+<event name="OS::FS::NFSDirRevalidateMtimeChanged">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NFSDirRevalidateMtimeChanged" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='obj 0x%0[%llx] token 0x%1[%llx] st_mtime 0x%2[%llx] modtime 0x%3[%llx]' />
+</event>
+
+
+<event name="OS::FS::TryDestroyFReeFilesStarted">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="TryDestroyFReeFilesStarted" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='FS instance 0x%0[%llx]' />
+</event>
+
+
+<event name="OS::FS::TryDestroyFReeFilesFinished">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="TryDestroyFReeFilesFinished" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='FS instance 0x%0[%llx] ret %1[%lld]' />
+</event>
+
+
+<event name="OS::FS::DirLinuxFSExtLookupST">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="DirLinuxFSExtLookupST" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+	</fields>
+	<k42Format value='dirref 0x%0[%llx] name %1[%s]' />
+</event>
+
+
+<event name="OS::FS::DirLinuxFSExtLookupFI">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="DirLinuxFSExtLookupFI" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='dirref 0x%0[%llx] nhlockref 0x%1[%llx]' />
+</event>
+
+
+<event name="OS::FS::DirLinuxFSGetStatusStarted">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="DirLinuxFSGetStatusStarted" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+	</fields>
+	<k42Format value='dirref 0x%0[%llx] name %1[%s]' />
+</event>
+
+
+<event name="OS::FS::DirLinuxFSGetStatusFinished">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="DirLinuxFSGetStatusFinished" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+	</fields>
+	<k42Format value='dirref 0x%0[%llx] name %1[%s]' />
+</event>
+
+
+<event name="OS::FS::DirLinuxFSGetStatusFiNf">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="DirLinuxFSGetStatusFiNf" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+		<field name="field4" type="string" />
+	</fields>
+	<k42Format value='dirref 0x%0[%llx] name %4[%s] FAILURE (%1[%lld] %2[%lld] %3[%lld])' />
+</event>
+
+
+<event name="OS::FS::RamfsLookup">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsLookup" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+	</fields>
+	<k42Format value='dirToken 0x%0[%llx] name %1[%s]' />
+</event>
+
+
+<event name="OS::FS::RamfsLookupRet">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsLookupRet" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='dirToken 0x%0[%llx] name %2[%s] entryToken 0x%1[%llx]' />
+</event>
+
+
+<event name="OS::FS::RamfsFChown">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsFChown" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='fileToken 0x%0[%llx] uid %1[%ld] gid %2[%ld]' />
+</event>
+
+
+<event name="OS::FS::RamfsFChmod">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsFChmod" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='fileToken 0x%0[%llx] mode %1[%ld]' />
+</event>
+
+
+<event name="OS::FS::RamfsFTruncate">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsFTruncate" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='fileToken 0x%0[%llx] length %1[%ld]' />
+</event>
+
+
+<event name="OS::FS::RamfsLink">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsLink" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='oldFileInfo 0x%0[%llx] newDirInfo 0x%1[%llx] name %2[%s]' />
+</event>
+
+
+<event name="OS::FS::RamfsUnlink">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsUnlink" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='dirToken 0x%0[%llx] ftoken 0x%1[%llx] name %2[%s]' />
+</event>
+
+
+<event name="OS::FS::RamfsDeleteFile">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsDeleteFile" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='fileToken 0x%0[%llx]' />
+</event>
+
+
+<event name="OS::FS::RamfsRename">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsRename" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="string" />
+		<field name="field4" type="string" />
+	</fields>
+	<k42Format value='oldD 0x%0[%llx] newD 0x%1[%llx] ren 0x%2[%llx] old %3[%s] new %4[%s]' />
+</event>
+
+
+<event name="OS::FS::RamfsMkdir">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsMkdir" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+	</fields>
+	<k42Format value='dirToken 0x%0[%llx] name %1[%s]' />
+</event>
+
+
+<event name="OS::FS::RamfsRmdir">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsRmdir" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+	</fields>
+	<k42Format value='dirToken 0x%0[%llx] name %1[%s]' />
+</event>
+
+
+<event name="OS::FS::RamfsUtime">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsUtime" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='fileToken 0x%0[%llx]' />
+</event>
+
+
+<event name="OS::FS::RamfsGetDents">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsGetDents" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='dirToken 0x%0[%llx] cookie %1[%ld]' />
+</event>
+
+
+<event name="OS::FS::RamfsGetStatus">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsGetStatus" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='token 0x%0[%llx]' />
+</event>
+
+
+<event name="OS::FS::RamfsGetFileTokenOrServerFile">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsGetFileTokenOrServerFile" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='dirToken 0x%0[%llx]' />
+</event>
+
+
+<event name="OS::FS::RamfsCreateFile">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsCreateFile" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='dirToken 0x%0[%llx] name %2[%s] ftoken 0x%1[%llx]' />
+</event>
+
+
+<event name="OS::FS::RamfsStartWrite">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RamfsStartWrite" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='ftoken 0x%0[%llx] offset %1[%ld] len %2[%ld] n %3[%ld]' />
+</event>
+
+
+<event name="OS::FS::LockedContactClients">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="LockedContactClients" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='ref 0x%0[%llx] clientSwitch %1[%ld]' />
+</event>
+
+
+<event name="OS::FS::RegisterCallBackUseType">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="RegisterCallBackUseType" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='ref 0x%0[%llx] fileLength %1[%ld] useType %2[%ld]' />
+</event>
+
+
+<event name="OS::FS::AckUseTypeCallBack">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="AckUseTypeCallBack" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='ref 0x%0[%llx] flength %1[%ld] offset %2[%ld] xhandle 0x%3[%llx]' />
+</event>
+
+
+<event name="OS::FS::GetLengthOffset">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="GetLengthOffset" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='ref 0x%0[%llx] opLen %1[%ld]' />
+</event>
+
+
+<event name="OS::FS::NonSharedToShared">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="NonSharedToShared" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='ref 0x%0[%llx] name %1[%s] req %2[%s]' />
+</event>
+
+
+<event name="OS::FS::SFDestroy">
+	<layerId value="OS" />
+	<classId value="FS" />
+	<specifier value="SFDestroy" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+		<field name="field2" type="string" />
+		<field name="field3" type="string" />
+	</fields>
+	<k42Format value='ref 0x%0[%llx] name %1[%s] fs %2[%s] method %3[%s]' />
+</event>
+
+</PEM_Events>

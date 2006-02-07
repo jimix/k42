@@ -1,0 +1,18 @@
+TraceHeader {
+	version   = 0x10000
+	encoding  = 1 (little endian)
+	headerLen = 0x6
+	flags     = 0x0
+	_alignment = 128k
+	_ticksPerSecond = 100
+	_processor = 0
+	_initTimeStamp = 0x0
+}
+1 Test0 no data words
+2 Test1 first data word 123456789
+3 Test2 first data word 123456789 second data word 2468ace0f
+4 Pack here is data 0xff 0x1 0x3579 0x56655665 0x2468ace0f
+5 String here is data str bubu
+6 StrData here is data 123456789 str1 bubu1 str2 bubu2
+7 List field0 is 0x56655665 and a list of size 8 111222233 2233344444 344555666 4455566667 555666677 6667777788 778888999 8888999999 
+8 ListOfStrings list of size 5 [five little strings to test ]

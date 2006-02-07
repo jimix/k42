@@ -1,0 +1,17 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.13 2002/03/21 12:55:09 mostrows Exp $
+# ############################################################################
+
+PWRPCHDR   = $(ARCHINCS)
+LIBCSRCS  += BLockAsm.S
+LIBKSRCS  += BLockAsm.S
+
+install_includes::
+	$(INSTALL_INC) $(INCDIR)/sync/arch/powerpc/   arch/powerpc/   $(PWRPCHDR)

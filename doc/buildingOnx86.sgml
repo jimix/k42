@@ -1,0 +1,100 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: buildingOnx86.sgml,v 1.9 2003/09/08 14:04:37 mostrows Exp $
+-->
+<!doctype article PUBLIC "-//OASIS//DTD DocBook V3.1//EN">
+<article id="DocBook">
+  <title>Building K42 on x86 Linux Platform</title>
+  <para>
+    This document describes how to build K42 on x86 platforms.
+  </para>
+
+  <section id="buildk42">
+    <title>Building K42 on x86 Platforms</title>
+    <programlisting>
+
+1. Create a "kitchawa" (2131) user and "kitchawan" (7188) group.  The
+   specified user/group id's are what we use; if you can use those it
+   will just be easier.  Perform steps 1-4 as user "kitchawa".
+
+2. Extract the toolchain tar file (toolchain-x86-ppc64.tgz) in
+   /home/kitchawa/tools.  Note: all this can be done on the same machine
+   which exports "/home/kitchawa" via NFS.  Adjust strings in these
+   instructions to compensate.
+
+3. Create directory /home/kitchawa/k42-packages and in this directory
+   untar the *Img.0.tgz files. Create a symlink fullDeb.Img.0 ->
+   partDeb.Img.0.  Remember K42_PACKAGES=/home/kitchawa/k42-packages.
+
+4. In same directory, untar k42linux.tgz.  Remember
+   K42_PKGSRC=/home/kitchawa/k42-packages.
+
+5. Perform a checkout of K42 (kitchsrc module) from CVS.  This should be
+   done by another user, a member of group kitchawan in their own
+   directory.
+
+6. In MakePaths.proto modeify the following environment variables:
+   K42_PACKAGES
+   K42_PKGROOT
+   LINUXSRCROOT
+   K42_KFS_PKGDISK (only if using KFS)
+   K42_CONFIG
+
+7. modify tools/misc/ksitevalues.sh as appropriate
+   if the machine you will run thinwire on does not export localhost, you
+   should set K42_NFS_ROOT=.../install/powerpc/${OPTIMIZATION}/kitchroot
+
+8. In 5, you will have checked out a file called MakePaths.proto.  Copy
+   this to Make.paths.  Make.paths contains the various customizations
+   required for your build environment.  Note the variables I've defined in
+   the previous steps; ensure that Make.paths sets those variables to the
+   values I've specified.  Also, comment out the setting of the variable
+   "SPEC_PKG".
+
+9. Make sure the first make in your path is gmake 3.79.x
+
+10 Make sure gcc version 3.2 is in your path.  Also if it is not called
+   gcc-3.2 modify HOST_CC and HOST_CXX to the correct names.
+
+11 Now attempt to build.
+
+12 Start the build process by typing "make full_snapshot".  Ensure that
+   /home/kitchawa/tools/bin is in your path (which is where
+   powerpc64-linux-gcc can be found).
+
+   Typical problems at this point are going to be incorrect directory
+   settings within our build infrastructure and permission problems.
+   I have little doubt that the build will fail at first, but after a
+   few e-mail iterations it should go.
+
+
+    </programlisting>
+  </section>
+
+  <section id="buildtool">
+    <title>Building The Toolchain</title>
+    <programlisting>
+
+1. Look at http://www.linuxppc64.org/toolchain.shtml to find the
+   correct binutils, gcc, glibc and linux kernel sources.
+
+2. Once the source trees above have been untarred, apply the binutils
+   patch included in the K42 source tree (kitchsrc/tools/binutils.patch).
+   This patch tells the linker to segment-align the data-segment of
+   shared libraries and applications, which is a K42 requirement.  (Once
+   Linux supports shared segments on PPC64, K42 will adapt to the same
+   scheme and this patch will not be necessary, though this will require
+   significant modifications to the Linux kernel and the dynamic linker.
+
+3. Follow the build instructions at http://www.linuxppc64.org/toolchain.shtml
+      
+    </programlisting>
+  </section>
+
+</article>

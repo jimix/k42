@@ -1,0 +1,50 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: servers.sgml,v 1.2 2004/10/13 22:11:48 apw Exp $
+-->
+<!doctype book PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!entity topsrc "../..">
+<!entity % servers.ent SYSTEM "servers.ent">
+%servers.ent;
+]>
+<!-- $Id: servers.sgml,v 1.2 2004/10/13 22:11:48 apw Exp $ -->
+<book id="K42">
+
+  <chapter id="serversOver">
+    &serversOver;
+    <section>
+      &kfsOver
+    </section>
+    <section>
+      &nfsOver
+    </section>
+    <section>
+      &ptyOver
+    </section>
+  </chapter>
+
+  <chapter id="serversPrgG">
+    &serversPrgG;
+    <section>
+      &kfsPrgG
+    </section>
+    <section>
+      &nfsPrgG
+    </section>
+    <section>
+      &ptyPrgG
+    </section>
+  </chapter>
+</book>
+
+<!--
+Local Variables:
+mode: sgml
+End:
+-->

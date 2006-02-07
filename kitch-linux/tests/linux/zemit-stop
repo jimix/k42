@@ -1,0 +1,21 @@
+#!/bin/sh
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2002.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+# ############################################################################
+#
+# Example: zemit-start; /bin/ls; zemit-stop
+#
+# This script uses a K42 /ksys synthetic filesystem command to cause a
+# magic string to be emitted on the console.  When run on hardware,
+# there is no effect.  When run on Mambo, a trigger will fire when the
+# string is seen, which will result in the memory access emitter being
+# turned off and the ztrace consumer to be stopped.  See zemit-start for
+# how to turn on the emitter.
+
+echo "zp" > /ksys/console

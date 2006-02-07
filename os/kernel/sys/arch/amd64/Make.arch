@@ -1,0 +1,55 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2001.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.7 2003/08/20 21:17:16 timvail Exp $
+# ############################################################################
+
+# VVV
+
+
+AMDHDR = $(ARCHINCS)
+
+install_includes::
+	$(INSTALL_INC) $(INCDIR)/sys/arch/amd64/   arch/amd64/   $(AMDHDR)
+
+ifdef IN_OBJ_DIR
+
+GENHDRS += asmConstants.H
+
+clean ::
+	-$(RM) genConstants.o genConstants.d asmConstants.H
+
+-include genConstants.d
+
+install_genhdrs:: asmConstants.H
+	$(INSTALL_INC) $(MKKITCHTOP)/include/sys/arch/amd64/ ./ $<
+
+ifdef K42TOOLS
+EXT=$(EXTRACTPROG)
+else
+EXT=$(MKTOOLBIN)/stubgen/$(EXTRACTPROG
+endif
+
+SYMDEFS=$(AWK) -f $(SRC_DIR_PATH)/arch/amd64/symdefs.awk
+
+asmConstants.H: genConstants.o
+	$(EXT) type $< | $(SED) -e 's/__TYPE[_]*//' -e 's/\([^.]*\)\.[0-9]*/\1/' | $(AWK) '{print "#define " $$1 "\t" $$2 ""}'> $@
+
+genConstants.o: genConstants.C
+	$(TARGET_CXX) -c -g $(TARGET_CFLAGS) $(CPPFLAGS) -Wno-unused $<
+
+symdefs.S: symdefs.raw
+	$(SYMDEFS) < $< > $@
+
+symdefsKern.S: symdefsKern.raw
+	$(SYMDEFS) < $< > $@
+
+clean::
+	-$(RM) symdefs.S symdefsKern.S
+
+endif # ifdef IN_OBJ_DIR

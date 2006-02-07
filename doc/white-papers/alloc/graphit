@@ -1,0 +1,303 @@
+#!/bin/sh	-- perl
+eval 'exec perl -S $0 ${1+"$@"}'
+    if 0;
+#!/usr/agora/bin/perl5
+
+require "getopts.pl";
+
+
+$USAGE="graphit [-r] [-n] [-a] [-t] [-u] [-d] [-h height] [-w width] [-p proc]
+-r output data with ranges data
+-a output data as averages only
+-t output totals only
+-n normalize results with uni-processor results
+-u unormalized results
+-h height
+-w width
+-d just print data
+-p max processors to plot";
+
+
+$line=0;
+$count=0;
+@titles=();
+@values=();
+@mins=();
+@maxs=();
+@avgs=();
+#%stats={};
+
+@linetype=("solid", "dotted", "dashed", "longdash", "dotdash", "dotdotdash", "dotdotdashdash", "solid");
+$curvetype='average';
+$legend=1;
+$ytitle="y axis title";
+$xtitle="processors";
+$caption="A caption";
+$linetype="solid";
+@marktype=( "circle", "box", "diamond", "triangle", "x", "cross", "ellipse", 
+	    "circle fill 1", "box fill 1", "diamond fill 1", "triangle fill 1", "x fill 1", "cross fill 1", "ellipse fill 1", 
+	    "xbar fill 1", "ybar fill 1" );
+@colour=( "0 0 0", "1 0 0", "0 1 0", "0 0 1", "1 1 0", "1 0 1", "0 1 1", "0.5 0.5 0.5" );
+
+
+$marktype="circle";
+$yaxistype="linear";
+$yaxismin=0;
+# $height=9.5;
+# $width=6.0;
+# $height=2.6;
+# $width=3.5;
+$height=4.0;
+$width=4.0;
+$xtranslate=0.0;
+$ytranslate=0.0;
+$maxproc=1024;
+$justdata=0;
+
+&Getopts('h:w:p:c:Utraungtd');
+
+($opt_r) && ($curvetype='range');
+($opt_a) && ($curvetype='average');
+($opt_t) && ($curvetype='total');
+($opt_n) && ($normalize=1);
+($opt_u) && ($normalize=0);
+($opt_g) && ($outputtype="graph");
+#($opt_t) && ($outputtype="table");
+($opt_d) && ($justdata=1);
+($opt_p) && ($maxproc=$opt_p);
+($opt_h) && ($height=$opt_h);
+($opt_w) && ($width=$opt_w);
+($opt_c) && ($caption=$opt_c);
+($opt_U) && (print STDERR "$USAGE\n",exit);
+
+($maxproc =~ "[Aa][lL][lL]") && ($maxproc=1024);
+#print "curvetype=$curvetype normalize=$normalize\n";
+
+
+sub recordvalues {
+  local(@values) = @_;
+  local($i) = (0);
+#  ( scalar(@values) == scalar(@titles) ) || die "Expecting values for all tests\n";
+  foreach (@values) {
+     if ($_) {
+       if (! $mins[$i] ) { 
+	 $mins[$i]=$_; $maxs[$i]=$_; $avgs[$i]=$_;
+       } else {
+	 ($_ < $mins[$i]) && ($mins[$i]=$_);
+	 ($_ > $maxs[$i]) && ($maxs[$i]=$_);
+	 $avgs[$i]+=$_;
+       }
+     }
+     $i++;
+   }
+}
+ 
+
+sub recordstats {
+  local($processors) = @_;
+  local($i)=0;
+  ($processors == 0) && return;
+  foreach (@titles) {
+    if ($mins[$i]) {
+      if ( $curvetype =~ /average/ || $curvetype =~ /range/ ) {
+	$avgs[$i]/=$processors;
+      }
+      if ($normalize) {
+	$avgs[$i]/=$base[$i];
+	$mins[$i]/=$base[$i];
+	$maxs[$i]/=$base[$i];
+      }
+      if ( $stats{$_} ) {
+	  $stats{$_}="$stats{$_},$processors $avgs[$i] $mins[$i] $maxs[$i]" if ($curvetype =~ /range/);
+	  $stats{$_}="$stats{$_},$processors $avgs[$i]" if ($curvetype =~ /average/ || $curvetype =~ /total/);
+      } else {
+	  $stats{$_}="$processors $avgs[$i] $mins[$i] $maxs[$i]" if ($curvetype =~ /range/);
+	  $stats{$_}="$processors $avgs[$i]" if ($curvetype =~ /average/ || $curvetype =~ /total/);
+      }
+      $mins[$i]=0; $maxs[$i]=0; $avgs[$i]=0;
+    }
+    $i++;
+  }
+}
+
+
+sub printstats {
+  local($i)=0;
+  foreach (@titles) {
+    print "$_ $stats{$_}\n";
+  }
+}
+
+sub justdata
+{
+  local($curve)=0;
+  local(@points,$point);
+  
+  
+  foreach (@titles) {
+    @points=split(/,/,$stats{$_});
+    foreach $point (@points) {
+      print "      $point\n";
+    }
+  }
+}
+
+sub linegraphstats
+{
+  local($curve)=0;
+  local(@points,$point);
+  print "newgraph x_translate $xtranslate y_translate $ytranslate\n";
+  
+  if ($legend) {
+    print "legend on bottom\n";
+  } 
+  else {
+    print "legend off\n";
+  }
+  
+  foreach (@titles) {
+#    print "newcurve\n      label : $_\n";
+#    print "newcurve\n    marktype $marktype[$curve]\n    linetype $linetype[$curve]\n color $colour[$curve]\n    label : $_\n";
+    print "newcurve\n    marktype $marktype[$curve]\n    linetype $linetype[$curve]\n    label : $_\n";
+#    print "newcurve\n    marktype text : $curve\n    linetype $linetype[$curve]\n    label : $_\n";
+    print "    pts\n" if ($curvetype =~ /average/ || $curvetype =~ /total/);
+    print "    y_epts\n"  if ($curvetype =~ /range/);
+    $curve++;
+    @points=split(/,/,$stats{$_});
+    foreach $point (@points) {
+      print "      $point\n";
+    }
+  }
+  
+ # if (!$caption) {
+ #   $caption="$kernel: $testname";
+ #   $caption="$caption: $field values for each worker" if ($statistic =~ /raw/);
+ #   $caption="$caption: Total $field values for all workers" if ($statistic =~ /total/);
+ #   $caption="$caption: $field per $perwhat" if ($statistic =~ /per/);
+ #   $caption="$caption: One Worker per Processor results reported as $field averaged over all Workers" 
+ #     if ($statistic =~ /average/);   
+ # }
+    print "xaxis size $width label : $xtitle\nyaxis size $height $yaxistype min $yaxismin  label : $ytitle\ntitle : $caption\n"
+#    print "\nxaxis size $width\nyaxis size $height $yaxistype min $yaxismin\ntitle : $ytitle\n"
+}
+
+
+
+#sub printtable
+#{
+#    local($curve)=0;
+#    local(@points,$point);
+
+#     ($columnspec="||c|c",$heading="$xtitle & $ytitle")  if ($statistic =~ /raw/ || $statistic=~ /total/ || $statistic=~ /per/);
+#     ($columnspec="||c|c|c|c",$heading="$xtitle & \\multicolumn{3}{c|}{$ytitle}") if ($statistic =~ /average/);
+
+# 	else
+# 	{
+# 	    ($columnspec="$columnspec|c",$heading="$heading & $ytitle")  if ($statistic =~ /raw/ || $statistic =~ /total/ || $statistic =~ /per/);
+# 	    if ($statistic =~ /average/)
+# 	    {
+# 		$columnspec="$columnspec|c|c|c";
+# 		$heading="$heading & \\multicolumn{3}";
+# 		if ($fieldcount == $totalfields) 
+# 		{
+# 		    $heading="$heading\{c\|\|\}{$ytitle}";
+# 		}
+# 		else
+# 		{
+# 		    $heading="$heading\{c\|\}{$ytitle}";
+# 		}
+# 	    }
+# 	}
+# 	if ($fieldcount==$totalfields)
+# 	{
+# 	    print "\\begin{tabular}{$columnspec||}\\hline\\hline\n";
+# 	    if ($statistic =~ /average/)
+# 	    {
+# 		$i=3*$totalfields+1;
+# 		print "$heading \\\\ \\cline{2-$i}\n";
+# 		$i = 0;
+# 		while ( $i < $totalfields )
+# 		{
+# 		    print "& avg & min & max";
+# 		    $i++;
+# 		}
+# 		print "\\\\ \\hline\\hline\n";
+# 	    } else 
+# 	    {
+# 		print "$heading \\\\ \\hline\\hline\n";
+# 	    }
+# 	}
+#     }
+
+#     for $key (sort keys %stats)
+#     {
+# 	if ($fieldcount==1)
+# 	{
+# 	    $output{$key}="$key & $stats{$key}" if ($statistic =~ /raw/ || $statistic =~ /total/);
+# 	    $output{$key}=sprintf("%d & %.2f",$key,$stats{$key}) if ($statistic =~ /per/ );
+# 	    ((@astats)=split(/\s/,$stats{$key}), $output{$key}=sprintf "%d & %.2f & %.2f & %.2f",$key,$astats[0],$astats[1],$astats[2])
+# 		if ($statistic =~ /average/);
+# 	}
+# 	else 
+# 	{
+# 	    $output{$key}="$output{$key} & $stats{$key}" if ($statistic =~ /raw/ || $statistic =~ /total/);
+# 	    $output{$key}=sprintf("%s & %.2f",$output{$key},$stats{$key}) if ($statistic =~ /per/ );
+# 	    ((@astats)=split(/\s/,$stats{$key}), $i=sprintf(" & %.2f & %.2f & %.2f",$astats[0],$astats[1],$astats[2]), $output{$key}="$output{$key}$i")
+# 		if ($statistic =~ /average/);
+# 	}
+#     }
+
+#     if ($fieldcount==$totalfields)
+#     {
+# 	for $key (sort keys %stats)
+# 	{
+# 	    print "$output{$key} \\\\ \\hline\n";
+# 	}
+#     }
+
+#     if ($line == $total && $fieldcount == $totalfields)
+#     {
+# 	if (!$caption) 
+# 	{
+# 	    $caption="$kernel: $testname";
+# 	    $caption="$caption: values for each worker" if ($statistic =~ /raw/);
+# 	    $caption="$caption: totals" if ($statistic =~ /total/);
+# 	    $caption="$caption: per $perwhat" if ($statistic =~ /per/);
+# 	    $caption="$caption: One Worker per Processor results reported as average over all Workers" 
+# 		if ($statistic =~ /average/);
+
+# 	}
+# 	print "\\hline\n%\\caption{$caption}\n\\end{tabular}\n";
+#     }
+# }
+
+while (<STDIN>)
+{
+  /^\s*$/ && next;
+  chop;
+  @titles=split(/,/); $line++; last;
+}
+
+while (<STDIN>)
+{
+  /^,*$/  && ($count <= $maxproc) && do 
+    { if ( $normalize && $count == 1 ) { @base=@values }
+      &recordstats($count);  $count=0; next; };
+
+  chop;
+
+  @values=split(/,/); $count++;  
+  ($count <= $maxproc) && (&recordvalues(@values));
+
+  $line++;
+}
+
+($count <= $maxproc) && (&recordstats($count));
+
+#&printstats();
+if( $justdata ) {
+    &justdata();
+} else {
+    &linegraphstats();
+}
+

@@ -1,0 +1,138 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.configure,v 1.8 2004/02/27 17:14:37 mostrows Exp $
+# ############################################################################
+
+ifneq ($(filter-out noDeb fullDeb partDeb, $(OBJDIR_OPT_TYPES)),)
+INSTALL=@$(ECHO) '***Opt level "$(OBJDIR_OPT_TYPES)" is invalid***' && /bin/false
+endif
+
+
+# contains all the logic used for configuration
+# input KCALLER parameter is "tool" or "kitch"
+
+# Default list of object directories
+# for each of OBJDIR_ARCH_TYPES (powerpc, mips64, amd64, generic64)
+# and (OBJDIR_OPT_TYPES = noDeb fullDeb partDeb), define an OBJDIR_ROOT
+# so OBJDIR_ROOT is powerpc/noDeb and mips64/fullDeb and ...
+OBJDIR_ROOT := $(foreach arch, $(OBJDIR_ARCH_TYPES), $(addprefix $(arch)/, $(OBJDIR_OPT_TYPES)))
+
+ifdef HAVE_OBJINFO
+
+.PHONY: subdirs_configure
+.PHONY: configure_sesame test_configure
+
+OBJDIRS     := $(foreach strv, $(OBJDIR_ROOT), $(addprefix $(MKANCHOR)/, $(strip $(subst $(MKSRCTOP),$(strv),$(_CWD)))))
+
+#weird hack to handle top directory
+ifndef TOP_DIR_HACK
+.SUFFIXES:
+.DEFAULT:
+	@for i in $(OBJDIRS); do 					\
+	         $(ECHO) "Makerules.kitch: cd to $$i, to make $@" && \
+		 cd $$i &&  $(MAKE) $@; \
+	done
+
+endif #!TOP_DIR_HACK
+
+#dummy configure rules if configured
+test_configure:
+
+configure_sesame::
+	@-$(RM) -f Make.config
+	$(MAKE) _configure
+
+else # HAVE_OBJINFO
+
+test_configure:
+	@$(ECHO) "attempt to do something in unconfigured directory"
+	@$(EXIT) 8
+
+# get absolute path name for this source directory
+_CWD := $(strip $(shell $(PWD)))
+
+#a test that figures out if specified top directory exists
+ifeq "$(MKSRCTOP)" "$(_CWD)"
+error:
+	@$(ECHO) "Error: directory $(MKSRCTOP) doesn't exist";
+	@$(EXIT) 1
+endif
+
+#a test that figures out if we are actually in a sub-directory of specified
+#top directory
+ifeq "$(findstring $(MKSRCTOP),$(_CWD))" ""
+error:
+	@$(ECHO) "Error: $(_CWD) not subdirectory of" $(MKSRCTOP)
+	@$(EXIT) 2
+endif
+
+ifdef CURR_DIR
+THIS_DIR     := $(MKANCHOR)/$(strip $(subst $(MKSRCTOP),$(CURR_DIR),$(_CWD)))
+CURR_DIR_STRIP :=  $(patsubst %/,%,$(CURR_DIR))
+OPTIMIZATION := $(notdir $(CURR_DIR_STRIP))
+T_TARGET     := $(dir $(CURR_DIR_STRIP))
+R_TARGET     := $(patsubst %/,%,$(T_TARGET))
+
+
+$(THIS_DIR):
+	$(INSTALL) -d $@
+
+create_obj_directory:: $(THIS_DIR)
+	@$(ECHO) "SRC_DIR_PATH=$(_CWD)" > $(THIS_DIR)/Makefile
+	@$(ECHO) "OPTIMIZATION=$(OPTIMIZATION)" >> $(THIS_DIR)/Makefile
+	@$(ECHO) "TARGET_MACHINE=$(R_TARGET)" >> $(THIS_DIR)/Makefile
+	@$(ECHO) "K42_PKGDIR=$(K42_PKGDIR_$(R_TARGET))" >> $(THIS_DIR)/Makefile
+	@$(ECHO) "export MKANCHOR:=$(MKANCHOR)"	>>  $(THIS_DIR)/Makefile
+	@$(ECHO) "export MKKITCHTOP:=$(MKKITCHTOP)">>  $(THIS_DIR)/Makefile
+	@$(ECHO) "export MKSRCTOP:=$(MKSRCTOP)">>  $(THIS_DIR)/Makefile
+	@$(ECHO) ".PHONY: $(MKANCHOR)/install/lib/Makefile.$(KCALLER)" >> \
+		$(THIS_DIR)/Makefile
+	@$(ECHO) "include $(MKANCHOR)/install/lib/Makefile.$(KCALLER)" >> \
+		$(THIS_DIR)/Makefile
+
+	@$(ECHO) '#Generated File - Do Not Modify' >  $(THIS_DIR)/Make.config
+	@$(ECHO) "HAVE_OBJINFO=1" 			>> $(THIS_DIR)/Make.config
+	@$(ECHO) "_CWD=$(_CWD)" 			>> $(THIS_DIR)/Make.config
+	@$(ECHO) "_THIS_DIR2=$(THIS_DIR) $(_CWD2)"		>> $(THIS_DIR)/Make.config
+	@$(ECHO) "export MKANCHOR:=$(MKANCHOR)"	>>  $(THIS_DIR)/Make.config
+	@$(ECHO) "export MKKITCHTOP:=$(MKKITCHTOP)">>  $(THIS_DIR)/Make.config
+	@$(ECHO) "export MKSRCTOP:=$(MKSRCTOP)">> $(THIS_DIR)/Make.config
+else
+
+create_obj_directory::
+	@$(ECHO) "attempt to create directory with no specified directory"
+	@$(EXIT) 2
+endif # CURR_DIR
+
+OBJDIRS      := $(foreach strv, $(OBJDIR_ROOT), $(addprefix $(MKANCHOR)/, $(strip $(subst $(MKSRCTOP),$(strv),$(_CWD)))))
+_configure configure_sesame::
+	@for i in $(OBJDIR_ROOT); do 					\
+	    $(MAKE) create_obj_directory CURR_DIR=$$i;			\
+	done
+	@$(ECHO) '#Generated File - Do Not Modify'          > Make.config
+	@$(ECHO) "HAVE_OBJINFO=1" 				>> Make.config
+	@$(ECHO) "_CWD=$(_CWD)" 				>> Make.config
+	@$(ECHO) "export MKANCHOR:=$(MKANCHOR)"		>> Make.config
+	@$(ECHO) "export MKKITCHTOP:=$(MKKITCHTOP)"	>> Make.config
+	@$(ECHO) "export MKSRCTOP:=$(MKSRCTOP)"	>> Make.config
+
+endif # HAVE_OBJINFO
+
+configure_sesame:: subdirs_configure
+ifdef SUBDIRS
+SUBDIRS_SRC_CONF  = $(SUBDIRS_SRC)
+SUBDIRS_SRC_CONF += $(SUBDIRS)
+SUBDIRS_CONFIGURE = $(SUBDIRS_SRC_CONF:%=%_configure)
+.PHONY: $(SUBDIRS_CONFIGURE)
+$(SUBDIRS_CONFIGURE) :
+	cd $(@:%_configure=%)/ && $(MAKE) configure_sesame _CWD=$(_CWD)/$(@:%_configure=%)
+subdirs_configure: $(SUBDIRS_CONFIGURE)
+else #SUBDIRS
+subdirs_configure:
+endif #SUBDIRS

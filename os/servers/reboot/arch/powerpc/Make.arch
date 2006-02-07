@@ -1,0 +1,56 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.4 2004/01/29 14:15:15 jimix Exp $
+# ############################################################################
+
+ifdef IN_OBJ_DIR
+#############################################################################
+#  rules to be made in object directory
+#############################################################################
+
+BOBJS	=   asm_util.o main.o misc.o printf.o
+
+
+LDFLAGS = -e__start  -static
+
+
+# removed "-O" from XLCFLAGS
+
+main.o : main.c ../../../../kernel/bilge/arch/powerpc/BootInfo.H
+
+reboot : $(BOBJS)
+	$(TARGET_CC) -Wl,-r -o reboot.o $(BOBJS) -nostdlib -lgcc
+	$(TARGET_LD) $(LDFLAGS) -Ttext 0x10000 -o reboot reboot.o
+
+servers.list : reboot
+	$(RM) $@
+	echo $(shell pwd)/$< > $@
+
+clean ::
+	$(RM) reboot $(BOBJS) core
+
+
+%.o:%.S
+	$(TARGET_CC) -c  $(TARGET32_CFLAGS) $(ASONLY_FLAGS) -Wa,-mppc64 $< -o $@
+
+%.o:%.c
+	$(TARGET_CC) -c  $(TARGET32_CFLAGS) $< -o $@
+
+
+CPPFLAGS = -Upowerpc -D__GNU_AS__ -DTARGET_MACHINE="powerpc" \
+	-I$(MKKITCHTOP)/include -DGCC3
+
+TARGET32_CFLAGS = $(CPPFLAGS) -msoft-float -mminimal-toc \
+	-Wa,-strip-local-absolute -Wa,-mppc64
+
+
+#############################################################################
+#  end of object directory rules
+#############################################################################
+endif

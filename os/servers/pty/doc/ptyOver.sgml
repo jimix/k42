@@ -1,0 +1,19 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: ptyOver.sgml,v 1.1 2001/09/23 18:24:11 bob Exp $
+-->
+<title>pty overview goes here</title>
+<para>pty overview text goes here</para>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./pty.sgml" "chapter" "title")
+End:
+-->

@@ -1,0 +1,309 @@
+#!/usr/bin/perl
+#############################################################################
+# K42: (C) Copyright IBM Corp. 2004.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: kvictim.pl,v 1.4 2005/02/10 18:22:32 mostrows Exp $
+# ############################################################################
+
+use POSIX;
+
+sub usage(){
+print << "USAGE_EOF"
+Usage:
+
+  kvictim name field1 field2 ....
+  kvictim field=X field1 field2 field3 ....
+  kvictim all victim_name
+
+Invocation:
+  kvictim name field1 field2 ....
+
+Returns:
+
+  name	value1	value2 ....
+
+"name" is the name of a victim (e.g. 'k0') "field*" are names of
+fields in the tables defined below.  Thus this invocation returns a
+string with the name of the victim and the values for all specified
+fields.
+
+Invocation:
+
+  kvictim field=X field1 field2 field3 ....
+
+Returns:
+  nameA	value1	value2	value3 ....	
+  nameB	value1	value2	value3 ....	
+  nameC	value1	value2	value3 ....	
+
+Returns a list of all victims for which the value of "field" is "X",
+along with the values of all subsequently specified fields.
+
+The definitions of fields and values are all contained within the
+kvictim script.
+
+The value for any field that is not defined for a particular victim is "#".
+
+Invocation:
+  kvictim all name
+
+Returns:
+  field1 value1
+  field2 value2
+  field3 value3
+  ...
+
+Returns a list of all fields and values for a specified name.
+
+
+Read the 'victims.conf' configuration file for more details.
+
+USAGE_EOF
+}
+
+#
+# Each victim can have any arbitrary (field,value) pair, as necessary
+# to support the tools and environment for that victim machine.  Here
+# are some of the fields used by the ktwd/thinwire/hwconsole tools.
+# Where indicated, some fields are used only by site-specific tools,
+# and may not be applicable for other victims/sites
+#
+
+# A victim may specify an "inherit" field, which identifies a parent
+# set of field values that are searched if the field being sought does
+# not exist in the victims set of field values.
+#
+# Multiple inherit field values are seperated by commas.
+#
+#
+# For an inheritance tree such as this:
+#
+# (A has:  inherit => 'B,C'
+#
+#             A
+#            / \
+#           B   C
+#          / \ / \
+#          D E F G
+#
+# The search order is: A B C D E F G
+# Once a field value is found, any subsequent definitions are ignored
+#
+
+# Any key (victim name) that begins with "_" is not considered a valid
+# victim, but rather as a set of fields and values that can be
+# inherited as a group by a victim.
+
+
+
+# This inheritance mechanism allows one to define a set of common
+# values (perhaps site-specific values or machine-type specific
+# values) that can be easily associated with victims.
+
+
+# victims.conf in the lib directory (../../lib, ../lib) relative to kvictim is
+# the default config file
+my @sysconfs;
+
+my $do_debug = 0;
+sub debug($) {
+  my $x = shift;
+  if ($do_debug == 0) { return; }
+  print "# $x";
+}
+
+
+my $exec = $0;
+my $basepath = $exec;
+$basepath =~s/^(.*)kvictim/$1..\/lib\//;
+my $sysconf = $basepath . "victims.conf";
+
+if(! -r $sysconf) {
+  $basepath = $exec;
+  $basepath =~s/^(.*)kvictim/$1..\/..\/lib\//;
+  $sysconf = $basepath . "victims.conf";
+}
+
+my @homeconfs = ( "$ENV{HOME}/.victims.conf",
+		  "/home/" . getpwuid(getuid) . "/.victims.conf" );
+
+my $homeconf;
+while($#homeconfs >= 0) {
+  $homeconf = shift @homeconfs;
+  last if(-r $homeconf );
+  undef $homeconf;
+}
+
+my @conf;
+
+if(defined $homeconf){
+  debug "Add file $homeconf\n";
+  unshift @conf, $homeconf;
+}
+debug "Add file $sysconf\n";
+unshift @conf, $sysconf;
+
+$victims->{kvictim}->{confpath} = $basepath;
+
+my %files;
+my $num_read = 0;
+while($#conf!=-1){
+  $conf = shift @conf;
+
+  next if(!-r "$conf");
+
+  next if($files{$conf}==1);
+
+  $files{$conf} = 1;
+
+  my $lineno = 0;
+  open DATA, "<$conf";
+  while(<DATA>){
+    ++$lineno;
+    my $line = $_;
+    next if(/^#/);
+
+    next if(/^\s*$/);
+    my @words = split;
+    chomp @words;
+    if($words[0] eq "include"){
+      $file = $words[1];
+      if (-r $file) {
+	debug "Add include file $file\n";
+	unshift @conf, $file;
+      } elsif (-r "$basepath/$file") {
+	debug "Add include file $basepath/$file\n";
+	unshift @conf, "$basepath/$file";
+      }
+      next;
+    }
+      if(!/^\s*([\S^\.]+)\.([\S^=]+)\s*=\s*(\S.*)\s*$/){
+	die "Malformed line: $conf:$lineno\n";
+      }
+    $victims->{$1}->{$2} = $3;
+  }
+  close DATA;
+  ++$num_read;
+}
+
+if($num_read == 0){
+  die "Can't read any configuration file!!!\n";
+}
+
+
+#
+# Return a flat hash of all values for a given victim name
+#
+sub flatten($){
+  my $start = shift;
+  #
+  # Print out  field, value pairs,  for each field defined
+  # for the specified victim.
+  #
+  my @next;
+  push @next, $start;
+
+  my $vals;
+  do {
+    $start = shift @next;
+    foreach my $field (keys %{$victims->{$start}}) {
+      if($field eq "inherit"){
+	# Remember inheritance keys to look up later
+	push @next, split(/,/, $victims->{$start}->{$field});
+      } else {
+	if(!defined $vals->{$field}){
+	  $vals->{$field} = $victims->{$start}->{$field};
+	}
+      }
+    }
+  } until($#next == -1);
+
+  return $vals;
+}
+
+
+sub lookup($$$){
+  my $start = shift;
+  my $input = shift;
+  my $output = shift;
+  push @{$output}, $start;
+  my $vals = flatten($start);
+  my $i = 0;
+  while($i <= $#{$input}){
+    my $key = $start;
+    my $arg = $input->[$i++];
+    my $answer;
+    if(!defined $vals->{$arg}){
+      $answer = '#';
+    } else {
+      $answer = $vals->{$arg};
+    }
+    push @{$output}, $answer;
+  }
+}
+
+
+if($ARGV[0] eq "--usage" ||
+   $ARGV[0] eq "--help"){
+  usage();
+  exit 0;
+}
+if($#ARGV==-1) {
+  print STDERR "No victim specified to look up\n";
+  exit -1;
+}
+
+my $start = shift @ARGV; 
+
+
+if($start eq 'all') {
+  #
+  # Print out  field, value pairs,  for each field defined
+  # for the specified victim.
+  #
+  $start = shift @ARGV;
+
+  if(!defined $victims->{$start}){
+    print STDERR "Victim '$start' is not defined\n";
+    exit 2;
+  }
+
+  my $vals = flatten($start);
+  foreach my $field (sort (keys %{$vals})){
+    print "$field $vals->{$field}\n";
+  }
+  exit 0;
+}
+
+
+if($start=~/([A-Za-z0-9_]*)=([A-Za-z0-9_]*)/){
+  my $field=$1;
+  my $val=$2;
+  foreach my $vic (sort (keys %{$victims})){
+    my @input = @ARGV;
+    push @input, $field;
+    next if(substr($vic,0,1) eq "_");
+    my @output;
+    lookup($vic, \@input, \@output);
+    if($output[$#output] eq $val) {
+      pop @output;
+      print join("\t", @output) . "\n";
+    }
+  }
+  exit 0;
+}
+my @output;
+
+if(!defined $victims->{$start}){
+  print STDERR "Victim '$start' is not defined\n";
+  exit 1;
+}
+
+
+lookup($start, \@ARGV, \@output);
+print join("\t", @output) . "\n";

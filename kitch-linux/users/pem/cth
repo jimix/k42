@@ -1,0 +1,168 @@
+#! /usr/bin/env bash
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# ****************************************************************************/
+#/****************************************************************************
+# * Module Description: System initialization script
+# * **************************************************************************/
+
+#
+# Gather PEM traces for cth
+#
+# CONSTRAINTS:
+#   If statusFile does not exist, start from the beginning.
+#
+# @author Peter F. Sweeney
+# @date   1/3/2005
+
+command=./pemRunCth.sh
+#inputFile=small4
+inputFile=verysmall
+
+sampleRate="-sampleRate 5000000"
+
+# files
+   statusFile="/home/pem/.cth"
+     modeFile="/home/pem/.cth.mode"
+extensionFile="/home/pem/.cth.extension"
+
+# set up environment
+/kbin/sysinit
+
+if [[ ! -a $statusFile ]]; then 
+    echo "CPO: start call /kbin/sysinit"
+    echo 0 > $statusFile
+    echo "0|X 1" > /ksys/console
+fi
+
+cd /apps/rf-cth/run
+     MODE=`cat $modeFile`
+   STATUS=`cat $statusFile`
+EXTENSION=`cat $extensionFile`
+
+echo "Gathering CPO/PEM cth traces MODE $MODE STATUS $STATUS extension $EXTENSION"
+
+if [[ $STATUS == 0 ]]; then 
+    echo "CPO: 0 $command -pmu -lp000 $sampleRate $MODE -f $inputFile.$EXTENSION"
+    echo 1 > $statusFile
+    ./prepare-$inputFile
+    $command -pmu -lp000 $sampleRate $MODE -f $inputFile.$EXTENSION
+#    echo 1001 > $statusFile
+#    $command -pmu -lp000 $sampleRate $MODE -traceMask 0x110000 -f $inputFile.$EXTENSION.appMarksOnly
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+if [[ $STATUS == 1 ]]; then 
+    echo "CPO: 1 $command -pmu -lp100 $sampleRate $MODE -f $inputFile.$EXTENSION"
+    echo 2 > $statusFile
+    ./prepare-$inputFile
+    $command -pmu -lp100 $sampleRate $MODE -f $inputFile.$EXTENSION
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+if [[ $STATUS == 2 ]]; then 
+    echo "CPO: 2 $command -pmu -lp010 $sampleRate $MODE -f $inputFile.$EXTENSION"
+    echo 3 > $statusFile
+    ./prepare-$inputFile
+    $command -pmu -lp010 $sampleRate $MODE -f $inputFile.$EXTENSION
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+if [[ $STATUS == 3 ]]; then 
+    echo "CPO: 3 $command -pmu -lp001 $sampleRate $MODE -f $inputFile.$EXTENSION"
+    echo 4 > $statusFile
+    ./prepare-$inputFile
+    $command -pmu -lp001 $sampleRate $MODE -f $inputFile.$EXTENSION
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+if [[ $STATUS == 4 ]]; then 
+    echo "CPO: 4 $command -pmu -lp110 $sampleRate $MODE -f $inputFile.$EXTENSION"
+    echo 5 > $statusFile
+    ./prepare-$inputFile
+    $command -pmu -lp110 $sampleRate $MODE -f $inputFile.$EXTENSION
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+if [[ $STATUS == 5 ]]; then 
+    echo "CPO: 5 $command -pmu -lp101 $sampleRate $MODE -f $inputFile.$EXTENSION"
+    echo 6 > $statusFile
+    ./prepare-$inputFile
+    $command -pmu -lp101 $sampleRate $MODE -f $inputFile.$EXTENSION
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+if [[ $STATUS == 6 ]]; then 
+    echo "CPO: 6 $command -pmu -lp011 $sampleRate $MODE -f $inputFile.$EXTENSION"
+    echo 7 > $statusFile
+    ./prepare-$inputFile
+    $command -pmu -lp011 $sampleRate $MODE -f $inputFile.$EXTENSION
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+if [[ $STATUS == 7 ]]; then 
+    echo "CPO: 7 $command -pmu -lp111 $sampleRate $MODE -f $inputFile.$EXTENSION"
+    echo 8 > $statusFile
+    ./prepare-$inputFile
+    $command -pmu -lp111 $sampleRate $MODE -f $inputFile.$EXTENSION
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+dataSampleRate="1000"
+if [[ $STATUS == 8 ]]; then 
+    echo "CPO: 8 $command -pmu -data $dataSampleRate $MODE -f $inputFile.$EXTENSION"
+    echo 9 > $statusFile
+    ./prepare-$inputFile
+    $command -pmu -data $dataSampleRate $MODE  -f $inputFile.$EXTENSION
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+dataSampleRate="500"
+if [[ $STATUS == 9 ]]; then 
+    echo "CPO: 9 $command -pmu -data $dataSampleRate $MODE -f $inputFile.$EXTENSION"
+    echo 10 > $statusFile
+    ./prepare-$inputFile
+    $command -pmu -data $dataSampleRate $MODE  -f $inputFile.$EXTENSION
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+dataSampleRate="100"
+if [[ $STATUS == 10 ]]; then 
+    echo "CPO: 10 $command -pmu -data $dataSampleRate $MODE -f $inputFile.$EXTENSION"
+    echo 11 > $statusFile
+    ./prepare-$inputFile
+    $command -pmu -data $dataSampleRate $MODE  -f $inputFile.$EXTENSION
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+dataSampleRate="50"
+if [[ $STATUS == 11 ]]; then 
+    echo "CPO: 11 $command -pmu -data $dataSampleRate $MODE -f $inputFile.$EXTENSION"
+    echo 12 > $statusFile
+    ./prepare-$inputFile
+    $command -pmu -data $dataSampleRate $MODE  -f $inputFile.$EXTENSION
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+echo "CPO: ending  rm $statusFile"
+rm $statusFile
+
+echo "0|XX" > /ksys/console

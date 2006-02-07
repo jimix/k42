@@ -1,0 +1,59 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: OverviewDoc.sgml,v 1.1 2004/01/26 15:38:18 okrieg Exp $
+-->
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+
+<!-- To disable review comments replace INCLUDE with IGNORE -->
+<!ENTITY % review "INCLUDE" >
+
+<!-- CVS gives us these -->
+<!ENTITY user "$Author: okrieg $">
+<!ENTITY date "$Date: 2004/01/26 15:38:18 $">
+<!ENTITY revision "$Revision">
+
+<!entity topsrc "../..">
+
+<!-- define and read in entities from this file -->
+<!ENTITY % wp.ent SYSTEM "wp.ent">
+%wp.ent;
+
+<!-- The actual meat of the Overview -->
+<!entity % OverviewDoc.ent SYSTEM "OverviewDoc.ent">
+%OverviewDoc.ent;
+]>
+
+
+<!--
+    In DocBook terms, a white paper is and article.
+-->
+<article status="draft" lang="en">
+  <title>K42 Overview</title>
+  &K42ArtHeader;
+
+  <abstract>
+    <para>
+      K42 is an open-source research kernel for cache-coherent 64-bit
+      multiprocessor systems.  K42 focuses on achieving good
+      performance and scalability, providing a customizable and
+      maintainable system, and being accessible to a large community
+      through an open source development model.  To that end, K42
+      fully supports the Linux API and ABI and uses Linux libraries,
+      device drivers, file systems, and other code.  In this paper we
+      present a brief overview of K42, describe the goals of K42 and
+      the core technologies we used to achieve those goals.  More
+      detailed descriptions of specific technologies and OS services
+      are available in separate white papers.
+    </para>
+  </abstract>
+
+    &Overview;
+  &bib.sgml;
+</article>
+

@@ -1,0 +1,64 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2001.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: ktw,v 1.1 2001/05/14 20:16:25 rosnbrg Exp $
+# ############################################################################
+
+# ############################################################################
+# Module Description:  Utility program that runs thinwire.
+#                      Must be copied by hand to /home/thinwire/bin on kserial.
+# ############################################################################
+
+CONFIG=/home/thinwire/bin/powerpc-hw.cfg
+LOCKDIR=/home/thinwire/lock
+
+MACHINE=
+TTY=
+LOCKFILE=
+HAVELOCK=
+
+trap cleanup EXIT 
+
+delete_lock() { 
+    rm -f ${LOCKFILE}
+}
+
+cleanup() {
+    if [ "${HAVELOCK}" ]; then 
+	delete_lock
+    fi
+    exit
+}
+
+main() {
+    if [ $# != 1 ]; then
+	echo "Usage: $0 <machine_name>"
+	exit
+    fi
+    MACHINE=$1
+    TTY=$(awk '$1 == "'${MACHINE}'" {print $3}' ${CONFIG})
+    if [ "${TTY}" == "" ]; then
+	echo "No entry for machine ${MACHINE} in ${CONFIG}"
+	exit
+    fi
+    LOCKFILE=${LOCKDIR}/tw_${MACHINE}_${TTY}
+    if [ -f ${LOCKFILE} ]; then
+	echo "Machine ${MACHINE} is locked (file ${LOCKFILE})"
+	exit
+    fi
+    touch ${LOCKFILE}
+    HAVELOCK=yes
+    PORT0=$(awk '$1 == "'${MACHINE}'" {print $4}' ${CONFIG})
+    let PORT1=PORT0+1
+    let PORT2=PORT0+2
+    let PORT3=PORT0+3
+    let PORT4=PORT0+4
+    thinwire /dev/${TTY} ${PORT0} ${PORT1} ${PORT2} ${PORT3} ${PORT4}
+}
+
+main $*

@@ -1,0 +1,44 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceMisc.xml,v 1.3 2004/07/08 17:15:32 gktse Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::Misc::TypeHdlrReg">
+	<layerId value="OS" />
+	<classId value="Misc" />
+	<specifier value="TypeHdlrReg" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+		<field name="field4" type="string" />
+	</fields>
+	<k42Format value='TypeMgr%0[%lld]::regTypeHdlr(%1[%llx],%4[%s]) hdrl=&lt;%2[%lld],%3[%llx]&gt;' />
+</event>
+
+
+<event name="OS::Misc::TypeReg">
+	<layerId value="OS" />
+	<classId value="Misc" />
+	<specifier value="TypeReg" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="string" />
+	</fields>
+	<k42Format value='TypeMgr%0[%lld]::regType(%0[%lld],%3[%s]) id=x%1[%llx], hash=%2[%lld]' />
+</event>
+
+</PEM_Events>

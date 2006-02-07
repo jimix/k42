@@ -1,0 +1,652 @@
+*** starting diffprogs
+*** starting movdir
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+subdir
+subdir
+data
+data
+data
+data
+data
+blocks
+movdest/dir
+movdest/dir/bprogs
+movdest/dir/bprogs/OSdefs.h
+movdest/dir/bprogs/OSgetpid.c
+movdest/dir/bprogs/OSgetpid.o
+movdest/dir/bprogs/OShead.h
+movdest/dir/bprogs/OSmachine.h
+movdest/dir/bprogs/OSparams.h
+movdest/dir/bprogs/OSprocs.h
+movdest/dir/bprogs/create.c
+movdest/dir/bprogs/create.s
+movdest/dir/bprogs/junk
+movdest/dir/bprogs/makefile
+movdest/dir/diffprogs
+movdest/dir/diffprogs/oldprog.c
+movdest/dir/diffprogs/newprog.c
+movdest/dir/movdir
+movdest/dir/movdir/subdir
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/mvcp
+movdest/dir/mvcp/x
+movdest/dir/osds
+movdest/dir/osds/OSsendmsg.c
+movdest/dir/osds/OShead.h
+movdest/dir/osds/driver.c
+movdest/dir/osds/zzz
+movdest/dir/osds/OStimers.h
+movdest/dir/osds/OSparams.h
+movdest/dir/osds/OSdetimer.c
+movdest/dir/osds/OSgetmsg.c
+movdest/dir/osds/OSprocs.h
+movdest/dir/osds/OSgettype.c
+movdest/dir/osds/OSdestroy.c
+movdest/dir/osds/OSsuicide.c
+movdest/dir/osds/OStimer.c
+movdest/dir/osds/OSmachine.c
+movdest/dir/osds/OSwakeup.c
+movdest/dir/osds/OSsuspend.c
+movdest/dir/osds/OStimers.c
+movdest/dir/osds/OSsendn.c
+movdest/dir/osds/OSprocs.c
+movdest/dir/osds/OSmsgs.c
+movdest/dir/osds/OSdefs.h
+movdest/dir/osds/OSsetatime.c
+movdest/dir/osds/OScreate.c
+movdest/dir/osds/makefile
+movdest/dir/osds/OSdispatch.s
+movdest/dir/osds/OSwait.c
+movdest/dir/osds/OSgetpid.c
+movdest/dir/osds/OSsetrtime.c
+movdest/dir/osds/OSmsgs.h
+movdest/dir/osds/CMstubs.c
+movdest/dir/osds/driverx.c
+movdest/dir/osds/OSctimer.c
+movdest/dir/osds/OSreplace.c
+movdest/dir/osds/OSdata.h
+movdest/dir/osds/sendn.c
+movdest/dir/osds/driver.h
+movdest/dir/osds/OSgetatime.c
+movdest/dir/osds/OSatimer.c
+movdest/dir/osds/OScatimer.c
+movdest/dir/osds/OSgetrtime.c
+movdest/dir/osds/rcvmsg.c
+movdest/dir/osds/OSmacros.h
+movdest/dir/osds/llib-losds
+movdest/dir/osds/atimer.c
+movdest/dir/osds/catimer.c
+movdest/dir/osds/create.c
+movdest/dir/osds/ctimer.c
+movdest/dir/osds/destroy.c
+movdest/dir/osds/detimer.c
+movdest/dir/osds/getatime.c
+movdest/dir/osds/getmsg.c
+movdest/dir/osds/getpid.c
+movdest/dir/osds/getrtime.c
+movdest/dir/osds/gettype.c
+movdest/dir/osds/replace.c
+movdest/dir/osds/sendmsg.c
+movdest/dir/osds/setatime.c
+movdest/dir/osds/setrtime.c
+movdest/dir/osds/suicide.c
+movdest/dir/osds/suspend.c
+movdest/dir/osds/timer.c
+movdest/dir/osds/wait.c
+movdest/dir/osds/wakeup.c
+movdest/dir/osds/entry.c
+movdest/dir/osds/OSrcvmsg.c
+movdest/dir/osds/driverx.h
+movdest/dir/osds/OSmachine.h
+movdest/dir/osds/tablex.c
+movdest/dir/osds/driverz.c
+movdest/dir/osds/driverz.h
+movdest/dir/osds/makefile
+movdest/dir/osds/drivery.c
+movdest/dir/osds/drivery.h
+movdest/dir/osds/OSmain.c
+movdest/dir/osds/table.c
+movdest/dir/osds/tabley.c
+movdest/dir/osds/tablez.c
+movdest/dir/osds/OSdispatch.c
+movdest/dir/osds/makefile
+movdest/dir/osds/osds.a
+movdest/dir/osds/ostest
+movdest/dir/osds/ostestz
+movdest/dir/osds/to.do
+movdest/dir/osds/read_ones.c
+movdest/dir/osds/xlisp.c
+movdest/dir/osds/xlsys.c
+movdest/dir/osds/x.h
+movdest/dir/osds/xlisp.h
+movdest/dir/osds/Omakefile
+movdest/dir/osds/makefile
+movdest/dir/print
+movdest/dir/print/prog.c
+movdest/dir/print/prog.c
+movdest/dir/scripts
+movdest/dir/scripts/shloop
+movdest/dir/text
+movdest/dir/text/memosrc
+movdest/dir/text/shortspell
+movdest/dir/text/runrules
+movdest/dir/text/sc.doc
+*** starting mvcp
+*** starting text
+POSIX
+Pre
+SPECmark
+SPECthruput
+pre
+pre
+pre
+pre
+spiff
+
+real
+user
+sys
+*** starting bprogs
+*** starting movdir
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+subdir
+subdir
+data
+data
+data
+data
+data
+blocks
+movdest/dir
+movdest/dir/bprogs
+movdest/dir/bprogs/OSdefs.h
+movdest/dir/bprogs/OSgetpid.c
+movdest/dir/bprogs/OSgetpid.o
+movdest/dir/bprogs/OShead.h
+movdest/dir/bprogs/OSmachine.h
+movdest/dir/bprogs/OSparams.h
+movdest/dir/bprogs/OSprocs.h
+movdest/dir/bprogs/create.c
+movdest/dir/bprogs/create.s
+movdest/dir/bprogs/junk
+movdest/dir/bprogs/makefile
+movdest/dir/diffprogs
+movdest/dir/diffprogs/oldprog.c
+movdest/dir/diffprogs/newprog.c
+movdest/dir/movdir
+movdest/dir/movdir/subdir
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/mvcp
+movdest/dir/mvcp/x
+movdest/dir/osds
+movdest/dir/osds/OSsendmsg.c
+movdest/dir/osds/OShead.h
+movdest/dir/osds/driver.c
+movdest/dir/osds/zzz
+movdest/dir/osds/OStimers.h
+movdest/dir/osds/OSparams.h
+movdest/dir/osds/OSdetimer.c
+movdest/dir/osds/OSgetmsg.c
+movdest/dir/osds/OSprocs.h
+movdest/dir/osds/OSgettype.c
+movdest/dir/osds/OSdestroy.c
+movdest/dir/osds/OSsuicide.c
+movdest/dir/osds/OStimer.c
+movdest/dir/osds/OSmachine.c
+movdest/dir/osds/OSwakeup.c
+movdest/dir/osds/OSsuspend.c
+movdest/dir/osds/OStimers.c
+movdest/dir/osds/OSsendn.c
+movdest/dir/osds/OSprocs.c
+movdest/dir/osds/OSmsgs.c
+movdest/dir/osds/OSdefs.h
+movdest/dir/osds/OSsetatime.c
+movdest/dir/osds/OScreate.c
+movdest/dir/osds/makefile
+movdest/dir/osds/OSdispatch.s
+movdest/dir/osds/OSwait.c
+movdest/dir/osds/OSgetpid.c
+movdest/dir/osds/OSsetrtime.c
+movdest/dir/osds/OSmsgs.h
+movdest/dir/osds/CMstubs.c
+movdest/dir/osds/driverx.c
+movdest/dir/osds/OSctimer.c
+movdest/dir/osds/OSreplace.c
+movdest/dir/osds/OSdata.h
+movdest/dir/osds/sendn.c
+movdest/dir/osds/driver.h
+movdest/dir/osds/OSgetatime.c
+movdest/dir/osds/OSatimer.c
+movdest/dir/osds/OScatimer.c
+movdest/dir/osds/OSgetrtime.c
+movdest/dir/osds/rcvmsg.c
+movdest/dir/osds/OSmacros.h
+movdest/dir/osds/llib-losds
+movdest/dir/osds/atimer.c
+movdest/dir/osds/catimer.c
+movdest/dir/osds/create.c
+movdest/dir/osds/ctimer.c
+movdest/dir/osds/destroy.c
+movdest/dir/osds/detimer.c
+movdest/dir/osds/getatime.c
+movdest/dir/osds/getmsg.c
+movdest/dir/osds/getpid.c
+movdest/dir/osds/getrtime.c
+movdest/dir/osds/gettype.c
+movdest/dir/osds/replace.c
+movdest/dir/osds/sendmsg.c
+movdest/dir/osds/setatime.c
+movdest/dir/osds/setrtime.c
+movdest/dir/osds/suicide.c
+movdest/dir/osds/suspend.c
+movdest/dir/osds/timer.c
+movdest/dir/osds/wait.c
+movdest/dir/osds/wakeup.c
+movdest/dir/osds/entry.c
+movdest/dir/osds/OSrcvmsg.c
+movdest/dir/osds/driverx.h
+movdest/dir/osds/OSmachine.h
+movdest/dir/osds/tablex.c
+movdest/dir/osds/driverz.c
+movdest/dir/osds/driverz.h
+movdest/dir/osds/makefile
+movdest/dir/osds/drivery.c
+movdest/dir/osds/drivery.h
+movdest/dir/osds/OSmain.c
+movdest/dir/osds/table.c
+movdest/dir/osds/tabley.c
+movdest/dir/osds/tablez.c
+movdest/dir/osds/OSdispatch.c
+movdest/dir/osds/makefile
+movdest/dir/osds/osds.a
+movdest/dir/osds/ostest
+movdest/dir/osds/ostestz
+movdest/dir/osds/to.do
+movdest/dir/osds/read_ones.c
+movdest/dir/osds/xlisp.c
+movdest/dir/osds/xlsys.c
+movdest/dir/osds/x.h
+movdest/dir/osds/xlisp.h
+movdest/dir/osds/Omakefile
+movdest/dir/osds/makefile
+movdest/dir/print
+movdest/dir/print/prog.c
+movdest/dir/print/prog.c
+movdest/dir/scripts
+movdest/dir/scripts/shloop
+movdest/dir/text
+movdest/dir/text/memosrc
+movdest/dir/text/shortspell
+movdest/dir/text/runrules
+movdest/dir/text/sc.doc
+*** starting print
+*** Number of users:
+
+*** Number of processes:
+
+*** starting loop
+
+
+*** starting print
+*** starting osds
+Expect to see Error code  - ignored here
+gcc -c OSprocs.c
+gcc -c OStimers.c
+gcc -c timer.c
+gcc -c -lm read_ones.c
+gcc -c -lm xlsys.c
+gcc -c -lm xlisp.c
+ld -r -o junk OSprocs.o OStimers.o timer.o read_ones.o xlsys.o xlisp.o
+*** starting edit
+
+
+*** starting edit
+
+
+*** starting edit
+
+
+*** starting morefind
+*** starting edit
+
+Now is the time
+For all good men
+Now is the time
+For all good men
+To come to the aid of their party.
+To come to the aid of their party.
+For all good men
+To come to the aid of their party.
+Now is the time
+
+For all good men
+To come to the aid of their party.
+
+Now is thee time
+Now is the time
+on the other side of the coin
+To come to the aid of their party.
+Now is the time
+Now is the time
+For all good men
+To come to the aid of their party.
+To come to the aid of their parity.
+
+To come to the aid of their party?
+To come to the aid of their party.
+Tocometotheaidoftheirparty.
+*** starting edit
+
+Now is the time
+For all good men
+Now is the time
+For all good men
+To come to the aid of their party.
+To come to the aid of their party.
+For all good men
+To come to the aid of their party.
+Now is the time
+
+For all good men
+To come to the aid of their party.
+
+Now is thee time
+Now is the time
+on the other side of the coin
+To come to the aid of their party.
+Now is the time
+Now is the time
+For all good men
+To come to the aid of their party.
+To come to the aid of their parity.
+
+To come to the aid of their party?
+To come to the aid of their party.
+Tocometotheaidoftheirparty.
+*** starting edit
+
+
+*** starting edit
+
+Now is the time
+For all good men
+Now is the time
+For all good men
+To come to the aid of their party.
+To come to the aid of their party.
+For all good men
+To come to the aid of their party.
+Now is the time
+
+For all good men
+To come to the aid of their party.
+
+Now is thee time
+Now is the time
+on the other side of the coin
+To come to the aid of their party.
+Now is the time
+Now is the time
+For all good men
+To come to the aid of their party.
+To come to the aid of their parity.
+
+To come to the aid of their party?
+To come to the aid of their party.
+Tocometotheaidoftheirparty.
+*** starting edit
+
+Now is the time
+For all good men
+Now is the time
+For all good men
+To come to the aid of their party.
+To come to the aid of their party.
+For all good men
+To come to the aid of their party.
+Now is the time
+
+For all good men
+To come to the aid of their party.
+
+Now is thee time
+Now is the time
+on the other side of the coin
+To come to the aid of their party.
+Now is the time
+Now is the time
+For all good men
+To come to the aid of their party.
+To come to the aid of their parity.
+
+To come to the aid of their party?
+To come to the aid of their party.
+Tocometotheaidoftheirparty.
+*** starting movdir
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+prog.c
+subdir
+subdir
+data
+data
+data
+data
+data
+blocks
+movdest/dir
+movdest/dir/bprogs
+movdest/dir/bprogs/OSdefs.h
+movdest/dir/bprogs/OSgetpid.c
+movdest/dir/bprogs/OSgetpid.o
+movdest/dir/bprogs/OShead.h
+movdest/dir/bprogs/OSmachine.h
+movdest/dir/bprogs/OSparams.h
+movdest/dir/bprogs/OSprocs.h
+movdest/dir/bprogs/create.c
+movdest/dir/bprogs/create.s
+movdest/dir/bprogs/junk
+movdest/dir/bprogs/makefile
+movdest/dir/diffprogs
+movdest/dir/diffprogs/oldprog.c
+movdest/dir/diffprogs/newprog.c
+movdest/dir/movdir
+movdest/dir/movdir/subdir
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir/prog.c
+movdest/dir/movdir/subdir
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/subdir/data
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/movdir/prog.c
+movdest/dir/mvcp
+movdest/dir/mvcp/x
+movdest/dir/osds
+movdest/dir/osds/OSsendmsg.c
+movdest/dir/osds/OShead.h
+movdest/dir/osds/driver.c
+movdest/dir/osds/zzz
+movdest/dir/osds/OStimers.h
+movdest/dir/osds/OSparams.h
+movdest/dir/osds/OSdetimer.c
+movdest/dir/osds/OSgetmsg.c
+movdest/dir/osds/OSprocs.h
+movdest/dir/osds/OSgettype.c
+movdest/dir/osds/OSdestroy.c
+movdest/dir/osds/OSsuicide.c
+movdest/dir/osds/OStimer.c
+movdest/dir/osds/OSmachine.c
+movdest/dir/osds/OSwakeup.c
+movdest/dir/osds/OSsuspend.c
+movdest/dir/osds/OStimers.c
+movdest/dir/osds/OSsendn.c
+movdest/dir/osds/OSprocs.c
+movdest/dir/osds/OSmsgs.c
+movdest/dir/osds/OSdefs.h
+movdest/dir/osds/OSsetatime.c
+movdest/dir/osds/OScreate.c
+movdest/dir/osds/makefile
+movdest/dir/osds/OSdispatch.s
+movdest/dir/osds/OSwait.c
+movdest/dir/osds/OSgetpid.c
+movdest/dir/osds/OSsetrtime.c
+movdest/dir/osds/OSmsgs.h
+movdest/dir/osds/CMstubs.c
+movdest/dir/osds/driverx.c
+movdest/dir/osds/OSctimer.c
+movdest/dir/osds/OSreplace.c
+movdest/dir/osds/OSdata.h
+movdest/dir/osds/sendn.c
+movdest/dir/osds/driver.h
+movdest/dir/osds/OSgetatime.c
+movdest/dir/osds/OSatimer.c
+movdest/dir/osds/OScatimer.c
+movdest/dir/osds/OSgetrtime.c
+movdest/dir/osds/rcvmsg.c
+movdest/dir/osds/OSmacros.h
+movdest/dir/osds/llib-losds
+movdest/dir/osds/atimer.c
+movdest/dir/osds/catimer.c
+movdest/dir/osds/create.c
+movdest/dir/osds/ctimer.c
+movdest/dir/osds/destroy.c
+movdest/dir/osds/detimer.c
+movdest/dir/osds/getatime.c
+movdest/dir/osds/getmsg.c
+movdest/dir/osds/getpid.c
+movdest/dir/osds/getrtime.c
+movdest/dir/osds/gettype.c
+movdest/dir/osds/replace.c
+movdest/dir/osds/sendmsg.c
+movdest/dir/osds/setatime.c
+movdest/dir/osds/setrtime.c
+movdest/dir/osds/suicide.c
+movdest/dir/osds/suspend.c
+movdest/dir/osds/timer.c
+movdest/dir/osds/wait.c
+movdest/dir/osds/wakeup.c
+movdest/dir/osds/entry.c
+movdest/dir/osds/OSrcvmsg.c
+movdest/dir/osds/driverx.h
+movdest/dir/osds/OSmachine.h
+movdest/dir/osds/tablex.c
+movdest/dir/osds/driverz.c
+movdest/dir/osds/driverz.h
+movdest/dir/osds/makefile
+movdest/dir/osds/drivery.c
+movdest/dir/osds/drivery.h
+movdest/dir/osds/OSmain.c
+movdest/dir/osds/table.c
+movdest/dir/osds/tabley.c
+movdest/dir/osds/tablez.c
+movdest/dir/osds/OSdispatch.c
+movdest/dir/osds/makefile
+movdest/dir/osds/osds.a
+movdest/dir/osds/ostest
+movdest/dir/osds/ostestz
+movdest/dir/osds/to.do
+movdest/dir/osds/read_ones.c
+movdest/dir/osds/xlisp.c
+movdest/dir/osds/xlsys.c
+movdest/dir/osds/x.h
+movdest/dir/osds/xlisp.h
+movdest/dir/osds/Omakefile
+movdest/dir/osds/makefile
+movdest/dir/print
+movdest/dir/print/prog.c
+movdest/dir/print/prog.c
+movdest/dir/scripts
+movdest/dir/scripts/shloop
+movdest/dir/text
+movdest/dir/text/memosrc
+movdest/dir/text/shortspell
+movdest/dir/text/runrules
+movdest/dir/text/sc.doc

@@ -1,0 +1,48 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: stubtestPrgG.sgml,v 1.2 2001/10/30 17:17:09 peterson Exp $
+-->
+<title>stubtest programming guide</title>
+<programlisting>
+  <![CDATA[
+function_idx:	11;
+mangled_name:	_varray_PUiT1PcT3T1T1UiUiUi;
+class       :	Bonnie;
+parent sig  :	public  Obj;
+fynction_name:	varray;
+returntype  :	SysStatus;
+signature   :	( uval * va1, uval * va2 , uval len1 , uval len2 , uval len3 );
+invocation  :   N;	(N=normal, A=asynchronous)
+functiontype:   V;	(V=virtual,S=static,C=constructor)
+stabmgmt    :	2:0:2:3:2:1056;   (where a:b:c:d:e:f
+                a=arraycnt[in] : b=arraycnt[in_out] : c=arraycnt[out] : 
+		d=sizearray_in] : e=sizearray[out] : f=stabfsize
+num_params  :	9; 
+params spec:    112 110 112 110 111 111 000 000 000 (abc)
+		(a=isarray, b=ref/ptr, c=in/inout/out)
+arrayspec   :   ? if not an array
+		?:len1:1024:020:-1:-1   (a:b:c:d:e:f)
+		(a)(b)    * or variable for length specification on in and out
+			  ? if notrelevant in this position
+		(c)       maximum size to reserve (constant or variable)
+		(d)       spec: (abc) 
+				(a) 0=constant  1=string  2=variable  for in
+				(b) same                              for out
+				(c) 0=constant            2=variable  for max
+				
+		(e)(f)	  index into the size array ..... (-1) if not relevant
+
+
+__inoutbuf(3:4:32)   uval *va5,  this spec might indicate that we should never
+embed a fixed array into the structure itself but always into the variable 
+sized thing. otherwise we can't copy at once....
+
+-- Hubertus
+  ]]>
+</programlisting>

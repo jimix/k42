@@ -1,0 +1,221 @@
+#! /usr/bin/env bash
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# ****************************************************************************/
+#/****************************************************************************
+# * Module Description: System initialization script
+# * **************************************************************************/
+
+#
+# Gather traces for SPECcpu benchmarks
+#
+# CONSTRAINTS:
+#   If benchmarkNameFile is empty
+#   If statusFile does not exist, start from the beginning.
+#
+# @author Peter F. Sweeney
+# @date   2/22/2005
+
+statusFile="/home/pem/.SPECcpuMultipleRuns"
+
+sampleRate="-sampleRate 5000000"
+#size="-small"
+size="-train"
+
+BENCHMARK=$1
+if [[ -z $BENCHMARK ]]; then
+  echo ""
+  echo "***SPECcpuMultipleRuns: BENCHMARK undefined!***"
+  echo ""
+  exit -8888
+fi
+
+command=./pemRun$BENCHMARK.sh
+
+EXTENSION=$2
+if [[ -z $EXTENSION ]]; then
+  echo ""
+  echo "***SPECcpuMultipleRuns: EXTENSION undefined!***"
+  echo ""
+  exit -8888
+fi
+
+MODE=$3
+if [[ -z $MODE ]]; then
+  echo ""
+  echo "***SPECcpuMultipleRuns: MODE undefined!***"
+  echo ""
+  exit -8888
+fi
+
+STATUS=$4
+if [[ -z $STATUS ]]; then
+  echo ""
+  echo "***SPECcpuMultipleRuns: STATUS undefined!***"
+  echo ""
+  exit -8888
+fi
+
+# set up environment
+/kbin/sysinit
+
+cd /apps/SPECcpu2000
+
+echo "Gathering CPO/PEM SPECcpuMultipleRusn benchmark $BENCHMARK, extension $EXTENSION, MODE $MODE, STATUS $STATUS"
+
+if [[ $STATUS == 0 ]]; then 
+    echo "CPO: 0 $command -pmu -lp000 $sampleRate $MODE -f $EXTENSION size $size"
+    $command -pmu -lp000 $sampleRate $MODE -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+if [[ $STATUS == 1 ]]; then 
+    echo "CPO: 1 $command -pmu -lp100 $sampleRate $MODE -f $EXTENSION size $size"
+    $command -pmu -lp100 $sampleRate $MODE -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+if [[ $STATUS == 2 ]]; then 
+    echo "CPO: 2 $command -pmu -lp010 $sampleRate $MODE -f $EXTENSION size $size"
+    $command -pmu -lp010 $sampleRate $MODE -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+if [[ $STATUS == 3 ]]; then 
+    echo "CPO: 3 $command -pmu -lp001 $sampleRate $MODE -f $EXTENSION size $size"
+    $command -pmu -lp001 $sampleRate $MODE -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+if [[ $STATUS == 4 ]]; then 
+    echo "CPO: 4 $command -pmu -lp110 $sampleRate $MODE -f $EXTENSION size $size"
+    $command -pmu -lp110 $sampleRate $MODE -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+if [[ $STATUS == 5 ]]; then 
+    echo "CPO: 5 $command -pmu -lp101 $sampleRate $MODE -f $EXTENSION size $size"
+    $command -pmu -lp101 $sampleRate $MODE -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+if [[ $STATUS == 6 ]]; then 
+    echo "CPO: 6 $command -pmu -lp011 $sampleRate $MODE -f $EXTENSION size $size"
+    $command -pmu -lp011 $sampleRate $MODE -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+if [[ $STATUS == 7 ]]; then 
+    echo "CPO: 7 $command -pmu -lp111 $sampleRate $MODE -f $EXTENSION size $size"
+    $command -pmu -lp111 $sampleRate $MODE -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+#################################
+# default data sample rates
+################################
+dataSampleRate="2000"
+if [[ $STATUS == 2000 ]]; then 
+    echo "CPO: 2000 $command -pmu -data $dataSampleRate $MODE -f $EXTENSION size $size"
+    echo 99999 > $statusFile
+    $command -pmu -data $dataSampleRate $MODE  -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+dataSampleRate="1000"
+if [[ $STATUS == 1000 ]]; then 
+    echo "CPO: 1000 $command -pmu -data $dataSampleRate $MODE -f $EXTENSION size $size"
+    echo 99999 > $statusFile
+    $command -pmu -data $dataSampleRate $MODE  -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+#################################
+# sharp shoot data sample rates
+################################
+dataSampleRate="800"
+if [[ $STATUS == 800 ]]; then 
+    echo "CPO: 800 $command -pmu -data $dataSampleRate $MODE -f $EXTENSION size $size"
+    echo 99999 > $statusFile
+    $command -pmu -data $dataSampleRate $MODE  -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+dataSampleRate="750"
+if [[ $STATUS == 750 ]]; then 
+    echo "CPO: 750 $command -pmu -data $dataSampleRate $MODE -f $EXTENSION size $size"
+    echo 99999 > $statusFile
+    $command -pmu -data $dataSampleRate $MODE  -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+dataSampleRate="500"
+if [[ $STATUS == 500 ]]; then 
+    echo "CPO: 500 $command -pmu -data $dataSampleRate $MODE -f $EXTENSION size $size"
+    echo 99999 > $statusFile
+    $command -pmu -data $dataSampleRate $MODE  -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+dataSampleRate="200"
+if [[ $STATUS == 200 ]]; then 
+    echo "CPO: 200 $command -pmu -data $dataSampleRate $MODE -f $EXTENSION size $size"
+    echo 100 > $statusFile
+    $command -pmu -data $dataSampleRate $MODE  -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+dataSampleRate="100"
+if [[ $STATUS == 100 ]]; then 
+    echo "CPO: 100 $command -pmu -data $dataSampleRate $MODE -f $EXTENSION $size"
+    echo 99999 > $statusFile
+    $command -pmu -data $dataSampleRate $MODE  -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+dataSampleRate="50"
+if [[ $STATUS == 50 ]]; then 
+    echo "CPO: 50 $command -pmu -data $dataSampleRate $MODE -f $EXTENSION size $size"
+    echo 99999 > $statusFile
+    $command -pmu -data $dataSampleRate $MODE  -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "T|R" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+dataSampleRate="25"
+if [[ $STATUS == 25 ]]; then 
+    echo "CPO: 25 $command -pmu -data $dataSampleRate $MODE -f $EXTENSION size $size"
+    echo 99999 > $statusFile
+    $command -pmu -data $dataSampleRate $MODE  -f $EXTENSION $size
+    echo "T|I" > /ksys/console
+    echo "0|X 1" > /ksys/console
+fi
+
+echo "CPO: ending  rm $statusFile"
+rm $statusFile
+
+# echo "0|XX" > /ksys/console
+
+

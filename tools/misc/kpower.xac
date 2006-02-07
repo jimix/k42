@@ -1,0 +1,25 @@
+Delay 3
+MotionNotify 500 100
+ButtonPress 1
+ButtonRelease 1
+Delay 3
+String telnet kpower2
+KeyStrPress Return
+KeyStrRelease Return
+Delay 5
+String 1
+KeyStrPress Return
+KeyStrRelease Return
+Delay 5
+String reboot 4
+KeyStrPress Return
+KeyStrRelease Return
+Delay 5
+String Y
+KeyStrPress Return
+KeyStrRelease Return
+Delay 20
+String LOGOUT
+KeyStrPress Return
+KeyStrRelease Return
+Delay 3

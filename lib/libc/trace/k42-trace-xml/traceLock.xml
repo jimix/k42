@@ -1,0 +1,273 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceLock.xml,v 1.3 2004/07/08 17:15:32 gktse Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::Lock::SemP">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="SemP" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='semaphore P %0[%lld] by %1[%016llx]' />
+</event>
+
+
+<event name="OS::Lock::SemV">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="SemV" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='semaphore V %0[%lld] by %1[%016llx]' />
+</event>
+
+
+<event name="OS::Lock::RwAr">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="RwAr" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='RW read acq users:%0[%lld]/%1[%lld] by %2[%016llx]' />
+</event>
+
+
+<event name="OS::Lock::RwRr">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="RwRr" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='RW read rel users:%0[%lld]/%1[%lld] by %2[%016llx]' />
+</event>
+
+
+<event name="OS::Lock::RwAw">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="RwAw" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='RW wr acq users:%0[%lld]/%1[%lld] by %2[%016llx]' />
+</event>
+
+
+<event name="OS::Lock::RwRw">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="RwRw" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='RW wr rel users:%0[%lld]/%1[%lld] by %2[%016llx]' />
+</event>
+
+
+<event name="OS::Lock::RwUp">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="RwUp" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='RW up acq users:%0[%lld]/%1[%lld] by %2[%016llx]' />
+</event>
+
+
+<event name="OS::Lock::RwDn">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="RwDn" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='RW down users:%0[%lld]/%1[%lld] by %2[%016llx]' />
+</event>
+
+
+<event name="OS::Lock::RwTry">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="RwTry" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='RW try acq rc:%0[%lld] by %1[%016llx]' />
+</event>
+
+
+<event name="OS::Lock::AcqSpin">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="AcqSpin" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='spin on %2[%s](%0[%016llx]) by %1[%016llx]' />
+</event>
+
+
+<event name="OS::Lock::AcqBlock">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="AcqBlock" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='block on %2[%s](%0[%016llx]) by %1[%016llx]' />
+</event>
+
+
+<event name="OS::Lock::AcqLock">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="AcqLock" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='acquire %2[%s](%0[%016llx]) by %1[%016llx]' />
+</event>
+
+
+<event name="OS::Lock::Rel1">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="Rel1" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='release %2[%s](%0[%016llx]) by %1[%016llx]' />
+</event>
+
+
+<event name="OS::Lock::Rel2">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="Rel2" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="string" />
+	</fields>
+	<k42Format value='release %2[%s](%0[%016llx]) by %1[%016llx]' />
+</event>
+
+
+<event name="OS::Lock::ContendSpin">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="ContendSpin" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+		<field name="field4" type="uint64" />
+		<field name="field5" type="uint64" />
+	</fields>
+	<k42Format value='lock 0x%0[%llx], spin %1[%lld], time %2[%lld], callers: 0x%3[%llx] 0x%4[%llx] 0x%5[%llx]' />
+</event>
+
+
+<event name="OS::Lock::ContendBlock">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="ContendBlock" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+		<field name="field4" type="uint64" />
+		<field name="field5" type="uint64" />
+		<field name="field6" type="uint64" />
+		<field name="field7" type="uint64" />
+	</fields>
+	<k42Format value='lock 0x%0[%llx], spin %1[%lld], time %2[%lld], callers: 0x%3[%llx] 0x%4[%llx] 0x%5[%llx] handoff time 0x%6[%lld] handoff proc 0x%7[%llx]' />
+</event>
+
+
+<event name="OS::Lock::ContendInit">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="ContendInit" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+	</fields>
+	<k42Format value='lock 0x%0[%llx], callers: 0x%1[%llx] 0x%2[%llx] 0x%3[%llx]' />
+</event>
+
+
+<event name="OS::Lock::DelayAcq">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="DelayAcq" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+		<field name="field4" type="uint64" />
+	</fields>
+	<k42Format value='lock 0x%0[%llx], time %1[%lld], callers: 0x%2[%llx] 0x%3[%llx] 0x%4[%llx]' />
+</event>
+
+
+<event name="OS::Lock::DelayRel">
+	<layerId value="OS" />
+	<classId value="Lock" />
+	<specifier value="DelayRel" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+		<field name="field4" type="uint64" />
+	</fields>
+	<k42Format value='lock 0x%0[%llx], time %1[%lld], callers: 0x%2[%llx] 0x%3[%llx] 0x%4[%llx]' />
+</event>
+
+</PEM_Events>

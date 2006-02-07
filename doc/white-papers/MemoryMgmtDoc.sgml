@@ -1,0 +1,42 @@
+
+<!-- K42: (C) Copyright IBM Corp. 2001.  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file
+  LICENSE.html in the top-level directory for more details.
+
+  $Id: MemoryMgmtDoc.sgml,v 1.1 2004/01/27 15:00:52 okrieg Exp $ -->
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+
+<!-- To disable review comments replace INCLUDE with IGNORE -->
+<!ENTITY % review "INCLUDE" >
+
+<!-- CVS gives us these --> <!ENTITY user "$Author: okrieg $"> <!ENTITY
+date "$Date: 2004/01/27 15:00:52 $"> <!ENTITY revision "$Revision">
+
+<!-- define and read in entities from this file --> <!ENTITY % wp.ent
+SYSTEM "wp.ent"> %wp.ent;
+
+<!-- URLs handy or this document --> <!ENTITY oasis.url
+"http://www.oasis-open.org"> <!ENTITY dbhtml.url
+"&oasis.url/docbook/documentation/reference/html" > <!ENTITY db.url
+"&dbhtml.url/docbook.html"> <!ENTITY dbel.url
+"&dbhtml.url/refelem.html"> <!ENTITY rpm.url "http://rpmfind.net">
+<!ENTITY rpmq.url "&rpm.url;/linux/rpm2html/search.php?query"> ]>
+
+
+<!-- In DocBook terms, a white paper is and article.  -->
+<article status="draft" lang="en">
+  <title>Memory Management in K42</title>
+  &K42ArtHeader;
+
+  <abstract>
+    <para>
+      This document describes the kernel mechanisms that support
+      virtual memory and the protocols used to communicate with
+      clients that suffer page faults and with file servers that
+      provide paging I/O.
+    </para>
+  </abstract>
+  
+</article>

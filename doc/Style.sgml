@@ -1,0 +1,323 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: Style.sgml,v 1.5 2005/06/02 01:23:31 apw Exp $
+-->
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+          "/sw/share/xml/dtd/docbookx/4.1.2/docbookx.dtd" >
+
+<article id="DocBook">
+  <title>K42 Style Guide</title>
+
+  <section>
+    <title>K42 Style Guide</title>
+    <para>
+      K42 adopted the coding style as described by <ulink url =
+      "http://www.apocalypse.org/pub/u/paul/docs/cstyle/cstyle.htm">
+      Recommended C Style and Coding Standards </ulink>
+
+      <itemizedlist spacing="compact">
+	<listitem>
+	  <simpara>
+	    In general we want to use the default rules set up by the
+	    group's emacs c++ mode rule, but see below for specifics
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <para>
+	    Function prototypes have the return type on the same line as
+	    the function name, whereas the function definition will have
+	    them on separate lines starting at the first column.  For
+	    example,
+
+	    <programlisting>
+    struct foo *
+    getNextFoo(struct foo *f)
+    {
+        ... code for getNextFoo
+    }
+	    </programlisting>
+	    Note: there is no space before or after variable names either
+	    in function declarations or function call, but there is after a
+	    comma
+	    <programlisting>
+    void
+    func(int arg1, int arg2)
+
+    and the call
+
+    func(var1, var2);
+
+    the parameter list, both calling and declaring, should be fit in as few
+    lines as possible, except to group semantically similar
+    parameters together - ex:
+
+    func(int foo, char bar, float gorp)
+
+      rather than
+
+    func(int foo, 
+         char bar, 
+         float gorp)
+	    </programlisting>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Functions, wherever possible, should return SysStatus: Also the
+	    static or virtual from the .H should be in comments:
+
+	    <programlisting>
+    /* virtual */ SysStatus
+    Foo::GiveMeUseCount(...) { 
+	    </programlisting>
+
+	    In cases where one of the return parameters is guaranteed to be
+	    unsigned and fit in 63 bits the return type should be
+	    SysStatusUval or an appropriate equivalent, and the value
+	    returned by the function rather than in a parameter.  In the
+	    event this variable is used further in the calling function a
+	    separate variable can be declared to hold the value:
+
+	    <programlisting>
+    SysStatusUval rc;
+    countType myCount;
+    
+    rc = Foo::GiveMeUseCount(...);
+    myCount = _SGETUVAL(rc);
+	    </programlisting>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    We decided to use the following style for comment blocks:
+	    <programlisting>
+    /*
+     * This is a block
+     * of important comments
+     */
+	    </programlisting>
+
+	    and to use the // syntax for single line comments.  if the
+	    comment is multi line but not large in scope or important
+	    overall then the use of // is fine e.g. multiline FIXMEs Also
+	    use // for .H files, esp note the closing comment
+	  </para>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    C++ file names will be indicated by .C and .H suffixes, while
+	    ansi c file names will be as usual.  The basename for a C++
+	    file that implements a class will be the same as the name of
+	    the class it implements (including capitilization, i.e., first
+	    letter should be capital), all other files start with lower
+	    case.
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <para>
+	    Adopting the Hurricane style for C++ variable names (mostly), we
+	    have the following: 
+	    <orderedlist spacing="compact">
+	      <listitem>
+		<simpara>
+		  constants (incl. enums) are capitilized as
+		  "NUMBER_OF_TOWNS"
+		</simpara>
+	      </listitem>
+	      <listitem>
+		<simpara>
+		  class names (typedefs & enums included) and global
+		  variables are always capitilized as "NumberOfTowns"
+		</simpara>
+	      </listitem>
+	      <listitem>
+		<simpara>
+		  instance variables as "numberOfTowns" and methods as
+		  "numberOfTowns()"
+		</simpara>
+	      </listitem>
+	      <listitem>
+		<simpara>
+		  variable names should be descriptive, ex: use paddr or
+		  procRef rather than p
+		</simpara>
+	      </listitem>
+	    </orderedlist>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Use
+	    <programlisting>
+    static const uval CONSTANT_NAME = constant_expr;
+	    </programlisting>
+	    in preference to
+	    <programlisting>
+    enum { CONSTANT_NAME = constant_expr };
+	    </programlisting>
+	    whenever it makes sense.
+	  </para>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    Shadowed member variables will be named: - getVarName() and
+	    setVarName(value) where varName is the private instance
+	    variable
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    Indenting is 4 and 4 (hard tabs are 8 columns)
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    Lines should be limited to 80 columns.  There should never be
+	    white space at the ends of lines or blank lines at the ends of
+	    files.
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <para>
+	    Machine dependent include files (i.e., where there is a machine
+	    independent include file in the next directory up should fail
+	    if included by themselves by putting following (where
+	    FOOBAR_DEFH is defined by machine independent file.
+	    <programlisting>
+    #ifndef FOOBAR_DEFH
+    <<<< include machine independent file - not this machine dependent file >>>>
+    #endif
+	    </programlisting>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Ifs should always have brackets {} even for only one statement
+
+	    <programlisting>
+    if (somethingIsTrue) {
+        doSomething();
+    }
+	    </programlisting>
+
+	    exception ifs statements ALL on one line
+	    <programlisting>
+    if ((rc = aCall()) == 0) return 0
+	    </programlisting>
+	    else statements immediately follow closing if }  and ALWAYS use {}
+	    <programlisting>
+    if (somethingIsTrue) {
+        doSomething();
+    } else {
+        doSomethingElse();
+    }
+	    </programlisting>
+	  </para>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    standard/core .H files should not be included in other .H files
+	    rather they are collected into a single .H (sysIncs.H, and
+	    kernIncs.H) and should be included only in .C files.  In
+	    general include only the necessary .H files, especially in
+	    other .H files.  If a .H files seems core then we should
+	    consider adding to the list
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    for including files use <filename> file.H </filename> for
+	    global includes and "file.H" for local (within module)
+	    includes.
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    Each header file should have a guard (#ifndef VAR/#define
+	    VAR/.../#endif VAR) to prevent recursion inclusion.  The guard
+	    variable name is derived from the filename: two underscores,
+	    the file name, underscore, H, underscore.  The file name is all
+	    upper case, with an underscore inserted if the original file
+	    name changed from lower case to upper case.
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    for locking, the name should document clearly whether locks are
+	    held.  Underscore prefixes (locked_, disabled_, internal_,
+	    etc.) are intended to convey something about the environment in
+	    which a function is to be called, not what the function does.
+	    Thus, a function that assumes that its caller has acquired the
+	    lock, should start with the prefix "locked_".  We use an
+	    underscore so that the normal capitalization rules for the base
+	    name can be used.
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    avoid global variables, except those that are explicitly
+	    initialized (not via constructors) and whose values do not
+	    change after initialization.
+	  </simpara>
+	</listitem>
+	<listitem>
+	  <para>
+	    Makefiles:
+	    <itemizedlist spacing="compact">
+	      <listitem>
+		<simpara>
+		  The Makefiles should use a set of standard variables for
+		  installing .H files into the include part of the
+		  installation tree.  Both variables, COMMINCS and
+		  ARCHINCS, should be constructed using INCDIR, which
+		  refers to MKKITCHTOP/include.  This is the top of the
+		  make tree and contains a trailing slash.
+		</simpara>
+	      </listitem>
+	      <listitem>
+		<simpara>
+		  COMMINCS should be set to contain a list of all the .H
+		  files in the current directory that belong in the
+		  corresponding directory of the include part of the
+		  installation tree.  For example, if you are lib/libc/usr
+		  and wish foo.H and bar.H to be installed into
+		  MKKITCHTOP/include/usr then set COMMINCS to foo.H and
+		  bar.H.  Files intended for other directories should use
+		  variable names based on that directory.  TOPINCS for the
+		  very few files that belong in the top, or SYSINCS for
+		  files that belong $(INCDIR)/sys.
+		</simpara>
+	      </listitem>
+	      <listitem>
+		<simpara>
+		  ARCHINCS should be set to refer to files that have an
+		  architecture specific component.  The base archFoo.H file
+		  will be installed by the makefile in the directory
+		  corresponding to the directory archFoo.H is in, and the
+		  architecture specific files will be installed in their
+		  corresponding architecture directories, e.g.,
+		  arch/powerpc/archFoo.H.
+		</simpara>
+	      </listitem>
+	    </itemizedlist>
+	  </para>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    All functions of a stubcompiled object that are exported (i.e.,
+	    that a corresponding function is generated in the stub object)
+	    should be preceded by a "_".  For example, the routines that
+	    come after __xprivate in <ulink url =
+	    "../lib/libc/io/FileLinuxServer.H"> FileLinuxServer.H </ulink>
+	  </simpara>
+	</listitem>
+      </itemizedlist>
+    </para>
+  </section>
+</article>

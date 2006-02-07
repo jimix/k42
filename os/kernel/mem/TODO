@@ -1,0 +1,61 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: TODO,v 1.1 2004/10/29 20:22:53 okrieg Exp $
+# ############################################################################
+
+o question, where do we want to put class code, should we just use error could 
+  of ewouldblock?, reserve a range that has global meanting
+o test with 62 and 64 requests outstanding to file system
+o isolate pages used for large pages from pages used for small, totally do this
+  in PMRoot for now.
+o put in limits in Swap file systems for number of outstanding requests
+o have same kind of data structure used to block/restart read requests, 
+  first version should just allocate a data structure for the pending reads
+  and have a list in the FCM
+  o we might eventually want to sue PageNotificaiton for this, i.e., restart 
+  all the way from the app..., 
+NOT use page notification, 
+could add list to base page sets for pending reads...reusing whatever
+a paricular page descriptor type has for its free list...,
+o do we want to reserve queue space for reads, and re-order
+o block read requests using above mechanism on allocation of memory
+o change KernelTransport to use single mechanism for queueing work
+o change IOReq... to prioritize work, and share outstanding across the 
+  different queued requests (mvoe out into calling class??)
+o how often do we wake up PMRoot scanner
+o how many FCM/PM touch
+o how many pages scanned, how many freed, should we scan/free them all
+  but less frequently, then can make more efficient.,e.g., ask each
+  attached region to unmap itself, region call hat with its whole
+  address range...
+o when should we clean dirty pages versus free after I/O, how much
+  clean
+o should we run scanning of file as side effect of free blocks being
+  cleaned, how do we drive the policy...
+o could have freeing as side effect....
+o tie in to fsync daemon
+o distributed PM list and FCM list in PMRoot
+o fsync daemon per prodcessor, and scanner as well distributed
+o do we need a separate dirtly list of frames for fsync in the FCM?
+o policy for fsync, i.e., do we unmap periodically, do we mark it read only and
+  then recognize that we got a write fault on it...
+o get rid of putPage (which blocks) in all FRs, no longer used I think
+o get rid of putpage in FRComputation, and in FS...
+o do we want timestaps associated with pages for last write?, or
+  timestamps, in the queue on the free list on fCM..., would enable
+  local decision making, i.e., can't allocate page..
+o we currently for fsync do unmapPage per page, horrible overhead when we are 
+  going to unmap it all, for both this usage and for unmapping whole file in 
+  scanner (if we choose to do this) we should distribute once, do
+  bunch of local unmapps, then return knowing that entire FCM is unmapped.
+o currently, orphaning distributed FCM's, i.e., not putting in
+  function for paging there.  This is okay for now, because we want to
+  merge back and have a single FCM tree, so not worth doing the work
+  in code that will go away.
+o large page support in PM hierarchy, aggressively coalesc memory

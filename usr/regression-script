@@ -1,0 +1,17 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: regression-script,v 1.12 2005/06/28 19:48:46 rosnbrg Exp $
+# ############################################################################
+#
+ls # expect to see a list of /
+ls bin # expect to see a list of /bin
+hello # expect hello to be run
+cat /tests/native/hithere # expect to see output
+testPageOut # expect testPageOut success
+#dcotest # expect dcotest success

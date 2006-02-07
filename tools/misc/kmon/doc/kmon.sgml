@@ -1,0 +1,30 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: kmon.sgml,v 1.1 2001/09/27 15:27:34 bob Exp $
+-->
+<!doctype book PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!entity topsrc "../../..">
+<!entity % kmon.ent SYSTEM "kmon.ent">
+%kmon.ent;
+]>
+<!-- $Id: kmon.sgml,v 1.1 2001/09/27 15:27:34 bob Exp $ -->
+<book id="K42">
+<chapter id="kmonOver">
+&kmonOver;
+</chapter>
+<chapter id="kmonPrgG">
+&kmonPrgG;
+</chapter>
+</book>
+
+<!--
+Local Variables:
+mode: sgml
+End:
+-->

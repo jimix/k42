@@ -1,0 +1,62 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: profile,v 1.5 2002/03/22 20:32:23 jimix Exp $
+# ############################################################################
+#
+# spec profile
+#
+
+LC_ALL=C
+unset LANG
+export PATH LC_ALL
+
+SPEC=${SPEC:-0}
+if [ "$SPEC" = "0" ] ; then
+	echo "Setting up your environment."
+	SPEC=`pwd`
+fi
+set TESTRESULTS $SPEC/tests.results
+export TESTRESULTS
+
+echo "The 'bin' directory for SPEC is now being added to your path"
+PATH=/usr/bin
+PATH=$PATH:/usr/sbin
+PATH=$PATH:/sbin
+PATH=$PATH:/etc
+PATH=$PATH:/usr/ucb
+PATH=$PATH:.
+PATH=$PATH:/usr/bin/X11
+PATH=/bin:${PATH}
+PATH=$SPEC/bin:${PATH}
+
+export SPEC PATH
+echo "PATH=$PATH"
+
+echo "Setting TESTRESULTS to $SPEC/tests.results"
+TESTRESULTS=$SPEC/tests.results
+export TESTRESULTS
+echo "Checking for a bin directory"
+if [ ! -d $SPEC/bin ] ; then
+	mkdir $SPEC/bin
+	echo "Created $SPEC/bin"
+fi
+echo "Checking for a $TESTRESULTS"
+if [ ! -d $TESTRESULTS ] ; then
+	mkdir $TESTRESULTS
+	echo "Created $TESTRESULTS"
+fi
+echo "Setting SPECTMP to $SPEC/tmp"
+SPECTMP=$SPEC/tmp
+export SPECTMP
+echo "Checking for a tmp directory"
+if [ ! -d $SPECTMP ] ; then
+	mkdir $SPEC/tmp
+	echo "Created $SPEC/tmp"
+fi
+

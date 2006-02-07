@@ -1,0 +1,50 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2001.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: kbl,v 1.1 2001/05/14 20:16:24 rosnbrg Exp $
+# ############################################################################
+
+# ############################################################################
+# Module Description:  Utility program that breaks victim machine locks.
+#                      Must be copied by hand to /home/thinwire/bin on kserial.
+# ############################################################################
+
+CONFIG=/home/thinwire/bin/powerpc-hw.cfg
+LOCKDIR=/home/thinwire/lock
+
+MACHINE=
+MC_TTY=
+TW_TTY=
+PIDS=
+
+main() {
+    if [ $# != 1 ]; then
+	echo "Usage: $0 <machine_name>"
+	exit
+    fi
+    MACHINE=$1
+    MC_TTY=$(awk '$1 == "'${MACHINE}'" {print $2}' ${CONFIG})
+    TW_TTY=$(awk '$1 == "'${MACHINE}'" {print $3}' ${CONFIG})
+    if [ "${MC_TTY}" == "" -o "${TW_TTY}" == "" ]; then
+	echo "No entry for machine ${MACHINE} in ${CONFIG}"
+	exit
+    fi
+    ps -uthinwire -opid,args > /tmp/bl$$_ps.out
+    PIDS=$(awk '/minicom.*'${MC_TTY}'/ {print $1}\
+		/thinwire.*'${TW_TTY}'/ {print $1}' /tmp/bl$$_ps.out)
+    rm -f /tmp/bl$$_ps.out
+    if [ "${PIDS}" == "" ]; then
+	echo "No minicom (${MC_TTY}) or thinwire (${TW_TTY}) processes found"
+    else
+	kill ${PIDS}
+	sleep 5		# give processes a chance to clean up
+    fi
+    rm -f ${LOCKDIR}/mc_${MACHINE}_${MC_TTY} ${LOCKDIR}/tw_${MACHINE}_${TW_TTY}
+}
+
+main $*

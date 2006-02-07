@@ -1,0 +1,164 @@
+<?xml version='1.0' ?>
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+<event name="MON::Test::Test0">
+	<layerId value="MON" />
+	<classId value="Test" />
+	<specifier value="Test0" />
+	<k42Format value='no data words' />
+</event>
+
+<event name="MON::Test::Test1">
+	<layerId value="MON" />
+	<classId value="Test" />
+	<specifier value="Test1" />
+	<fields>
+  	  <field name="field0" type="uint64" description="this is a descr" /> 
+	</fields>
+	<k42Format value='first data word %0[%llx]' />
+</event>
+
+
+<event name="MON::Test::Test2">
+	<layerId value="MON" />
+	<classId value="Test" />
+	<specifier value="Test2" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+                <field name="field2" type="uint64" description="added field" />
+	</fields>
+	<k42Format value='first data word %0[%llx] second data word %1[%llx]' />
+</event>
+
+<event name="MON::Test::Pack">
+	<layerId value="MON" />
+	<classId value="Test" />
+	<specifier value="Pack" />
+	<fields>
+		<field name="field0" type="uint8" />
+		<field name="field1" type="uint8" />
+		<field name="field2" type="uint16" />
+		<field name="field3" type="uint32" />
+		<field name="field4" type="uint64" />
+	</fields>
+	<k42Format value='here is data 0x%0 0x%1 0x%2 0x%3 0x%4' />
+</event>
+
+
+<event name="MON::Test::String">
+	<layerId value="MON" />
+	<classId value="Test" />
+	<specifier value="String" />
+	<fields>
+		<field name="field0" type="string" />
+	</fields>
+	<k42Format value='here is data str %0[%s]' />
+</event>
+
+
+<event name="MON::Test::StrData">
+	<layerId value="MON" />
+	<classId value="Test" />
+	<specifier value="StrData" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="string" />
+		<field name="field2" type="string" />
+	</fields>
+	<printFormat value='here is data %0 str1 %1 str2 %2' />
+</event>
+
+
+<event name="MON::Test::List">
+	<layerId value="MON" />
+	<classId value="Test" />
+	<specifier value="List" />
+	<fields>
+		<field name="field0" type="uint32" />
+		<field name="listSize" type="uint32" />
+                <field name="theList" type="list" size="listSize" eltType="uint64" />
+	</fields>
+	<k42Format value='field0 is 0x%0[%x] and a list of size %1[%d] %2[%llx]' />
+</event>
+
+<event name="MON::Test::ListOfStrings">
+	<layerId value="MON" />
+	<classId value="Test" />
+	<specifier value="ListOfStrings" />
+	<fields>
+		<field name="listSize" type="uint32" />
+                <field name="theList" type="list" size="listSize" 
+                       eltType="string" />
+	</fields>
+	<printFormat value='list of size %0 [%1]' />
+</event>
+
+<event name="MON::Test::MixedSequence" traceLayout='opt' >
+	<layerId value="MON" />
+	<classId value="Test" />
+	<specifier value="MixedSequence" />
+	<fields>
+		<field name="l8_1" type="uint8" />
+		<field name="l64" type="uint64" />
+		<field name="l16" type="uint16" />
+		<field name="l8_2" type="uint8" />
+		<field name="l32" type="uint32" />
+	</fields>
+	<printFormat value='here is data 0x%0 0x%1 0x%2 0x%3 0x%4' />
+</event>
+
+<event name="MON::Test::Periodic" description="test periodic events" >
+  <layerId value="MON" />
+  <classId value="Test" />
+  <specifier value="Periodic" />
+  <fields>
+      <field name="field0" type="uint64" />
+      <field name="matchField" type="uint64" />
+  </fields>
+  <printFormat value='field0 = %0, matchField= %1' />
+  <interval type='periodic' name='PeriodicInterval' pair='MON::Test::Periodic' match='' />
+</event>
+
+<event name="MON::Test::PhaseStart" description="test interval events" >
+  <layerId value="MON" />
+  <classId value="Test" />
+  <specifier value="PhaseStart" />
+  <fields>
+      <field name="field0" type="uint64" />
+      <field name="matchField" type="uint64" />
+  </fields>
+  <printFormat value='field0 = %0, matchField= %1' />
+  <interval type='start' name='PhaseInterval' pair='MON::Test::PhaseEnd' match='matchField' />
+</event>
+
+<event name="MON::Test::PhaseEnd" description="test interval events" >
+  <layerId value="MON" />
+  <classId value="Test" />
+  <specifier value="PhaseEnd" />
+  <fields>
+      <field name="field0" type="uint64" />
+      <field name="matchField" type="uint64" />
+  </fields>
+  <printFormat value='field0 = %0, matchField= %1' />
+  <interval type='end' name='PhaseInterval' pair='MON::Test::PhaseStart' match='matchField' />
+</event>
+
+<event name="MON::Test::ListOfSmallSizes">
+	<layerId value="MON" />
+	<classId value="Test" />
+	<specifier value="ListOfSmallSizes" />
+	<fields>
+		<field name="listSize" type="uint64" format="%d" />
+                <field name="listOfBytes" type="list" size="listSize" eltType="uint8" />
+                <field name="listOfShorts" type="list" size="listSize" eltType="uint16" />
+                <field name="listOfInts" type="list" size="listSize" eltType="uint32" />
+                <field name="listOfLongs" type="list" size="listSize" eltType="uint64" />
+
+	</fields>
+	<printFormat value='Lists of size %0\n\tbytes:[%1]\n\tshorts[%2]\n\tints[%3]\n\tlongs[%4]' />
+</event>
+
+
+</PEM_Events>

@@ -1,0 +1,30 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: pty.sgml,v 1.1 2001/09/23 18:24:11 bob Exp $
+-->
+<!doctype book PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!entity topsrc "../../..">
+<!entity % pty.ent SYSTEM "pty.ent">
+%pty.ent;
+]>
+<!-- $Id: pty.sgml,v 1.1 2001/09/23 18:24:11 bob Exp $ -->
+<book id="K42">
+<chapter id="ptyOver">
+&ptyOver;
+</chapter>
+<chapter id="ptyPrgG">
+&ptyPrgG;
+</chapter>
+</book>
+
+<!--
+Local Variables:
+mode: sgml
+End:
+-->

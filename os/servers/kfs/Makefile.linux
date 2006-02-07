@@ -1,0 +1,93 @@
+#
+# Makefile for the linux K42 FS (KFS)
+#
+# Copyright (C) 2003 Livio B. Soares (livio@ime.usp.br)
+# Licensed under the LGPL
+# $Id: Makefile.linux,v 1.24 2003/12/16 19:18:04 lbsoares Exp $
+
+# Change '1' below to '0', if snaphshotting is to be turned off
+KFS_SNAPSHOT  := 0
+
+O_TARGET := kfs.o
+
+# Linking CRTs are only necessary when we have global objects in the code,
+# since it needs to implicitly call the constructor and destrutor for us.
+# Also, the module has to call __do_global_ctors_aux() at init time and
+# __do_global_dtors_aux() at exit time.
+# Lastly, they need to link "around" the C++ objects to complete the entire
+# list. So, something like: `ld $CRTBEGIN obj1.o ... objn.o $CRTEND`
+#CRTBEGIN=`$(CXX) -print-file-name=crtbegin.o`
+#CRTEND=`$(CXX) -print-file-name=crtend.o`
+
+obj-y := os-linux/LinuxVFS.o os-linux/LinuxFileSystemKFS.o \
+	os-linux/FileSystemKFSLinux.o os-linux/BlockCache.o \
+	os-linux/BlockCacheLinux.o \
+	os-linux/io/DiskClient.o os-linux/FSFileKFSLinux.o \
+	os-linux/misc/HashSimple.o \
+	FileSystemKFS.o FSFileKFS.o KFSGlobals.o ServerObject.o \
+	ObjToken.o SuperBlock.o KFSDisk.o \
+	LSOBasic.o LSOBasicDir.o LSOBasicFile.o LSOBasicSymlink.o \
+	PSOBasicRW.o RecordMap.o  PSODiskBlock.o PSOPreallocExtent.o \
+	PSOSmall.o PSOSmallMeta.o \
+	KFSDebug.o
+
+ifeq (1, $(KFS_SNAPSHOT))
+obj-y  += private/BlockCacheSnap.o private/os-linux/BlockCacheLinuxSnap.o \
+	private/SuperBlockSnap.o private/PSOSmallSnap.o private/RecordMapSnap.o
+endif
+
+obj-m := $(O_TARGET)
+
+include $(TOPDIR)/Rules.make
+
+CFLAGS_KFS := $(CFLAGS)
+ifeq (1, $(KFS_SNAPSHOT))
+CFLAGS_KFS += -Iprivate/ -Iprivate/os-linux/ -DKFS_SNAPSHOT
+endif
+
+CXX                := g++
+# Remove optimizations to ease debugging
+#CXX_CFLAGS         := $(subst -O2,-O0,$(subst -g,-ggdb3,$(subst -fno-optimize-sibling-calls,,$(CFLAGS_KFS))))
+#CXX_CFLAGS         := $(subst -O2,-O0,$(CFLAGS_KFS))
+#CXX_CFLAGS         := $(subst -O2,-Os,$(CFLAGS_KFS))
+CXX_CFLAGS         := $(CFLAGS_KFS)
+CXX_EXTRA_CFLAGS   += -I. -I$(TOPDIR)/include/linux -Ios-linux/ -DLINUX_KERNEL -nostdlib  -nodefaultlibs -fno-rtti -fno-exceptions -fno-builtin #-fkeep-inline-functions
+
+%.o: %.C
+	$(CXX) $(CXX_CFLAGS) $(CXX_EXTRA_CFLAGS) -DKBUILD_BASENAME=$(subst $(comma),_,$(subst -,_,$(*F))) $(CXX_CFLAGS_$@) -c -o $@ $<
+	@ ( \
+	    echo 'ifeq ($(strip $(subst $(comma),:,$(CXX_CFLAGS) $(CXX_EXTRA_CFLAGS) $(CXX_CFLAGS_$@))),$$(strip $$(subst $$(comma),:,$$(CXX_CFLAGS) $$(CXX_EXTRA_CFLAGS) $$(CXX_CFLAGS_$@))))' ; \
+	    echo 'FILES_FLAGS_UP_TO_DATE += $@' ; \
+	    echo 'endif' \
+        ) > $(dir $@)/.$(notdir $@).flags
+
+#CFLAGS_MY             := $(subst -O2,-O0,$(subst -g,-ggdb3,$(subst -fno-optimize-sibling-calls,,$(CFLAGS_KFS))))
+CFLAGS_MY              := $(CFLAGS_KFS)
+CFLAGS_MY              := -I. $(CFLAGS_MY)
+
+%.o: %.c
+	$(CC) $(CFLAGS_MY) $(EXTRA_CFLAGS_nostdinc) -DKBUILD_BASENAME=$(subst $(comma),_,$(subst -,_,$(*F))) $(CFLAGS_$@) -c -o $@ $<
+	@ ( \
+	    echo 'ifeq ($(strip $(subst $(comma),:,$(CFLAGS_MY) $(EXTRA_CFLAGS_nostdinc) $(CFLAGS_$@))),$$(strip $$(subst $$(comma),:,$$(CFLAGS_MY) $$(EXTRA_CFLAGS_nostdinc) $$(CFLAGS_$@))))' ; \
+	    echo 'FILES_FLAGS_UP_TO_DATE += $@' ; \
+	    echo 'endif' \
+	) > $(dir $@)/.$(notdir $@).flags
+
+# Below is a stupid hack, redefining O_TARGET from Rules.make
+# I just removed the $(filter $(obj-y), $^) to permit the use
+# of CRTBEGIN and CRTEND.
+
+#ifdef O_TARGET
+#$(O_TARGET): $(obj-y)
+#	rm -f $@
+#    ifneq "$(strip $(obj-y))" ""
+#	$(LD) $(EXTRA_LDFLAGS) -r -o $@ $(obj-y)
+#    else
+#	$(AR) rcs $@
+#    endif
+#	@ ( \
+#	    echo 'ifeq ($(strip $(subst $(comma),:,$(EXTRA_LDFLAGS) $(obj-y))),$$(strip $$(subst $$(comma),:,$$(EXTRA_LDFLAGS) $$(obj-y))))' ; \
+#	    echo 'FILES_FLAGS_UP_TO_DATE += $@' ; \
+#	    echo 'endif' \
+#	) > $(dir $@)/.$(notdir $@).flags
+#endif # O_TARGET

@@ -1,0 +1,227 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: sysPrgG.sgml,v 1.4 2002/01/10 21:18:48 dilma Exp $
+-->
+<title>Clustered Object System (COS)</title>
+<section>
+  <title>Overview</title>
+  <para>
+    The white paper <ulink url="&topsrc/doc/white-papers/ClusteredObject.html">
+    Clustered Objects in K42</ulink> provides information on Clustered Objects.
+  </para>
+
+  <para>
+    (More to be written.)
+
+  </para>
+</section>
+
+<section>
+  <title>Files</title>
+  <para>
+
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/COSMgr.H"><filename>COSMgr:</filename></ulink>
+    Interface to the Clustered Object System Manager. Contains statics
+    which recored the standard well known clustered object references
+    available in all processes
+    
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/lib/libc/cobj/sys/COSMgrObject.H"><filename>COSMgrObject[.H]</filename></ulink>
+	<ulink
+	url="&topsrc/lib/libc/cobj/sys/COSMgrObject.C"><filename>[.C]</filename></ulink>:
+	The user level implementation of the Clustered Object Manager
+
+      </simpara>
+      <itemizedlist>
+	<listitem>
+	  <simpara>
+        
+	    <ulink url="COSMgrObjectKernObject.H"><filename>
+	    COSMgrObjectKernObject[.H]</filename></ulink> <ulink
+	    url="&topsrc/lib/libc/cobj/sys/COSMgrObjectKernObject.C"><filename>[.C]</filename>
+	    </ulink>:The kernel level implementation of the Clustered
+	    Object Manager
+
+	  </simpara>
+	</listitem>
+      </itemizedlist>
+    </listitem>
+  </itemizedlist>
+  <para>
+
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/COSMgrKern.H"><filename>COSMgrKern:</filename></ulink>
+    Kernel Specific Extensions to COSMgr Interface. (Records Kernel
+    well known Clustered Objects
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/COSMissHandler.H"><filename>COSMissHandler:</filename></ulink>
+    Interface that every Clustered object must implement to its ensure
+    ability to interact with the Clustered Object System.  Typically a
+    single object within a Clustered Object implements this interface.
+    The Clustered Object System expects the object to server as the
+    central point of contact for a given Clustered
+    Object. Implementation note: Only subclasses of this class can be
+    installed into the global translation table.
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/COSTransObject.H"><filename>COSMTransObject[.H</filename></ulink>
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/COSTransObject.H"><filename>.C]:</filename></ulink>
+    Class from which every representative object of a Clustered Object
+    must be a subclass of.
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/COSconsts.h"><filename>COSconsts:</filename></ulink>
+    Some Clustered Object System constants required both in C++ and
+    assembley files.
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/COVTable.H"><filename>COVTable:</filename></ulink>
+    Clustered Object System's view of a C++ vtable.  This is fragile
+    code which exposes the implementation of the compiler specific
+    vtable implementation.  Needs to be changed if the compiler
+    changes.
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/TransEntry.H"><filename>TransEntry:</filename></ulink>
+    Defines the structures of both the global and local translation
+    table entries and includes methods for manipulating there fields.
+
+  </para>
+  <para>
+    
+ <ulink
+ url="&topsrc/lib/libc/cobj/sys/COSDefaultObject.H"><filename>COSDefaultObject:</filename></ulink>
+ This is the special hand built object used by the COS to lazyly
+ redirect calls to a clustered object on first access on a vp.  Or
+ subsequent accesses if the local tranlation table enties for a given
+ clustered object reference has been reset.
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/COSBreakpointObject.H"><filename>COSBreakpointObject:
+    </filename></ulink> Another specialized Clustered Object whose
+    methods all cause a breakpoint to occur.
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/TransPageDescList.H"><filename>TransPageDescList[.H
+    </filename></ulink> <ulink
+    url="&topsrc/lib/libc/cobj/sys/TransPageDescList.C"><filename>.C]:</filename></ulink>
+    Class used by the COSMgrObject to manage the references of the
+    global translation table.
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/TransPageDescHash.H"><filename>TransPageDescHash[.H
+    </filename></ulink> <ulink
+    url="&topsrc/lib/libc/cobj/sys/TransPageDescHash.C"><filename>.C]:</filename></ulink>
+    Class used by the TransPageDesList to store the pages of memory
+    which back the global trans table.
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/TransPageDesc.H"><filename>TransPageDesc[.H</filename></ulink>
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/TransPageDesc.C"><filename>.C]:</filename></ulink>
+    A descriptor which describles a single page of memory which
+    contains TransEntry structures and is stored in the
+    TransPageDescHash.  Each descriptor keeps a list of the free
+    entires on the page and is capable of allocating and deallocating
+    entires from the page.
+
+  </para>
+  <para>
+
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/defaultFuncs.S"><filename>defaultFuncs</filename></ulink>
+    This is the assembly code which implements the methods of the
+    DefaultObject.
+
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/cobj/sys/arch/mips64/defaultFuncs.S"><filename>mips
+	specific</filename></ulink>
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/lib/libc/cobj/sys/arch/powerpc/defaultFuncs.S"><filename>powerpc
+	specific</filename></ulink>
+
+      </simpara>
+    </listitem>
+  </itemizedlist>
+  <para>
+
+    <ulink
+    url="&topsrc/lib/libc/cobj/sys/mediateMethods.S"><filename>mediateMethods</filename></ulink>This
+    is the assembly code which implements the methods of the mediator
+    object which is used to switch clustered objects on the fly.
+    
+  </para>
+<itemizedlist spacing="compact">
+
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/lib/libc/cobj/sys/arch/mips64/mediateMethods.S"><filename>mips
+	specific</filename></ulink>
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink
+	url="&topsrc/lib/libc/cobj/sys/arch/powerpc/mediateMethods.S"><filename>powerpc
+	specific</filename></ulink>
+    
+      </simpara>
+    </listitem>
+  </itemizedlist>
+</section>
+

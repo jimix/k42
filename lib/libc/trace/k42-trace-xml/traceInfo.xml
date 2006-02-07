@@ -1,0 +1,143 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceInfo.xml,v 1.7 2004/11/14 16:56:24 bob Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::Info::NumberProcessors"
+       description="Number of processors being used to run machine">
+	<layerId value="OS" />
+	<classId value="Info" />
+	<specifier value="NumberProcessors" />
+	<fields>
+		<field name="numberProcessors" type="uint64" 
+                 description="number of processors we are running with
+                              not number of processors on mahcine"   />
+	</fields>
+	<k42Format value='Number of Processors %0[%lld]' />
+</event>
+
+
+<event name="OS::Info::MemorySize"
+       description="size of memory">
+	<layerId value="OS" />
+	<classId value="Info" />
+	<specifier value="MemorySize" />
+	<fields>
+		<field name="memorySize" type="uint64" 
+                 description="size of memory on machine same as amount used"   />
+	</fields>
+	<k42Format value='Size of memory 0x%0[%llx]' />
+</event>
+
+<event name="OS::Info::PageTableSize"
+       description="size of the page table, for convenience both the log
+       number of ptes and size in bytes of the table is logged">
+	<layerId value="OS" />
+	<classId value="Info" />
+	<specifier value="PageTableSize" />
+	<fields>
+		<field name="logNumberPTEs" type="uint64" 
+                 description="log number of ptes page table entries"   />
+		<field name="sizePageTable" type="uint64" 
+                 description="size of page table"   />
+	</fields>
+	<k42Format value='log number of ptes %0[%lld] size of page table 0x%1[%llx]' />
+</event>
+
+<event name="OS::Info::ControlFlags"
+       description="flags used to control k42 behavior, such as length of
+       thinwire polling, migration behavior, pmroot distributiveness, etc
+       see KernelInfo.H for description of look at book output">
+	<layerId value="OS" />
+	<classId value="Info" />
+	<specifier value="ControlFlags" />
+	<fields>
+		<field name="controlFlags" type="uint64" 
+                 Description="k42 control flags"   />
+	</fields>
+	<k42Format value='Control flags 0x%0[%llx]' />
+</event>
+
+<event name="OS::Info::LinkDate"
+       description="date the kernel running was linked">
+	<layerId value="OS" />
+	<classId value="Info" />
+	<specifier value="LinkDate" />
+	<fields>
+		<field name="linkDate" type="string" 
+                 description="date the kernel running was linked"   />
+	</fields>
+	<k42Format value='Date kernel was linked %0[%s]' />
+</event>
+
+<event name="OS::Info::CVSCheckoutDate"
+       description="date the kernel running checked out">
+	<layerId value="OS" />
+	<classId value="Info" />
+	<specifier value="CVSCheckoutDate" />
+	<fields>
+		<field name="linkDate" type="string" 
+                 description="date the kernel running checked out"   />
+	</fields>
+	<k42Format value='Date the kernel running checked out %0[%s]' />
+</event>
+
+<event name="OS::Info::BuildUser"
+       description="user that built the running kernel">
+	<layerId value="OS" />
+	<classId value="Info" />
+	<specifier value="BuildUser" />
+	<fields>
+		<field name="linkDate" type="string" 
+                 description="user that built the running kernel"   />
+	</fields>
+	<k42Format value='User that built the running kernel %0[%s]' />
+</event>
+
+<event name="OS::Info::DebugLevel"
+       description="debug level of the running kernel">
+	<layerId value="OS" />
+	<classId value="Info" />
+	<specifier value="DebugLevel" />
+	<fields>
+		<field name="linkDate" type="string" 
+                 description="debug level of the running kernel"   />
+	</fields>
+	<k42Format value='Debug level of the running kernel %0[%s]' />
+</event>
+
+<event name="OS::Info::CPUClockFrequency"
+       description="frequency of the cpu clock">
+	<layerId value="OS" />
+	<classId value="Info" />
+	<specifier value="CPUClockFrequency" />
+	<fields>
+		<field name="CPUClockFrequency" type="uint64" 
+                 description="frequency of the cpu clock"   />
+	</fields>
+	<k42Format value='CPU CLock Frequency %0[%lld]HZ' />
+</event>
+
+<event name="OS::Info::TicksPerSecond"
+       description="number of tracing ticks per second">
+	<layerId value="OS" />
+	<classId value="Info" />
+	<specifier value="TicksPerSecond" />
+	<fields>
+		<field name="TicksPerSecond" type="uint64" 
+                 description="number of tracing ticks per second"   />
+	</fields>
+	<k42Format value='Ticks per second %0[%lld]' />
+</event>
+
+</PEM_Events>

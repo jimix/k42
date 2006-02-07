@@ -1,0 +1,57 @@
+/******************************************************************************
+ * K42: (C) Copyright IBM Corp. 2000.
+ * All Rights Reserved
+ *
+ * This file is distributed under the GNU LGPL. You should have
+ * received a copy of the license along with K42; see the file LICENSE.html
+ * in the top-level directory for more details.
+ *
+ * $Id: TODO,v 1.8 2001/03/02 20:34:46 rosnbrg Exp $
+ *****************************************************************************/
+
+current:
+- mechanism to start and stop another process's dispatchers - for gang
+  scheduling
+
+design discussion:
+- move VP or add VPs and migrate threads
+
+central to SOSP target:
+- gang scheduling
+
+basic infrastructure:
+- retry notification wrt Async IPC
+- retry notification wrt Sync IPC
+- primitive PPC to disabled target
+- primitive PPC to remote target
+- PPC send/reply to remote target
+- domain administration
+- denial of service: need to discuss architecture to ensure that async
+  calls can't dominate
+- stub compiler with machine specific component to marshall args into 
+  registers, also change async calls so arguments don't have to be copied
+  into PPC page
+- consider a virtual-time timer facility; maybe use it instead of
+  soft-preempt requests to drive thread time-slicing.  Also, consider
+  adding a "quantum expired" informational interrupt bit, separate from the
+  soft-preempt request bit.
+- increase user thread stack size
+- build a mechanism for expanding the xobject pool dynamically
+
+questionable:
+- polling in idle loop (?): avoiding doing a full state save when
+  pre-empting idle process (save on the order of a couple of hundred
+  cycles) 
+- recursion solutions: for traversing unbounded data structures, may
+  need thread s with super-large stacks in kernel... 
+
+done:
+- thread preemption
+- VP dispatching algorithm
+- async IPC on thread (ROS)
+- multiple domains
+  - vpnum become row and column index, have to look at every use and
+    see if talking about column, row or both 
+- move generation records out of dispatcher, or look at all (ROS)
+- "use it or lose it" design and implementation
+- make idle vps a row of the kernel, not user-level processes

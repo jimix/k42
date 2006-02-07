@@ -1,0 +1,19 @@
+/.cvsignore/1.9/Wed Aug 22 19:17:27 2001//D2005.09.07.14.00.00
+/BUGS/1.6/Tue Jul 30 20:47:57 2002//D2005.09.07.14.00.00
+/LICENSE.html/1.3/Mon May  8 07:27:43 2000//D2005.09.07.14.00.00
+/Make.paths.proto/1.1/Fri Jun 18 16:54:21 2004//D2005.09.07.14.00.00
+/MakePaths.proto/1.134/Mon Aug  8 10:18:43 2005//D2005.09.07.14.00.00
+/Makefile/1.110/Fri Jul  8 01:19:52 2005//D2005.09.07.14.00.00
+/README.html/1.16/Fri Feb 21 15:01:59 2003//D2005.09.07.14.00.00
+/RegressStamp/1.414/Wed Sep  7 07:39:01 2005//D2005.09.07.14.00.00
+/Status/1.237/Thu Aug 25 18:37:07 2005//D2005.09.07.14.00.00
+/StatusOtherBenchs/1.1/Fri Jun 11 15:28:17 2004//D2005.09.07.14.00.00
+/dead-dirs/1.43/Fri Mar 18 19:51:47 2005//D2005.09.07.14.00.00
+D/bin////
+D/contrib////
+D/doc////
+D/lib////
+D/os////
+D/tools////
+D/usr////
+D/kitch-linux////

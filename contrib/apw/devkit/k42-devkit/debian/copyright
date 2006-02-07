@@ -1,0 +1,25 @@
+This package was debianized by Amos Waterland <apw@us.ibm.com> on
+Fri Feb 18 13:57:52 EST 2005
+
+It was downloaded from http://research.ibm.com/k42
+
+Upstream Author: Michal Ostrowski <mostrows@us.ibm.com>
+
+Copyright: GNU General Public Licence, Version 2
+
+   Tuxracer is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Library General Public License as
+   published by the Free Software Foundation; either version 2 of the
+   License, or (at your option) any later version.
+
+   Tuxracer is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+
+   You should have received a copy of the GNU General Public License with
+   your Debian GNU/Linux system, in /usr/share/common-licenses/GPL, or with
+   the Debian GNU/Linux bash source package as the file COPYING.  If not,
+   write to the Free Software Foundation, Inc., 59 Temple Place - Suite
+   330, Boston, MA 02111-1307, USA.
+

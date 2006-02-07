@@ -1,0 +1,73 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: bootPrgG.sgml,v 1.1 2001/09/23 18:24:00 bob Exp $
+-->
+<title>boot directory</title>
+<section>
+  <title>Overview</title>
+  <para>
+    An overview of system boot on the various architectures.
+  </para>
+  <section>
+    <title>PowerPC</title>
+    <para>
+      On PowerPC hardware, we construct a CHRP boot image with the kernel
+      piggy-backed as data.  Current systems boot a 32-bit ELF executable
+      with a special OpenFirmware "note".
+    </para>
+    <para>
+      The boot program is a stand-alone XCOFF program which is packed in an
+      ELF header and prepended to the kernel by the standard AIX
+      mkboot_chrp utility.  The program is run in real-mode without address
+      translation.
+    </para>
+    <para>
+      The boot program is given control by OpenFirmware with the console
+      open.  The program finds the piggybacked kernel and then reads the
+      kernel executable header to locate the various sections (text, data,
+      and bss).  PTEs for the segments are created and the sections are
+      copied to their intended linked physical address.  Runtime
+      Application Services (RTAS) are instantiated in low memory for the
+      kernel to access hardware facilities.  The I/O devices and interrupt
+      controller on the system are probed with necessary information stored
+      in a BootInfo data structure used by the kernel.
+    </para>
+    <para>
+      PCI devices not configured by OpenFirmware are properly enabled when
+      probed.  PCI registers are accessed via RTAS PCI configuration space
+      calls.  Any secondary processors are started and placed into a spin
+      loop to be woken when the kernel is running.  The timebase register
+      of each processor is zeroed and started synchronized.
+    </para>
+    <para>
+      An assembly routine is called which switches the processor into
+      64-bit mode and jumps to the entry point of the kernel.  The routine
+      is passed a KernelArgs structure containing various initialization
+      values: some values provided by the OpenFirmware boot and additional
+      values such as the kernel entry point, TOC, stack base, and PTE SDR1
+      register value.
+    </para>
+    <para>
+      PowerPC SimOS is booted in a similar manner although no hardware probing
+      is performed.  The SimOS boot program is a 64-bit executable with the kernel
+      directly concatenated onto the end.  SimOS boot stores some fake, appropriate
+      values into the BootInfo structure: some values appropriate for the simulator,
+      some values appropriate for the simulated S70 Raven system, and some values
+      as flags to the kernel running on the simulator.  The zero OpenFirmware
+      entry point and zero PCI hostbridge information are necessary.
+    </para>
+  </section>
+</section>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./boot.sgml" "chapter" "title")
+End:
+-->

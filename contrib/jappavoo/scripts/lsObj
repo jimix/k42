@@ -1,0 +1,234 @@
+#!/usr/bin/env perl
+#!perl
+# K42: (C) Copyright IBM Corp. 2003.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the license along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#
+# Prerequisites:
+require "getopts.pl";
+use Math::BigInt;
+use IO::Socket;
+
+$verbose=0;
+$clear=0;
+$port=3624;
+$listObjects=1;
+$periodic=0;
+$dostats=1;
+$dotty=0;
+$network=0;
+$output=STDOUT;
+
+&Getopts('q:h:p:Psorvdn');
+($opt_h) && ($host=$opt_h);
+($opt_p) && ($port=$opt_p);
+($opt_v) && ($verbose=1,$listObjects=1);
+($opt_s) && ($listObjects=0,$dostats=1);
+($opt_o) && ($listObjects=1,$dostats=0);
+($opt_P) && ($periodic=1,$listObjects=0);
+($opt_r) && ($raw=1,$listObjects=1, $dostats=0);
+($opt_q) && ($rawquery=$opt_q, $raw=1, $dostats=0);
+($opt_d) && ($dotty=1, $listObjects=0, $dostats=0);
+($opt_n) && ($network=1);
+
+if (!$raw) {
+  if (!$ARGV[0]) {
+    usage();
+    exit(1);
+  }
+
+  $IMAGE=$ARGV[0];
+  shift;
+}
+
+%symtbl={};
+%stats={};
+$c=0;
+$total=0;
+
+# Print usage statement.
+sub usage() {
+print <<EOF;
+'lsObj' attaches to a K42 host and acquires its object list
+
+Usage: lsObj [OPTION [ARG] ...] IMAGE
+ -v       be verbose
+ -r       do not require IMAGE, do raw symbols instead
+ -q QUERY do not require IMAGE and pass QUERY to K42 remote listener
+ -o       list objects but not statistics
+ -s       list statistics but not objects
+ -d       output a directed graph and do not list statistics or objects
+ -P       periodically update the screen with current object list
+ -n       listen on port 3625 and send output there instead of stdout
+ -h HOST  connect to K42 instance running on HOST
+ -p PORT  use PORT when connect to K42 instance
+
+Examples: lsObj -h foo.bar.org boot_image.dbg
+          lsObj -h foo.bar.org -d boot_image.dbg
+          lsObj -h foo.bar.org -r
+
+EOF
+}
+
+sub symtbl {
+    local($add,$len,$type,$sym,$c);
+    undef $add;
+    $c=0;
+    open(SYM,"powerpc64-linux-nm -a -C $IMAGE|");
+    while (<SYM>) {
+	/(.*) V vtable for (.*)/ && ($add="0x$1",$name=$2);
+        ( $symtbl{$add}=$name,$c++,
+        ) if ($add);
+        (print "adding $add : $name\n") if ($add && $verbose);
+	$c==100 && ((print STDERR "."),$c=0);
+        undef $add;
+    }
+    print STDERR "\n";
+}
+
+sub findsymbl {
+    local($target,$tmp,$vtblAddr)=@_;
+
+    $tmp=Math::BigInt->new($target);
+    $tmp->bsub(16);
+    $vtblAddr=$tmp->as_hex();
+    (print "looking for $vtblAddr derived from $target\n") if ($verbose);
+    ($stats{$symtbl{$vtblAddr}}++,
+     return "$symtbl{$vtblAddr}") if $symtbl{$vtblAddr};
+
+    $stats{"NOTFOUND"}++;
+    return "NOTFOUND";
+}
+
+sub vprint {
+ local($str)=@_;
+ if ($verbose) { print STDERR $str; }
+}
+
+sub printStats {
+  local($stat);
+  if ($dostats) {
+    foreach $stat (keys %stats) {
+      $total=$total+$stats{$stat};
+      print "**** STATS: $stat: $stats{$stat}\n";
+    }
+    print  "**** STATS: Total objects=$total\n";
+  }
+}
+
+sub resetStats {
+  if ($dostats) {
+    undef %stats;
+    $total=0;
+  }
+}
+
+sub connectToK42 {
+  local($k42host, $k42port)=@_;
+
+  &vprint("Attempting to connect to $k42host:$k42port\n");
+
+  $k42sock = new IO::Socket::INET (
+                                   PeerAddr => $k42host,
+                                   PeerPort => $k42port,
+                                   Proto    => 'tcp',
+                                   );
+  die "Could not create socket: $!\n" unless $k42sock;
+  &vprint("Connected to $k42host:$k42port\n");
+}
+
+sub queryK42 {
+  local($ref,$root,$type,$name,$index = 0,$relation);
+  &vprint("Attempting to get object list from k42 host\n");
+
+  if ($rawquery) { print $k42sock "$rawquery\n"; }
+  else { print $k42sock "getObjectList\n"; }
+
+  ($dotty) && print $output "graph Objects {\n";
+
+  while (defined($_ = <$k42sock>)) {
+    if ($raw) {
+      print;
+    } else {
+      /(.*) (.*) (.*)/ && ($ref=$1, $root=$2, $type=$3);
+      $name=&findsymbl($type);
+      if ($listObjects) {
+#       print "$ref $root $type ",$name, "\n";
+       print $output "$ref $root $type ",$name, "\n";
+      }
+      if ($dotty) {
+        $relation = "$name -- $ref";
+	$relation =~ tr/[:<>]/_/;
+        $relation =~ s/0x/Ox/;
+        print $output "  $relation;\n";
+        $index++;
+      }
+    }
+  }
+  close($k42sock);
+  ($dotty) && print $output "}\n";
+  &printStats();
+  &resetStats();
+}
+
+sub getObjs()  {
+  connectToK42($host, $port);
+  queryK42();
+}
+
+
+if (!$raw) {
+#  print STDERR "Loading symbols ...";
+  &symtbl();
+}
+
+if ($host) {
+  if ($periodic) {
+    do {
+      ($clear) && system "clear";
+      getObjs();
+    } while (sleep(5));
+  } elsif ($network) {
+    print "Waiting for connection on port 3625 ...\n";
+    my $listensock = IO::Socket::INET->new(LocalPort => 3625,
+					   Listen => 10,
+					   Proto => 'tcp',
+					   Reuse => 1);
+
+    while (my $connection = $listensock->accept) {
+        print "Handling incoming socket connection ...\n";
+	$output=$connection;
+	getObjs();
+        close($connection);
+    }
+  } else {
+    getObjs();
+  }
+} else {
+  foreach $infile (@ARGV) {
+    open(INFILE,$infile) || die "Error opening $infile\n";
+    open(OUTFILE,">$infile.ann") || die "Error opening $infile.ann\n";
+    print STDERR "Processing $infile:\n";
+    print STDERR "Translating addresses.";
+
+    $c=0;
+    &resetStats();
+    while (<INFILE>) {
+      $line=$_;
+ 	/^.* typeToken=(.*)$/ && ($addr="$1"); 
+      chop($line);
+      print OUTFILE ("$line (",&findsymbl($addr),")\n");
+      $c++;
+      $c==100 && ((print STDERR "."),$c=0);
+    }
+    print STDERR "\n";
+    &printStats();
+    &resetStats();
+    close(INFILE);
+    close(OUTFILE);
+  }
+}

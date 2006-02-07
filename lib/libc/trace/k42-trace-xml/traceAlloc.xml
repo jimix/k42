@@ -1,0 +1,26 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceAlloc.xml,v 1.4 2004/07/08 17:15:32 gktse Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::Alloc::CreateReg">
+	<layerId value="OS" />
+	<classId value="Alloc" />
+	<specifier value="CreateReg" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='MemDesc::CreateNewRegion %0[%llx]' />
+</event>
+
+</PEM_Events>

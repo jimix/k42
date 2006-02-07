@@ -1,0 +1,19 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: libOver.sgml,v 1.1 2001/09/30 21:09:25 bob Exp $
+-->
+<title>lib overview goes here</title>
+<para>lib overview text goes here</para>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./lib.sgml" "chapter" "title")
+End:
+-->

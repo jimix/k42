@@ -1,0 +1,45 @@
+k42-packages (0.5.4-1) unstable; urgency=low
+
+  * Go forward to linux-029 and partDEb.Img.4.
+
+ -- Amos Waterland <apw@us.ibm.com>  Mon,  18 Jul 2005 13:25:26 -0500
+
+  * Go back to linux-028 and Img.3, fixing permissions.
+
+ -- Amos Waterland <apw@us.ibm.com>  Mon,  18 Jul 2005 13:25:26 -0500
+	
+  * Do not do parallel builds.
+
+ -- Amos Waterland <apw@us.ibm.com>  Fri,  08 Jul 2005 09:34:13 -0500
+
+  * Add linux-029 and Img.4.
+
+ -- Amos Waterland <apw@us.ibm.com>  Tue,  05 Jul 2005 10:12:28 -0500
+
+  * Add linux-028.
+
+ -- Amos Waterland <apw@us.ibm.com>  Mon,  06 Jun 2005 20:48:04 -0500
+
+  * Compilation fix.
+
+ -- Amos Waterland <apw@us.ibm.com>  Tue,  24 May 2005 20:27:54 -0500
+
+  * More space cleanups.
+
+ -- Amos Waterland <apw@us.ibm.com>  Tue,  24 May 2005 19:36:54 -0500
+
+  * Minor space cleanups.
+
+ -- Amos Waterland <apw@us.ibm.com>  Tue,  24 May 2005 17:51:44 -0500
+
+  * More Linux patches, and don't package Bitkeeper metadata anymore.
+
+ -- Amos Waterland <apw@us.ibm.com>  Tue,  24 May 2005 16:19:50 -0500
+
+  * Linux patches that enable ssh.
+
+ -- Amos Waterland <apw@us.ibm.com>  Tue,  10 May 2005 16:27:39 -0500
+
+  * Initial Release.
+
+ -- Amos Waterland <apw@us.ibm.com>  Fri,  18 Feb 2005 15:36:35 -0500

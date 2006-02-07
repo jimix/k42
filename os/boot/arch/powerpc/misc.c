@@ -1,0 +1,165 @@
+/******************************************************************************
+ * K42: (C) Copyright IBM Corp. 2000.
+ * All Rights Reserved
+ *
+ * This file is distributed under the GNU LGPL. You should have
+ * received a copy of the license along with K42; see the file LICENSE.html
+ * in the top-level directory for more details.
+ *
+ * $Id: misc.c,v 1.11 2004/10/27 13:56:42 mostrows Exp $
+ *****************************************************************************/
+#include <stddef.h>
+
+char 	*strcat(char *s1, const char *s2);
+char 	*strcpy(char *s1, const char *s2);
+
+int strlen(const char *s)
+{
+	register int i = 0;
+
+	while (s[i] != '\0')			/* up to NULL */
+		++i;
+	return (i);
+}
+
+int isprint(int c)
+{
+	return (( c >= 0x20 ) && ( c <= 0x7E ));
+}
+int isspace(int c)
+{
+    return ((c == ' ') || (c == '\f') || (c == '\n')
+	   || (c == '\r') || (c == '\t') || (c == '\v'));
+}
+
+int isdigit(int c)
+{
+    return ((c >= '0') && (c <= '9'));
+}
+
+int atoi(const char *s)
+{
+    register int i = 0, n, sign = 1;
+
+    for (i = 0; isspace(s[i]); i++)
+	;
+    if (s[i] == '-')
+	sign = -1, i++;
+    if (s[i] == '+')
+	i++;
+    for (n = 0; isdigit(s[i]); i++)
+	n = 10 * n + (s[i] - '0');
+
+    return (sign * n);
+}
+
+/*
+ *
+ *  hexdump(buf,cc) - Format and display hex dump of data block
+ *
+ *          Inputs:
+ *		buf  - Pointer to input buffer to dump
+ *		cc   - Character count to dump
+ *
+ */
+
+hexdump(char * buf,int cc)
+{
+    int    i,j;
+    char   hstr[60];
+    char   astr[19];
+    char   tbuf[10];
+
+    while (cc)
+    {
+	strcpy(astr,"[................]");
+	strcpy(hstr,"");
+
+	for (i=0,j=1;i<16 && cc>0;i++,j++)
+	{
+	    cc--;
+	    sprintf(tbuf,"%02X",*(buf+i));
+	    strcat(hstr,tbuf);
+	    if (!(j%4))
+		strcat(hstr," ");
+
+	    if (isprint(*(buf+i)))
+	    {
+		astr[j] = *(buf+i);
+	    }
+	}
+
+	for (; j<=16; j++) {
+	    strcat(hstr,"  ");
+	    if (!(j%4))
+		strcat(hstr," ");
+	}
+	buf+=16;
+	printf("\t%s %s\n\r",hstr,astr);
+    }
+}
+
+int strcmp( const char *s1, const char *s2 )
+{
+	register char *str1 = (char *)s1;
+	register char *str2 = (char *)s2;
+
+	while (*str1 && (*str1 == *str2))
+		str1++, str2++;
+	return ((int)(*str1 - *str2));
+}
+
+int strncmp( const char *s1, const char *s2, size_t size)
+{
+	register char *str1 = (char *)s1;
+	register char *str2 = (char *)s2;
+
+	while (size-- && *str1 && (*str1 == *str2))
+		str1++, str2++;
+	return ((int)(*str1 - *str2));
+}
+
+char *strcpy( char *s1, const char *s2 )
+    {
+	register char *dest = (char *)s1;
+	register char *src  = (char *)s2;
+						/* copy up to NULL */
+	while (( *dest++ = *src++ ) != '\0' )
+	    ;
+	return ( s1 );
+    }
+
+char *strcat( char *s1, const char *s2 )
+    {
+	register char *dest = (char *)s1;
+	register char *src  = (char *)s2;
+
+	while ( *dest != '\0' )			/* look for dest null char */
+	    dest++;
+	while (( *dest++ = *src++ ) != '\0')	/* copy up to src null char */
+	    ;
+	return ( s1 );
+    }
+
+#define MAXEXITS        32                      /* max number of atexits */
+
+static void (*_atexit[ MAXEXITS ])(void);       /* atexit functions */
+static unsigned _n_atexit = 0;                  /* number of functions */
+
+void exit ( int status )
+    {
+        while ( _n_atexit-- )                   /* functions to call? */
+            (*_atexit[ _n_atexit ])();          /* call them */
+
+	while (1) {};
+//        __exit( status );                       /* return to calling prog */
+    }
+
+int atexit( void (*func)(void))
+    {
+        if ( _n_atexit == MAXEXITS-1 )          /* out of room? */
+            return ( -1 );                       /* return error */
+        else
+            _atexit[ _n_atexit++ ] = func;      /* else store function */
+        return ( 0 );                            /* no error */
+    }

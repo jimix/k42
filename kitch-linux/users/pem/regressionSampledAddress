@@ -1,0 +1,77 @@
+#! /usr/bin/env bash
+ 
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# ****************************************************************************/
+# $Id: regressionSampledAddress,v 1.2 2005/03/21 03:04:38 pfs Exp $
+#
+# Automatically generate PEM traces for benchmarks
+# To overcome kpower failures, boot k42 immediately to execute SPECcpu-driver.
+#
+# Must have set up the path correctly before executing: k42_paths
+#
+# @author Peter F. Sweeney
+# @date   3/7/2005
+
+
+if [[ -z $K42_TOP ]]; then
+  echo ""
+  echo "***Must set K42_TOP to point to your version of k42!***"
+  exit -1
+fi
+echo "where \"`where k42console`\""
+if [[ ! -n `where k42console` ]]; then
+  echo ""
+  echo "***Path is not set up correctly to find k42console!***"
+  echo "path: $path"
+  exit -1
+fi
+
+export K42_TRACE_LOG_NUMB_BUFS=8
+export K42_NUMB_LARGE_PAGES_RESERVED=40
+
+# training inputs
+#machine=kxs1
+
+# reference inputs
+machine=kxs2
+
+echo ""
+echo "Environment variables:"
+printenv | grep K42
+
+set -x
+
+cd ~/k42/powerpc/noDeb/os
+
+cp $K42_TOP/kitchsrc/kitch-linux/users/pem/SPECcpuSampledAddress       $K42_TOP/install/powerpc/noDeb/kitchroot/home/pem
+cp $K42_TOP/kitchsrc/kitch-linux/users/pem/SPECcpuSampledAddressDriver $K42_TOP/install/powerpc/noDeb/kitchroot/home/pem
+
+# k42 boot time script
+export K42_INITSCR=/home/pem/SPECcpuSampledAddressDriver
+
+benchmark="Facerec"
+STATUS=2000
+
+benchmarkNameFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.SPECcpuSampledAddress.BenchmarkName"
+if [[ -a $benchmarkNameFile ]]; then 
+   rm $benchmarkNameFile
+fi
+echo $benchmark > $benchmarkNameFile
+
+statusFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.SPECcpuSampledAddress.status"
+if [[ -a $statusFile ]]; then 
+  rm $statusFile
+fi
+echo $STATUS > $statusFile
+
+ k42console -m $machine -o noDeb -v 3 -R -B killsteal -- MKANCHOR=/a/kix/homes/kix/pfs/k42 HW_VERBOSE=3
+#k42console -m $machine -o noDeb -v 3 -R -B killsteal -- MKANCHOR=/a/kix/homes/kix/pfs/k42 
+
+

@@ -1,0 +1,58 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: SchedulingDoc.sgml,v 1.1 2004/01/27 20:32:55 okrieg Exp $
+-->
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+
+<!-- To disable review comments replace INCLUDE with IGNORE -->
+<!ENTITY % review "INCLUDE" >
+
+<!-- CVS gives us these -->
+<!ENTITY user "$Author: okrieg $">
+<!ENTITY date "$Date: 2004/01/27 20:32:55 $">
+<!ENTITY revision "$Revision">
+
+<!entity topsrc "../..">
+
+<!-- define and read in entities from this file -->
+<!ENTITY % wp.ent SYSTEM "wp.ent">
+%wp.ent;
+
+<!-- The actual meat of the Scheduling -->
+<!entity % SchedulingDoc.ent SYSTEM "SchedulingDoc.ent">
+%SchedulingDoc.ent;
+]>
+
+
+<!--
+    In DocBook terms, a white paper is and article.
+-->
+<article class="whitepaper" status="draft" lang="en">
+  <title>Scheduling in K42</title>
+  &K42ArtHeader;
+
+  <abstract>
+
+    <para>
+      In K42, responsibility for scheduling is divided between user-level and
+      kernel-level code.
+      Moving part of the scheduler to user level reduces kernel interaction
+      and improves performance.
+      Flexibility is increased because applications can tailor the user-level
+      part of the scheduler to their own needs.
+      K42 was designed from the beginning to support two-level scheduling in
+      a multiprocessor environment.
+    </para>
+
+  </abstract>
+
+    &Scheduling;
+  &bib.sgml;
+</article>
+

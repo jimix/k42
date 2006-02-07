@@ -1,0 +1,68 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceControl.xml,v 1.9 2004/10/04 20:49:00 bob Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::Control::TicksPerSecond">
+	<layerId value="OS" />
+	<classId value="Control" />
+	<specifier value="TicksPerSecond" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='TicksPerSecond 0x%0[%llx]' />
+</event>
+
+
+<event name="OS::Control::Heartbeat" 
+       description="timer heartbeat events that ensures timestamps wrap-arounds are captured" >
+	<layerId value="OS" />
+	<classId value="Control" />
+	<specifier value="Heartbeat" />
+	<fields>
+		<field name="timestamp" type="uint64" description="full 64 bit timestamp" />
+		<field name="physicalProc" type="uint64" description="physical processor id" />
+	</fields>
+	<k42Format value='Heartbeat 64bit time %0[%lld] on vp 0x%1[%llx]' />
+</event>
+
+
+<event name="OS::Control::TracedStart">
+	<layerId value="OS" />
+	<classId value="Control" />
+	<specifier value="TracedStart" />
+	<k42Format value='traced daemon started' />
+</event>
+
+
+<event name="OS::Control::TracedStop">
+	<layerId value="OS" />
+	<classId value="Control" />
+	<specifier value="TracedStop" />
+	<k42Format value='traced daemon stopped' />
+</event>
+
+<event name="OS::Control::TraceMask"
+       decsription="the value of the trace mask whenever it is changed to a
+       non zero value">
+	<layerId value="OS" />
+	<classId value="Control" />
+	<specifier value="TraceMask" />
+	<fields>
+		<field name="traceMask" type="uint64" 
+                 description="value of trace mask" />
+	</fields>
+	<k42Format value='trace mask 0x%0[%llx]' />
+</event>
+
+</PEM_Events>

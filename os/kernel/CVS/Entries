@@ -1,0 +1,16 @@
+/Makefile/1.65/Fri Feb 27 17:14:29 2004//D2005.09.07.14.00.00
+/ObjectRefsKern.H/1.25/Wed Jun 15 04:49:12 2005//D2005.09.07.14.00.00
+/kernIncs.H/1.20/Sun Jul 11 21:59:26 2004//D2005.09.07.14.00.00
+/mmu.H/1.8/Fri Oct  5 21:49:00 2001//D2005.09.07.14.00.00
+D/arch////
+D/bilge////
+D/defines////
+D/doc////
+D/exception////
+D/init////
+D/linux////
+D/mem////
+D/proc////
+D/stubtest////
+D/sys////
+D/trace////

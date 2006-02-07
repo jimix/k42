@@ -1,0 +1,66 @@
+#!/bin/sh
+##################################################################
+##								##
+##		     Copyright (c) 1991 AT&T			##
+##	               All Rights Reserved 			##
+##								##
+##   This is AT&T's unpublished software for SPEC authorized    ##
+##                  and licensed users only                     ##
+##								##
+##################################################################
+
+
+K42setupAndStartHWPerf()
+{
+  # set mask
+  if [ "$SDETHWPERF" ] ; then
+    echo 1 >/ksys/hwperf/toggle
+    echo $SDETHWPERF > /ksys/hwperf/period
+  fi
+}
+
+K42stopHWPerf()
+{
+  if [ "$SDETHWPERF" ] ; then
+    echo 0 > /ksys/hwperf/period
+    echo 0 >/ksys/hwperf/toggle
+  fi
+}
+
+
+## setup critical environment ##
+HOME=`pwd`
+if [ -f $HOME/wcc.env ]
+then
+	. $HOME/wcc.env
+else
+	$echo "$HOME/wcc.env does not exist, using default C compiler"
+fi
+: ${WCC:=cc}
+PATH=$HOME/bin:/bin:/usr/bin:$HOME/tools:/usr/ucb:$ADDPATH
+export PATH HOME CLOBBER CLONEPATH WCC
+unset TMP
+
+CLOBBER=${CLOBBER:-NO}
+
+MAX_CLONE_NUM=`cat $HOME/MAX_CLONE_NUM`
+SEQUENCE=$1
+
+## data files for sde runs ##
+THRPUT=/usr/tmp/thrp.out
+ERFILE=/usr/tmp/err.out
+export THRPUT ERFILE
+rm -f $THRPUT
+rm -f $ERFILE
+
+# K42 Kludge for profiling a single run
+K42setupAndStartHWPerf
+
+$HOME/bin/run $MAX_CLONE_NUM $SEQUENCE	# Run the benchmarks!
+
+# K42 Kludge for profiling a single run
+K42stopHWPerf
+
+## indicate end of benchmark ##
+echo "\nEND OF THE SOFTWARE DEVELOPMENT BENCHMARK\n"
+date

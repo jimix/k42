@@ -1,0 +1,54 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceProc.xml,v 1.7 2005/02/01 14:28:27 cascaval Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::Proc::LinuxFork" description="create new process">
+	<layerId value="OS" />
+	<classId value="Proc" />
+	<specifier value="LinuxFork" />
+	<fields>
+		<field name="pidLinux"  type="uint64" description="linux process id" />
+		<field name="pid"       type="uint64" description="process id" />
+		<field name="ppidLinux" type="uint64" description="linux parent	process id" />
+		<field name="ppid"      type="uint64" description="parent process id" />
+	</fields>
+	<k42Format value='Fork Linux Process - Child Linux PID %0[%llx] K42 PID %1[%llx] Parent Linux PID %2[%llx] Parent K42 PID %3[%llx]' />
+</event>
+
+
+<event name="OS::Proc::LinuxExec" description="overlay executable onto an existing process" >
+	<layerId value="OS" />
+	<classId value="Proc" />
+	<specifier value="LinuxExec" />
+	<fields>
+		<field name="pidLinux" type="uint64" description="linux process	id" />
+		<field name="pid"      type="uint64" description="process id" />
+		<field name="ppid"     type="uint64" description="parent process id" />
+	</fields>
+	<k42Format value='Exec - Linux PID %0[%llx] K42 PID %1[%llx] K42 Parent %2[%llx]' />
+</event>
+
+
+<event name="OS::Proc::LinuxKill" description="terminate linux executable" >
+	<layerId value="OS" />
+	<classId value="Proc" />
+	<specifier value="LinuxKill" />
+	<fields>
+		<field name="pidLinux" type="uint64" description="linux process	id" />
+		<field name="pidK42" type="uint64" description="k42 process id" />
+	</fields>
+	<k42Format value='Terminate a Linux Process - Linux PID 0x%0[%llx] K42 PID 0x%1[%llx]' />
+</event>
+
+</PEM_Events>

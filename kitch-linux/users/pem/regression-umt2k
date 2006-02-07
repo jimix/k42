@@ -1,0 +1,73 @@
+#! /usr/bin/env bash
+ 
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# ****************************************************************************/
+# $Id: regression-umt2k,v 1.1 2005/01/26 17:35:27 pfs Exp $
+#
+# Automatically generate PEM traces for umt2k
+#
+# Environment variables defined:
+#   K42_INITSCR		actions to take when k42 boots
+#
+# @author Peter F. Sweeney
+# @date   1/24/2004
+
+machine=$1
+if [[ -z $1 ]]; then
+  echo "***regression.umt2k: Must specify k42 victim machine!***"
+  exit -1
+fi
+
+set -x
+
+cd ~/k42/powerpc/noDeb/os
+
+cp $K42_TOP/kitchsrc/kitch-linux/users/pem/umt2k $K42_TOP/install/powerpc/noDeb/kitchroot/home/pem
+
+# k42 boot time script
+export K42_INITSCR=/home/pem/umt2k
+
+# files
+#                       statusFile     file that contains status of actions
+   statusFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.umt2k"
+#                       modeFile       file that contains mode of tracing
+     modeFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.umt2k.mode"
+#                       extensionFile  file that contains trace file suffix
+extensionFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.umt2k.extension"
+
+
+iterations="1 2 3 4 5"
+
+for iteration in $iterations; do
+
+  echo "$iteration" > $extensionFile
+
+  MODE=user
+  echo "-$MODE" > $modeFile
+  if [[ -a $statusFile ]]; then 
+    rm $statusFile
+  fi
+  echo 0 > $statusFile
+  echo "umt2k with mode -$MODE with extension $iteration"
+  k42console -m $machine -o noDeb -R -B killsteal
+
+  MODE=both
+  echo "-$MODE" > $modeFile
+  echo "-$MODE" > $modeFile
+  if [[ -a $statusFile ]]; then
+    rm $statusFile
+  fi
+  echo 0 > $statusFile
+  echo "umt2k with mode -$MODE with extension $iteration"
+  k42console -m $machine -o noDeb -R -B killsteal
+
+done
+
+

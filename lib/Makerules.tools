@@ -1,0 +1,111 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Makerules.tools,v 1.30 2004/08/20 17:30:43 mostrows Exp $
+# ############################################################################
+
+# Rules for compiling tools, included in source tree
+#
+# $Id: Makerules.tools,v 1.30 2004/08/20 17:30:43 mostrows Exp $
+
+include $(MKSRCTOP)/Make.paths
+
+ifndef IN_OBJ_DIR
+-include Make.config
+endif #IN_OBJ_DIR
+
+#include only once
+ifndef MAKERULES.TOOLS
+MAKERULES.TOOLS=1
+
+ifndef IN_OBJ_DIR
+default::
+endif
+
+INSTALL_INC=$(MKTOOLBIN)/kinstall
+# if on AIX, then use the gnu version of install
+ifeq ($(PLATFORM_OS),AIX)
+INSTALL=gnuinstall
+PWD=/bin/pwd
+else
+INSTALL=install
+PWD=pwd
+endif
+
+ifeq ($(PLATFORM_OS),IRIX64)
+INSTALL=ginstall
+PWD=/bin/pwd
+endif
+
+ifeq ($(PLATFORM_OS),Linux)
+INSTALL=/usr/bin/install
+PWD=/bin/pwd
+endif
+
+# parallel make breaks windows 95
+ifneq ($(findstring _95, $(PLATFORM_OS)),)
+SEQ=1
+endif
+
+ifdef SEQ
+MAKEFLAGS += -j 1
+else
+MAKEFLAGS += -j -l 4
+endif
+
+ifndef IN_OBJ_DIR
+# define all the phony rules for performance
+.PHONY: default install_includes targets install_targets clean
+.PHONY: subdirs_install_includes subdirs_targets
+.PHONY: subdirs_install_targets subdirs_clean
+
+KCALLER="tools"
+include $(MKKITCHTOP)/lib/Make.configure
+
+
+# translate standard targets to depend on config, and
+# actually do the work in the object directories
+all				\
+targets				\
+install_targets			\
+clean				\
+rm_targets		        \
+clean:: test_configure
+	@for i in $(OBJDIRS); do 					\
+	         $(ECHO) "doing cd to " $$i ;				\
+	         cd $$i && $(MAKE) $@;					\
+	done
+
+clean_configure:
+	$(FIND) . -type f -name "Make.config" -exec $(RM) '{}' \;
+
+.PHONY: subdirs_install_includes
+
+install_includes:: subdirs_install_includes
+
+ifdef SUBDIRS
+SUBDIRS_SRC += $(SUBDIRS)
+SUBDIRS_INSTALL_INCLUDES = $(SUBDIRS_SRC:%=%_install_includes)
+.PHONY: $(SUBDIRS_INSTALL_INCLUDES)
+$(SUBDIRS_INSTALL_INCLUDES) :
+	cd $(@:%_install_includes=%)/ && $(MAKE) install_includes
+subdirs_install_includes: $(SUBDIRS_INSTALL_INCLUDES)
+else #SUBDIRS
+subdirs_install_includes:
+endif #SUBDIRS
+
+# include all machine specific makefiles
+ARCH_MAKE = $(strip $(wildcard arch/*/Make.arch))
+ifneq ($(ARCH_MAKE),)
+-include $(ARCH_MAKE)
+endif
+
+-include $(MKKITCHTOP)/lib/Make.help
+endif #!IN_OBJ_DIR
+
+endif # MAKERULES.TOOLS

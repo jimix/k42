@@ -1,0 +1,303 @@
+<!-- K42: (C) Copyright IBM Corp. 2001.  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file
+  LICENSE.html in the top-level directory for more details.
+
+  $Id: kfsPrgG.sgml,v 1.1 2004/02/11 23:03:57 lbsoares Exp $ -->
+
+<title>KFS Programming</title>
+<section>
+   <title>Files</title>
+   <!-- start sub list of file system independent files -->
+   <itemizedlist>
+      
+      <listitem>
+	 <para>Interface to file system indepedant:</para>
+	 <itemizedlist>
+	    <listitem>
+	       <simpara>
+		  <ulink url="&topsrc/os/servers/kfs/FileSystemKFS.H">
+		     <filename>FileSystemKFS [.H]</filename></ulink>
+		  <ulink url="&topsrc/os/servers/kfs/FileSystemKFS.H">
+		     <filename>[.C]</filename> </ulink>: Interface to
+		  file system independant layer.
+		  
+	       </simpara>
+	    </listitem>
+
+	    <listitem>
+	       <simpara>
+		  <ulink url="&topsrc/os/servers/kfs/ServerFileBlockKFS.H">
+		     <filename>ServerFileBlockKFS [.H]</filename></ulink> 
+		  <ulink url="&topsrc/os/servers/kfs/ServerFileBlockKFS.H">
+		     <filename>[.C]</filename></ulink>:
+		  Interface to a block file. 
+	       </simpara>
+	    </listitem>
+	    <listitem>
+	       <simpara>
+		  <ulink url="&topsrc/os/servers/kfs/ServerFileDirKFS.H">
+		     <filename>ServerFileDirKFS [.H]</filename></ulink>
+		  <ulink url="&topsrc/os/servers/kfs/ServerFileDirKFS.H">
+		     <filename>[.C]</filename></ulink>:
+		  Interface to a directory file. 
+	       </simpara>
+	    </listitem>
+	    
+	 </itemizedlist>
+      </listitem>
+      <!-- end sub list of file syste independent files -->
+      
+      <!-- sub list of utility files -->
+      <listitem>
+	 <para>Utility files:</para>
+	 
+	 <itemizedlist>
+	    
+	    <listitem>
+	       <simpara>
+		  <ulink url="&topsrc/os/servers/kfs/KFSDebug.H">
+		     <filename>KFSDebug [.H]</filename></ulink>: Macroes
+		  used for debugging.
+		  
+	       </simpara>
+	    </listitem>
+	    
+	    <listitem>
+	       <simpara>
+
+		  <ulink url="&topsrc/os/servers/kfs/DataBlock.H">
+		     <filename>DataBlock [.H]</filename></ulink>
+		  <ulink url="&topsrc/os/servers/kfs/DataBlock.C">
+		     <filename>[.C]</filename>
+		  </ulink>: A block of data from the disk. On constructor reads
+		  in block. On flush flushes out to disk.
+		  
+	       </simpara>
+	    </listitem>
+
+	    <listitem>
+	       <simpara>
+		  <ulink url="&topsrc/os/servers/kfs/Disk.H"> <filename>Disk
+			[.H]</filename></ulink>
+		  <ulink url="&topsrc/os/servers/kfs/Disk.C"><filename>[.C]
+		     </filename></ulink>:
+		  Class represents a single disk.
+		  
+	       </simpara>
+	    </listitem>
+	    <listitem>
+	       <simpara>
+		  <ulink url="&topsrc/os/servers/kfs/ToyDisk.H">
+		     <filename>ToyDisk [.H]</filename></ulink>
+		  <ulink url="&topsrc/os/servers/kfs/ToyDisk.H">
+		     <filename>[.C]</filename></ulink>:
+		  Simple interface to a disk. How does this relate to Disk????
+	       </simpara>
+	    </listitem>
+
+	    <listitem>
+	       <simpara>
+		  <ulink url="&topsrc/os/servers/kfs/ORSMap.H"> 
+		     <filename>ORSMap [.H]</filename></ulink>
+		  <ulink url="&topsrc/os/servers/kfs/ORSMap.H">
+		     <filename>[.C]</filename></ulink>:
+		  Level of indirection describes type of each file and
+		  where meta-data is stored.
+	       </simpara>
+	    </listitem>
+	    <listitem>
+	       <simpara>
+		  <ulink url="&topsrc/os/servers/kfs/ObjToken.H">
+		     <filename>ObjToken [.H]</filename></ulink>
+		  <ulink url="&topsrc/os/servers/kfs/ObjToken.H">
+		     <filename>[.C]</filename></ulink>:
+		  A data structure used to pass around object
+		  reference. We should get rid of this, and just pass
+		  around pointer to internal object. 
+	       </simpara>
+	    </listitem>
+
+	    <listitem>
+	       <simpara>
+		  <ulink url="&topsrc/os/servers/kfs/SuperBlock.H">
+		     <filename>SuperBlock [.H]</filename></ulink>
+		  <ulink url="&topsrc/os/servers/kfs/SuperBlock.H">
+		     <filename>[.C]</filename></ulink>:
+		  Superblock.
+	       </simpara>
+	    </listitem>
+
+	 </itemizedlist>
+      </listitem>
+
+      <!-- end sub list of utility files -->
+
+      <!-- sub list of ServerObject files -->
+      <listitem>
+	 <simpara>
+	    <ulink url="&topsrc/os/servers/kfs/ServerObject.H">
+	       <filename>ServerObject [.H]</filename></ulink>
+	    <ulink url="&topsrc/os/servers/kfs/ServerObject.H"><filename>[.C]
+	       </filename></ulink>
+	    (<ulink url="&topsrc/os/servers/kfs/PSOTypes.H">
+	       <filename>PSOTypes[.H] really file types</filename></ulink>):
+	    Internal file objects
+	 </simpara>
+	 
+	 <itemizedlist>
+	    <!-- sub list of LSO files -->
+	    <listitem>
+	       <simpara>
+		  <ulink url="&topsrc/os/servers/kfs/LSOBase.H">
+		     <filename>LSOBase.H</filename></ulink>: description
+	       </simpara>
+	       
+	       <itemizedlist>
+		  <listitem>
+		     <simpara>
+			<ulink url="&topsrc/os/servers/kfs/LSOBasic.H">
+			   <filename>LSOBasic [.H]</filename></ulink>
+			<ulink url="&topsrc/os/servers/kfs/LSOBasic.H">
+			   <filename>[.C]</filename></ulink>:
+			Logical information for a file. 
+		     </simpara>
+		     <itemizedlist>
+			<listitem>
+			   <simpara>
+			      <ulink url=
+				     "&topsrc/os/servers/kfs/LSOBasicDir.H">
+				 <filename>LSOBasicDir [.H]</filename></ulink>
+			      <ulink url=
+				     "&topsrc/os/servers/kfs/LSOBasicDir.H">
+				 <filename>[.C]</filename></ulink>:
+			      Directory.
+			   </simpara>
+			</listitem>
+			<listitem>
+			   <simpara>
+			      <ulink url=
+				     "&topsrc/os/servers/kfs/LSOBasicFile.H">
+				 <filename>LSOBasicFile [.H]</filename></ulink>
+			      <ulink url=
+				     "&topsrc/os/servers/kfs/LSOBasicFile.H">
+				 <filename>[.C]</filename></ulink>:
+			      Block file.
+			   </simpara>
+			</listitem>
+		     </itemizedlist>
+		  </listitem>
+	       </itemizedlist>
+	    </listitem>
+	    <!-- end sub list of LSO files -->
+
+	    <!-- sub list of PSO files -->
+	    <listitem>
+	       <simpara>
+		  <ulink url="&topsrc/os/servers/kfs/PSOBase.H">
+		     <filename>PSOBase.H</filename></ulink>: description
+	       </simpara>
+	       <itemizedlist>
+		  <listitem>
+		     <simpara>
+			<ulink
+			       url="&topsrc/os/servers/kfs/PSOBasicRW.H">
+			   <filename>PSOBasicRW [.H]</filename></ulink>
+			<ulink url="&topsrc/os/servers/kfs/PSOBasicRW.H">
+			   <filename>[.C]</filename></ulink>:
+			description
+		     </simpara>
+		  </listitem>
+		  <listitem>
+		     <simpara>
+			<ulink url="&topsrc/os/servers/kfs/PSORecordMap.H">
+			   <filename>PSORecordMap [.H]</filename></ulink>
+			<ulink url="&topsrc/os/servers/kfs/PSORecordMap.H">
+			   <filename>[.C]</filename></ulink>:
+			description
+		     </simpara>
+		  </listitem>
+
+	       </itemizedlist>
+	    </listitem>
+	    <!-- end sub list of PSO files -->
+
+
+	 </itemizedlist>
+      </listitem>
+      <Listitem>
+	 <simpara>
+	    Nonsense for portability, clean this crap up:
+	 </simpara>
+	    <itemizedlist>
+	       <listitem>
+		  <simpara>
+		     <ulink url="&topsrc/os/servers/kfs/system.H"> 
+		     <filename>system [.H]</filename></ulink>: description
+		  </simpara>
+	       </listitem>
+	       <Listitem>
+		  <simpara>
+		     <ulink url="&topsrc/os/servers/kfs/aix.H"> 
+		     <filename>aix [.H]</filename></ulink>: description
+		  </simpara>
+	       </listitem>
+	       <listitem>
+		  <simpara>
+		     <ulink url="&topsrc/os/servers/kfs/diskLayout.H">
+		     <filename>diskLayout [.H]</filename></ulink>: description
+		  </simpara>
+	       </listitem>
+	       <listitem>
+		  <simpara>
+		     <ulink url="&topsrc/os/servers/kfs/irix.H"> 
+		     <filename>irix [.H]</filename></ulink>: description
+		  </simpara>
+	       </listitem>
+	       <listitem>
+		  <simpara>
+		     <ulink url="&topsrc/os/servers/kfs/k42.H"> 
+		     <filename>k42 [.H]</filename></ulink>: description
+		  </simpara>
+	       </listitem>
+	       <listitem>
+		  <simpara>
+		     <ulink url="&topsrc/os/servers/kfs/linux.H"> 
+		     <filename>linux [.H]</filename></ulink>: description
+		  </simpara>
+	       </listitem>
+	    </itemizedlist>
+      </Listitem>
+   </itemizedlist>
+</section>
+<section>
+   <title>TODO</title>
+   <itemizedlist>
+      <listitem>
+	 <simpara>
+	    Caching of meta-data, in objects themselves.
+	 </simpara>
+      </listitem>
+      <listitem>
+	 <simpara>
+	    Get rid of System.H and related include files.
+	 </simpara>
+      </listitem>
+      <listitem>
+	 <simpara>
+	    Get rid of ObjectToken, higher levels keep track of
+	    object, have direct pointer??
+	 </simpara>
+      </listitem>
+      <listitem>
+	 <simpara>
+	    Some kind of daemon to write out information, and maintain
+	    working set of files...
+	 </simpara>
+      </listitem>
+   </itemizedlist>
+</section>
+
+<!-- Local Variables: mode: sgml sgml-parent-document: ("./kfs.sgml"
+"chapter" "title") End: -->

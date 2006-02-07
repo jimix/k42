@@ -1,0 +1,210 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceOMP.xml,v 1.7 2004/07/09 15:47:13 cascaval Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<!--
+<event name="APP::OMP::BindProcessorsStart">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="BindProcessorsStart" />
+	<fields>
+		<field name="numThreads" type="uint32" />
+		<field name="lineNo" type="uint32" description="source line number"/>
+		<field name="file" type="string" description="source file"/>
+	</fields>
+	<k42Format value='bind processors start: numThrds %0[%d] file %2[%s] lineno %1[%d]' />
+	<interval type='START' name='BindProcessorsInterval' pair='APP::OMP::BindProcessorEnd' match='' />
+</event>
+
+<event name="APP::OMP::BindProcessorsEnd">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="BindProcessorsEnd" />
+	<k42Format value='bind processors end' />
+	<interval type='End' name='BindProcessorsInterval' pair='APP::OMP::BindProcessorStart' match='' />
+</event>
+
+
+<event name="APP::OMP::ParInitStart">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="ParInitStart" />
+	<fields>
+		<field name="numThreads" type="uint32" />
+		<field name="numProcs" type="uint32" />
+		<field name="lineNo" type="uint32" description="source line number"/>
+		<field name="file" type="string" description="source file"/>
+	</fields>
+	<k42Format value='par init start: thrds %0[%d] procs %1 [%d] file %3[%s] lineno %2[%d]' />
+	<interval type='START' name='ParInitInterval' pair='APP::OMP::ParInitEnd' match='' />
+</event>
+
+<event name="APP::OMP::ParInitEnd">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="ParInitEnd" />
+	<k42Format value='ParInit end' />
+	<interval type='End'  name='ParInitInterval' pair='APP::OMP::ParInitStart' match='' />
+</event>
+
+<event name="APP::OMP::ReInitRTEStart">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="ReInitRTEStart" />
+	<fields>
+		<field name="numThreads" type="uint32" />
+		<field name="lineNo" type="uint32" description="source line number"/>
+		<field name="file" type="string" description="source file"/>
+	</fields>
+	<k42Format value='reinit RTE start: numThrds %0[%d] file %2[%s] lineno %1[%d]' />
+	<interval type='START'  name='REInitRTEInterval' pair='APP::OMP::ReInitRTEEnd' match='' />
+</event>
+
+<event name="APP::OMP::ReInitRTEEnd">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="ReInitRTEEnd" />
+	<k42Format value='ReInitRTE end' />
+	<interval type='End'  name='ReInitRTEInterval' pair='APP::OMP::ReInitRTEStart' match='' />
+</event>
+
+
+<event name="APP::OMP::InitStart">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="InitStart" />
+	<fields>
+		<field name="numThreads" type="uint32" />
+		<field name="lineNo" type="uint32" description="source line number"/>
+		<field name="file" type="string" description="source file"/>
+	</fields>
+	<k42Format value='init start: numThrds %0[%d] file %2[%s] lineno %1[%d]' />
+	<interval type='START' name='InitInterval' pair='APP::OMP::InitEnd' match='' />
+</event>
+
+<event name="APP::OMP::InitEnd">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="InitEnd" />
+	<k42Format value='Init end' />
+	<interval type='End' name='InitInterval' pair='APP::OMP::InitStart' match='' />
+</event>
+
+-->
+
+<event name="APP::OMP::LockStart">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="LockStart" />
+	<fields>
+		<field name="threadId" type="uint32" />
+		<field name="operation" type="uint32" />
+		<field name="lock_type" type="uint32" />
+		<field name="lock_addr" type="uint64" />
+	</fields>
+	<k42Format value='lock start: threadId 0%[%d] op %1[%d] type %2[%d] addr %3[%lld]' />
+	<interval type='START'  name='LockInterval' pair='APP::OMP::LockEnd' match='threadId,operation,lock_type,lock_addr' />
+</event>
+
+<event name="APP::OMP::LockEnd">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="LockEnd" />
+	<fields>
+		<field name="threadId" type="uint32" />
+		<field name="operation" type="uint32" />
+		<field name="lock_type" type="uint32" />
+		<field name="lock_addr" type="uint64" />
+	</fields>
+	<k42Format value='lock end' />
+	<k42Format value='lock end: threadId 0%[%d] op %1[%d] type %2[%d] addr %3[%lld]' />
+	<interval type='END'  name='LockInterval' pair='APP::OMP::LockStart' match='threadId,operation,lock_type,lock_addr' />
+</event>
+
+<event name="APP::OMP::AssignWIStart">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="AssignWIStart" />
+	<fields>
+                <field name="WIptr" type="uint64" />
+                <field name="WSptr" type="uint64" />
+	</fields>
+	<k42Format value='assign WI start: wiptr %0[%lld] wsptr %1[%lld]' />
+	<interval type='START'  name='AssignWIInterval' pair='APP::OMP::AssignWIEnd' match='WIptr' />
+</event>
+
+<event name="APP::OMP::AssignWIEnd">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="AssignWIEnd" />
+	<fields>
+                <field name="WIptr" type="uint64" />
+		<field name="numThreads" type="uint32" />
+	</fields>
+	<k42Format value='assign WI end: wiptr %0[%lld] numThrds %1[%d]' />
+	<interval type='End' name='AssignWIInterval' pair='APP::OMP::AssignWIStart' match='WIptr' />
+</event>
+
+<event name="APP::OMP::WaitAssignWIDoneStart">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="WaitAssignWIDoneStart" />
+	<fields>
+                <field name="WIptr" type="uint64" />
+		<field name="numThreads" type="uint32" />
+	</fields>
+	<k42Format value='wait assign WI done start: wiptr %0[%lld] numThrds %1[%d]' />
+	<interval type='START' name='WaitAssignWIDoneInterval' pair='APP::OMP::WaitAssignWIDoneEnd' match='WIptr' />
+</event>
+
+<event name="APP::OMP::WaitAssignWIDoneEnd">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="WaitAssignWIDoneEnd" />
+	<fields>
+                <field name="WIptr" type="uint64" />
+	</fields>
+	<k42Format value='wait assign WI done end: wiptr %0[%lld]'/>
+	<interval type='End' name='WaitAssignWIDoneInterval' pair='APP::OMP::WaitAssignWIDoneStart' match='WIptr' />
+</event>
+
+<event name="APP::OMP::QueryWork">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="QueryWork" />
+	<fields>
+                <field name="threadID" type="uint32" />
+	</fields>
+	<k42Format value='query work: threadId %0[%d]' />
+</event>
+
+<event name="APP::OMP::LibEntry">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="LibEntry" />
+	<k42Format value='lib entry' />
+	<interval type='START' name='LibInterval' pair='APP::OMP::LibExit' match='' />
+</event>
+
+<event name="APP::OMP::LibExit">
+	<layerId value="APP" />
+	<classId value="OMP" />
+	<specifier value="LibExit" />
+	<k42Format value='lib exit' />
+	<interval type='END' name='LibInterval' pair='APP::OMP::LibEntry' match='' />
+</event>
+
+
+
+</PEM_Events>

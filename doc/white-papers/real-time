@@ -1,0 +1,88 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: real-time,v 1.3 2001/08/20 13:42:17 bob Exp $
+-->
+
+<abstract>
+
+K42's provides real-time guarantees including quality of service and
+maximum interrupt response latency.  In conjunction with K42's <\ref
+scheduling infrastructure>, real-time tasks can effectively co-exist with
+gang-scheduled and real-time gang scheduled jobs, generic time-shared
+applications, and background processing.  In this paper we discuss what
+real-time capabilities K42 supports, briefly how we've chosen to implement
+those capabilities, and why we've made these decisions.
+
+<real-time interfaces>
+
+K42 supports the ability for a user to ask for a given percentage of a cpu
+or to ask for a given number of time every so often.  Examples: a user may
+request 20% of the cycles on cpu 1, alternatively a user may request 3ms
+every 16ms.  Users may pin down memory regions to guarantee that they are
+not paged to disk.  For gang-scheduled applications and real-time
+gang-scheduled applications a user requests a certain number of cpus,
+indicates whether that number may be dynamically adjusted by the OS, and
+may specify a minimum amount of cpu the application is willing to run with.
+
+The guarantees for the above capabilities are maintained by a resource
+manager.  Requests for any resource by any application pass through the
+resource manager.  While it would have been possible to have the resource
+manager handle only real-time and gang-scheduling requests, we decided by
+managing resource for all applications the resource manager could provide
+additional capabilities and provide a better understanding of the
+performance of the system.  Some examples are the resource manager can
+allow a system administrator to dedicate 30% of the cpu for time-shared
+applications.  By being aware of background jobs the resource manager can
+provide progress statistics for how much time they have been allocated.
+
+In the event there are not enough resources available an application's
+request will be rejected and it will not enter the system.  Once it has
+been accepted by the resource manager, K42 guarantees that it will have
+access to the resources it requested.
+
+<implementation issues>
+
+There are five priority bands in K42.  Processes in higher priority bands
+(lower numbers) have absolute precedence over processes in lower priority
+bands.  So, for example, if there is any process in priority band 3 that is
+available to run, it will run regardless of what is ready to run in
+priority band 4.  The priority bands in K42 are: 1 - kernel, 2 - gang
+scheduled, 3 - real time, 4 - time shared, 5 - background.  
+
+This breakdown does not mean that gang-scheduled jobs are considered more
+important than real-time jobs, rather this is a result of an implementation
+issues.  In K42 real-time jobs will get the amount of time that have
+requested and gang-scheduled applications will get left over time.  The
+reason gang scheduling is in a higher band is due to 1) the desire to have
+a very simply designed kernel dispatcher, the entity that chooses and run
+different processes, and 2) the desire to avoid global algorithms, data
+structure, and locks for scalability.  More details of how gang-scheduling
+works can be found in <\ref scheduling infrastructure>.
+
+The standard and most efficient model for real-time applications is that
+they will run less than the time they requested.  In the event the
+real-time process runs outside of the time it requested it will be
+hard-preempted by kernel to ensure that it does not unfairly monopolize
+the cpu.  Since a voluntary yield is more efficient, it is in the
+application's best interests to complete its tasks in the time it
+requested. 
+
+Each priority band including the real-time one is scheduled with a
+proportional share scheduler.  While this is not fixed, i.e., each band
+could be scheduled with a different scheduler, we have found the
+proportional share scheduler to be sufficient.  Scheduling every band with
+the same scheduler allows an additional simplification at the dispatcher
+level since all process can be compared on one scale.  The proportional
+share scheduler also deals effectively with applications that have io and
+cpu intensive portions.
+
+The K42 is fully preemptive.  Except for some very few low-level exception
+code, K42 even when it is in the kernel may be preempted.  This is achieved
+by XXX BRYAN XXX.  This capability allows K42 to guarantee very low latency
+in response to interrupts - well under 1 ms response time.

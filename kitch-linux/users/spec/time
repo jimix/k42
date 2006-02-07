@@ -1,0 +1,3 @@
+#!/bin/sh
+echo
+exec /usr/bin/time -p $*

@@ -1,0 +1,276 @@
+# K42: (C) Copyright IBM Corp. 2003.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the license along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+# $Id: SysCallTable,v 1.43 2005/08/31 13:56:05 dgurley Exp $
+#
+
+# k42 names do not include the conventional __k42_linux_ prefix
+# parameter conversion, if specified, is a string of 6 0/1 entries
+#    1 requests sign extension of the corresponding parameter
+# trace format request is S_FMT if first parameter is a string,
+#    SS_FMT if first two are strings
+#
+# NYI produces code which results in a trap if the svc is invoked
+# NYS<errno> produces code which results in a function returning error and setting the errno.
+
+# index | linux name           | k42 64 bit name        | k42 32 bit name  | 32 bit parameter conversion | comment | trace format | 
+|   0 | restart_syscall        | NYI                    | NYI                   |        | sys_restart_syscall          |        |
+|   1 | exit                   | exit                   | exit                  |        | sys_exit                     |        |
+|   2 | fork                   | fork                   | fork                  |        | sys_fork                     |        |
+|   3 | read                   | read                   | read                  |        | sys_read                     |        |
+|   4 | write                  | write                  | write                 |        | sys_write                    |        |
+|   5 | open                   | open                   | open                  | 011000 | sys32_open                   | S_FMT  |
+|   6 | close                  | close                  | close                 |        | sys_close                    |        |
+|   7 | waitpid                | waitpid                | waitpid               | 101000 | sys32_waitpid                |        |
+|   8 | creat                  | creat                  | creat                 | 010000 | sys32_creat                  | S_FMT  |
+|   9 | link                   | link                   | link                  |        | sys_link                     | SS_FMT |
+|  10 | unlink                 | unlink                 | unlink                |        | sys_unlink                   | S_FMT  |
+|  11 | execve                 | execve                 | execve_32             |        | sys32_execve                 | S_FMT  |
+|  12 | chdir                  | chdir                  | chdir                 |        | sys_chdir                    | S_FMT  |
+|  13 | time                   | time                   | time_32               |        | sys32_time                   |        |
+|  14 | mknod                  | mknod                  | mknod                 |        | sys_mknod                    | S_FMT  |
+|  15 | chmod                  | chmod                  | chmod                 |        | sys_chmod                    | S_FMT  |
+|  16 | lchown                 | lchown                 | lchown                |        | sys_lchown                   | S_FMT  |
+|  17 | break                  | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+|  18 | oldstat                | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+|  19 | lseek                  | lseek                  | lseek                 | 010000 | ppc32_lseek                  |        |
+|  20 | getpid                 | getpid                 | getpid                |        | sys_getpid                   |        |
+|  21 | mount                  | mount                  | mount                 |        | sys32_mount                  | SS_FMT |
+|  22 | umount                 | umount                 | umount                |        | sys_oldumount                | S_FMT  |
+|  23 | setuid                 | setuid                 | setuid                |        | sys_setuid                   |        |
+|  24 | getuid                 | getuid                 | getuid                |        | sys_getuid                   |        |
+|  25 | stime                  | stime                  | stime_32              |        | ppc64_sys32_stime            |        |
+|  26 | ptrace                 | ptrace                 | ptrace                |        | sys32_ptrace                 |        |
+|  27 | alarm                  | alarm                  | alarm                 |        | sys_alarm                    |        |
+|  28 | oldfstat               | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+|  29 | pause                  | pause                  | pause                 |        | sys32_pause                  |        |
+|  30 | utime                  | utime                  | utime                 |        | compat_sys_utime             |        |
+|  31 | stty                   | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+|  32 | gtty                   | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+|  33 | access                 | access                 | access                | 010000 | sys32_access                 | S_FMT  |
+|  34 | nice                   | NYSENOSYS              | NYSENOSYS             | 100000 | sys32_nice                   |        |
+|  35 | ftime                  | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+|  36 | sync                   | sync                   | sync                  |        | sys_sync                     |        |
+|  37 | kill                   | kill                   | kill                  | 110000 | sys32_kill                   |        |
+|  38 | rename                 | rename                 | rename                |        | sys_rename                   | SS_FMT |
+|  39 | mkdir                  | mkdir                  | mkdir                 | 010000 | sys32_mkdir                  | S_FMT  |
+|  40 | rmdir                  | rmdir                  | rmdir                 |        | sys_rmdir                    | S_FMT  |
+|  41 | dup                    | dup                    | dup                   |        | sys_dup                      |        |
+|  42 | pipe                   | pipe                   | pipe                  |        | sys_pipe                     |        |
+|  43 | times                  | times                  | times_32              |        | compat_sys_times             |        |
+|  44 | prof                   | NYI                    | NYI                   |        | sys_ni_sysca                 |        |
+|  45 | brk                    | brk                    | brk_32                |        | sys_brk                      |        |
+|  46 | setgid                 | setgid                 | setgid                |        | sys_setgid                   |        |
+|  47 | getgid                 | getgid                 | getgid                |        | sys_getgid                   |        |
+|  48 | signal                 | NYI                    | NYI                   |        | sys_signal                   |        |
+|  49 | geteuid                | geteuid                | geteuid               |        | sys_geteuid                  |        |
+|  50 | getegid                | getegid                | getegid               |        | sys_getegid                  |        |
+|  51 | acct                   | NYSENOSYS              | NYSENOSYS             |        | sys_acct                     |        |
+|  52 | umount2                | NYSENOSYS              | NYSENOSYS             |        | sys_umount                   | S_FMT  |
+|  53 | lock                   | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+|  54 | ioctl                  | ioctl                  | ioctl_32              |        | compat_sys_ioctl             |        |
+|  55 | fcntl                  | fcntl                  | fcntl_32              |        | compat_sys_fcntl             |        |
+|  56 | mpx                    | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+|  57 | setpgid                | setpgid                | setpgid               | 110000 | sys32_setpgid                |        |
+|  58 | ulimit                 | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+|  59 | oldolduname            | NYI                    | NYI                   |        | sys32_olduname               |        |
+|  60 | umask                  | umask                  | umask                 | 100000 | sys32_umask                  |        |
+|  61 | chroot                 | chroot                 | chroot                |        | sys_chroot                   | S_FMT  |
+|  62 | ustat                  | NYSENOSYS              | NYSENOSYS             |        | sys_ustat                    |        |
+|  63 | dup2                   | dup2                   | dup2                  |        | sys_dup2                     |        |
+|  64 | getppid                | getppid                | getppid               |        | sys_getppid                  |        |
+|  65 | getpgrp                | getpgrp                | getpgrp               |        | sys_getpgrp                  |        |
+|  66 | setsid                 | setsid                 | setsid                |        | sys_setsid                   |        |
+|  67 | sigaction              | sigaction              | sys32_sigaction       |        | sys32_sigaction              |        |
+|  68 | sgetmask               | NYI                    | NYI                   |        | sys_sgetmask                 |        |
+|  69 | ssetmask               | NYI                    | NYI                   | 100000 | sys32_ssetmask               |        |
+|  70 | setreuid               | setreuid               | setreuid              |        | sys_setreuid                 |        |
+|  71 | setregid               | setregid               | setregid              |        | sys_setregid                 |        |
+|  72 | sigsuspend             | sigsuspend             | sys32_sigsuspend      |        | sys32_sigsuspend             |        |
+|  73 | sigpending             | NYSENOSYS              | NYSENOSYS             |        | compat_sys_sigpending        |        |
+|  74 | sethostname            | sethostname            | sethostname           | 010000 | sys32_sethostname            | S_FMT  |
+|  75 | setrlimit              | setrlimit              | setrlimit_32          |        | compat_sys_setrlimit         |        |
+|  76 | getrlimit              | NYI                    | NYI                   |        | compat_sys_old_getrlimit     |        |
+|  77 | getrusage              | getrusage              | getrusage             | 100000 | compat_sys_getrusage         |        |
+|  78 | gettimeofday           | gettimeofday           | sys32_gettimeofday    |        | sys32_gettimeofday           |        |
+|  79 | settimeofday           | settimeofday           | settimeofday_32       |        | sys32_settimeofday           |        |
+|  80 | getgroups              | NYS0                   | NYS0                  | 100000 | sys32_getgroups              |        |
+|  81 | setgroups              | setgroups              | setgroups             | 100000 | sys32_setgroups              |        |
+|  82 | select                 | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+|  83 | symlink                | symlink                | symlink               |        | sys_symlink                  | S_FMT  |
+|  84 | oldlstat               | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+|  85 | readlink               | readlink               | readlink              | 001000 | sys32_readlink               |        |
+|  86 | uselib                 | NYSENOSYS              | NYSENOSYS             |        | sys_uselib                   |        |
+|  87 | swapon                 | NYSENOSYS              | NYSENOSYS             |        | sys_swapon                   |        |
+|  88 | reboot                 | NYSENOSYS              | NYSENOSYS             |        | sys_reboot                   |        |
+|  89 | readdir                | NYI                    | NYI                   |        | old32_readdir                |        |
+|  90 | mmap                   | mmap                   | mmap_32               |        | sys_mmap                     |        |
+|  91 | munmap                 | munmap                 | munmap                |        | sys_munmap                   |        |
+|  92 | truncate               | truncate               | truncate              |        | sys_truncate                 |        |
+|  93 | ftruncate              | ftruncate              | ftruncate             |        | sys_ftruncate                |        |
+|  94 | fchmod                 | fchmod                 | fchmod                |        | sys_fchmod                   |        |
+|  95 | fchown                 | fchown                 | fchown                |        | sys_fchown                   |        |
+|  96 | getpriority            | NYSENOSYS              | NYSENOSYS             | 110000 | sys32_getpriority            |        |
+|  97 | setpriority            | NYSENOSYS              | NYSENOSYS             | 111000 | sys32_setpriority            |        |
+|  98 | profil                 | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+|  99 | statfs                 | statfs                 | statfs_32             |        | compat_sys_statfs            |        |
+| 100 | fstatfs                | NYSENOSYS              | NYSENOSYS             |        | compat_sys_fstatfs           |        |
+| 101 | ioperm                 | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+| 102 | socketcall             | socketcall             | compat_sys_socketcall |        | compat_sys_socketcall        |        |
+| 103 | syslog                 | NYSENOSYS              | NYSENOSYS             | 001000 | sys32_syslog                 |        |
+| 104 | setitimer              | NYSENOSYS              | NYSENOSYS             |        | compat_sys_setitimer         |        |
+| 105 | getitimer              | NYSENOSYS              | NYSENOSYS             |        | compat_sys_getitimer         |        |
+| 106 | stat                   | stat                   | compat_sys_newstat    |        | compat_sys_newstat           | S_FMT  |
+| 107 | lstat                  | lstat                  | compat_sys_newlstat   |        | compat_sys_newlstat          | S_FMT  |
+| 108 | fstat                  | fstat                  | compat_sys_newfstat   |        | compat_sys_newfstat          |        |
+| 109 | olduname               | NYI                    | uname                 |        | sys_uname                    |        |
+| 110 | iopl                   | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+| 111 | vhangup                | NYSENOSYS              | NYSENOSYS             |        | sys_vhangup                  |        |
+| 112 | idle                   | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+| 113 | vm86                   | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+| 114 | wait4                  | wait4                  | wait4                 | 101000 | compat_sys_wait4             |        |
+| 115 | swapoff                | NYSENOSYS              | NYSENOSYS             |        | sys_swapoff                  |        |
+| 116 | sysinfo                | NYSENOSYS              | NYSENOSYS             |        | sys32_sysinfo                |        |
+| 117 | ipc                    | ipc                    | ipc_32                |        | sys32_ipc                    |        |
+| 118 | fsync                  | fsync                  | fsync                 |        | sys_fsync                    |        |
+| 119 | sigreturn              | sigreturn              | sigreturn_32          |        | ppc32_sigreturn              |        |
+| 120 | clone                  | clone                  | clone                 |        | sys_clone                    |        |
+| 121 | setdomainname          | NYSENOSYS              | NYSENOSYS             | 010000 | sys32_setdomainname          |        |
+| 122 | uname                  | uname                  | uname_32              |        | ppc64_newuname               |        |
+| 123 | modify_ldt             | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+| 124 | adjtimex               | NYSENOSYS              | NYSENOSYS             |        | sys32_adjtimex               |        |
+| 125 | mprotect               | mprotect               | mprotect              |        | sys_mprotect                 |        |
+| 126 | sigprocmask            | sigprocmask            | sys32_sigprocmask     |        | compat_sys_sigprocmask       |        |
+| 127 | create_module          | NYSENOSYS              | NYSENOSYS             |        | sys_ni_syscall               |        |
+| 128 | init_module            | NYSENOSYS              | NYSENOSYS             |        | sys_init_module              |        |
+| 129 | delete_module          | NYSENOSYS              | NYSENOSYS             |        | sys_delete_module            |        |
+| 130 | get_kernel_syms        | NYS0                   | NYS0                  |        | sys_ni_syscall               |        |
+| 131 | quotactl               | NYSENOSYS              | NYSENOSYS             |        | sys_quotactl                 |        |
+| 132 | getpgid                | getpgid                | getpgid               | 100000 | sys32_getpgid                |        |
+| 133 | fchdir                 | fchdir                 | fchdir                |        | sys_fchdir                   |        |
+| 134 | bdflush                | NYSENOSYS              | NYSENOSYS             |        | sys_bdflush                  |        |
+| 135 | sysfs                  | NYI                    | NYI                   | 100000 | sys32_sysfs                  |        |
+| 136 | personality            | personality            | personality_32        |        | ppc64_personality            |        |
+| 137 | afs_syscall            | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+| 138 | setfsuid               | setfsuid               | setfsuid              |        | sys_setfsuid                 |        |
+| 139 | setfsgid               | setfsgid               | setfsgid              |        | sys_setfsgid                 |        |
+| 140 | _llseek                | _llseek                | _llseek               |        | sys_llseek                   |        |
+| 141 | getdents               | getdents               | sys32_getdents        |        | sys32_getdents               |        |
+| 142 | _newselect             | _newselect             | _newselect_32         |        | ppc32_select                 |        |
+| 143 | flock                  | flock                  | flock                 |        | sys_flock                    |        |
+| 144 | msync                  | NYSENOSYS              | NYSENOSYS             |        | sys_msync                    |        |
+| 145 | readv                  | readv                  | sys32_readv           |        | sys32_readv                  |        |
+| 146 | writev                 | writev                 | sys32_writev          |        | sys32_writev                 |        |
+| 147 | getsid                 | NYSENOSYS              | NYSENOSYS             | 100000 | sys32_getsid                 |        |
+| 148 | fdatasync              | fdatasync              | fdatasync             |        | sys_fdatasync                |        |
+| 149 | _sysctl                | _sysctl                | sys32_sysctl          |        | sys32_sysctl                 |        |
+| 150 | mlock                  | NYSENOSYS              | NYSENOSYS             |        | sys_mlock                    |        |
+| 151 | munlock                | NYSENOSYS              | NYSENOSYS             |        | sys_munlock                  |        |
+| 152 | mlockall               | NYSENOSYS              | NYSENOSYS             |        | sys_mlockall                 |        |
+| 153 | munlockall             | NYSENOSYS              | NYSENOSYS             |        | sys_munlockall               |        |
+| 154 | sched_setparam         | NYSENOSYS              | NYSENOSYS             |        | sys32_sched_setparam         |        |
+| 155 | sched_getparam         | NYSENOSYS              | NYSENOSYS             |        | sys32_sched_getparam         |        |
+| 156 | sched_setscheduler     | NYSENOSYS              | NYSENOSYS             |        | sys32_sched_setscheduler     |        |
+| 157 | sched_getscheduler     | NYSENOSYS              | NYSENOSYS             |        | sys32_sched_getscheduler     |        |
+| 158 | sched_yield            | sched_yield            | sched_yield           |        | sys_sched_yield              |        |
+| 159 | sched_get_priority_max | NYSENOSYS              | NYSENOSYS             |        | sys32_sched_get_priority_max |        |
+| 160 | sched_get_priority_min | NYSENOSYS              | NYSENOSYS             |        | sys32_sched_get_priority_min |        |
+| 161 | sched_rr_get_interval  | NYSENOSYS              | NYSENOSYS             |        | sys32_sched_rr_get_interval  |        |
+| 162 | nanosleep              | nanosleep              | nanosleep_32          |        | compat_sys_nanosleep         |        |
+| 163 | mremap                 | NYSENOSYS              | NYSENOSYS             |        | sys_mremap                   |        |
+| 164 | setresuid              | setresuid              | setresuid             |        | sys_setresuid                |        |
+| 165 | getresuid              | getresuid              | getresuid             |        | sys_getresuid                |        |
+| 166 | query_module           | NYSENOSYS              | NYSENOSYS             |        | sys_ni_syscall               |        |
+| 167 | poll                   | poll                   | poll                  |        | sys_poll                     |        |
+| 168 | nfsservctl             | NYSENOSYS              | NYSENOSYS             |        | sys32_nfsservctl             |        |
+| 169 | setresgid              | setresgid              | setresgid             |        | sys_setresgid                |        |
+| 170 | getresgid              | getresgid              | getresgid             |        | sys_getresgid                |        |
+| 171 | prctl                  | NYSENOSYS              | NYSENOSYS             | 100000 | sys32_prctl                  |        |
+| 172 | rt_sigreturn           | rt_sigreturn           | rt_sigreturn_32       |        | ppc32_rt_sigreturn           |        |
+| 173 | rt_sigaction           | rt_sigaction           | sys32_rt_sigaction    |        | sys32_rt_sigaction           |        |
+| 174 | rt_sigprocmask         | rt_sigprocmask         | sys32_rt_sigprocmask  |        | sys32_rt_sigprocmask         |        |
+| 175 | rt_sigpending          | NYSENOSYS              | NYSENOSYS             |        | sys32_rt_sigpending          |        |
+| 176 | rt_sigtimedwait        | NYSENOSYS              | NYSENOSYS             |        | sys32_rt_sigtimedwait        |        |
+| 177 | rt_sigqueueinfo        | NYSENOSYS              | NYSENOSYS             |        | sys32_rt_sigqueueinfo        |        |
+| 178 | rt_sigsuspend          | rt_sigsuspend          | sys32_rt_sigsuspend   |        | sys32_rt_sigsuspend          |        |
+| 179 | pread64                | pread                  | pread_ppc32           |        | sys32_pread64                |        |
+| 180 | pwrite64               | pwrite                 | pwrite_ppc32          |        | sys32_pwrite64               |        |
+| 181 | chown                  | chown                  | chown                 |        | sys_chown                    | S_FMT  |
+| 182 | getcwd                 | getcwd                 | getcwd                |        | sys_getcwd                   |        |
+| 183 | capget                 | NYSENOSYS              | NYSENOSYS             |        | sys_capget                   |        |
+| 184 | capset                 | NYSENOSYS              | NYSENOSYS             |        | sys_capset                   |        |
+| 185 | sigaltstack            | NYSENOSYS              | NYSENOSYS             |        | sys32_sigaltstack            |        |
+| 186 | sendfile               | sendfile               | sendfile_32           |        | sys32_sendfile               |        |
+| 187 | getpmsg                | getpmsg                | getpmsg               |        | sys_ny_syscall               |        |
+| 188 | putpmsg                | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+| 189 | vfork                  | vfork                  | vfork                 |        | sys_vfork                    |        |
+| 190 | ugetrlimit             | ugetrlimit             | compat_sys_getrlimit  |        | compat_sys_getrlimit         |        |
+| 191 | readahead              | NYI                    | NYI                   |        | sys32_readahead              |        |
+| 192 | mmap2                  | mmap2                  | sys32_mmap2           |        | sys32_mmap2                  |        |
+| 193 | truncate64             | truncate64             | truncate64_ppc32      |        | sys32_truncate64             |        |
+| 194 | ftruncate64            | ftruncate64            | ftruncate64_ppc32     |        | sys32_ftruncate64            |        |
+| 195 | stat64                 | NYI                    | stat64                |        | sys_stat64                   |        |
+| 196 | lstat64                | NYI                    | lstat64               |        | sys_lstat64                  |        |
+| 197 | fstat64                | NYI                    | fstat64               |        | sys_fstat64                  |        |
+| 198 | pciconfig_read         | NYI                    | NYI                   |        | sys32_pciconfig_read         |        |
+| 199 | pciconfig_write        | NYI                    | NYI                   |        | sys32_pciconfig_write        |        |
+| 200 | pciconfig_iobase       | NYI                    | NYI                   |        | sys32_pciconfig_iobase       |        |
+| 201 | multiplexer            | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+| 202 | getdents64             | getdents64             | getdents64            |        | sys_getdents64               |        |
+| 203 | pivot_root             | NYI                    | NYI                   |        | sys_pivot_root               |        |
+| 204 | fcntl64                | fcntl64                | fcntl_32              |        | compat_sys_fcntl64           |        |
+| 205 | madvise                | NYI                    | NYI                   |        | sys_madvise                  |        |
+| 206 | mincore                | NYI                    | NYI                   |        | sys_mincore                  |        |
+| 207 | gettid                 | NYI                    | NYI                   |        | sys_gettid                   |        |
+| 208 | tkill                  | NYI                    | NYI                   |        | sys_tkill                    |        |
+| 209 | setxattr               | NYI                    | NYI                   |        | sys_setxattr                 |        |
+| 210 | lsetxattr              | NYI                    | NYI                   |        | sys_lsetxattr                |        |
+| 211 | fsetxattr              | NYI                    | NYI                   |        | sys_fsetxattr                |        |
+| 212 | getxattr               | NYSENOTSUP             | NYSENOTSUP            |        | sys_getxattr                 |        |
+| 213 | lgetxattr              | NYI                    | NYI                   |        | sys_lgetxattr                |        |
+| 214 | fgetxattr              | NYI                    | NYI                   |        | sys_fgetxattr                |        |
+| 215 | listxattr              | NYI                    | NYI                   |        | sys_listxattr                |        |
+| 216 | llistxattr             | NYI                    | NYI                   |        | sys_llistxattr               |        |
+| 217 | flistxattr             | NYI                    | NYI                   |        | sys_flistxattr               |        |
+| 218 | removexattr            | NYI                    | NYI                   |        | sys_removexattr              |        |
+| 219 | lremovexattr           | NYI                    | NYI                   |        | sys_lremovexattr             |        |
+| 220 | fremovexattr           | NYI                    | NYI                   |        | sys_fremovexattr             |        |
+| 221 | futex                  | NYI                    | NYI                   |        | compat_sys_futex             |        |
+| 222 | sched_setaffinity      | NYI                    | NYI                   |        | compat_sys_sched_setaffinity |        |
+| 223 | sched_getaffinity      | NYI                    | NYI                   |        | compat_sys_sched_getaffinity |        |
+| 224 | UNUSED_224             | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+| 225 | tuxcall                | NYI                    | NYI                   |        | sys_ni_syscall               |        |
+| 226 | sendfile64             | NYI                    | NYI                   |        | sys32_sendfile64             |        |
+| 227 | io_setup               | NYI                    | NYI                   |        | compat_sys_io_setup          |        |
+| 228 | io_destroy             | NYI                    | NYI                   |        | sys_io_destroy               |        |
+| 229 | io_getevents           | NYI                    | NYI                   |        | compat_sys_io_getevents      |        |
+| 230 | io_submit              | NYI                    | NYI                   |        | compat_sys_io_submit         |        |
+| 231 | io_cancel              | NYI                    | NYI                   |        | sys_io_cancel                |        |
+| 232 | set_tid_address        | NYI                    | NYI                   |        | sys_set_tid_address          |        |
+| 233 | fadvise64              | NYI                    | NYI                   |        | ppc32_fadvise64              |        |
+| 234 | exit_group             | exit_group             | exit_group            |        | sys_exit_group               |        |
+| 235 | lookup_dcookie         | NYI                    | NYI                   |        | ppc32_lookup_dcookie         |        |
+| 236 | epoll_create           | NYI                    | NYI                   |        | sys_epoll_create             |        |
+| 237 | epoll_ctl              | NYI                    | NYI                   |        | sys_epoll_ctl                |        |
+| 238 | epoll_wait             | NYI                    | NYI                   |        | sys_epoll_wait               |        |
+| 239 | remap_file_pages       | NYI                    | NYI                   |        | sys_remap_file_pages         |        |
+| 240 | timer_create           | NYI                    | NYI                   |        | ppc32_timer_create           |        |
+| 241 | timer_settime          | NYI                    | NYI                   |        | compat_timer_settime         |        |
+| 242 | timer_gettime          | NYI                    | NYI                   |        | compat_timer_gettime         |        |
+| 243 | timer_getoverrun       | NYI                    | NYI                   |        | sys_timer_getoverrun         |        |
+| 244 | timer_delete           | NYI                    | NYI                   |        | sys_timer_delete             |        |
+| 245 | clock_settime          | NYI                    | NYI                   |        | compat_clock_settime         |        |
+| 246 | clock_gettime          | clock_gettime          | sys32_clock_gettime   |        | compat_clock_gettime         |        |
+| 247 | clock_getres           | NYI                    | NYI                   |        | compat_clock_getres          |        |
+| 248 | clock_nanosleep        | NYI                    | NYI                   |        | compat_clock_nanosleep       |        |
+| 249 | swapcontext            | NYI                    | NYI                   |        | ppc32_swapcontext            |        |
+| 250 | tgkill                 | NYI                    | NYI                   |        | sys32_tgkill                 |        |
+| 251 | utimes                 | utimes                 | NYI                   |        | sys32_utimes                 |        |
+| 252 | statfs64               | NYI                    | NYI                   |        | compat_statfs64              |        |
+| 253 | fstatfs64              | NYI                    | NYI                   |        | compat_fstatfs64             |        |
+| 254 | fadvise64_64           | NYI                    | NYI                   |        | ppc32_fadvise64_64           |        |
+| 255 | rtas                   | NYI                    | NYI                   |        | ppc_rtas                     |        |

@@ -1,0 +1,480 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: porting.html,v 1.1 2002/08/06 19:31:36 peterson Exp $
+-->
+
+<html>
+
+<head>
+<title> Porting K42 </title>
+</head>
+
+<body>
+
+    <BR><BR><BR><BR>
+
+    <CENTER>
+	Notes on Porting K42
+    </CENTER>
+    <BR><BR><BR><BR>
+
+    <CENTER>
+      James L. Peterson <br>
+      Phillipe L. De Backer
+    </CENTER>
+    <BR><BR><BR><BR>
+
+    <CENTER>
+      IBM Austin Research Laboratory<BR>
+      Austin, TX<BR>
+    </CENTER>
+    <BR><BR><BR><BR>
+
+    <CENTER>
+      December 2001
+    </CENTER>
+    <BR><BR><BR><BR>
+
+    <CENTER>
+      ABSTRACT
+    </CENTER>
+
+    <P>
+This note is an attempt to record the useful information that we
+have acquired while porting the K42 operating system to the
+X86-64 processor.
+    <P>
+    <HR>
+
+
+<H1> Notes on Porting K42 </H1>
+
+<p> The K42 group is developing a new high performance,
+general-purpose operating system kernel for cache-coherent
+multiprocessors. We are targeting next generation servers ranging
+from small-scale multiprocessors (which we expect will become
+ubiquitous) to very large-scale non-symmetric multiprocessors
+that are becoming increasingly important in both commercial and
+technical environments.  The K42 operating system is designed to
+be compatible with the Linux operating system.  K42 currently
+runs on PowerPC and MIPS systems (both native and using SimOS).
+
+<p> One of the processors which we expect to be widespread is the
+X86-64 architecture.  It is a clean extension of the common "x86"
+architecture to 64 bits.  The x86 processor registers are
+extended to 64 bits, and the number of registers is increased to
+16.  In addition, memory addresses are extended to 64-bits,
+including a 64-bit instruction pointer (rip) and stack pointer
+(rsp).  A compatibility mode supports the previous 32-bit 
+architecture.
+
+<p> Our task was to port K42 to the X86-64 architecture.
+
+
+<H2> The Source Tree </H2>
+
+<p>
+The first problem is to get access to the K42 source.  The
+K42 source tree is stored in CVS, and available from the
+CVS server on rios1.watson.ibm.com.  We are able to access
+the entire tree using 
+
+<pre>
+CVSROOT=:pserver:peterson@rios1.watson.ibm.com:/u/kitchawa/cvsroot
+</pre>
+
+Getting a copy of the entire K42 source is then
+
+<pre>
+cvs co kitchsrc
+</pre>
+
+<p>
+The source tree is designed to contain both source code and
+documentation, as well as the tools and structure to compile
+and link (build) the source code.
+
+
+<H2> Documentation </H2>
+
+<p> The majority of documentation in K42 is contained in sgml
+files in a subdirectory called <tt>doc</tt> in each source
+directory.  There are a series of top-level documents that
+provide help with getting started on the system (in the
+<tt>kitchsrc/doc</tt> directory).  There is a <tt>Makefile</tt>
+in each <tt>doc</tt> directory to make documentation at that
+level.  Executing a <tt>make world</tt> from the top-level
+<tt>doc</tt> directory will build all HTML documentation
+throughout the system (other choices are <tt>make world_ps</tt>
+for postscript and <tt>make world_all</tt> for both HTML and
+postscript).  For convenience, pointers to many of the HTML files
+are built into a file called <tt>docPointers</tt> in the
+<tt>doc</tt> directory.  There are a series of technical white
+papers in the <tt>doc/white-papers</tt> directory.  These can
+also be found on the K42 home page
+(http://www-stage.watson.ibm.com/K42/index.html).
+
+<p>
+Production of the documentation HTML (or postscript) files from the source SGML
+files is designed bo be done on a Linux system.  It uses several
+tools, including the following RPMs:
+
+<pre>
+sgml-common-0.1-10
+sgml-tools-1.0.9-8
+jadetex-2.7-4
+openjade-1.3-6
+tetex-fonts-1.0.7-7
+tetex-1.0.7-7
+tetex-*-1.0.7-7
+</pre>
+
+You can probably find these RPMs at http://rpmfind.net
+(in particular http://rpmfind.net/linux/RPM/).
+
+<H2> The Source Code </H2>
+
+The source code itself is located under the <tt>kitchsrc</tt>
+directory.  It is largely C++ code, with a smaller number of
+C and assembly language files.
+
+<pre>
+  File names and counts
+
+    692	*.H      -- C++ header file
+    654	*.C      -- C++ code file
+    238	Makefile
+    184	*.sgml   -- SGML documentation
+    143	*.c      -- c code file
+    115	*.h      -- c header file
+     72	Make.arch
+     56	*.ent    
+     47	*.S      -- assembly language file
+     41	*.fig    -- documentation figure (xfig)
+     36	*.tex    -- TeX file
+     34	*.eps    -- encapsulated postscript
+     28	*.sh     -- shell script
+     22	*.src
+     20	*.java   -- java source
+     11	*.gplt
+     11	*.data
+     11	*.awk
+     10	Make.files
+     10	*.raw
+     10	*.idraw
+      7	*.ps
+      4	profile
+      4	*.y
+      4	*.sty
+      4	*.s
+      4	*.old
+      4	*.conf
+      3	TODO
+      3	*.scr
+      3	*.lds
+      3	*.html
+      3	*.bib
+	...
+</pre>
+
+<p> 
+The source code should be fairly consistent in style, since the
+team has an agreed upon coding style.  In general, code should
+be ANSI C++ specifically for the gnu C++ compiler.  We are in 
+the process of transitioning from GCC 2.0 to GCC 3.0, so the
+code should compile on both.
+
+
+<H2> Platform Specific Code </H2>
+
+<p>
+K42 was designed to be ported to multiple architectures,
+initially <tt>powerpc</tt> and <tt>mips64</tt>.  We added
+the <tt>amd64</tt> and have partially completed the
+<tt>generic64</tt> architectures.  These <tt>TARGET</tt>
+architectures have architecture specific code for a number
+of functions, such as the low-level hardware operations to
+support CPU scheduling and memory management.  
+
+<p>
+Architecture
+specific changes to the build process (defining architecture
+specific files to compile, for example), are put in
+<tt>Make.arch</tt> files.  These are included in the
+corresponding architecture independent Makefiles. Thus,
+the kitchsrc/os/kernel/mem/Makefile will include one of
+mem/arch/amd64/Make.arch,
+mem/arch/generic64/Make.arch,
+mem/arch/mips64/Make.arch, or
+mem/arch/powerpc/Make.arch, depending upon the 
+target architecture being specified.
+
+
+<p>
+Architecture specific code is kept under an <tt>arch</tt>
+directory in the source tree.  Each <tt>arch</tt> directory has a
+subdirectory for the architecture specific code for each
+supported architecture.  Porting K42 to a new architecture
+will involve creating and populating a set of new directories
+under <tt>arch</tt> directories.
+
+<p>
+The <tt>generic64</tt> port is designed to help with the port
+to a new architecture.  The idea of the <tt>generic64</tt>
+port is that it defines the interface between the 
+architecture independent portion of K42 (most of the code)
+and the architecture dependent portion (which needs to be
+created for each new port).  The objective is to provide a
+clear definition of what needs to be provided for each port.
+
+<p>
+To create a new port, in theory, one needs only to define
+a new name for your port, copy the generic64 files, changing
+all references to generic64 to the name of the new port,
+and then fill in the contents of the procedures and methods
+in these files.  The size of this task can be approximated
+by the number of files in the generic64 directories:
+
+<pre>
+     39	*.H
+     27	*.C
+     17	Make.arch
+     13	Makefile
+      6	*.c
+      5	*.h
+      3	*.sgml
+      2	*.src
+      1	*.ent
+      1	*.awk
+</pre>
+
+<p>
+Many of the architecture specific directories are similar
+across the various ports -- examining the other ports can be
+very helpful in defining a new port.
+
+
+<H2> The Build Process </H2>
+
+<p>
+The K42 build process is based upon standard GNU make.
+Each directory, starting at the top, includes a Makefile.
+This Makefile defines a set of make targets which can be
+used to build the entire system.  In general, make in
+one directory will recursively invoke itself on its
+subdirectories to accomplish its task.
+
+<p> 
+The objective of the build process is to produce a set of
+binaries.  The most important is <tt>boot_image</tt> -- the
+bootable image of the K42 kernel.  In addition, there are a
+larger set of programs and servers which are created to be run on
+K42.
+
+<p>
+The build process is designed to allow multiple simultaneous
+builds for different target architectures.  The target 
+architecture is defined by the ARCHS environment or make
+variable.  For example, building the powerpc K42 system
+involves:
+
+<pre>
+ARCHS=powerpc make         or         make ARCHS=powerpc
+</pre>
+
+while building the amd64 K42 system is:
+
+<pre>
+ARCHS=amd64 make         or         make ARCHS=amd64
+</pre>
+
+<p>
+The ARCHS is used to define the TARGET_MACHINE make variable.
+This can be used to test in the makefiles for a particular
+target architecture.  In addition it is passed to C and C++
+as a preprocessor variable, which can be used for #ifdef's.
+The structure of K42 has been designed to minimize the 
+need for platform specific #ifdef's -- there are only
+18 such tests for TARGET_generic64.
+
+<p> 
+A separate, but related make variable is the
+<tt>PLATFORM</tt> that is supporting the build process itself.
+K42 is meant to be cross-compiled -- that is, compiled on one
+platform for another target.  Specifically, we normally build
+powerpc K42 on AIX, mips64 K42 on IRIX, and amd64 on Linux;
+generic64 K42 should build on any platform.  The platform
+is determined by the build process as it runs and does not 
+need to be explicitly set.  By default, if no TARGET_MACHINE
+is specified (with the ARCHS environment variable), the
+build environment picks the TARGET_MACHINE base on the
+build platform.
+
+<p>
+The K42 build divides into three directory trees: the source
+(kitchsrc), the install (install), and the object.  The object tree is
+defined by the Target architecture and the debug level
+(fullDeb, partDeb, noDeb).  For example,
+for the PowerPC architecture and the highest level of debugging, the
+object tree is powerpc/fullDeb/...  For the mips architecture, and no
+debugging, the object tree is mips64/noDeb.  The purpose of this
+structure is to allow builds for multiple target architectures from
+the same source tree at the same time.
+
+<p> Overall, the source tree is the original input to the build
+process.  The source tree is kept in CVS.  Everything can be
+built from the source tree (with the exception of the build tool
+chain -- gmake, gcc, ...).
+
+<p>
+The install tree is used to store the intermediate results of
+the build; results which may be used by other parts of the build,
+such as header files (install/include) and libraries (install/lib).
+
+<p>
+The object tree stores the temporary files that are generated as
+the result of a build -- the object files (*.o) and such.  The object
+tree is a parallel structure to the source tree -- for each source
+directory in the source tree, a directory of the same name is in
+the object tree.  The result of compiling a source file, from
+the source tree, results in an object file in the parallel object
+tree.
+
+<p>
+The top-level makefile in the source directory normally drives
+everything. There are two main commands at this level:  full_snapshot
+and fast_snapshot.  full_snapshot is a full build; fast_snapshot
+is used for incremental builds.
+
+<p>
+A full build consists of a number of separate, sequential steps.
+Each step traverses the entire source tree, with each makefile
+invoking make on each of its subdirectories.
+
+<p>
+To provide uniformity in the way that the build is performed in each
+subdirectory, most of the build is controlled by a common set of
+rules.  These rules are defined in kitchsrc/tools/lib/Makerules.kitch
+which is "included" into each Makefile.  
+
+<p>
+Each Makefile also includes its own local Make.config file.  The
+Make.config file defines several makefile variables (_CWD, MKANCHOR,
+MKKITCHTOP) which are used in the build process.  The Make.config
+files are automatically generated early in the full build (by the
+"make configure_sesame" command).
+
+<p>
+Makerules.kitch itself "includes" several other files to support
+the build process:
+
+<dl>
+<dt>
+Make.paths
+<dd>
+define the PLATFORM, MKSRCTOP, MKKITCHTOPP, MKTOOLBIN
+	from MKANCHOR.
+	defined as a copy of MakePaths.proto or $HOME/.kitchmfinc, 
+	defines the OBJDIR_ARCH_TYPES and OBJDIR_OPT_TYPES.
+
+<dt>
+Make.config
+<dd>
+defines (_CWD, MKANCHOR, MKKITCHTOP) for each directory
+
+<dt>
+Make.configure
+<dd>
+defines the rules for building Make.config for each
+	source file, as well as the parallel object tree and its Makefiles.
+
+<dt>
+Make.arch
+<dd>
+included if it exists (as arch/TARGET_MACHINE/Make.arch)
+	to provide any target-machine dependent build information.
+
+<dt>
+Make.help
+<dd>
+supports "make help"
+</dl>
+
+
+<p>
+Makerules.kitch mainly defines all the rules that drive the
+build process.  This allows the Makefiles in the various directories
+to consist mainly of the definition of makefile variables which
+then activate the rules in Makerules.kitch.  For example, the
+definition of SUBDIRS will automatically mean that the subdirectories
+are recursively called by make for the standard commands: clean,
+install_includes, and so on.
+
+<p>
+Each directory in the object tree has two basic files: Makefile and
+Make.config.  Both of these files are automatically generated during
+the "make configure_sesame" step of a full build.  The Makefile
+defines several variables which identify it and the parameters
+of the build (the TARGET_MACHINE (powerpc, mips64, amd64) and 
+OPTIMIZATION (fullDeb, partDeb, noDeb), as well as the path
+to the parallel source file directory (SRC_DIR_PATH), and the
+top of the build tree (MKANCHOR and MKKITCHTOP).  The Make.config
+file in the object tree is identical to the Make.config file
+in the source tree.
+
+<p>
+The Makefile in the object tree includes Makefile.kitch.  This
+"generic" object tree Makefile includes Make.paths, Make.arch, and
+all the generated dependency files (*.d).  In addition it includes the
+Makefile for this object directory from the corresponding source tree.
+Doing so provides all the information about the files to be compiled,
+and so on, that is included in the source tree Makefile, but leaves us
+still in the object directory.  VPATH is used to allow make to find
+the source files (in the source tree) for compilation.
+
+<pre>
+VPATH = $(SRC_DIR_PATH):$(SRC_DIR_PATH)arch/$(TARGET_MACHINE) 
+</pre>
+
+In addition, of course, including the source Makefile also includes
+Makerules.kitch, which provides all the rules for the build.
+
+
+
+	make
+	compiler, loaders, 
+	other build tools
+	glibc libc.a without memcmp.o, strrchr.o or xlocale.o
+	boot.image
+
+<H2> Overall boot control flow </H2>
+
+<H2> The porting code </H2>
+	expedient code
+	memory management
+	memory layout
+
+<H2> Other parts of the port </H2>
+	Processor or Simulator
+	Booting
+	stubgen
+	thinwire
+	knightly
+	Linux
+	glibc
+
+<H2> Debugging </H2>
+	single-step
+	early_printk, err_printf, cprint
+	asserts
+	gdb
+
+<H2> Regression tests and output </H2>
+
+</html>

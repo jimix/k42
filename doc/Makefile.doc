@@ -1,0 +1,114 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2001.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Makefile.doc,v 1.16 2005/02/21 17:28:36 dilma Exp $
+# ############################################################################
+
+#
+# RedHat RPM:	stylesheets-1.54.13rh-5 or greater
+# Mandrake RPM:	docbook-style-dsssl-1.74b-1mdk or greater
+#
+
+#
+# You can also just pass the location to make like this:
+#   $ make DSSSL_DIR=<dir> [target]
+#
+
+DSSSL_DIR=$(shell if [ ! -z "`egrep 'Fedora|RedHat|Red Hat' /etc/issue`" ]; then \ls -d /usr/share/sgml/docbook/*dsssl-stylesheets* | head -1; else echo /usr/share/sgml/docbook/stylesheet/dsssl/modular; fi)
+ifeq ($(shell test -d $(DSSSL_DIR) || echo no),no)
+$(error See Makefile: Cannot find Style Sheets $$(DSSSL_DIR)=$(DSSSL_DIR))
+endif
+
+JADE=openjade -D$(DSSSL_DIR)
+STYLE_SHEET=$(topsrc)/doc/k42.dsl
+
+COMMON +=$(STYLE_SHEET)
+
+HTML_VARS= -V nochunks
+HTML_ARGS= -t sgml -ihtml $(HTML_VARS) -d $(STYLE_SHEET)\#html
+
+TEX_VARS=
+TEX_ARGS= -t tex $(TEX_VARS) -d $(STYLE_SHEET)\#print
+
+RTF_VARS=
+RTF_ARGS= -t rtf $(RTF_VARS) -d print/docbook.dsl
+
+%.dvi: %.tex
+	-jadetex $< > /dev/null 2>&1
+	if egrep '^LaTeX Warning: There were undefined references.' \
+	  $(basename $<).log >/dev/null 2>&1 ; then \
+	    jadetex $<; jadetex $< ;\
+	fi >/dev/null 2>&1
+	$(RM) $(foreach ext, aux log dvi, $($@:%.dvi=%.$(ext)))
+
+%.ps: %.dvi
+	dvips -o $@ $<  > /dev/null 2>&1 
+
+
+%.jpg: %.fig
+	fig2dev -L jpeg $< $@
+
+%.png: %.fig
+	fig2dev -L png $< $@
+
+%.eps: %.fig
+#	fig2dev -L eps -C dummy $< $@
+	fig2dev -L eps $< $@
+
+%.html: %.sgml $(COMMON) $(FIG_HTML)
+	$(JADE) $(HTML_ARGS) $< > $@ || $(RM) $@
+
+%.tex: %.sgml $(COMMON) $(FIG_TEX)
+	$(JADE) $(TEX_ARGS) -o $@ $<
+
+%.rtf: %.sgml $(COMMON) $(FIG_TEX)
+	$(JADE) $(RTF_ARGS) -o $@ $<
+
+
+TARGETS_HTML=$(DOCSRCS:%.sgml=%.html)
+TARGETS_PS=$(DOCSRCS:%.sgml=%.ps)
+TARGETS_RTF=$(DOCSRCS:%.sgml=%.rtf)
+
+html: $(TARGETS_HTML)
+ps: $(TARGETS_PS)
+rtf: $(TARGETS_RTF)
+
+SUBDIRS_world = $(SUBDIRS:%=%_world)
+$(SUBDIRS_world):
+	$(MAKE) -C ../$(@:%_world=%)/doc world 
+
+SUBDIRS_world_ps = $(SUBDIRS:%=%_world_ps)
+$(SUBDIRS_world_ps):
+	$(MAKE) -C ../$(@:%_world_ps=%)/doc world_ps
+
+SUBDIRS_world_all = $(SUBDIRS:%=%_world_all)
+$(SUBDIRS_world_all):
+	$(MAKE) -C ../$(@:%_world_all=%)/doc world_all
+
+SUBDIRS_world_clean = $(SUBDIRS:%=%_world_clean)
+$(SUBDIRS_world_clean):
+	$(MAKE) -C ../$(@:%_world_clean=%)/doc world_clean
+
+
+world: $(SUBDIRS_world) html
+world_ps: $(SUBDIRS_world_ps) ps
+world_all: $(SUBDIRS_world_all) html ps
+world_clean: $(SUBDIRS_world_clean) clean
+
+CLEAN_FILES  = $(TARGETS_HTML) $(TARGETS_PS) $(TARGETS_RTF)
+CLEAN_FILES += $(FIG_HTML) $(FIG_TEX)
+
+clean_tex:
+	$(RM) *.tex *.aux *.log *.dvi
+
+clean: clean_tex
+	$(RM) $(CLEAN_FILES)
+
+clobber: clean
+	$(RM) *~ *.bak
+

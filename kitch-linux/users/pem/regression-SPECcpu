@@ -1,0 +1,100 @@
+#! /usr/bin/env bash
+ 
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# ****************************************************************************/
+# $Id: regression-SPECcpu,v 1.6 2005/03/09 17:11:35 pfs Exp $
+#
+# Automatically generate PEM traces for SPECcpu2000
+# k42 console side of the world.
+# Approach for CFP
+#   Loop over iterations
+#   boot k42 to invoke SPECcpu
+#
+# Environment variables defined:
+#   K42_INITSCR		actions to take when k42 boots
+#
+# @author Peter F. Sweeney
+# @date   1/24/2004
+
+machine=$1
+if [[ -z $1 ]]; then
+  echo "***regression.SPECcpu: Must specify k42 victim machine!***"
+  exit -1
+fi
+
+benchmark=$2
+if [[ -z $2 ]]; then
+  echo "***regression.SPECcpu: Must specify SPEcpu2000 benchmark!***"
+  exit -1
+fi
+
+set -x
+
+cd ~/k42/powerpc/noDeb/os
+
+#cp $K42_TOP/kitchsrc/kitch-linux/users/pem/SPECcpu$benchmark $K42_TOP/install/powerpc/noDeb/kitchroot/home/pem
+cp $K42_TOP/kitchsrc/kitch-linux/users/pem/SPECcpu $K42_TOP/install/powerpc/noDeb/kitchroot/home/pem
+
+# k42 boot time script
+#export K42_INITSCR=/home/pem/SPECcpu$benchmark
+export K42_INITSCR=/home/pem/SPECcpu
+
+# files
+#                       statusFile     file that contains status of actions
+       statusFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.SPECcpu$benchmark"
+#                       modeFile       file that contains mode of tracing
+         modeFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.SPECcpu$benchmark.mode"
+#                       extensionFile  file that contains trace file suffix
+    extensionFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.SPECcpu$benchmark.extension"
+# 			benchmarkNameFile  file that contains the benchmark name
+benchmarkNameFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.SPECcpuBenchmarkName"
+
+
+if [[ -a $benchmarkNameFile ]]; then
+  rm $benchmarkNameFile
+fi
+echo $benchmark > $benchmarkNameFile
+
+iterations="1 2 3 4 5"
+iterations="1 2 4 5"
+
+for iteration in $iterations; do
+
+  echo "$iteration" > $extensionFile
+
+  MODE=user
+  echo "-$MODE" > $modeFile
+  if [[ -a $statusFile ]]; then 
+    rm $statusFile
+  fi
+  echo 0 > $statusFile
+  echo "SPECcpu$benchmark with mode -$MODE with extension $iteration"
+#  k42console -m $machine -o noDeb -R -B killsteal
+# k42 hack!
+  k42console -m $machine -o noDeb -R -B killsteal -- MKANCHOR=/a/kix/homes/kix/pfs/k42
+
+done
+
+exit -1
+
+
+  MODE=both
+  echo "-$MODE" > $modeFile
+  if [[ -a $statusFile ]]; then
+    rm $statusFile
+  fi
+  echo 0 > $statusFile
+  echo "SPECcpu$benchmark with mode -$MODE with extension $iteration"
+#  k42console -m $machine -o noDeb -R -B killsteal
+# k42 hack!
+  k42console -m $machine -o noDeb -R -B killsteal -- MKANCHOR=/a/kix/homes/kix/pfs/k42
+
+
+

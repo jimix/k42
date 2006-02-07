@@ -1,0 +1,21 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2004.
+# All Rights Reserved
+#
+#  $Id: README,v 1.1 2004/04/13 21:01:25 aabauman Exp $
+# ############################################################################
+
+This directory contains a tool to convert K42 trace files to an LTT
+(Linux Trace Toolkit) approximation in order to use the LTT visualiser
+program on K42 traces.
+
+Since this tool includes LTT and Linux headers (LTTTypes.h,
+ltt-linuxevents.h, linux-ppc64-unistd.h), it is licensed under the GPL,
+rather than the LGPL that covers most of K42.
+
+LTT expects as well as a trace file, a proc file which contains info about
+the process IDs and IRQ numbers on the system. K42 doesn't yet have the
+interfaces to extract this information, so you have to supply it manually.
+The ltt-procfile file contains an example procfile for a basic K42 boot on
+a Power3 box. If you don't care about the visualiser displaying process
+and IRQ names, it's also sufficient to supply an empty file.

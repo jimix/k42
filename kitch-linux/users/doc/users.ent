@@ -1,0 +1,14 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: users.ent,v 1.1 2001/09/30 21:09:28 bob Exp $
+-->
+<!entity usersOver SYSTEM "usersOver.sgml">
+<!entity usersPrgG SYSTEM "usersPrgG.sgml">
+<!entity % spec SYSTEM "../spec/doc/spec.ent">
+%spec;

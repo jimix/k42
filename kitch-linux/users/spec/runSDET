@@ -1,0 +1,21 @@
+#!/bin/bash -e
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2002.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: runSDET,v 1.48 2005/07/17 21:17:02 butrico Exp $
+# ############################################################################
+
+eval `/kbin/thinenv -l K42_PKGVER`
+if [ "$K42_PKGVER" == "3" ]; then
+    /knfs/home/spec/bin/runSDET.Img.3 "$@"
+elif [ "$K42_PKGVER" == "4" ]; then
+    /knfs/home/spec/bin/runSDET.Img.4 "$@"
+else
+    echo "I don't know how to run SDET for this package version " $K42_PKGVER
+    exit 1
+fi

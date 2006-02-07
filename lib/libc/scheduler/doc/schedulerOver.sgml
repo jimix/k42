@@ -1,0 +1,54 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: schedulerOver.sgml,v 1.2 2001/10/23 19:44:12 bob Exp $
+-->
+<title>Overview of K42 Scheduler</title>
+<section>
+  <title>Timer Support</title>
+
+  <para>
+    Timer support consists of base kernel services and user services,
+    packaged with the scheduler, which use the base kernel services.
+  </para>
+
+  <para>
+    The services consist of a facility to get the current time, and a
+    facility to request an interrupt at a future time.  The two services
+    are somewhat integrated to reduce the number of user/kernel crossings
+    required.  Specifically, all timer request return the current time as a
+    result.  Thus, the user code can request an interrupt some time in the
+    future and with the same call, learn the current time and thus when the
+    interrupt will occur.  Note that this care is only needed on
+    architectures which to not support user mode access to the hardware
+    clock.
+  </para>
+
+  <para>
+    The plan (not yet implemented) for accurate clocks is to let the
+    hardware clock (we call it the tick counter) run free.  We never adjust
+    the tick counter.  The kernel will also publish the current parameters
+    needed to convert the tick counter to absolute time.  The function used
+    will have the properties that absolute time will be continuous and
+    monotone (always increasing).
+  </para>
+
+  <para>
+    In line with the K42 user mode scheduler strategy, the kernel provides
+    one outstanding timer interrupt request for each virtual processor.
+    When the time of the interrupt arrives, the timer interrupt bit is set
+    causing an interrupt to be delivered to the user mode scheduler.  The
+    user mode timer services will maintain a list of all outstanding timer
+    interrupt requests.  It will maintain the kernel timer as the time of
+    the next interrupt.  This strategy allows user requests for watchdog
+    timers to be made and cancelled without kernel calls, since the
+    requests are (almost) always farther in the future than the next real
+    timer interrupt request.
+  </para>
+
+</section>

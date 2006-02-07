@@ -1,0 +1,255 @@
+#!/bin/sh
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: setupsdet,v 1.3 2003/12/03 18:52:47 mostrows Exp $
+# ############################################################################
+
+OSTYPE=`uname`
+SDETGID=500
+SDETUID=500
+SDETUSER=spec
+SDETGROUP=spec
+SDETCMD=""
+SDETHOME=/home/$SDETUSER
+SPECORIGDIR=/u/kitchawa/k42-packages/src-private
+SPEC=specdata/benchspec
+PKG=057.sdet
+PKGDIR=$SPECORIGDIR/$SPEC/$PKG
+TMPDIR=/tmp
+
+FIND=find
+CPIO=cpio
+USAGE="$0 [buildtar]"
+
+error()
+{
+   echo "ERROR: $1" >&2
+}
+
+
+
+setupForOS()
+{
+  case "$OSTYPE" in
+  AIX)
+    echo "Setting up SDET for: AIX"
+    SDETCMD="su - $SDETUSER -c"
+    mkusr='mkuser id=$SDETUID pgrp=$SDETGROUP home=$SDETHOME $SDETUSER'
+    mkgrp='mkgroup id=$SDETGID $SDETGROUP'
+    mfile=M.aix
+    tarfile=AIX.sdm.tar
+    ;;
+  Linux)
+    echo "Setting up SDET for: Linux"
+    mkusr='useradd -u $SDETUID -g $SDETGROUP -d $SDETHOME $SDETUSER'
+    mkgrp='groupadd -g $SDETGID $SDETGROUP'
+    mfile=M.linux
+    tarfile=Linux.sdm.tar
+    ;;
+  *)
+    OSTYPE=K42
+    echo "Setting up SDET for: K42"
+    mkusr='error "cannot create users for $OSTYPE"; exit 1'
+    mkgrp='error "cannot create groups for $OSTYPE" ; exit 1'
+    mfile=M.k42
+    tarfile=K42.sdm.tar
+    ;;
+  esac
+}
+
+checkForTar()
+{
+  if [ ! -f $tarfile ]
+  then
+    error "Could not Find SDET source tarball: $SRCTAR"
+    exit 1      
+  fi
+}
+
+buildTarFile()
+{
+#  set -x
+  case "$OSTYPE" in
+  AIX)
+    if [ -f /usr/gnu/bin/cpio ]; then
+       CPIO=/usr/gnu/bin/cpio
+    fi
+    ;;
+  esac
+  
+  if [ ! -f $tarfile ]
+  then
+    tmpdir=$TMPDIR/$$.sdetsetuptmpdir
+    if [ -d $tmpdir ]; then
+       echo "ERROR: $tmpdir already exists try cleaning up and rerun"
+       exit 1
+    fi
+    if ! mkdir $tmpdir; then
+       echo "ERROR: could not create $tmpdir"
+       exit 1
+    fi
+    echo "Building $tarfile"
+    (cd $PKGDIR && $FIND . ! -name \*~ -type f -print | $CPIO -pdum $tmpdir )
+    copyFiles . $tmpdir
+    applyPatches . $tmpdir
+    (cd $tmpdir/tools;make)
+    (cd $tmpdir;tar -cf - .) > $tarfile
+    echo "issue next command to clean temporary dir"
+    echo "rm -r $tmpdir"
+  else
+    echo "$tarfile already exists to rebuild remove $tarfile and rerun"
+  fi
+  tar -cvf $OSTYPE.sdet.image.tar $tarfile $0
+  echo "transfer $OSTYPE.sdet.image to target machine, untar and run $0"
+}
+
+copyFiles()
+{
+  srcdir=$1
+  destdir=$2
+  INSTALL=install
+
+  case "$OSTYPE" in
+  AIX)
+     bin_TARGETS="copy.clone time cleanstderr locale ps cc ld df"
+     home_TARGETS="M.aix M.common"
+     dot_TARGETS="profile"
+     if [ -f /u/kitchawa/bin/gnuinstall ]; then
+        INSTALL=/u/kitchawa/bin/gnuinstall
+     fi
+     ;;
+  esac
+
+  for i in $bin_TARGETS
+  do
+    $INSTALL -m 0755 $srcdir/$i $destdir/bin/$i
+  done
+
+  for i in $home_TARGETS
+  do
+    $INSTALL -m 0755 $srcdir/$i $destdir/$i
+  done
+
+  for i in $dot_TARGETS
+  do
+    $INSTALL -m 0755 $srcdir/$i $destdir/.$i
+  done
+    
+}
+
+applyPatches()
+{
+  srcdir=$1
+  destdir=$2
+  PATCH=patch
+
+  if [ -f $srcdir/sdet.$OSTYPE.patch ]; then
+    (cd $destdir;$PATCH -p1 < $srcdir/sdet.$OSTYPE.patch)
+  fi
+}
+
+
+setupGrp()
+{
+  gid=`sed -ne "s/$SDETGROUP:[^:]*:\([0-9]*\):.*/\1/p" /etc/group`
+  
+  if [ -n "$gid" ]; then
+    if [ "$gid" -ne "$SDETGID" ]; then
+      error "setupGrp: $SDETGROUP exists: gid = $gid should be $SDETGID"
+      exit 1
+    fi
+  else
+    # make the group
+    eval $mkgrp
+  fi
+}
+
+setupUsr()
+{
+  id=`sed -ne "s/$SDETUSER:[^:]*:\([0-9]*:[0-9]*\):.*/\1/p" /etc/passwd`
+  uid=${id%:*}
+  gid=${id#*:}
+
+  if [ -n "$id" ]; then
+    if [ "$uid" -ne "$SDETUID"  -o "$gid" -ne "$SDETGID" ]; then
+      error "setupUsr: $SDETUSER exists and has incorrect values:"
+      error "  uid = $uid should be $SDETUID"
+      error "  gid = $gid should be $SDETGID"
+      exit 1
+    fi
+  else
+    # make the user
+    eval $mkusr
+  fi  
+}
+
+setupHome()
+{
+  if [ ! -d "$SDETHOME" ]; then
+    mkdir -p "$SDETHOME"
+    chown $SDETUSER.$SDETGROUP $SDETHOME
+    chmod 777 $SDETHOME
+  fi
+
+  if [ ! -r "$SDETHOME/$SRCTAR" ]; then
+    cp $SRCTAR $SDETHOME/$SRCTAR
+    chown $SDETUSER.$SDETGROUP $SDETHOME/$SRCTAR
+    su - $SDETUSER -c "tar -xf $SRCTAR"
+  fi
+}
+
+runBenchMark()
+{
+   echo "Running the BenchMark..."
+   cmd='make -f $mfile'
+   su - $SDETUSER -c "$cmd"
+}
+
+filterResults()
+{
+  echo "filtering Results ..."
+}
+
+archiveResults()
+{
+  echo "archive Results ..."
+}
+
+processResults()
+{
+  filterResults
+  archiveResults
+}
+
+# main
+
+setupForOS
+
+if [ "$#" = 1 ]; 
+then
+  if [ "$1" = "buildtar" ]; then
+    buildTarFile
+  else
+    echo $USAGE
+    exit 1
+  fi
+fi
+exit
+
+checkForTar
+
+setupGrp
+
+setupUsr
+
+setupHome
+
+runBenchMark
+
+#processResults

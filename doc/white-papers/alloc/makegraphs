@@ -1,0 +1,16 @@
+#!/bin/ksh
+
+INPUT=$1;
+
+if [[ $# != 1 ]]; then
+  echo "Usage: makegraphs inputfile"
+  exit 
+fi
+
+cat $INPUT | parseit "$INPUT."
+
+ls $INPUT.*.data  | while read file
+do
+  cat $file | graphit > ${file%%.data}.jgraph
+  jgraph -P ${file%%.data}.jgraph > ${file%%.data}.ps
+done

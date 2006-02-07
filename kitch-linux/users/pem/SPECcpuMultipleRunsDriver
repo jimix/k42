@@ -1,0 +1,565 @@
+#! /usr/bin/env bash
+ 
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# ****************************************************************************/
+# $Id: SPECcpuMultipleRunsDriver,v 1.2 2005/03/21 03:04:37 pfs Exp $
+#
+# Automatically generate PEM traces for SPECcpu2000 CFP benchmarks and configurations
+# Invoked on k42 boot
+#  Must keep all state in files: Benchmark
+#
+# Environment variables defined:
+#   K42_INITSCR		actions to take when k42 boots
+#
+# @author Peter F. Sweeney
+# @date   3/05/2004
+
+# boot strap
+benchmarkNameFile="/home/pem/.SPECcpuBenchmarkName"
+if [[ ! -a $benchmarkNameFile ]]; then 
+    echo ""
+    echo "***benchmarkNameFile, $benchmarkNameFile, does not exist!***"
+    echo ""
+    exit -9999
+fi
+benchmark=`cat $benchmarkNameFile`
+if [[ -z $benchmark ]]; then
+  echo ""
+  echo "***SPECcpuMultipleRunsDriver: benchmark undefined!***"
+  echo ""
+  exit -8888
+fi
+
+iterationFile="/home/pem/.SPECcpuIteration"
+iteration=`cat $iterationFile`
+if [[ -z $iteration ]]; then
+  echo ""
+  echo "***SPECcpuMultipleRunsDriver: iteration undefined!***"
+  echo ""
+  exit -8888
+fi
+
+statusFile="/home/pem/.SPECcpuMultipleRuns"
+STATUS=`cat $statusFile`
+if [[ -z $STATUS ]]; then
+  echo ""
+  echo "***SPECcpuMultipleRunsDriver: STATUS undefined!***"
+  echo ""
+  exit -8888
+fi
+
+MODE=-user
+
+echo "SPECcpuMultipleRunsDriver enter with benchmark $benchmark, iteration $iteration, status $STATUS, mode $MODE" 
+
+# benchmarks
+if [[ $benchmark == "Wupwise" ]]; then
+  echo "SPECcpuMultipleRunsDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+
+  if [[ $STATUS < 8 ]]; then 
+    let nextStatus=STATUS+1
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $nextStatus > $statusFile
+
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  fi 
+
+  if [[ $iteration < 0 ]]; then
+    if [[   $iteration == 1 ]]; then
+      iteration=2
+    elif [[ $iteration == 2 ]]; then
+      iteration=3
+    elif [[ $iteration == 3 ]]; then 
+      iteration=4
+    elif [[ $iteration == 4 ]]; then 
+      iteration=5
+    fi
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+    echo "+++SPECcpuMultipleRunsDriver: benchmark $benchmark, iteration $iteration $MODE $STATUS"
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  else 
+    benchmark="Done"
+    echo $benchmark > $benchmarkNameFile
+    iteration=1
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+	rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+  fi
+fi
+
+if [[ $benchmark == "Mgrid" ]]; then
+  echo "SPECcpuMultipleRunsDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+
+  if [[ $STATUS < 8 ]]; then 
+    let nextStatus=STATUS+1
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $nextStatus > $statusFile
+
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  fi 
+
+  benchmark="Done"
+  echo $benchmark > $benchmarkNameFile
+  STATUS=0
+  if [[ -a $statusFile ]]; then 
+      rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+
+fi
+
+if [[ $benchmark == "Applu" ]]; then
+  echo "SPECcpuMultipleRunsDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+
+  if [[ $STATUS < 8 ]]; then 
+    let nextStatus=STATUS+1
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $nextStatus > $statusFile
+
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  fi 
+
+  benchmark="Art"
+  echo $benchmark > $benchmarkNameFile
+  iteration=5
+  echo $iteration > $iterationFile
+  STATUS=0
+  if [[ -a $statusFile ]]; then 
+      rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+fi
+
+if [[ $benchmark == "Mesa" ]]; then
+  echo "SPECcpuMultipleRunsDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+
+  if [[ $STATUS < 8 ]]; then 
+    let nextStatus=STATUS+1
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $nextStatus > $statusFile
+
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  fi 
+
+  benchmark="Galgel"
+  echo $benchmark > $benchmarkNameFile
+  STATUS=0
+  if [[ -a $statusFile ]]; then 
+      rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+fi
+
+if [[ $benchmark == "Galgel" ]]; then
+  echo "SPECcpuMultipleRunsDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+
+  if [[ $STATUS < 8 ]]; then 
+    let nextStatus=STATUS+1
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $nextStatus > $statusFile
+
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  fi 
+
+  if [[ $iteration < 5 ]]; then
+    if [[   $iteration == 1 ]]; then
+      iteration=6
+    elif [[ $iteration == 2 ]]; then
+      iteration=3
+    elif [[ $iteration == 3 ]]; then 
+      iteration=4
+    elif [[ $iteration == 4 ]]; then 
+      iteration=5
+    fi
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+    echo "+++SPECcpuMultipleRunsDriver: benchmark $benchmark, iteration $iteration $MODE $STATUS"
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  else 
+    benchmark="Art"
+    echo $benchmark > $benchmarkNameFile
+    iteration=1
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+	rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+  fi
+fi
+
+if [[ $benchmark == "Art" ]]; then
+  echo "SPECcpuMultipleRunsDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+
+  if [[ $STATUS < 8 ]]; then 
+    let nextStatus=STATUS+1
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $nextStatus > $statusFile
+
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  fi 
+
+  if [[ $iteration < 4 ]]; then
+    if [[   $iteration == 1 ]]; then
+      iteration=6
+    elif [[ $iteration == 3 ]]; then 
+      iteration=5
+    fi
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+    echo "+++SPECcpuMultipleRunsDriver: benchmark $benchmark, iteration $iteration $MODE $STATUS"
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  else 
+    benchmark="Fma3d"
+    echo $benchmark > $benchmarkNameFile
+    iteration=1
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+	rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+  fi
+fi
+
+if [[ $benchmark == "Equake" ]]; then
+  echo "SPECcpuMultipleRunsDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+
+  if [[ $STATUS < 8 ]]; then 
+    let nextStatus=STATUS+1
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $nextStatus > $statusFile
+
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  fi 
+
+  if [[ $iteration < 5 ]]; then
+    if [[   $iteration == 1 ]]; then
+      iteration=2
+    elif [[ $iteration == 2 ]]; then
+      iteration=3
+    elif [[ $iteration == 3 ]]; then 
+      iteration=4
+    elif [[ $iteration == 4 ]]; then 
+      iteration=5
+    fi
+    echo $iteration > $iterationFile
+#    STATUS=0
+    STATUS=1
+    if [[ -a $statusFile ]]; then 
+	rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+    echo "+++SPECcpuMultipleRunsDriver: benchmark $benchmark, iteration $iteration $MODE $STATUS"
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  else 
+    benchmark="Done"
+    echo $benchmark > $benchmarkNameFile
+    iteration=5
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+	rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+  fi
+fi
+
+#################
+# currently unacceptable benchmarks
+if [[ $benchmark == "Facerec" ]]; then
+  echo "SPECcpuMultipleRunsDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+  if [[ $STATUS < 8 ]]; then 
+    let nextStatus=STATUS+1
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $nextStatus > $statusFile
+
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  fi 
+
+  benchmark="Ammp"
+  echo $benchmark > $benchmarkNameFile
+  STATUS=0
+  echo $STATUS > $statusFile
+fi
+
+if [[ $benchmark == "Ammp" ]]; then
+  echo "SPECcpuMultipleRunsDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+
+  if [[ $STATUS < 8 ]]; then 
+    let nextStatus=STATUS+1
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $nextStatus > $statusFile
+
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  fi 
+
+  if [[ $iteration < 5 ]]; then
+    if [[   $iteration == 1 ]]; then
+      iteration=2
+    elif [[ $iteration == 2 ]]; then
+      iteration=3
+    elif [[ $iteration == 3 ]]; then 
+      iteration=4
+    elif [[ $iteration == 4 ]]; then 
+      iteration=5
+    fi
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+    echo "+++SPECcpuMultipleRunsDriver: benchmark $benchmark, iteration $iteration $MODE $STATUS"
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  else 
+    benchmark="Done"
+    echo $benchmark > $benchmarkNameFile
+    iteration=1
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+	rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+  fi
+fi
+
+if [[ $benchmark == "Lucas" ]]; then
+  echo "SPECcpuMultipleRunsDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+
+  if [[ $STATUS < 8 ]]; then 
+    let nextStatus=STATUS+1
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $nextStatus > $statusFile
+
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  fi 
+
+  benchmark="Fma3d"
+  echo $benchmark > $benchmarkNameFile
+  STATUS=0
+  if [[ -a $statusFile ]]; then 
+      rm $statusFile
+  fi
+  echo $STATUS > $statusFile
+fi
+
+if [[ $benchmark == "Fma3d" ]]; then
+  echo "SPECcpuMultipleRunsDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+
+  if [[ $STATUS < 8 ]]; then 
+    let nextStatus=STATUS+1
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $nextStatus > $statusFile
+
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  fi 
+
+  if [[ $iteration < 5 ]]; then
+    if [[ $iteration == 1 ]]; then
+      iteration=3
+    elif [[ $iteration == 3 ]]; then
+      iteration=5
+    fi
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+	rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+    echo "+++SPECcpuMultipleRunsDriver: benchmark $benchmark, iteration $iteration $MODE $STATUS"
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  else
+    benchmark="Swim"
+    echo $benchmark > $benchmarkNameFile
+    iteration=1
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+        rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+  fi
+fi
+
+if [[ $benchmark == "Sixtrack" ]]; then
+  echo "SPECcpuMultipleRunsDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+
+  if [[ $STATUS < 8 ]]; then 
+    let nextStatus=STATUS+1
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $nextStatus > $statusFile
+
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  fi 
+
+  if [[ $iteration < 5 ]]; then
+    if [[ $iteration == 1 ]]; then
+      iteration=6
+    elif [[ $iteration == 2 ]]; then 
+      iteration=3
+    elif [[ $iteration == 3 ]]; then 
+      iteration=4
+    elif [[ $iteration == 4 ]]; then 
+      iteration=5
+    fi
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+	rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+    echo "+++SPECcpuMultipleRunsDriver: benchmark $benchmark, iteration $iteration $MODE $STATUS"
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  else 
+    benchmark="Apsi"
+    echo $benchmark > $benchmarkNameFile
+    iteration=1
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+  fi
+fi
+
+if [[ $benchmark == "Apsi" ]]; then
+  echo "SPECcpuMultipleRunsDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+
+  if [[ $STATUS < 8 ]]; then 
+    let nextStatus=STATUS+1
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $nextStatus > $statusFile
+
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  fi 
+
+  if [[ $iteration < 5 ]]; then
+    if [[ $iteration == 1 ]]; then
+      iteration=6
+    elif [[ $iteration == 2 ]]; then 
+      iteration=3
+    elif [[ $iteration == 3 ]]; then 
+      iteration=4
+    elif [[ $iteration == 4 ]]; then 
+      iteration=5
+    fi
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+    echo "+++SPECcpuMultipleRunsDriver: benchmark $benchmark, iteration $iteration $MODE $STATUS"
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  else 
+    benchmark="Done"
+    echo $benchmark > $benchmarkNameFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+	rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+  fi
+fi
+
+if [[ $benchmark == "Swim" ]]; then
+  echo "SPECcpuMultipleRunsDriver benchmark: $benchmark, extension: $iteration, mode: $MODE with STATUS: $STATUS"
+
+  if [[ $STATUS < 8 ]]; then 
+    let nextStatus=STATUS+1
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $nextStatus > $statusFile
+
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  fi 
+
+  if [[ $iteration < 1 ]]; then
+    if [[ $iteration == 1 ]]; then
+      iteration=2
+    elif [[ $iteration == 2 ]]; then 
+      iteration=3
+    elif [[ $iteration == 3 ]]; then 
+      iteration=4
+    elif [[ $iteration == 4 ]]; then 
+      iteration=5
+    fi
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+	rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+    echo "+++SPECcpuMultipleRunsDriver: benchmark $benchmark, iteration $iteration $MODE $STATUS"
+    /home/pem/SPECcpuMultipleRuns $benchmark $iteration $MODE $STATUS
+  else 
+    benchmark="Done"
+    echo $benchmark > $benchmarkNameFile
+    iteration=1
+    echo $iteration > $iterationFile
+    STATUS=0
+    if [[ -a $statusFile ]]; then 
+      rm $statusFile
+    fi
+    echo $STATUS > $statusFile
+  fi
+fi
+
+
+
+exit -1
+
+

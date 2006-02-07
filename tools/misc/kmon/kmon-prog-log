@@ -1,0 +1,107 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: kmon-prog-log,v 1.14 2002/06/13 22:37:17 bob Exp $
+# ############################################################################
+
+12-04-00
+ fixed printing of TICKS on bottom timeline to be %.3f
+ fixed top message to be float as well
+ added time diff to top message
+ fixed graphical attribution of colors so that box represents correct color 
+ fixed calculate stats attribution of time to correct info structure
+ fixed not hiding of list of show events with their counts
+ fixed displaying of spurious show strings from non-selected major/minor
+ added ability to store show event from one file load to the next
+ added ability to print up to 9 show event strings and counts
+ added gray background for show event strings and counts
+12-06-00
+ fixed deprecation of appendText in trace.java
+ fixed deprecation of handleEvent in trace.java
+12-07-00
+ switched order of open and quit in file menu
+ fixed deprecation of handleEvent in traceDraw.java
+ fixed deprecation of appendText in g.java
+ fixed deprecation of hide() and show() in CDAColorWindow
+ fixed deprecation of hide() and show() in PIDColorWindow
+ fixed deprecation of hide() and show() in Global
+ fixed deprecation of action and handleEvent in CDAColorWindow
+ fixed deprecation of action and handleEvent in PIDColorWindow
+ fixed deprecation of action and handleEvent in getEventType
+ fixed deprecation of delItems in getEventType
+ added show help dialog box
+12-08-00
+ added additional page fault TRACE_EXCEPTION_IPC_REFUSED event
+01-04-00
+ fixed bug in displaying index rather than pid for pid list
+ modified default file to be trace-out.0.trc
+ changed macros to handle new PID format
+01-05-00
+ added TRACE_EXCEPTION_AWAIT_PPC_RETRY TRACE_EXCEPTION_AWAIT_PPC_RETRY_DONE
+ changed event line (middle button) so that it is not modal - always displays
+ added ability to get rid of event line by clicking outside trace array
+01-24-01
+ modified g.java and traceDraw.java to accommodate change from CDA_ADJUST
+ events to CDA_SWITCH events
+02-16-01
+ added ability to handle timestamp wraps
+ added feature to 0 base time
+ added ability to understand ticks_per_second event
+ added ability to parse command line arguments and print usage
+ added -tps as a command line argument to set ticksPerSec
+ fixed dots so they wrap every 50 dots
+04-11-01
+ changed ERROR NOT a height to just sum errors and print at end
+10-14-01
+ fixed bug of not fixing file offset to account for file header
+ added numbers to distinguish cases in file io error mesasge
+10-30-01
+ fixed ability to pick up cdas starting the in the middle of a trace file
+ fixed bug of not clearing text event area before printing events
+11-28-01
+ changed menu item from show pid colors to show CommID colors
+ changed commID to print out in hex
+ changed CommID OK button to close button
+ Added more colors to colorInd array
+ created PID and CommID infrastructure (some of PID nyi)
+ Made colors for CommID predictable
+ Added sorting of CommIDs
+11-29-01
+ Temporarily removed sorting of CommIDs
+ Fixed zoom, scrolling - changed to use time only for all indications 
+ Added signiicant digits to time values, added number of events
+12-12-01
+ Added automatically set zoom when we start up and sort out the heartbeats
+ Added apply and close button to show events window (getEventType)
+02-08-02
+ Added fix to make kernel red on processors other than 0
+ Made idle loop always come up as blue
+02-10-02
+ Removed extra copy of kernel in CommID list
+ Had kernel always first idle always second by sorting
+ Created a commidIndex to map between sorted commids and their indicies
+ Added displaying of filename in the timeline rectangle to indicate data origin
+04-14-02
+ Cleaned up handling and print error for old versions
+ Added zoom to time feature via ZoomWIndow
+04-15-02
+ Fixed bug about not setting kernel to red
+ Added ability to allow many many CommIDs to be shown
+05-03-02
+ Changed printing of calculated stats - more columns for COMMids - no sci notat
+05-31-02
+ Fixed being able to read in read-only files
+ Fixed bug of not sorting all CommIDs properly (was missing the 0th)
+06-10-02
+ Added capability of handling 16 bit packed events.
+06-12-02
+ Added ability of syncing timestamp across diferent streams
+ Added a little more ability to process args
+06-13-02
+ Added ability to match names to commIDs
+ Added a scan file feature currently not used

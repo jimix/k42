@@ -1,0 +1,66 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceSwap.xml,v 1.3 2004/07/08 17:15:33 gktse Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::Swap::Put">
+	<layerId value="OS" />
+	<classId value="Swap" />
+	<specifier value="Put" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='swap putPage addr: %0[%llx] block: %1[%llx]' />
+</event>
+
+
+<event name="OS::Swap::PutAsync">
+	<layerId value="OS" />
+	<classId value="Swap" />
+	<specifier value="PutAsync" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='swap putPage async: fr: %1[%llx] off: 0x%0[%llx] block: 0x%2[%llx]' />
+</event>
+
+
+<event name="OS::Swap::FillAsync">
+	<layerId value="OS" />
+	<classId value="Swap" />
+	<specifier value="FillAsync" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='swap fillPage async: fr: %1[%llx] off: 0x%0[%llx] block: 0x%2[%llx]' />
+</event>
+
+
+<event name="OS::Swap::IOComplete">
+	<layerId value="OS" />
+	<classId value="Swap" />
+	<specifier value="IOComplete" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='swap complete IO: fr: %1[%llx] off: 0x%0[%llx] err: 0x%2[%llx]' />
+</event>
+
+</PEM_Events>

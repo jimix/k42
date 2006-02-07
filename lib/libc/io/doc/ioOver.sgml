@@ -1,0 +1,173 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: ioOver.sgml,v 1.2 2001/11/01 19:54:06 mostrows Exp $
+-->
+<title>Io overview goes here</title>
+<para>Io overview text goes here</para>
+
+<section>
+  <title>Shared Memory Transport</title>
+  <section>
+    <title>Introduction</title>
+    <para>
+      
+      K42's PPC mechanism allows for up to 4096 bytes of data to be
+      transferred in a single operation (including data needed to
+      describe the operation being performed).  For larger data
+      transfers an out-of-band transport mechanism is required.  The
+      Shared-Memory Transport (SMT) mechanism implemented by MemTrans
+      objects provides this functionality.
+      
+    </para>
+    <para>
+
+      Fundamentally a MemTrans object provides management services for
+      a number of shared-memory regions.  Users of MemTrans objects
+      use them to allocate and free memory that will be used to
+      transfer data to another process and to identify data residing
+      in shared memory at potentially different addresses across
+      address spaces.
+      
+    </para>
+    <para>
+      
+      In the context of I/O objects, one would use a MemTrans object
+      to perform a <function>write</function>-like PPC operation by
+      allocating a block of memory from MemTrans, placing the data to
+      be written into the newly allocated memory, identifying the
+      block of memory as an offset into the shared memory region and
+      passing the offset in the PPC call.  The receiver of this call
+      would use their own MemTrans object to translate the offset into
+      a local pointer, perform the actions required of it and at some
+      point in the future inform MemTrans that the memory is to be
+      freed.
+      
+    </para>
+    <para>
+
+      This functionality is implemented by associating with each
+      MemTrans object a memory region that is to be exported (this is
+      the "local" region).  This region is read-write in the local
+      process and will be exported read-only to other processes.
+      MemTrans objects may then have a number of other "remote"
+      MemTrans objects (in other processes) they are connected to.
+      From each of these remote objects a memory region is imported
+      read-only.
+
+    </para>
+    <para>
+
+      The key functionality offered by MemTrans is the facilities to
+      allocate memory in a local region and to allow it to be freed by
+      another process that accesses the same region as a remote
+      region.  This is accomplished in a manner that avoids performing
+      PPC calls for these operations if possible by using a
+      distributed ring-buffer scheme to transfer information about
+      de-allocation operations.  MemTrans provides a simple
+      page-allocator, more sophisticated allocators can be built on
+      top of this allocator.
+      
+    </para>
+    <section>
+      <title>Out-Of-Band Communication Using Ring-Buffers</title>
+      <para>
+	
+	The MemTrans class provides a "ControlRing" class that allows
+	for such distributed ring-buffers to be constructed.  A
+	ControlRing object essentially contains an array, and head and
+	tail fields.  The head and tail fields are in fact indicies
+	into the array and indicate what data has been produced and is
+	awaiting consumption.
+	
+      </para>
+      <para>
+	
+	To implement a distributed ring-buffer in the context of
+	MemTrans shared-memory regions, two ControlRing objects are
+	created, one in each of the local regions of MemTrans objects in
+	two different processes.  Note that each process can modify only
+	one ControlRing object and thus cannot update the tail field of
+	the ControlRing that the other process can insert data into.
+	Consequently, the tail field of one ControlRing object is
+	considered to be the tail field of the other ControlRing object.
+	With such a mechanism a MemTrans object can consume data from a
+	ControlRing inside a read-only remote region.  
+	
+      </para>
+      <para>
+	
+	When data is inserted into or consumed from a ControlRing a
+	notification may need to be sent to the other process via an
+	asynchronous PPC call.  The conditions under which such
+	notifications are sent can be configured at run-time (so a
+	ControlRing may notify very aggressively or very lazily).  Note
+	that a notification need not be made right away, since the
+	information inserted into the ring is available to the other
+	process immediately and it may process it without a
+	notification.
+	
+      </para>
+      <para>
+	
+	Using the ControlRing class, MemTrans provides a default service
+	for de-allocating memory in remote regions.  A process wishing
+	to free such memory will identify it using the offset into the
+	region and insert the offset into a ControlRing.  The other
+	process will consume from the ControlRing and free the
+	appropriate page from the MemTrans page allocator.
+	
+      </para>
+      
+    </section>
+    <section>
+      <title>Shared-Memory Transport Management</title>
+      <para>
+	This section discusses how MemTrans objects are managed and
+	created.  Any use of MemTrans requires that at least two
+	processes create MemTrans objects and have them communicate
+	with one another using the PPC mechanism; this forms an "SMT
+	connection".
+	
+      </para>
+      <para>
+	
+	Different users of MemTrans will want different SMT connection
+	properties to suit its needs.  For example, when used for
+	sockets, one SMT connection between the process and the socket
+	server is used by all sockets.  On the other hand, each
+	DiskClient object communicating with a block device will have
+	its own SMT connection, since each DiskClient will presumably
+	be making very large data transfers.
+
+	An SMT connection can be identified using the two relevant
+	process ids and a key.  What the key is, is determined by the
+	user.  Thus in the above example, sockets will use the TypeID
+	of the SocketServer as the key, whereas DiskClients may use
+	the XHandles to their block-device interfaces on the server
+	side.  This current scheme relies on there not being
+	collisions between the XHandle space and the TypeID space.
+
+	When a MemTrans object is created it is given its key and the
+	ProcessID it is to connect to.  The new object will attempt to
+	make the connection and if it fails (because it is the first
+	of the two objects to be created), it will wait for the other
+	process to connect to it.
+
+      </para>
+    </section>
+  </section>
+</section>
+<!--
+Local Variables:
+mode: flyspell
+sgml-parent-document: ("./io.sgml" "chapter" "title")
+End:
+-->
+<!-- LocalWords: MemTrans SocketServer DiskClient XHandle TypeID ProcessID XHandles
+ -->

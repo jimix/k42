@@ -1,0 +1,36 @@
+/******************************************************************************
+ * K42: (C) Copyright IBM Corp. 2004.
+ * All Rights Reserved
+ *
+ * This file is distributed under the GNU LGPL. You should have
+ * received a copy of the license along with K42; see the file LICENSE.html
+ * in the top-level directory for more details.
+ *
+ * $Id: TODO,v 1.2 2004/07/23 21:48:56 dilma Exp $
+ *****************************************************************************/
+
+Important issues to be done:
+- we don't have a buffer cache at all! For now every read/write request
+  coming from ext2 results in disc access (i.e, we invoke a method
+  of DiskClient)
+- we don't implement a list of dirty inodes, and we don't have a thread
+  that wakes up to do some cleanup if the list becomes too large.
+  __mark_dirty_inode() for now results in an actual disk write
+
+
+Unacceptable hacks that have to be cleaned up:
+
+- file os/servers/pty/printk.C is being replicated here. Should we move it
+  to lib/lk?
+  ditto for file os/servers/pty/Util.C
+
+- in the linux tree (linux-026):
+    -  there's some replication of stuff on pty/misc.c and fs/misc.c
+    -  I've copied core/block.c and core/memory.c into fs/
+
+The following symbols used to be in baseServers from pty.k42lib.o,
+but now they're from base.k42lib.o (we want to validate that
+pty can be build without fs.k42lib.o, meaning that we don't introduce
+undefined symbols?)
+
+generic_fillattr

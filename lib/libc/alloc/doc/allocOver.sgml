@@ -1,0 +1,156 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: allocOver.sgml,v 1.2 2001/10/23 19:44:11 bob Exp $
+-->
+<title>Overview of K42's Memory Allocation Facility</title>
+<section>
+  <title>Memory Types</title>
+  <para>
+
+    We believe there are three different kinds of memory, that need to be
+    used for different purposes.  The goal is to get proper MP behavior.
+    The three cases are:
+
+    <itemizedlist spacing="compact">
+      <listitem>
+	<simpara>
+	  Purely local memory.  All local memory can be allocated from a
+	  pool, since no false sharing is possible.  We will require that
+	  local memory be freed on the same processor that allocates/uses
+	  it.  We call this memory LocalStrict.
+	</simpara>
+      </listitem>
+
+      <listitem>
+	<para>
+	  Global memory.  This is memory which backs objects which may be
+	  used on more than one processor.  We allow this memory to be
+	  freed on any processor.  A request to allocate global memory will
+	  be satisfied, if possible, by global memory that was recently
+	  freed on the same processor.  This heuristic bets on that memory
+	  still being in the processor cache.  We distinguish two kinds of
+	  global memory.
+
+	  <itemizedlist spacing="compact">
+	    <listitem>
+	      <simpara>
+		Global.  This memory is for use where performance is not
+		important, because it is not often used, but space is
+		important.
+	      </simpara>
+	    </listitem>
+	    <listitem>
+	      <simpara>
+		GlobalPadded.  This memory is for use where performance is
+		important.  In that case, is it necessary that each
+		independent allocation be at least cache line sized, so
+		that false sharing does not occur.  Thus, all GlobalPadded
+		requests are padded to the cache line size.  (Note that the
+		programmer cannot tell in advance if a particular object is
+		smaller or larger than a cache line.)
+	      </simpara>
+	    </listitem>
+	  </itemizedlist>
+
+	</para>
+      </listitem>
+
+    </itemizedlist>
+  </para>
+
+  <para>
+    We also provide PINNED versions of these in the kernel.  For
+    convenience, the PINNED versions are identical to the normal versions
+    in the user process.  This allows objects which need to be pinned in
+    the kernel but are also used in user processes (e.g. SchedulerStatus)
+    to be declared once.
+  </para>
+
+  <para>
+    New macros for declaring object allocation have been provided.  These
+    all work both in clustered objects and simple C++ objects.  They are:
+    <programlisting>
+       DEFINE_LOCALSTRICT_NEW(objectname)
+       DEFINE_GLOBAL_NEW(objectname)
+       DEFINE_GLOBALPADDED_NEW(objectname)
+       DEFINE_PINNEDLOCALSTRICT_NEW(objectname)
+       DEFINE_PINNEDGLOBAL_NEW(objectname)
+       DEFINE_PINNEDGLOBALPADDED_NEW(objectname)
+    </programlisting>
+  </para>
+
+  <para>
+    There are several techniques for creating a PINNED variant of an object
+    in the kernel.  These techniques could also be used to specify
+    different allocation classes (LOCAL...)
+  </para>
+
+  <para>
+    If the object is always PINNED (in the kernel), just use the correct
+    DEFINE_ macro.  This is OK even if the object is used in user processes
+    as well.
+  </para>
+
+  <para>
+    If the object is normally PAGED, but a PINNED version is needed,
+    subclass the PAGED version, supplying only a different DEFINE_ macro in
+    the subclass.
+  </para>
+
+  <para>
+    Trouble occurs when an object uses another inside itself.  See the
+    definition and uses of ListSimple and its variants for examples.  In
+    this case, we have taken the approach of using templates to generate
+    classes with different allocation properties.  Simple objects like
+    ListSimple are declared as template classes parameterized by the
+    allocation class.  By convention, we always call this parameter "class
+    ALLOC".
+  </para>
+
+  <para>
+    When an object which itself must exist in several allocations uses such
+    an object, it must also be a template class.  See ProcessShared.H as an
+    example.
+  </para>
+
+  <para>
+    Note that the macro DEFINE_ALLOC_NEW(objectname) is provided for
+    convenience.  This macro assume that the alloc class parameter is
+    called ALLOC.  For example, in ProcessShared, see
+    <programlisting>
+       DEFINE_ALLOC_NEW(ProcessShared) and
+       DEFINE_ALLOC_NEW(ObjectHandleHolder).
+    </programlisting>
+  </para>
+
+  <para>
+    alloc.H provides classes corresponding to the allocation classes we
+    have discussed above.  These are used to instantiate versions of
+    allocation parameterized templates.  These class names are:
+    <programlisting>
+       AllocLocalStrict
+       AllocGlobal
+       AllocGlobalPadded
+       AllocPinnedLocalStrict
+       AllocpPinnedGlobal
+       AllocPinnedGlobalPadded
+    </programlisting>
+  </para>
+
+  <para>
+    alloc.H also provides explicit allocation functions, such as
+    allocLocalStrict and freeLocalStrict, for direct use.
+  </para>
+
+  <para>
+    You will also see an allocChoose mechanism.  So far I have avoided
+    using it.  If you decide to use this, please talk to the group so we
+    can decide what we want to do.
+  </para>
+</section>

@@ -1,0 +1,230 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceClustObj.xml,v 1.4 2005/08/19 23:22:48 bseshas Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::ClustObj::CreateCOSMgrSpec">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="CreateCOSMgrSpec" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='COSMgr::COSMgr() instance created on %0[%lld]' />
+</event>
+
+
+<event name="OS::ClustObj::CreateCOSMgr">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="CreateCOSMgr" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='COSMgr::create() attempting to create COSMgr on %0[%lld]' />
+</event>
+
+
+<event name="OS::ClustObj::VPInit">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="VPInit" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+		<field name="field3" type="uint64" />
+		<field name="field4" type="uint64" />
+	</fields>
+	<k42Format value='COSMgr::init %0[%lld], gTransTableAddr %1[%llx], lTransTableAddr %2[%llx], numGTransEntriesPerPage %3[%lld] numReservedEntries %4[%lld]' />
+</event>
+
+
+<event name="OS::ClustObj::MH">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="MH" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='MissHandler::MissHandler() vp %0[%lld] ref %1[%llx]' />
+</event>
+
+
+<event name="OS::ClustObj::MH1">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="MH1" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='MissHandler::MissHandler() vp %0[%lld] ref %1[%llx]' />
+</event>
+
+
+<event name="OS::ClustObj::MHRepl">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="MHRepl" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='MHReplicate::handleMiss vp %0[%lld] ref %1[%llx]' />
+</event>
+
+
+<event name="OS::ClustObj::MHShared">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="MHShared" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='MHSHared::MHShared(co) vp %0[%lld] ref %1[%llx]' />
+</event>
+
+
+<event name="OS::ClustObj::MHShared1">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="MHShared1" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='MHSHared::MHShared(co,ref,idir) vp %0[%lld] ref %1[%llx]' />
+</event>
+
+
+<event name="OS::ClustObj::MHHandMiss">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="MHHandMiss" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='MHSHared::handleMiss vp %0[%lld] ref %1[%llx]' />
+</event>
+
+
+<event name="OS::ClustObj::MHClean">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="MHClean" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+		<field name="field2" type="uint64" />
+	</fields>
+	<k42Format value='MHSHared::cleanup ref %0[%llx] thecp %1[%lld] vp %2[%lld]' />
+</event>
+
+
+<event name="OS::ClustObj::MarkSet">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="MarkSet" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='Generation marker set     marker 0x%0[%llx] thread 0x%1[%llx]' />
+</event>
+
+
+<event name="OS::ClustObj::MarkElapsed">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="MarkElapsed" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='Generation marker elapsed marker 0x%0[%llx] thread 0x%1[%llx]' />
+</event>
+
+
+<event name="OS::ClustObj::MarkActive">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="MarkActive" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='Generation marker active  marker 0x%0[%llx] thread 0x%1[%llx]' />
+</event>
+
+
+<event name="OS::ClustObj::GlobalCnt">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="GlobalCnt" />
+	<fields>
+		<field name="field0" type="uint64" />
+		<field name="field1" type="uint64" />
+	</fields>
+	<k42Format value='Global gen count incremented thread 0x%0[%llx] count 0x%1[%lld]' />
+</event>
+
+
+<event name="OS::ClustObj::SwapStart">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="SwapStart" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='Started hot swap on root 0x%0[%llx]' />
+</event>
+
+
+<event name="OS::ClustObj::SwapDone">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="SwapDone" />
+	<fields>
+		<field name="field0" type="uint64" />
+	</fields>
+	<k42Format value='Finished hot swap on root 0x%0[%llx]' />
+</event>
+
+<event name="OS::ClustObj::Alloc" description="create object">
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="Alloc" />
+	<fields>
+		<field name="field0"  type="uint64" description="Root ptr" />
+		<field name="field1"   type="uint64" description="Miss handler" />
+		<field name="field2"  type="uint64" description="Rep ptr" />
+	</fields>
+	<k42Format value='ClustObj alloc - root %0[%llx] mh %1[%llx] rep %2[%llx]' />
+</event>
+
+<event name="OS::ClustObj::Dealloc" description="destroy object" >
+	<layerId value="OS" />
+	<classId value="ClustObj" />
+	<specifier value="Dealloc" />
+	<fields>
+		<field name="field0" type="uint64" description="Root ptr" />
+		<field name="field1"  type="uint64" description="Rep ptr" />
+	</fields>
+	<k42Format value='ClustObj dealloc - root %0[%llx] rep %1[%llx]' />
+</event>
+
+</PEM_Events>

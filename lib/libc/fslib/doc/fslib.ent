@@ -1,0 +1,13 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: fslib.ent,v 1.2 2003/03/21 15:12:15 bob Exp $
+-->
+<!entity fslibFigPath ".">
+<!entity fslibOver SYSTEM "fslibOver.sgml">
+<!entity fslibPrgG SYSTEM "fslibPrgG.sgml">

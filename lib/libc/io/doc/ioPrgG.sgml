@@ -1,0 +1,916 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: ioPrgG.sgml,v 1.7 2002/09/12 19:27:46 okrieg Exp $
+-->
+<title>IO library</title>
+<section>
+  <title>Files in this directory</title>
+  <para>
+    
+    Files that maintain the name space:
+
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+	
+	<ulink url= "&topsrc/lib/libc/io/NameTreeLinux.H" > 
+	  <filename>NameTreeLinux.H</filename></ulink>:
+	Interface definition for name space tree specific to a particular
+	mount point. Each instance of a file system exports its own
+	NameTreeLinux. Implementations of this interface are
+	<ulink url="&topsrc/lib/libc/fslib/NameTreeLinuxFS.C">
+	  <filename>NameTreeLinuxFS.C</filename></ulink> and
+	<ulink url="&topsrc/lib/libc/fslib/NameTreeLinuxFSVirtFile.C">
+	  <filename>NameTreeLinuxFSVirtFile.C</filename></ulink>.
+       </simpara>
+    </listitem> 
+
+    <listitem>
+      <simpara>
+	
+	<ulink url="&topsrc/lib/libc/io/PathName.H"> 
+	  <filename>PathName[.H]</filename></ulink> 
+	<ulink url="&topsrc/lib/libc/io/PathName.C">
+	  <filename>[.C]</filename></ulink>: Class used to parse
+	  pathnames.
+	
+      </simpara>
+    </listitem> 
+
+  </itemizedlist>
+  <para>
+    
+    Files that provide client-side interfaces:
+    
+  </para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+	<anchor id="FileLinux">
+	
+	<ulink url="&topsrc/lib/libc/io/FileLinux.H">
+	  <filename> FileLinux[.H]</filename></ulink> 
+	<ulink url="&topsrc/lib/libc/io/FileLinux.C">
+	  <filename>[.C]</filename></ulink>:
+	Defines fundamental interface all IO objects support.
+	
+         </simpara>
+      <itemizedlist>
+	<listitem>
+	  <simpara>
+	    <anchor id="FileLinuxClientStream">
+	    
+	    <ulink url="&topsrc/lib/libc/io/FileLinuxClientStream.H">
+	      <filename>FileLinuxStream [.H]</filename></ulink> 
+	    <ulink url="&topsrc/lib/libc/io/FileLinuxClientStream.C">
+	      <filename>[.C]</filename></ulink>: Defines the PPC
+	      interface used by server objects to notify FileLinux
+	      derivatives of changes to server state.
+	    
+	  </simpara>
+	  <itemizedlist>
+	    <listitem>
+	      <simpara>
+		<anchor id="FileLinuxStream">
+		
+		<ulink url="&topsrc/lib/libc/io/FileLinuxStream.H">
+		  <filename> FileLinuxStream [.H]</filename></ulink> 
+		<ulink url="&topsrc/lib/libc/io/FileLinuxStream.C">
+		  <filename>[.C]</filename></ulink>: Provides a
+		  read/write interface for all stream-like objects
+		  (those which provide IO capabilities, but are not
+		  seekable).
+		
+	      </simpara>
+	      <itemizedlist>
+		<listitem>
+		  <simpara>
+		    <anchor id="FileLinuxSocket">
+		    
+		    <ulink url="&topsrc/lib/libc/io/FileLinuxSocket.H">
+		      <filename>FileLinuxSocket [.H]</filename></ulink> 
+		    <ulink url="&topsrc/lib/libc/io/FileLinuxSocket.C">
+		      <filename>[.C]</filename></ulink>: Provides a
+		      read/write stream interface with capabilities
+		      for data-stream sockets.
+		    
+		  </simpara>
+		</listitem>
+		<listitem>
+		  <simpara>
+		    <anchor id="FileLinuxPacket">
+		    
+		    <ulink url="&topsrc/lib/libc/io/FileLinuxPacket.H">
+		      <filename>FileLinuxPacket [.H] </filename></ulink> 
+		    <ulink url="&topsrc/lib/libc/io/FileLinuxPacket.C">
+		      <filename>[.C]</filename></ulink>: Provides a
+		      read/write stream interface with capabilities
+		      for datagram sockets.
+		    
+		  </simpara>
+		</listitem>
+	      </itemizedlist>
+	    </listitem>
+	    <listitem>
+	      <simpara>
+		<anchor id="FileLinuxFile">
+		
+		<ulink url="&topsrc/lib/libc/io/FileLinuxFile.H">
+		  <filename>FileLinuxFile [.H]</filename></ulink> 
+		<ulink url="&topsrc/lib/libc/io/FileLinuxFile.C">
+		  <filename>[.C]</filename></ulink>: Provides
+		  interface for files (which are seekable). Files
+		are memory-mapped.
+		
+	      </simpara>
+	    </listitem>
+
+	    <listitem>
+	      <simpara>
+		<anchor id="FileLinuxVirtFile">
+		
+		<ulink url="&topsrc/lib/libc/io/FileLinuxVirtFile.H">
+		  <filename>FileLinuxVirtFile [.H]</filename></ulink> 
+		<ulink url="&topsrc/lib/libc/io/FileLinuxVirtFile.C">
+		  <filename>[.C]</filename></ulink>: Provides
+		  interface for
+		<ulink url="&topsrc/os/servers/virtfs/doc/virtfs.html">
+		  VirtFS files</ulink>(which are seekable).
+		Main difference from FileLinuxFile
+		is that files are not memory mapped.
+		
+	      </simpara>
+	    </listitem>
+
+	    <listitem>
+	      <simpara>
+		<anchor id="FileLinuxDevTTY">
+		
+		<ulink url="&topsrc/lib/libc/io/FileLinuxDevTTY.H">
+		  <filename>FileLinuxDevTTY [.H]</filename></ulink> 
+		<ulink url="&topsrc/lib/libc/io/FileLinuxDevTTY.C">
+		  <filename>[.C]</filename></ulink>: Provides a
+		  read/write stream interface with capabilities for
+		  TTY's.  (Provides a wrapper that supports TTY
+		  capabilities around another object which actually
+		  provides the real IO functionality.)
+		
+	      </simpara>
+	    </listitem>
+	    <listitem>
+	      <simpara>
+		<anchor id="FileLinuxDevNull">
+		
+		<ulink url="&topsrc/lib/libc/io/FileLinuxDevNull.H">
+		  <filename> FileLinuxDevNull [.H]</filename></ulink> 
+		<ulink url="&topsrc/lib/libc/io/FileLinuxDevNull.C">
+		  <filename>[.C]</filename></ulink>: See "/dev/null"
+		  for details.
+		
+	      </simpara>
+	    </listitem>
+	    <listitem>
+	      <simpara>
+		<anchor id="FileLinuxDir">
+		
+		<ulink url="&topsrc/lib/libc/io/FileLinuxDir.H">
+		  <filename>FileLinuxDir[.H]</filename></ulink> 
+		<ulink url="&topsrc/lib/libc/io/FileLinuxDir.C">
+		  <filename>[.C]</filename></ulink>: Provides access
+		  to directories.
+		
+	      </simpara>
+	    </listitem>
+	  </itemizedlist>
+	</listitem>
+      </itemizedlist>
+    </listitem>
+    <listitem>
+      <simpara>
+	<anchor id="DiskClient">
+		
+	<ulink url="&topsrc/lib/libc/io/DiskClient.H">
+	  <filename>DiskClient[.H]</filename></ulink> 
+	<ulink url="&topsrc/lib/libc/io/DiskClient.C">
+	  <filename>[.C]</filename></ulink>: Wrapper for raw block
+	  device interfaces.
+		
+      </simpara>
+    </listitem>
+    
+  </itemizedlist>
+  <para> Files that provide server-side interfaces and infrastructure:</para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+	
+	<ulink url="&topsrc/lib/libc/io/IOServer.H">
+	  <filename> IOServer[.H]</filename></ulink> 
+	<ulink url="&topsrc/lib/libc/io/IOServer.C">
+	  <filename>[.C]</filename></ulink>: Defines fundamental
+	  interface for server-side objects.
+	
+      </simpara>
+      <itemizedlist>
+	<listitem>
+	  <simpara>
+	    
+	    <ulink url="&topsrc/lib/libc/io/StreamServer.H">
+	      <filename> StreamServer [.H]</filename></ulink>: Basic
+	      no-frills stream server.
+	    
+	  </simpara>
+	  <itemizedlist>
+	    <listitem>
+	      <simpara>
+
+		<ulink url="&topsrc/lib/libc/io/StreamServerTTY.H">
+		  <filename>StreamServerTTY [.H]</filename></ulink>:
+		  Interface for TTY's (adds appropriate ioctl()'s).
+		
+	      </simpara>
+	    </listitem>
+	    <listitem>
+	      <simpara>
+		
+		<ulink url="&topsrc/lib/libc/io/StreamServerDiskr.H">
+		  <filename>StreamServerDisk [.H]</filename></ulink>
+		<ulink url="&topsrc/lib/libc/io/StreamServerDisk.C">
+		  <filename>[.C]</filename></ulink>: Temporary
+		  interface for disk objects.
+		
+	      </simpara>
+	    </listitem>
+	  </itemizedlist>
+	</listitem>
+	<listitem>
+	  <simpara>
+	    
+	    <ulink url="&topsrc/lib/libc/io/NetDataServer.H">
+	      <filename>NetDataServer [.H]</filename></ulink>:
+	      Interface for servers providing connection-oriented
+	      services. (connect())
+	    
+	  </simpara>
+	  <itemizedlist>
+	    <listitem>
+	      <simpara>
+		
+		<ulink url="&topsrc/lib/libc/io/PacketServer.H">
+		  <filename>PacketServer [.H]</filename></ulink>:
+		  Interface for datagram socket services.
+		
+	      </simpara>
+	    </listitem>
+	    <listitem>
+	      <simpara>
+
+		<ulink url="&topsrc/lib/libc/io/SocketServer.H">
+		  <filename>SocketServer [.H]</filename></ulink>:
+		  Interface for data-stream socket services.
+
+	      </simpara>
+	    </listitem>
+	  </itemizedlist>
+	</listitem>
+      </itemizedlist>
+    </listitem>
+  </itemizedlist>
+  <para> Files that provide data transport services:</para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+	
+	<ulink url="&topsrc/lib/libc/io/MemTrans.H">
+	  <filename>MemTrans [.H]</filename></ulink> 
+	<ulink url="&topsrc/lib/libc/io/MemTrans.C">
+	  <filename>[.C]</filename></ulink>: Defines a shared-memory
+	  transport service for transferring large amount of data
+	  between processes.
+	
+      </simpara>
+    </listitem>
+  </itemizedlist>
+  <para>Misc files</para>
+  <itemizedlist spacing="compact">
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/io/cprintf.C">
+	  <filename>cprintf.C</filename></ulink>: implements printing
+	  to the console.
+	
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	
+	<ulink url="&topsrc/lib/libc/io/printfBuf.H">
+	  <filename>printfBuf[.H]</filename></ulink> 
+	<ulink url="&topsrc/lib/libc/io/printfBuf.C">
+	  <filename>[.C]</filename></ulink>: internal routine that all
+	  K42 printing routines go to.
+	
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/io/thinwire.C">
+	  <filename>thinwire.C</filename></ulink>: Kludge to export
+	  thinwire to user-level, THIS SHOULD GO AWAY
+	
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/io/IOBufferList.H">
+	  <filename> IOBufferList[.H]</filename></ulink> 
+	<ulink url="&topsrc/lib/libc/io/IOBufferList.C">
+	  <filename>[.C]</filename></ulink>: A trivial buffering
+	  implementation used by IO classes.
+
+      </simpara>
+    </listitem> 
+    <listitem>
+      <simpara>
+
+	<ulink url="&topsrc/lib/libc/io/InitASF.C">
+	  <filename>InitASF.C</filename></ulink>: Routines to
+	  initializeASF library.
+	
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	
+	<ulink url="&topsrc/lib/libc/io/DirBuf.H">
+	  <filename>DirBuf[.H]</filename></ulink> 
+	<ulink url="&topsrc/lib/libc/io/DirBuf.C">
+	  <filename>[.C]</filename></ulink>: Describes contents of a
+	  directory buffer.
+	
+      </simpara>
+    </listitem>
+  </itemizedlist>
+</section>
+<section>
+  <title>Overview</title>
+  <para>
+
+    K42 is intended to support multiple personalities, and it has no
+    fully functional personality of its own.  The three types of
+    objects involved in IO are: 1) personality objects, currently
+    FileLinux ones, that export some personality, 2) IO objects, that
+    export the ASI interface for accessing data efficient in a
+    personality neutral fashion, and 3) Dir objects for traversing
+    directory information in a personality neutral fashion.
+    (Actually, there are mount points... but they won't be visible.)
+
+  </para>
+  <para>
+
+    The reason that the personality objects are not derived from the
+    IO objects is that, with the clustered object model, we do not
+    support multiple derivation.  We expect to share implementations
+    of IO objects across different personalities for transferring data
+    to the application address space, and the personality specific
+    objects will use IO objects for data transport.
+    
+  </para>
+  <section><title>Personality objects</title>
+    <para>
+      
+      The only personality object today is the <!--<xref
+      linkend="FileLinux">--> one. The basic interface of FileLinux
+      provides all the methods used to emulate the I/O interfaces of
+      Linux, including per-fd methods (e.g., read/write...) and static
+      methods (e.g., open, socket...).  These methods can be used
+      directly for increased efficiency over the unix system calls
+      provided by the <ulink
+			     url="&topsrc/lib/libc/io/../../../kitch-linux/lib/README.html">Linux
+	emulation</ulink> library.  For I/O. the linux emulation library
+      is basically wrappers around these functions together with some
+      extra management of file descriptors, mapping K42 error codes to
+      errno...
+      
+    </para>
+  </section>
+  <section>
+    <title>The K42 name space</title>
+    <para>
+      
+      Naming in K42 is pretty radically different from most systems.
+      Each file system exports a single persistent NameTree.  In each
+      process, there is an independent name space into which the
+      process can map file system NameTrees (i.e., a relative path
+      name from the file system tree is maintained).
+      
+    </para>
+    <para>
+      
+      All directory name resolving is done at the application level,
+      and the absolute path names are resolved into PathName objects,
+      which is an easily parsed string structure.  A lookup is done
+      against the process mount table, and the result is a file system
+      NameTree, a relative path within the file system for the process
+      NameTree, and the unresolved components of the user supplied
+      pathname.  The unresolved component of the path name is
+      concatenated to the relative path within the file system, and a
+      request is made to the file system with the object handle for
+      the file system NameTree, and a pathname relative to that.
+      
+    </para>
+    <para>
+      
+      The key attributes of this scheme (positive and negative) are as
+      follows:
+      
+    </para> 
+    <itemizedlist>
+      <listitem>
+	<para>
+
+	  All directory traversals to a file system occur from a
+	  NameTree, reducing complexity in the file system, e.g., file
+	  systems can arbitrarily discard non-open directories knowing
+	  that there are no outstanding references to them (except for
+	  those explicitly opened).
+	  
+	</para>
+      </listitem> 
+      <listitem>
+	<para>
+	  
+	  All complex path name parsing is done at user level,
+	  simplifying file systems.
+	  
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  
+	  All directory traversals are absolute, possibly requiring
+	  more traversal of data structures in the file systems. When
+	  this becomes a problem, we will add intermediate per-process
+	  NameTree objects, that the process can instantiate where
+	  useful to reduce overhead.  This is a more general solution
+	  than CWD, which reduced overhead for just a small number of
+	  name lookups.
+	  
+	</para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      
+      Operations on a pathname, e.g., getObj, unlink... are
+      implemented by first doing a lookup on the MountTable, and then
+      the operation on the lowest level directory.  The reason for
+      this is that it allows us to make the MountTable and NameTree
+      interfaces personality neutral. That is, you lookup the name in
+      the name space, and then perform a local operation on the
+      enclosing directory.  This doesn't cost us in performance
+      because we expect to implement in the NameTree a cache of
+      recently accessed directories. That is, we expect a name lookup
+      to typically be resolved entirely in the application's address
+      space by a local lookup.
+      
+    </para>
+
+    <para>
+      
+      Eventually, we expect to enable both global mount space, as well
+      as per-application mount spaces.  To make the former work, we
+      will need to keep the per-application caches of directories
+      consistent with a global server.  We expect to do this either by
+      passing some generation count (i.e., an extra number) around on
+      all calls, and returning an error when the generation count is
+      inconsistent with the generation the server is now in.  However,
+      we could also have an upcall mechanism.
+      
+    </para>
+  </section>
+  <section>
+    <title>IO objects</title>
+    <para>
+
+      The ASI interface is the C++ interface exported by the IO class.
+      All objects are specific to a particular kind of stream, e.g.,
+      mapped or Stream, and the type of buffering.  This avoids
+      dynamic checks, since the object instantiated is specific to the
+      requirements on that object.  Line buffered and non-buffered
+      streams are handled together, since efficiency is less of a
+      concern. The objects that implement ASI directly include:
+
+    </para>
+
+    <para>
+
+      Notes on Interface:
+
+    </para>
+    <itemizedlist>
+      <listitem>
+	<para> 
+	  
+	  realloc is only called unlocked on a stream of the correct
+	  mode, i.e., the internal implementation of a stream never
+	  has to forward to another object
+
+	</para>
+      </listitem>
+    </itemizedlist>
+  </section>
+  <section>
+    <title>Blocking in application</title>
+    <para>
+
+      In K42, we have the model that applications block in their own
+      address space, rather than in the server address space.  This is
+      done by having the server aggressively tell the application when
+      data on an IO object becomes available.  If data is not
+      available on a request to an IO object, the thread blocks in the
+      client's address space waiting to be told that data has become
+      available.  There are several reasons for this:
+
+    </para>
+    <itemizedlist>
+      <listitem>
+	<para>
+	  
+	  Minimizes resources needed to keep track of threads in the
+	  servers.
+	  
+	</para>
+      </listitem> 
+      <listitem>
+	<para>
+	  
+	  Given zero-copy interfaces, where the client and server
+	  share buffers, in the performance critical case where data
+	  is available, the client can do the IO operation without
+	  ever crossing to the server address space.
+	  
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  
+	  It allows much of the communication to be via asynchronous
+	  upcalls from the high priority server, which is very
+	  efficient in the common case that they can be buffered.
+	  
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  
+	  Gives us a strategy to implement select in the application
+	  level, since information about all the servers the
+	  application is speaking to are available in its own address
+	  space.
+
+	</para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      
+      The current example of this is in the <!-- just another xref
+      problem <ulink url=#FileLinuxSocket">FileLinuxSocket</ulink>-->
+      implementations described above. The basic rules for
+      synchronization are:
+
+    </para>
+    <orderedlist>
+      <listitem>
+	<para>
+	  
+	  On a request to the client object, the request is blocked in
+	  the application level if appropriate (e.g., a read is
+	  blocked if no data is available).
+	  
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  On read/write calls the client object requests back from the
+	  server the state of file after the request, it then updates
+	  the locally cached state under the protection of the client
+	  lock.  However in doing so it may only clear bits in this
+	  state.  Any setting of bits is performed through
+	  asynchronous mechanisms (_signalDataAvailable).  This is
+	  necessary to avoid race conditions.
+	  
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  
+	  Servers keep track for each client the state that the client
+	  thinks the file is in.
+	  
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  
+	  When there is a change in state, the server will make a call
+	  to the client if:
+
+	</para>
+	<itemizedlist spacing="compact">
+	  <listitem>
+	    <simpara>
+	      
+	      data has become available,
+	      
+	    </simpara>
+	  </listitem>
+	  <listitem>
+	    <simpara>
+	      
+	      space has become available for writing,
+	      
+	    </simpara>
+	  </listitem>
+	  <listitem>
+	    <simpara>
+	      
+	      an exception has occurred
+	      
+	    </simpara>
+	    <para>
+	      
+	      These upcalls happen on a thread, and the change in
+	      state happens under the protection of the client
+	      lock. (Note, we send a bitmask ored with the current
+	      state of the client, so multiple positive transitions
+	      may happen in one shot.)
+	      
+	    </para>
+	  </listitem>
+	</itemizedlist>
+      </listitem>
+      <listitem>
+	<para>
+
+	  If a client mistakingly makes a call to the server when the
+	  state is incorrect (i.e., makes a read when no data is
+	  available) the request returns with an error and the thread
+	  is blocked in the client.
+
+	</para>
+      </listitem>
+    </orderedlist>
+    <para>
+
+      If only one application (with one open-instance) accesses the
+      file, the state in the application level will always be entirely
+      correct.  All requests are blocked in the application until a
+      server makes an upcall, and a single upcall is made unblocking
+      the application if requests can proceed.
+
+    </para>
+    <para>
+      
+      If two applications are accessing the same file, then the server
+      informs both of a transition.  Once one of them has handled the
+      event, the state in the other will be incorrect.  This is okay,
+      since a subsequent request by the other application will return
+      an error and application will get the correct state on its next
+      request.  It is critical here that we never mistakingly tell the
+      application that no data is available when it is available, it
+      is okay to have the state wrong the other way.
+      
+    </para>
+  </section>
+  <section><title>Notification Protocol</title>
+    <para>
+      
+      In order for an application to know whether a thread should
+      block until an IO operation can complete the servers providing
+      support for the IO operation must be able to notify the
+      application that such as state has been attained.  This is
+      accomplished by one of two means: asynchronous notification (via
+      upcalls) and synchronous notifications passed as extra
+      parameters to PPC calls made to the server (typically passed
+      through arguments called "moreAvail").
+      
+    </para>
+    <para>
+      
+      The difficulty in performing notifications is performing them
+      efficiently.  We do not want to issue asynchronous upcalls if
+      they are not necessary (an application may have a socket open
+      but not be interested in reading from it, and thus has no need
+      for notifications of state changes on that socket).  Therefore
+      we must establish a protocol that ensures that applications are
+      sufficiently kept up-to-date on the state of their IO objects
+      but also avoids spurious notifications.
+      
+    </para>
+    <para>
+
+      Our protocol thus consists of the following rules:
+      
+    </para>
+    <itemizedlist>
+      <listitem>
+	<para>
+	  
+	  With each notification (synchronous and asynchronous) the
+	  server object will pass to a client a bitmask representing
+	  the complete state of the IO object.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  
+	  Each notification will contain embedded in it a generation
+	  count so that the client can look at two notifications and
+	  determine which is the more recent one.  Notifications may
+	  be re-ordered by the time the client observes them and
+	  therefore the client requires some means by which it can
+	  avoid overwriting the current state of the IO object with a
+	  stale state.
+	  
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  
+	  The server will not issue an asynchronous notification to a
+	  client if the current state has no bits set that are not set
+	  in the last notification that the server issued.  This
+	  prevents the server from issuing notifications that provide
+	  little or no new valuable information to the client.  As a
+	  consequence a client may not be informed promptly of bits
+	  being unset (e.g. if a socket changes state from readable to
+	  not readable, an asynchronous notification will not be
+	  issued).  (Such information is propagated anyway on the
+	  return path back to the client after an IO request is issued
+	  via a "moreAvail" parameter.)
+	  
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  
+	  The initial state of an IO object will be "INVALID".
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  If the INVALID bit in the bitmask is set, then the server
+	  will not issue and asynchronous notifications.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  
+	  The server may assert the INVALID bit if a client has not
+	  reacted to previous asynchronous notifications.  When the
+	  server sets the INVALID bit, it must also set all other bits
+	  in the bitmask to reflect the complete state of the object.
+	  
+	</para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      
+      When a server sets the ENDOFFILE bit, it indicates that once the
+      READ_AVAIL bit is set to 0, it will never again be set to 1.
+      Thus ENDOFFILE reports whether or not a data stream has an
+      active data-source attached to it.  ENDOFFILE may be set to true
+      even while there is data to read; thereby allowing a client to
+      clear data from the server's buffer after the data-source of the
+      IO stream has gone away.
+      
+    </para>
+    <para>
+      
+      See the implementation of select in <ulink
+						 url="&topsrc/kitch-linux/lib/emu/FD.H"><filename>FD</filename></ulink> to see how
+      select is implemented above this.  Briefly, what is going on is
+      as follows:
+      
+    </para>
+    <orderedlist>
+      <listitem>
+	<para>
+
+	  The FD object maintains a bitvector saying on which files it
+	  has valid state, a bitvector indicating if data isavailable
+	  for reading, a bitvector indicating if space is available
+	  for writing and a fourth bit vector indicating if exceptions
+	  have occurred. The state of the three latter bit vectors is
+	  only legitimate if the first bitvector indicates that it is
+	  valid.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  When a file is opened, the state is marked as invalid.  This
+	  is to allow server objects to initialize.  When an object is
+	  marked as invalid, it will not generate any asynchronous
+	  notifications.  Once it has been marked something other than
+	  invalid, it will never again be marked as invalid.
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  
+	  When an application first does a select, the FD makes a
+	  getAvailability call on the IO/FileLinux object registering
+	  its interest in finding out the state of the file, and
+	  passing the file a function call to be called when there is
+	  a state transition.
+
+	</para>
+      </listitem>
+      <listitem>
+        <para>
+	  
+	  The FD lock must be released before any call by the FD to
+	  the IO object to avoid deadlock.  This happens when the
+	  state of the file is invalid, and the FD must poll the file
+	  to find out the valid state.
+	  
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  
+	  The IO object calls the FD (using the registered function)
+	  while holding the client lock, that is, any change in the
+	  select bits for a file are done by the file itself and under
+	  the file's lock.
+
+	</para>
+      </listitem
+    </orderedlist>
+    <para>
+
+      There is a livelock situation, since the FD has to release its
+      lock whenever polling a file (because the state is invalid), but
+      this is only a problem if:
+
+    </para>
+    <itemizedlist>
+      <listitem>
+	<para>
+
+	  there is real concurrency in the application banging on the
+	  same file descriptors, and
+
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+
+	  we are dealing with files which transition from valid to
+	  invalid frequently.  The only example of this is the IOWire
+	  objects, where we transition to invalid as a kludge to poll
+	  over the wire, hence who cares...  (and really, this is not
+	  allowed anyways)
+
+	</para>
+      </listitem>
+    </itemizedlist>
+    <para>
+
+      The above discussion assumes that we have a single lock
+      protecting requests to the server.  This is probably okay since
+      we only make requests to the server for a short period of time
+      (all blocking is done in the client) so we don't have to have
+      independent locks for reading and writing.  If we ever do, then
+      we may have to separate out all the state transitions for
+      reading/writing/exceptions...
+
+    </para>
+  </section>
+</section>
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./io.sgml" "chapter" "title")
+End:
+-->
+<!-- LocalWords: MemTrans SocketServer DiskClient XHandle TypeID ProcessID
+ -->

@@ -1,0 +1,41 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: arch.sgml,v 1.4 2003/03/10 23:32:05 bob Exp $
+-->
+<!doctype book PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!entity topsrc "../../../..">
+<!entity % arch.ent SYSTEM "arch.ent">
+%arch.ent;
+]>
+<book id="K42">
+  <chapter id="Over">
+    &archOver;
+    <section>
+      &amd64Over;
+    </section>
+    <section>
+      &generic64Over;
+    </section>
+    <section>
+      &powerpcOver;
+    </section>
+  </chapter>
+  <chapter id="PrgG">
+    &archPrgG;
+    <section>
+      &amd64PrgG;
+    </section>
+    <section>
+      &generic64PrgG;
+    </section>
+    <section>
+      &powerpcPrgG;
+    </section>
+  </chapter>
+</book>

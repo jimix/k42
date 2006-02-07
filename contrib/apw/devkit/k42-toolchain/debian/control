@@ -1,0 +1,12 @@
+Source: k42-toolchain
+Section: devel
+Priority: optional
+Maintainer: Amos Waterland <apw@us.ibm.com>
+Build-Depends-Indep: debhelper
+Standards-Version: 3.6.1.0
+
+Package: k42-toolchain
+Architecture: any
+Description: K42 toolchain
+ 'k42-toolchain' provides the cross-compilers necessary to build the
+ K42 research operating system.

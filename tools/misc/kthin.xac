@@ -1,0 +1,216 @@
+##################################################################
+# start by getting ktw up and running
+Delay 3
+MotionNotify 100 100
+ButtonPress 1
+ButtonRelease 1
+Delay 3
+String ssh kserial2 -l thinwire
+KeyStrPress Return
+KeyStrRelease Return
+Delay 10
+String ks03si
+KeyStrPress Return
+KeyStrRelease Return
+Delay 5
+String ktw k4
+KeyStrPress Return
+KeyStrRelease Return
+Delay 5
+
+##################################################################
+# now get thinwire running
+Delay 3
+MotionNotify 100 500
+ButtonPress 1
+ButtonRelease 1
+Delay 3
+String ssh kitch0 -l k42
+KeyStr Return
+Delay 10
+String ks03si
+KeyStrPress Return
+KeyStrRelease Return
+Delay 3
+String cd /u/kitchawa/tftpboot
+KeyStr Return
+Delay 3
+String ln -sf /a/kitch0/homes/kitch0/k42/knightly-hw/build/powerpc/
+String fullDeb/os/chrpboot.tok chrpboot.k4 
+KeyStr Return
+Delay 3
+String cd /u/k42/knightly-hw/build/
+KeyStr Return
+Delay 3
+String rm -f kthin.out
+KeyStr Return
+Delay 3
+String rm -f rlog.out
+KeyStr Return
+Delay 3
+String cd /u/k42/knightly-hw/build/powerpc/fullDeb/os
+KeyStr Return
+Delay 3
+String emacs -nw
+KeyStr Return
+Delay 3
+KeyStr Escape
+KeyStr x
+String shell
+KeyStr Return
+Delay 3
+String kthinwire-hw k4
+KeyStr Return
+Delay 5
+
+# let the machine boot
+Delay 400
+
+
+##################################################################
+# now go do the log in
+
+Delay 3
+MotionNotify 600 500
+ButtonPress 1
+ButtonRelease 1
+Delay 3
+String ssh kitch0 -l k42
+KeyStr Return
+Delay 10
+String ks03si
+KeyStrPress Return
+KeyStrRelease Return
+Delay 3
+String emacs -nw
+KeyStr Return
+Delay 3
+KeyStr Escape
+KeyStr x
+String shell
+KeyStr Return
+Delay 3
+String rlogin k4 -l regress-hw
+KeyStr Return
+Delay 3
+
+# let the regress script run
+Delay 400
+
+
+##################################################################
+#rather than coordinating between kthin and ktw just
+# reach over and finish up ktw
+MotionNotify 100 100
+ButtonPress 1
+ButtonRelease 1
+Delay 3
+KeyStrPress Control_L
+KeyStrPress c
+KeyStrRelease c
+KeyStrRelease Control_L
+Delay 3
+String exit
+KeyStr Return
+Delay 5
+String clear
+KeyStr Return
+Delay 5
+##################################################################
+
+#now back to our own thinwire work
+MotionNotify 100 500
+ButtonPress 1
+ButtonRelease 1
+Delay 3
+KeyStrPress Control_L
+KeyStrPress x
+KeyStrRelease x
+KeyStrPress w
+KeyStrRelease w
+KeyStrRelease Control_L
+Delay 3
+String /u/k42/knightly-hw/build/kthin.out
+KeyStr Return
+Delay 3
+KeyStrPress Control_L
+KeyStrPress x
+KeyStrRelease x
+KeyStrPress c
+KeyStrRelease c
+KeyStrRelease Control_L
+Delay 3
+String yes
+KeyStr Return
+Delay 3
+String exit
+KeyStr Return
+Delay 3
+String clear
+KeyStr Return
+Delay 3
+
+##################################################################
+#again for easy coorindation just finish up the rlogin window as well
+
+MotionNotify 600 500
+ButtonPress 1
+ButtonRelease 1
+Delay 3
+KeyStrPress Control_L
+KeyStrPress x
+KeyStrRelease x
+KeyStrPress w
+KeyStrRelease w
+KeyStrRelease Control_L
+Delay 3
+String /u/k42/knightly-hw/build/rlog.out
+KeyStr Return
+Delay 3
+KeyStrPress Control_L
+KeyStrPress x
+KeyStrRelease x
+KeyStrPress c
+KeyStrRelease c
+KeyStrRelease Control_L
+Delay 3
+String yes
+KeyStr Return
+Delay 3
+String exit
+KeyStr Return
+Delay 3
+String clear
+KeyStr Return
+Delay 3
+
+##################################################################
+# put kpower back in usable stable by power cycling it
+Delay 3
+MotionNotify 500 100
+ButtonPress 1
+ButtonRelease 1
+Delay 3
+String telnet kpower2
+KeyStrPress Return
+KeyStrRelease Return
+Delay 5
+String 1
+KeyStrPress Return
+KeyStrRelease Return
+Delay 5
+String reboot 4
+KeyStrPress Return
+KeyStrRelease Return
+Delay 5
+String Y
+KeyStrPress Return
+KeyStrRelease Return
+Delay 20
+String LOGOUT
+KeyStrPress Return
+KeyStrRelease Return
+Delay 3
+String clear
+KeyStr Return
+Delay 3

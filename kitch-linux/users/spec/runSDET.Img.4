@@ -1,0 +1,77 @@
+#!/bin/bash -e
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2002.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: runSDET.Img.4,v 1.2 2005/07/18 00:23:36 butrico Exp $
+# ############################################################################
+
+: ${RAMFSOUTPUTNAME="/output"}
+: ${OUTPUTNAME="/knfs/output"}
+: ${FSPATH="/ram"}
+: ${SDETKRNCTL="0xffff"}
+
+# MAA - as far as I can tell, the only way to get bash to honor quoted
+# strings in the input is to use "$@" here - you can't assign the string
+# to anything else.
+# using "$@" here lets -s '2 4 6' work.
+
+while getopts awt:p:c:r:o:s:vnif OPT "$@" ; do
+    case $OPT in
+    a)
+	export ABORTEARLY="yes";;
+    t)
+	export SDETTRACE=$OPTARG;;
+    p)
+	export SDETHWPERF=$OPTARG;;
+    c)
+	export SDETKRNCTL=$OPTARG;;
+    n)
+	export NONET=1;;
+    o)  
+	export OUTPUTNAME=$OPTARG;;
+    s) 
+	export RUNSERIES="$OPTARG";;
+    w)
+        export DOPOLLING=1;;
+    i)
+        export INTERCEPTNFS=1;;
+    v)  
+	export VERBOSE=1;;
+    ?)
+	echo Unknown arg: $OPTIND ;
+	usage;
+	exit 1;;
+    esac
+done
+
+if [ "$VERBOSE" ]; then
+    echo SDETTRACE =$SDETTRACE
+    echo SDETHWPERF=$SDETHWPERF
+    echo SDETKRNCTL=$SDETKRNCTL
+    echo OUTPUTNAME=$OUTPUTNAME
+    echo RUNSERIES =$RUNSERIES 
+    echo FSPATH    =$FSPATH
+    export VERBOSE_CPIO=--verbose
+    set -x
+fi
+
+if [ -z "$OUTPUTNAME" ] ; then
+    echo SDETTRACE =$SDETTRACE
+    echo SDETHWPERF=$SDETHWPERF
+    echo SDETKRNCTL=$SDETKRNCTL
+    echo OUTPUTNAME=$OUTPUTNAME
+    echo RUNSERIES =$RUNSERIES 
+    exit 1;
+fi
+
+/knfs/home/spec/bin/mksdet.k42 RUNSDET=/knfs/home/spec/bin/run_sdet.k42 \
+	LIST=/knfs/home/spec/bin/SDET.filelist.Img.4.cpio \
+	KLIST=/knfs/home/spec/bin/k42.filelist.Img.4.cpio \
+	SPEC_TAR=/knfs/home/spec/spec.tgz \
+	FSPATH=$FSPATH
+exit 0

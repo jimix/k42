@@ -1,0 +1,11 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: MemoryMgmtDoc.ent,v 1.1 2004/01/27 15:00:52 okrieg Exp $
+-->
+<!entity MemoryMgmt SYSTEM "MemoryMgmt.sgml">

@@ -1,0 +1,11 @@
+--- ld/emulparams/elf64ppc.sh   6 Jan 2003 16:14:00 -0000       1.11
++++ ld/emulparams/elf64ppc.sh   26 Feb 2003 13:22:22 -0000
+@@ -5,7 +5,7 @@
+ SCRIPT_NAME=elf
+ OUTPUT_FORMAT="elf64-powerpc"
+ TEXT_START_ADDR=0x10000000
+-#SEGMENT_SIZE=0x10000000
++SEGMENT_SIZE=0x10000000
+ MAXPAGESIZE=0x10000
+ COMMONPAGESIZE=0x1000
+ ARCH=powerpc:common64

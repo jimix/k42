@@ -1,0 +1,87 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: BUGS,v 1.6 2002/07/30 20:47:57 jimix Exp $
+# ############################################################################
+
+This is a list of currently known but not-yet-fixed bugs in K42.
+
+May 1/2000
+- the ethernet drivers are not yet working on kitch12, kitch13, and k1 with a 
+  single binary.
+
+May 1/2000
+- k1 does not boot with 1GB of RAM.
+
+May 1/2000
+- random hangs in err_printf()'s have been seen in Kevin's code.
+
+May 1/2000
+- random hangs on hardware during boot around initKernelProcess.
+
+May 1/2000
+- there is no way of killing a user process.  If it crashes or hangs, you have 
+  to reboot.
+
+May 1/2000
+- %lld was behaving differently on hardware than it did on the
+  simulator before we fixed it by adding the file
+  sysdeps/k42/gmp-mparam.h in glibc.  Should look into why there was a
+  difference.
+
+May 1/2000
+- "XHandleTrans.C:182 XHandleTransTable full" error appears after
+  running hardware for a while -- due to token circulation not
+  happening.  This is impacting our uptimes.
+
+May 1/2000
+- unmap range of a large range hangs in kernel (MP?).
+
+May 1/2000
+- PPC doesn't scale on hardware.  Need to look and see why.
+
+May 1/2000
+- migrate test with 50 threads causes hangs.  Need to look and see why.
+
+May 1/2000
+- wait for 100000 usec to reap process in
+  ProcessShared<ALLOC>::startExecuting() and
+  ProcessReplicated::startExecuting()
+  Slows process creation destroy tests.
+
+May 1/2000
+- FileLinux::create() crashes w/ garbage argument (should fail).  Eg,
+  "cat" (without an argument) crashes the system.
+
+May 1/2000
+- Arguments to PPC calls are not error checked on the server end,
+  opening a potential security hole.
+
+May 2/2000
+- Alignment handlers are not implemented in K42 yet, meaning that
+  4-byte aligned loads/stores to doubles fail if they happen to cross a
+  page boundary on PowerPC.
+
+May 2/2000
+- In kitch-linux/apps/splash2/codes/apps/barnes/defs.Hm4 there are
+  some fields in structs added as a workaround to force doubles to be 8
+  byte aligned.  Remove these as soon as the alignment handler is
+  implemented.
+
+May 6/2000
+- err_printf() is not migration safe, and so if it is called from a
+  migratable thread it causes an assert failure in the Scheduler.  This
+  assert calls err_printf(), which sets up a nice loop...
+
+May 6/2000
+- Thread allocation does not interact well with migration.  If a
+  thread is allocated on VP 0, migrates to VP 1, then ends, it leaves a
+  thread on the free list of VP 1.  If you repeat this a number of times
+  VP 0 may run out of threads (since it is drawing on the fixed pool of
+  the ThreadManager) while VP 1 has a large list of free threads.  Some
+  mechanism to address this problem needs to be introduced.

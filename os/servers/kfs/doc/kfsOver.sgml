@@ -1,0 +1,31 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+ 
+  $Id: kfsOver.sgml,v 1.2 2002/12/03 16:07:34 okrieg Exp $
+-->
+<title>KFS overview</title>
+
+<para>KFS is a OO file system derived from the Hurricane file system
+from the University of Toronto.  It has been largely re-written from
+scratch for K42 to conform to the OO design of the K42 OS. For details
+on HFS see: 
+<ulink
+       url="ftp://ftp.cs.toronto.edu/pub/parallel/Okrieg_PhD.ps.Z">Orran's
+PhD</ulink>
+or 
+<ulink
+       url="http://www.eecg.toronto.edu/~okrieg/papers/hfs_tocs.ps.gz">TOCS
+paper
+</ulink>.</para>
+
+<!--
+Local Variables:
+mode: sgml
+sgml-parent-document: ("./kfs.sgml" "chapter" "title")
+End:
+-->

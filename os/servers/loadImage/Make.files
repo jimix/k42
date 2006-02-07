@@ -1,0 +1,12 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000, 2001.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.files,v 1.14 2005/06/28 19:47:57 rosnbrg Exp $
+# ############################################################################
+# base files used for loadImage
+SRVSRCS += loadImage.C

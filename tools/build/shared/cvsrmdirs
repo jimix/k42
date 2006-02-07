@@ -1,0 +1,156 @@
+#!/bin/ksh
+
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: cvsrmdirs,v 1.1 2001/03/08 19:57:24 rosnbrg Exp $
+# ############################################################################
+
+#set -x 
+
+# defaults
+export BACKUP=1
+export BACKUPEXT="cvsrmdirs.old"
+export CVSENTRIESFILE=../CVS/Entries 
+integer REMOVEBACKUPS=0;
+integer REMOVEINREPO=0;
+
+usage () {
+   print -u2 "USAGE: cvsrmdirs [-h] [-b] [-r] 
+By default this script deletes the directories specified on standard input
+in your checked out copy of the source tree updating the cvs meta files 
+appropriately .  It creates backups of the directory and meta files which
+can be removed using the -b flag.  Note your current dir must be the top
+of you checkout tree (eg. ~/Work/kitchsrc)
+
+-h prints help message
+-b removes backups created by this script in the current and its sub dirs
+   (note the rm commands are not actually executed rather they are printed
+    to standard out)
+-r removes directories specified on standard in, in the repository (current 
+   dir must be the top of the module in the repository). Again the rm commands
+   are not executed but rather printed to standard out.
+"
+}
+
+removebackups ()  {
+   find . -name "*.$BACKUPEXT" -print | while read file
+   do
+     print "rm -rf $file"
+   done
+}
+
+removeinrepo () {
+while read dir
+do
+  # filter out CVS directories
+  if [[ ${dir##*/} != "CVS" ]]; then
+  #  print -u2 -n "Removing $dir: "
+    if [[ -a $dir && -d $dir ]]; then
+       # remove the directory directory 
+       print  "rm -rf $dir"
+    else
+       print -u2 "ERROR does not exist skipping..."
+    fi
+  fi
+done
+}
+
+removeincopy () {
+while read dir
+do
+  entries=${dir}/$CVSENTRIESFILE
+  name=${dir##*/}
+  # filter out CVS directories
+  if [[ $name != "CVS" ]]; then
+    print -u2 "Processing $dir: "
+    if [[ -a $dir && -d $dir ]]; then
+      if [[ -a $entries  ]]; then
+         if grep -q $name $entries; then
+
+            # Enough Checks Do the work now.
+            # if a backup exist mv it to different name
+            if [[ -a $entries.$BACKUPEXT ]]; then 
+                stamp=$(date +'%Y%m%j%H%M%S').$RANDOM
+                if [[ -a $entries.$stamp.$BACKUPEXT ]]; then
+                   print -u2 "ERROR trying make secondary backup $entries.$stamp.$BACKUPEXT"
+                   exit 1
+                fi
+                mv $entries.$BACKUPEXT $entries.$stamp.$BACKUPEXT
+            fi
+
+            # backup Entries file
+            if cp $entries $entries.$BACKUPEXT; then
+            
+              # update Entries file (No test here as Entries chould be 
+              # blank due to the delete)
+              grep -v "^D/$name/*\$" $entries.$BACKUPEXT > $entries
+
+              # get rid of directory 
+              if [[ ! -a $dir.$BACKUPEST ]]; then
+                if mkdir $dir.$BACKUPEXT; then    
+                  if mv $dir $dir.$BACKUPEXT; then
+                     print -u2 "Done."
+                  else
+                     print -u2 "ERROR moving $dir to $dir.$BACKUPEXT"
+                     exit 1;
+                  fi
+                else
+                  print -u2 "ERROR unable to create $dir.$BACKUPEXT"
+                fi
+              else 
+                 printf -u2 "ERROR attempting to remove $dir but $dir.$BACKUPEXT already exists"
+              fi
+            else
+               print -u2 "ERROR not able to create $entries.$BACKUPEXT"
+               exit 1;
+            fi 
+
+         else
+           print -u2 "ERROR can not an entry for $name in $entries"
+         fi
+      else
+          print -u2 "ERROR can not find $entries"
+      fi
+    else
+       print -u2 "ERROR does not exist skipping..."
+    fi
+  fi
+done
+}
+
+#process cmdline args and verify
+origargs="$@"
+
+integer optcount=0
+while getopts "hbr" OPT
+do
+  case $OPT in
+     ("h")   usage; exit;;
+     ("b")   export REMOVEBACKUPS=1;             
+             (( optcount=optcount + 1 ));;
+     ("r")   export REMOVEINREPO=1;
+             (( optcount=optcount + 1 ));;
+  esac
+done
+shift $optcount
+
+if (( REMOVEBACKUPS == 1 )); then
+   removebackups
+   exit 0;
+fi
+
+if (( REMOVEINREPO == 1 )); then
+   removeinrepo
+   exit 0;
+fi
+
+removeincopy
+
+
+exit 0;

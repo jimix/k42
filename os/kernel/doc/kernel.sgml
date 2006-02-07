@@ -1,0 +1,95 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: kernel.sgml,v 1.15 2003/03/10 23:32:09 bob Exp $
+-->
+<!doctype book PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!entity topsrc "../../..">
+<!entity % kernel.ent SYSTEM "kernel.ent">
+%kernel.ent;
+]>
+<book id="K42">
+  <chapter id="Over">
+    &kernelOver;
+    <section>
+      &archOver;
+      <section>
+	&amd64Over;
+      </section>
+      <section>
+	&generic64Over;
+      </section>
+      <section>
+	&powerpcOver;
+      </section>
+    </section>
+    <section>
+      &bilgeOver;
+    </section>
+    <section>
+      &definesOver;
+    </section>
+    <section>
+      &exceptionOver;
+    </section>
+    <section>
+      &initOver;
+    </section>
+    <section>
+      &memOver;
+    </section>
+    <section>
+      &procOver;
+    </section>
+    <section>
+      &traceOver;
+    </section>
+    <section>
+      &stubtestOver;
+    </section>
+  </chapter>
+  <chapter id="PrgG">
+    &kernelPrgG;
+    <section>
+      &archPrgG;    
+      <section>
+	&amd64PrgG;
+      </section>
+      <section>
+	&generic64PrgG;
+      </section>
+      <section>
+	&powerpcPrgG;
+      </section>
+    </section>
+    <section>
+      &bilgePrgG;
+    </section>
+    <section>
+      &definesPrgG;
+    </section>
+    <section>
+      &exceptionPrgG;
+    </section>
+    <section>
+      &initPrgG;
+    </section>
+    <section>
+      &memPrgG;
+    </section>
+    <section>
+      &procPrgG;
+    </section>
+    <section>
+      &tracePrgG;
+    </section>
+    <section>
+      &stubtestPrgG;
+    </section>
+  </chapter>
+</book>

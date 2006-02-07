@@ -1,0 +1,88 @@
+#!/bin/bash
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# ****************************************************************************/
+#/****************************************************************************
+# * Module Description: System initialization script
+# * **************************************************************************/
+
+# start up trace daemon and set trace mask to none
+#/traceControl --mask NONE
+#/traceControl --start
+function run_regress()
+{
+    cd /
+    for i in 1 2 3 4 5; do
+	echo
+	echo "================================================================"
+	echo "Running K42 regress pass $i of 5"
+	DATE=`date`
+	echo "time $DATE"
+	echo "================================================================"
+
+	touch /knfs/tmp/regress-k42-pass-$i
+	# A hang == failure.. right?
+	/kbin/shellServer regress
+    done
+
+    cd /tmp
+    for i in 1 2 3 4 5; do
+	echo
+	echo "================================================================"
+	echo "Running linux regress pass $i of 5"
+	DATE=`date`
+	echo "time $DATE"
+	echo "================================================================"
+
+	touch regress-linux-pass-$i
+
+	# be verbose 
+	if ! /tests/linux/regress.sh -vd ; then
+	    echo "*** Linux regress failed on pass $i ***"
+	    # knightly recognizes failure by this script not executing
+	fi
+    done
+
+    return 0;
+}
+
+function rep() { 
+    for i in `seq 1 $1` ; do 
+	echo -n "$2 " ; 
+    done ; 
+    echo ; 
+}
+
+
+/kbin/sysinit
+
+K42_REGRESS_RESET=`/kbin/thinenv K42_REGRESS_RESET`
+
+#echo "0|C0xffff" > /ksys/console
+HOME=/home/regress
+PATH=${PATH}:${HOME}/bin:/kbin
+
+export HOME
+
+if [ -f /knfs/tmp/regress-out ] ; then
+    rm -f /knfs/tmp/regress-out
+fi
+
+if [ ! -f /knfs/tmp/regress-out ] ; then
+    run_regress ;
+    touch /knfs/tmp/regress-out;
+fi    
+
+# stops the trace control daemon and writes down the rest of the file
+#/traceControl --stop
+echo "Regress Test Complete";
+
+# Delay before rebooting to give completion message a chance to get out
+sleep 1
+echo "0|XX" > /ksys/console

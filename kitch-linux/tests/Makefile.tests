@@ -1,0 +1,47 @@
+# -*-Makefile-*-##############################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+# All Rights Reserved
+#
+#  $Id: Makefile.tests,v 1.26 2005/06/28 19:44:03 rosnbrg Exp $
+# ############################################################################
+
+
+ifdef IN_OBJ_DIR
+# ############################################################################
+#  rules to be made in object directory
+# ############################################################################
+
+.SECONDARY:
+
+OBJS = 
+
+TARGETS  += $(USRTARGETS)
+
+PROG_TARGETS = $(USRTARGETS:%=$(MKKITCHROOT)/tests/$(TESTDIR)/%)
+SCRIPT_TARGETS = $(SCRIPTS:%=$(MKKITCHROOT)/tests/$(TESTDIR)/%)
+INST_PROGS =  $(SCRIPT_TARGETS) $(PROG_TARGETS)
+
+
+$(PROG_TARGETS): $(MKKITCHROOT)/tests/$(TESTDIR)/%: %
+	$(INSTALL) --mode 0755 $< $@
+	$(INSTALL_DSK)
+
+# scripts get installed directly from the src tree
+$(SCRIPT_TARGETS): $(MKKITCHROOT)/tests/$(TESTDIR)/% : $(SRC_DIR_PATH)/%
+	$(INSTALL) --mode 0755 $< $@
+	$(INSTALL_DSK)
+
+install_targets:: $(INST_PROGS)
+
+clean::
+	-$(RM) $(USRTARGETS:%=%.dbg) $(USRTARGETS:%=%.d)
+
+# ############################################################################
+#  end of object directory rules
+# ############################################################################
+endif

@@ -1,0 +1,13 @@
+Source: k42-devkit
+Section: devel
+Priority: optional
+Maintainer: Amos Waterland <apw@us.ibm.com>
+Build-Depends-Indep: debhelper
+Standards-Version: 3.6.1.0
+
+Package: k42-devkit
+Architecture: any
+Depends: gcc, g++, flex, byacc, tclx8.4-dev, tk8.4-dev, libnet-telnet-perl, python-xml, blt-dev, k42-toolchain, k42-packages (>= 0.5.4)
+Description: K42 devkit
+ 'k42-devkit' provides the development kit necessary to build the
+ K42 research operating system.

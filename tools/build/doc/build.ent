@@ -1,0 +1,14 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: build.ent,v 1.1 2001/09/27 15:27:30 bob Exp $
+-->
+<!entity buildOver SYSTEM "buildOver.sgml">
+<!entity buildPrgG SYSTEM "buildPrgG.sgml">
+<!entity % shared SYSTEM "../shared/doc/shared.ent">
+%shared;

@@ -1,0 +1,104 @@
+/******************************************************************************
+ * K42: (C) Copyright IBM Corp. 2000.
+ * All Rights Reserved
+ *
+ * This file is distributed under the GNU LGPL. You should have
+ * received a copy of the license along with K42; see the file LICENSE.html
+ * in the top-level directory for more details.
+ *
+ * $Id: TODO,v 1.40 2002/04/06 16:46:25 dilma Exp $
+ *****************************************************************************/
+
+Current Restructuring:
+
+- ParentSet needs to be ListSimpleLocked?? If all manipulation of list
+is done holding the lock, there is no need.
+
+- add features to control time attributes of destruction deamon and to
+  collect stastistics from it so we can experiment it
+
+- work on DirLinuxFSVolatile::locked_purge
+	for now it only throws away tokens and invoke revalidation
+	for files/dirs objects.
+
+- DirLinuxFS::rmdir is not complying to behavior you have on linux,
+where you remove a directory but processes can still stat it until
+last client go away. There is a test which catches this wrong
+behavior (kitch-linux/tests/linux/rmdir.c; the test is not include
+in the build(Makefile) or in regress.sh)
+
+- Destruction of DirLinuxFS objects is not being exercised (rmdir
+don't do anything about getting rid of the object, and for 
+nodes in the tree stay there forever. Not even pruning the tree
+is causing destruction).
+
+- Big stuff to thing about:
+	- negative dentries (i.e, keep information about lookups that
+	failure). Notice that their timeout should be more
+	restrictive than for "positive" dentries)
+	- toking freeing and triggering destruction of directories
+		- a directory d with a reference to multilinked SF: the
+		  SF may not go away since it's used (through another path),
+                  but that does not imply that d has to stay around
+
+- kfs correctness and performance
+  - we start using, fix below, then make default, then delete $%$@% hfs
+  - correctness: tokens should be just pointers to internal files,
+    get rid of Craig's mechanism for not replicating
+  - performance: 
+    - caching of meta-data: 
+      - spacial and temporal locality on inodes for flushing
+      - directory state
+- paging interfaces with kernel and objects going away
+  - interfaces for mapping pages to disk, NFS...
+  - ftruncate
+- small file support
+- upcalls for shared file support (switch from single clint to
+  multiple client needs to be done)
+- passing capabilities and authentication
+- direct communication to network/socket 
+
+misc fixup:
+- not deleting a ServerFile when we remove it from the
+  multiLinkMgr list in the FileSystem
+- in ServerFileBlockNFS, when file goes invalid, need to remove from
+  multi-link (through some call to file system layer)
+- check if directory dups are working properly in terms of
+  client-specific data (they should share a cookie; write a test for
+  that and add to regress.sh )
+
+- elimination of subtrees derived from stale cached data
+
+- on FileLinuxFile we may get getRef == -1 on destruction if
+write/read is given 0  bytes as length. I believe Jimmi changed
+read/write syscalls not do anything in such cases, but anyway the
+onative interface has to be fixed.
+
+- symbolic links: add followLink (like VFS)
+
+- are file mask/process mask being applied on open/creat?
+
+- is current process root being taken into account on dealing with .. ?
+
+- memory leak: FileLinux methods are not destroying path name on errors
+
+Open issues:
+- How do we represent CWD: path, File object or both
+- cd on symlink, followed by cd out of it : should we get 
+  unix behavior or should we get back to the expected place?
+
+- what should happen when the reading of a page fails? Right now 
+  	FRVA:_fillPageComplete has a tassert on the rc it got
+  (one possible reason for failure is when a  NFS server call
+  times out ...)
+
+basic infrastructure:
+- look at FIXME comment in VAFileServerNFS.H and PAFileServerToyFS.H
+  initial comment
+- get rid of open in exposed interface (but VFS has it ...)
+- make sure that on an error we always free the token (for NFS) e.g.,
+  on a create of a server file object, if it fails fslib has to
+  invalidate the token (fslib always invalidates token on operations
+  where it passes in the token and the operation fails).
+
+

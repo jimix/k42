@@ -1,0 +1,66 @@
+#!/bin/bash
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001, 2005.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# * $Id: sysinit,v 1.19 2005/07/14 19:44:59 butrico Exp $
+# ****************************************************************************/
+#/****************************************************************************
+# * Module Description: System initialization script
+# * **************************************************************************/
+
+export PATH=$PATH:/sbin
+
+function status()
+{
+    printf "\n* $1 ...\n"
+}
+
+status "K42 init script launching"
+
+status "Starting /ksys filesystem"
+/kbin/sysctl
+
+status "Waiting for hostname to become active"
+while [ ! -f /ksys/hostname ] ; do true; done
+
+status "Storing hostname in /ksys/hostname"
+/kbin/thinenv K42_IP_HOSTNAME  > /ksys/hostname
+
+status "Initializing loopback device"
+ip addr add 127.0.0.1/8 dev lo
+ip link set lo up
+
+status "Configuring /ksys/console"
+(echo 0; echo C) > /ksys/console
+
+status "Starting the /proc filesystem"
+/kbin/procfsServer
+
+status "Fetching boot parameters"
+eval $(/kbin/thinenv -l K42_INIT_SSHD K42_PKGVER)
+
+if [ "$K42_PKGVER" == "4" ]; then
+    status "Fixing permissions on ramdisks"
+    chmod 600 /var/empty
+
+    status "Mirroring local writable directories"
+    if [ ! -f /etc/.updated ]; then
+	rsync --ignore-existing -rl -v /nfs/etc/ /etc/ &&
+	touch /etc/.updated
+    fi
+
+    status "Launching the ssh daemon"
+    if [ -n "$K42_INIT_SSHD" ]; then
+	eval $K42_INIT_SSHD
+    else
+	/usr/sbin/sshd -4 -e
+    fi
+fi
+
+status "K42 init script finished"
+exit 0

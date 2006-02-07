@@ -1,0 +1,73 @@
+#! /usr/bin/env bash
+ 
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# ****************************************************************************/
+# $Id: regression-cth,v 1.4 2005/02/24 22:24:09 pfs Exp $
+#
+# Automatically generate PEM traces for cth
+#
+# Environment variables defined:
+#   K42_INITSCR		actions to take when k42 boots
+#
+# @author Peter F. Sweeney
+# @date   1/8/2004
+
+machine=$1
+if [[ -z $1 ]]; then
+  echo "***regression.cth: Must specify k42 victim machine!***"
+  exit -1
+fi
+
+set -x
+
+cd ~/k42/powerpc/noDeb/os
+
+cp $K42_TOP/kitchsrc/kitch-linux/users/pem/cth $K42_TOP/install/powerpc/noDeb/kitchroot/home/pem
+
+# k42 boot time script
+export K42_INITSCR=/home/pem/cth
+
+# files
+#                       statusFile     file that contains status of actions
+   statusFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.cth"
+#                       modeFile       file that contains mode of tracing
+     modeFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.cth.mode"
+#                       extensionFile  file that contains trace file suffix
+extensionFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.cth.extension"
+
+
+iterations="1 2 3 4 5"
+
+for iteration in $iterations; do
+
+  echo "$iteration" > $extensionFile
+
+  MODE=user
+  echo "-$MODE" > $modeFile
+  if [[ -a $statusFile ]]; then 
+    rm $statusFile
+  fi
+  echo "cth with mode -$MODE with extension $iteration"
+#  k42console -m $machine -o noDeb -R -B killsteal
+# k42 hack!
+  k42console -m $machine -o noDeb -R -B killsteal -- MKANCHOR=/a/kix/homes/kix/pfs/k42
+
+
+  MODE=both
+  echo "-$MODE" > $modeFile
+  if [[ -a $statusFile ]]; then
+    rm $statusFile
+  fi
+  echo "cth with mode -$MODE with extension $iteration"
+#  k42console -m $machine -o noDeb -R -B killsteal
+# k42 hack!
+  k42console -m $machine -o noDeb -R -B killsteal -- MKANCHOR=/a/kix/homes/kix/pfs/k42
+
+done

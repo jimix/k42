@@ -1,0 +1,112 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: syncPrgG.sgml,v 1.6 2001/10/25 03:17:09 okrieg Exp $
+-->
+<title>Syncronization</title>
+<para>This module privides the core synchronization facilites for K42.</para>
+  <ItemizedList spacing="compact">
+    <listitem>
+      <simpara>
+	<ulink url="&topsrc/lib/libc/sync/Lock.H">Lock.H</ulink> 
+
+	The basic blocking locks are available by including this file.
+	It is automatically included from <ulink
+	url="&topsrc/lib/libc/sync/../sys/sysIncs.H">sys/sysIncs.H</ulink>.  We define
+	here ous generic machinary for locking, including the
+	structure for a lock embedded in the bottom bits of a pointer,
+	and the "AutoLock" facility which allows locks to be
+	automatically acquired and released on entry to a facility.
+
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+	
+        <ulink url="&topsrc/lib/libc/sync/BLock.H">BLock.H</ulink>
+      
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+      
+	<ulink url="&topsrc/lib/libc/sync/BLockGeneric.H">BLockGeneric.H</ulink>
+      
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+      
+	<ulink url="&topsrc/lib/libc/sync/Barrier.H">Barrier.H</ulink>
+     
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+      
+	<ulink url="&topsrc/lib/libc/sync/BlockedThreadQueues.H">BlockedThreadQueues.H</ulink>
+      
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+      
+	<ulink url="&topsrc/lib/libc/sync/FairBLock.H">FairBLock.H</ulink>
+     
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+      
+	<ulink url="&topsrc/lib/libc/sync/MPMsgHndlr.H">MPMsgHndlr.H</ulink>
+     
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+      
+	<ulink url="&topsrc/lib/libc/sync/MPMsgHndlrDisabled.H">MPMsgHndlrDisabled.H</ulink>
+     
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+      
+	<ulink url="&topsrc/lib/libc/sync/MPMsgHndlrEnabled.H">MPMsgHndlrEnabled.H</ulink>
+     
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+      
+	<ulink url="&topsrc/lib/libc/sync/PtrBLock.H">PtrBLock.H</ulink>
+     
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+      
+	<ulink url="&topsrc/lib/libc/sync/PtrSLock.H">PtrSLock.H</ulink>
+     
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+        
+	<ulink url="&topsrc/lib/libc/sync/RequestCount.H">RequestCount.H</ulink>
+     
+      </simpara>
+    </listitem>
+    <listitem>
+      <simpara>
+      
+	<ulink url="&topsrc/lib/libc/sync/SLock.H">SLock.H</ulink>
+     
+      </simpara>
+    </listitem>
+  </ItemizedList>

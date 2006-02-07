@@ -1,0 +1,20 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2001.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Make.arch,v 1.5 2002/01/31 19:35:32 peterson Exp $
+# ############################################################################
+
+# do we need anything here XXX
+
+default:: libobjs
+
+# LIBKERNSRCS += lolita.S
+LIBKERNSRCS +=  ExceptionLocalAsm.S
+
+#KernelTimer.o: MEMORY_MODEL=-fPIC -fpic
+#ProcessAnnex.o: MEMORY_MODEL=-fPIC -fpic

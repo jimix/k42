@@ -1,0 +1,69 @@
+#! /usr/bin/env bash
+ 
+#/*****************************************************************************
+# * K42: (C) Copyright IBM Corp. 2001.
+# * All Rights Reserved
+# *
+# * This file is distributed under the GNU LGPL. You should have
+# * received a copy of the license along with K42; see the file LICENSE.html
+# * in the top-level directory for more details.
+# *
+# ****************************************************************************/
+# $Id: regression-radix,v 1.3 2005/01/26 17:35:09 pfs Exp $
+#
+# Automatically generate PEM traces for radix
+#
+# Environment variables defined:
+#   K42_INITSCR		actions to take when k42 boots
+#
+# @author Peter F. Sweeney
+# @date   1/8/2004
+
+machine=$1
+if [[ -z $1 ]]; then
+  echo "***regression.radix: Must specify k42 victim machine!***"
+  exit -1
+fi
+
+set -x
+
+cd ~/k42/powerpc/noDeb/os
+
+cp $K42_TOP/kitchsrc/kitch-linux/users/pem/radix $K42_TOP/install/powerpc/noDeb/kitchroot/home/pem
+
+# radix
+export K42_INITSCR=/home/pem/radix
+
+# files
+#                       statusFile     file that contains status of actions
+   statusFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.radix"
+#                       modeFile       file that contains mode of tracing
+     modeFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.radix.mode"
+#                       extensionFile  file that contains trace file suffix
+extensionFile="$K42_TOP/install/powerpc/noDeb/kitchroot/home/pem/.radix.extension"
+
+
+iterations="1 2 3 4 5"
+
+for iteration in $iterations; do
+
+  echo "$iteration" > $extensionFile
+
+  MODE=user
+  echo "-$MODE" > ${modeFile}
+  if [[ -a $statusFile ]]; then 
+    rm $statusFile
+  fi
+  echo "radix with mode -$MODE and extension $iteration"
+  k42console -m $machine -o noDeb -R -B killsteal
+
+
+  MODE=both
+  echo "-$MODE" > $modeFile
+  if [[ -a $statusFile ]]; then
+    rm $statusFile
+  fi
+  echo "radix with mode -$MODE and extension $iteration"
+  k42console -m $machine -o noDeb -R -B killsteal
+
+done

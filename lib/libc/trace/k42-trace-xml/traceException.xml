@@ -1,0 +1,401 @@
+<?xml version='1.0' ?>
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.HTML
+  in the top-level directory for more details.
+
+  $Id: traceException.xml,v 1.23 2005/08/31 20:53:34 pfs Exp $
+-->
+<?xml-stylesheet href="pem_events.xsl" type="text/xsl" ?>
+
+<PEM_Events>
+
+<event name="OS::Exception::CDAInit" description="CPU domain Annex needed for resource accounting">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="CDAInit" />
+	<fields>
+		<field name="CDA_addr"      type="uint64" description="unknown" />
+		<field name="priorityClass" type="uint64" description="priority run domain at" />
+		<field name="quantum"       type="uint64" description="time quantum between context switches"/>
+		<field name="pulse"         type="uint64" description="unknown" />
+		<field name="weight"        type="uint64" description="unknown" />
+	</fields>
+	<k42Format value='Initialized CDA addr %0[%llx] priorityClass %1[%llx] quantum %2[%llx] pulse %3[%llx] weight %4[%llx]' />
+</event>
+
+
+<event name="OS::Exception::Dispatch" description="context switch">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="Dispatch" />
+	<fields>
+		<field name="commID" type="uint64"  description="target commID" />
+		<field name="CDA"    type="uint64"  description="domain" />
+	</fields>
+	<computedFields>
+	  <computedField name="pid"   type="uint32" expr="(int)  (commID>>32)" description="process ID"/>    
+<!--	 How to support shorts? 
+	  <computedField name="RDNum" type="uint16" expr="(short)(commID>>16)" description="resource domain number"/>
+	  <computedField name="VPNum" type="uint16" expr="(short) commID"      description="virtual process number"/>
+-->
+	</computedFields>
+
+	<k42Format value='Dispatch commID %1[%llx], CDA %0[%llx]' />
+</event>
+
+
+<event name="OS::Exception::ProcessYield" description="context switch logical thread">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="ProcessYield" />
+	<fields>
+		<field name="commID" type="uint64" description="unknown" />
+	</fields>
+	<k42Format value='PROCESS_YIELD, commID %0[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="commID" />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+</event>
+
+
+<event name="OS::Exception::ProcessHandoff" description="context switch logical thread">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="ProcessHandoff" />
+	<fields>
+		<field name="commID" type="uint64" description="target commID of context switch" />
+	</fields>
+	<k42Format value='PROCESS_HANDOFF, commID %0[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="commID" />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+</event>
+
+
+<event name="OS::Exception::PPCCall" description="remote procedure call">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="PPCCall" />
+	<fields>
+		<field name="commID" type="uint64" description="target commID of remote procedure call" />
+	</fields>
+	<k42Format value='PPC CALL, commID %0[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="commID" />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+	<interval type='START' name='PPCCallInterval' pair='OS::Exception::PPCReturn' match='commID' fields='*' />
+</event>
+
+
+<event name="OS::Exception::PPCReturn" description="return from remote procedure call">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="PPCReturn" />
+	<fields>
+		<field name="commID" type="uint64" description="target commID of return" />
+	</fields>
+	<k42Format value='PPC RETURN, commID %0[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="commID" />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+	<interval type='END' name='PPCCallInterval' pair='OS::Exception::PPCCall' match='commID' fields='*' />
+</event>
+
+
+<event name="OS::Exception::IPCRefused" description="remote procedure cal refused">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="IPCRefused" />
+	<fields>
+		<field name="commID" type="uint64" description="unknown" />
+	</fields>
+	<k42Format value='IPC REFUSED, commID %0[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="commID" />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+</event>
+
+
+<event name="OS::Exception::Pgflt" description="page fault. Page faults can be nested once if the kernel thread handling the page fault, page faults">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="Pgflt" />
+	<fields>
+		<field name="threadPtr"  type="uint64" 
+                     description="kernel thread object pointer" />
+		<field name="faultAddr" type="uint64"
+                     description="address that caused the page fault" />
+		<field name="commID"    type="uint64"
+                     description="commID that generated the page fault" />
+		<field name="faultIAR"  type="uint64"
+                     description="interrupt address register" />
+		<field name="faultInfo"  type="uint64"
+                     description="info about the fault" />
+	</fields>
+	<k42Format value='PGFLT, kernel thread %0[%llx], faultAddr 0x%1[%llx], commID %2[%llx], faultIAR 0x%3[%llx], faultInfo 0x%4[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="0" description="context switch to kernel comm ID "/>
+        <interval type='START' name='PgfltInterval' pair='OS::Exception::PgfltDone' 
+                  match='commID,threadPtr,faultAddr' />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+</event>
+
+
+<event name="OS::Exception::PgfltDone" description="page fault done">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="PgfltDone" />
+	<fields>
+		<field name="commID"    type="uint64" description="commID that generated the page fault" />
+		<field name="threadPtr" type="uint64" description="kernel thread object pointer" />
+		<field name="faultAddr" type="uint64" description="virtual address of fault" />
+		<field name="RC"        type="uint64" description="return code" />
+		<field name="threadLocalPointer"  type="uint64" description="pointer to thread specific state" />
+	</fields>
+	<k42Format value='PGFLT DONE, commID %0[%llx], kernel thread %1[%llx], faultAddr %2[%llx], RC %3[%llx] thrdself:%4[%lld]' />
+	<stateChange type="CONTEXT_SWITCH" value="commID" />
+        <interval type='END' name='PgfltInterval' pair='OS::Exception::Pgflt'
+                  match='commID,threadPtr,faultAddr' />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+</event>
+
+
+<event name="OS::Exception::AwaitDispatch" description="dispatch to a new commID (split transaction).  Initially dispatch to kernel commID">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="AwaitDispatch" />
+	<fields>
+		<field name="threadPtr" type="uint64" description="kernel thread object pointer" />
+	</fields>
+	<k42Format value='AWAIT_DISPATCH, kernel thread %0[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="0" description="context switch to kernel comm ID" />
+	<interval type='START' name='AwaitDispatchInterval' pair='OS::Exception::AwaitDispatchDone' fields='*' />
+</event>
+
+
+<event name="OS::Exception::AwaitDispatchDone" description="dispatch to a new commID (split transaction).  Dispatch to commID">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="AwaitDispatchDone" />
+	<fields>
+		<field name="commID" type="uint64" description="dispatched to commID" />
+	</fields>
+	<k42Format value='AWAIT_DISPATCH DONE, commID %0[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="commID" />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+	<interval type='END' name='AwaitDispatchInterval' pair='OS::Exception::AwaitDispatch' fields='*' />
+</event>
+
+
+<event name="OS::Exception::PPCAsyncRemote"
+	description="remote asynchronous procedure call">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="PPCAsyncRemote" />
+	<fields>
+		<field name="threadPtr" type="uint64" description="kernel thread object pointer" />
+		<field name="commID"   type="uint64" description="target commID" />
+	</fields>
+	<k42Format value='PPC_ASYNC_REMOTE, kernel thread %0[%llx], target commID %1[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="0" description="context switch to kernel comm ID" />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+	<interval type='START' name='PPCAsyncRemoteInterval' pair='OS::Exception::PPCAsyncRemoteDone' match='commID' fields='*' />
+</event>
+
+
+<event name="OS::Exception::PPCAsyncRemoteDone"
+	description="completion of remote asynchronous procedure call">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="PPCAsyncRemoteDone" />
+	<fields>
+		<field name="commID" type="uint64" description="unknown" />
+	</fields>
+	<k42Format value='PPC_ASYNC_REMOTE DONE, commID %0[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="commID" />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+	<interval type='END'  name='PPCAsyncRemoteInterval' pair='OS::Exception::PPCAsyncRemote' match='commID' fields='*' />
+</event>
+
+
+<event name="OS::Exception::AwaitPPCRetry"
+	description="retry remote procedure call">
+
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="AwaitPPCRetry" />
+	<fields>
+		<field name="threadPtr" type="uint64" description="kernel thread object pointer" />
+		<field name="commID"   type="uint64" description="target commID" />
+	</fields>
+	<k42Format value='AWAIT_PPC_RETRY, kernel thread %0[%llx], target commID %1[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="0" description="context switch to kernel comm ID" />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+	<interval type='START' name='AwaitPPCRetryInterval' pair='OS::Exception::AwaitPPCRetryDone' match='commID' fields='*' />
+</event>
+
+
+<event name="OS::Exception::AwaitPPCRetryDone"
+	description="retry remote procedure call completed">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="AwaitPPCRetryDone" />
+	<fields>
+		<field name="commID" type="uint64"  description="unknown" />
+	</fields>
+	<k42Format value='AWAIT_PPC_RETRY DONE, commID %0[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="commID" />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+	<interval type='END'   name='AwaitPPCRetryInterval' pair='OS::Exception::AwaitPPCRetry' match='commID' fields='*' />
+</event>
+
+
+<event name="OS::Exception::IPCRemote"	description="remote procedure call">
+
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="IPCRemote" />
+	<fields>
+		<field name="threadPtr" type="uint64" description="kernel thread object pointer" />
+		<field name="ipcType"  type="uint64" description="unknown" />
+		<field name="commID"   type="uint64" description="target commID" />
+	</fields>
+	<k42Format value='IPC_REMOTE, kernel thread %0[%llx], ipcType %1[%llx],	target commID %2[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="0" description="context switch to kernel comm ID" />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+	<interval type='START' name='IPCRemoteInterval' pair='OS::Exception::IPCRemoteDone' match='commID' fields='*' />
+</event>
+
+
+<event name="OS::Exception::IPCRemoteDone"
+	description="remote procedure call completed">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="IPCRemoteDone" />
+	<fields>
+		<field name="commID" type="uint64" description="unknown" />
+	</fields>
+	<k42Format value='IPC_REMOTE DONE, commID %0[%llx]' />
+	<stateChange type="CONTEXT_SWITCH" value="commID" />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+	<interval type='END'  name='IPCRemoteInterval' pair='OS::Exception::IPCRemote' match='commID' fields='*' />
+</event>
+
+
+<event name="OS::Exception::AcceptRemoteIPC" 
+description="remote prcedure call accepted">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="AcceptRemoteIPC" />
+	<fields>
+		<field name="ipcType"  type="uint64" description="unknown" />
+		<field name="callerID" type="uint64" description="unknown" />
+	</fields>
+	<k42Format value='ACCEPT_REMOTE_IPC, ipcType %0[%llx], callerID %1[%llx]' />
+</event>
+
+
+<event name="OS::Exception::PPCAsyncLocal"
+	description="asynchronous remote procedure call within same process">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="PPCAsyncLocal" />
+	<fields>
+		<field name="commID" type="uint64" description="target commID that message is being sent to" />
+		<field name="RC"     type="uint64" description="return code" />
+	</fields>
+	<k42Format value='PPC_ASYNC_LOCAL, target commID %0[%llx], RC %1[%llx]' />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+</event>
+
+
+<event name="OS::Exception::IOInterrupt" description="unknown">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="IOInterrupt" />
+	<fields>
+		<field name="vector" type="uint64" description="unknown" />
+		<field name="PC"     type="uint64" description="unknown" />
+	</fields>
+	<k42Format value='IO_INTERRUPT, vector %0[%llx], PC %1[%llx]' />
+</event>
+
+
+<event name="OS::Exception::IPInterrupt" description="unknown">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="IPInterrupt" />
+	<k42Format value='IP_INTERRUPT' />
+</event>
+
+
+<event name="OS::Exception::TimerInterrupt" description="unknown">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="TimerInterrupt" />
+	<fields>
+		<field name="PC"        type="uint64" description="unknown" />
+		<field name="branchReg" type="uint64" description="unknown" />
+	</fields>
+	<k42Format value='TIMER_INTERRUPT, pc %0[%llx], branchReg %1[%llx]' />
+</event>
+
+
+<event name="OS::Exception::ReqIPCRetryNotif" description="unknown">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="ReqIPCRetryNotif" />
+	<fields>
+		<field name="commID" type="uint64" description="target commID that did not accept the call" />
+	</fields>
+	<k42Format value='Request IPC retry notification, target commID %0[%llx]' />
+</event>
+
+
+<event name="OS::Exception::IPCRetryNotify" description="unknown">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="IPCRetryNotify" />
+	<fields>
+		<field name="commID" type="uint64" description="source commID to retry the call or return that was refused" />
+	</fields>
+	<k42Format value='IPC retry notify, source %0[%llx]' />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+</event>
+
+
+<event name="OS::Exception::ExceptionMPMsg"
+	description="multi-processor MSG facility to communicate across	processors within an address space; that is, communicate among dispatchers (commIDs) that all belong to the same process">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="ExceptionMPMsg" />
+	<fields>
+		<field name="vtable" type="uint64" description="unknown" />
+		<field name="data0"  type="uint64" description="unknown" />
+	</fields>
+	<k42Format value='Exception MP msg, vtable %0[%llx], data0 %1[%llx]' />
+</event>
+
+
+<event name="OS::Exception::QuantumExpired" description="unknown">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="QuantumExpired" />
+	<fields>
+		<field name="commID" type="uint64" description="unknown" />
+	</fields>
+	<k42Format value='QUANTUM_EXPIRED, commID %0[%llx]' />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+</event>
+
+
+<event name="OS::Exception::Pulse" description="unknown">
+	<layerId value="OS" />
+	<classId value="Exception" />
+	<specifier value="Pulse" />
+	<fields>
+		<field name="commID" type="uint64" description="unknown" />
+	</fields>
+	<k42Format value='PULSE generated, commID %0[%llx]' />
+	<computedField name="pid"   type="uint32" expr="(int)(commID>>32)" description="process ID"/>    
+</event>
+
+</PEM_Events>

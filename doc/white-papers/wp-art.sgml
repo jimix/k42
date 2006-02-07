@@ -1,0 +1,32 @@
+<!--
+  K42: (C) Copyright IBM Corp. 2001.
+  All Rights Reserved
+
+  This file is distributed under the GNU LGPL. You should have
+  received a copy of the license along with K42; see the file LICENSE.html
+  in the top-level directory for more details.
+
+  $Id: wp-art.sgml,v 1.4 2003/10/02 17:54:33 bob Exp $
+-->
+
+  <artheader>
+	<author><surname> Jonathan Appavoo </surname></author>
+	<author><surname> Marc Auslander </surname></author>
+	<author><surname> Dilma DaSilva </surname></author>
+	<author><surname> David Edelsohn </surname></author>
+	<author><surname> Orran Krieger </surname></author>
+	<author><surname> Michal Ostrowski </surname></author>
+	<author><surname> Bryan Rosenburg </surname></author>
+	<author><surname> Robert W. Wisniewski </surname></author>
+	<author><surname> Jimi Xenidis </surname></author>
+      <affiliation>
+	<orgdiv>
+	modified October 2001
+	</orgdiv>
+      </affiliation>
+
+    <copyright>
+      <year>2001</year>
+      <holder>IBM Corp.</holder>
+    </copyright>
+  </artheader>
