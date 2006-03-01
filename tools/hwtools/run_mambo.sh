@@ -22,9 +22,14 @@ if [ -z "${MAMBO_TCL_INIT}" -o ! -f "${MAMBO_TCL_INIT}" ] ; then
     fi
 fi
 
+if [ "$MAMBO_DIR" -a -d $MAMBO_DIR ]; then
+    export PATH=$(cd $MAMBO_DIR && pwd -P)/bin:$PATH;
+    export PATH=$(cd $MAMBO_DIR && pwd -P)/bin/emitter:$PATH;
+fi
+
 : ${MAMBO_DEBUG_PORT:=1234}
 : ${MAMBO_SIMULATOR_PORT:=$[$TW_BASE_PORT-2]}
-: ${MAMBO_MEM:=128}
+: ${MAMBO_MEM:=256}
 : ${MAMBO_GARB_FNAME:=/dev/zero}
 : ${MAMBO_TYPE:=gpul}
 
@@ -32,18 +37,16 @@ fi
 : ${MAMBO_ZVAL_STOP:="---- stop ztrace ----"}
 : ${MAMBO_ZVAL_FILE:=$PWD/zval.out}
 
-if [ "$MAMBO_DIR" -a -d $MAMBO_DIR ]; then
-    export PATH=$MAMBO_DIR/bin:$MAMBO_DIR/bin/emitter:$PATH;
+[ -z $MAMBO ] && MAMBO=$(type systemsim-${MAMBO_TYPE} | awk '{print $3}');
+[ -z $MAMBO ] && MAMBO=$(type mambo-${MAMBO_TYPE} | awk '{print $3}');
+
+if [ -z $MAMBO ]; then
+	echo "run_mambo: FAIL: could not find mambo executable"
+	exit 1
 fi
 
-
 if [ ! "$MAMBO_DIR" ]; then
-    if ! which mambo-${MAMBO_TYPE} >/dev/null 2>/dev/null ; then 
-	echo "Can't determine mambo-${TYPE} location, not in PATH";
-	exit 1;
-    fi
-    MAMBO_EXE=`which mambo-${MAMBO_TYPE}`
-    MAMBO_DIR=${MAMBO_EXE%/bin/mambo-${MAMBO_TYPE}}
+    MAMBO_DIR=$(dirname $(dirname $(type $MAMBO | awk '{print $3}')))
 fi
 
 : ${MAMBO_ROM_FILE:=${MAMBO_DIR}/run/${MAMBO_TYPE}/linux/rom.bin}
@@ -68,4 +71,5 @@ if [ $HW_VERBOSE -ge 1 ] ; then
 	    -f $MAMBO_TCL_INIT"
 fi
 
-exec $RLWRAP mambo-${MAMBO_TYPE} $MAMBO_EXTRA_OPTS -f $MAMBO_TCL_INIT
+
+exec $RLWRAP $MAMBO $MAMBO_EXTRA_OPTS -f $MAMBO_TCL_INIT
