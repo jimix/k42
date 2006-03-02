@@ -165,6 +165,7 @@ $(B)/prom.o \
 $(B)/slb_low.o \
 	$(B)/udbg.o \
 		     $(B)/unimplemented.o			\
+		     $(B)/k42_boot_data.o			\
 		     $(S)/os/kexceptobjs.o			\
 		     $(L)/core.k42lib.o				\
 		     $(L)/util.k42lib.o				\
@@ -239,6 +240,12 @@ $(B)/unimplemented.o: $(H)/os/boot/arch/powerpc/unimplemented.c
 	      -Wno-trigraphs -fno-strict-aliasing -fno-common \
 	      -ffreestanding -fomit-frame-pointer -c $< -o $@
 
+OBJS += $(B)/k42_boot_data.o
+$(B)/k42_boot_data.o: $(H)/os/boot/arch/powerpc/k42_boot_data.c
+	$(call status, CC, $@)
+	$(CC) -g -nostdinc -Wall -Wstrict-prototypes \
+	      -Wno-trigraphs -fno-strict-aliasing -fno-common \
+	      -ffreestanding -fomit-frame-pointer -c $< -o $@
 
 # Rule for how to incrementally link our kernel objects.
 $(S)/os/k%objs.o:
