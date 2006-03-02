@@ -51,7 +51,7 @@ __ioremap(unsigned long addr, unsigned long size, unsigned long flags)
     void* vaddr = (void*)ioReserveAndMap(addr, size);
     err_printf("IO remap: %016lx[%lx] %p\n", addr, size, vaddr);
     tassert((uval)vaddr, err_printf("Out of I/O mapping range\n"));
-    return eeh_ioremap(addr, vaddr);
+    return vaddr;
 }
 
 void*
