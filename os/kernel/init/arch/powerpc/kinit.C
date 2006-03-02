@@ -25,6 +25,8 @@
 #include <sys/HVChan.H>
 #include <sys/GDBIO.H>
 
+extern char bootData[BOOT_DATA_MAX];
+
 BootPrintf::StaticStuff BootPrintf::staticStuff;
 
 void writeCOM2(char c);
@@ -373,6 +375,10 @@ extern "C" void start_kernel(void)
   b.check_exception = 0x0;
   b.rtas_last_error = 0x0;
   b.ibm_scan_log_dump = 0xffffffff;
+
+  for (int i = 0; i < BOOT_DATA_MAX; i++) {
+    b.boot_data[i] = bootData[i];
+  }
   
   start(&b);
 }
