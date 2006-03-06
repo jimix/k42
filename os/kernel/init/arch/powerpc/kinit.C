@@ -36,6 +36,8 @@ void writeCOM2Str(char *str);
 // Defining instance of _BootInfo (declared in bilge/arch/powerpc/BootInfo.H).
 struct BootInfo *_BootInfo;
 struct BootInfo b;
+#undef systemcfg
+extern struct BootInfo *systemcfg;
 
 // Defining instance of _OnSim (declared in kernel.H).
 uval _OnSim;
@@ -309,24 +311,27 @@ extern "C" void udbg_printf(const char *fmt, ...);
  */
 extern "C" void start_kernel(void)
 {
-  b.eye_catcher[0] = 'K';
-  b.version.major = 0x1;
-  b.version.minor = 0x0;
-  b.platform = 0x100;
-  b.processor = 0x700100;
-  b.processorCount = 0xffffffffffffffff;
-  b.physicalMemorySize = 0x8000000;
-  b.tb_orig_stamp = 0x0;
-  b.tb_ticks_per_sec = 0x0;
-  b.tb_to_xs = 0x0;
-  b.stamp_xsec = 0x0;
-  b.tb_update_count = 0x0;
-  b.tz_minuteswest = 0x0;
-  b.tz_dsttime = 0x0;
-  b.dCacheL1Size = 0x8000;
-  b.dCacheL1LineSize = 0x80;
-  b.iCacheL1Size = 0x10000;
-  b.iCacheL1LineSize = 0x80;
+  /* Fill out the first part from Linux's systemcfg structure.  */
+  b.eye_catcher[0] = systemcfg->eye_catcher[0];
+  b.version.major = systemcfg->version.major;
+  b.version.minor = systemcfg->version.minor;
+  b.platform = systemcfg->platform;
+  b.processor = systemcfg->processor;
+  b.processorCount = systemcfg->processorCount;
+  b.physicalMemorySize = systemcfg->physicalMemorySize;
+  b.tb_orig_stamp = systemcfg->tb_orig_stamp;
+  b.tb_ticks_per_sec = systemcfg->tb_ticks_per_sec;
+  b.tb_to_xs = systemcfg->tb_to_xs;
+  b.stamp_xsec = systemcfg->stamp_xsec;
+  b.tb_update_count = systemcfg->tb_update_count;
+  b.tz_minuteswest = systemcfg->tz_minuteswest;
+  b.tz_dsttime = systemcfg->tz_dsttime;
+  b.dCacheL1Size = systemcfg->dCacheL1Size;
+  b.dCacheL1LineSize = systemcfg->dCacheL1LineSize;
+  b.iCacheL1Size = systemcfg->iCacheL1Size;
+  b.iCacheL1LineSize = systemcfg->iCacheL1LineSize;
+
+  /* Fill in the rest with K42-specific values.  */
   b.rtas.entry = 0x1ff4000;
   b.rtas.base = 0x1ff4000;
   b.rtas.size = 0x8000;

@@ -37,7 +37,8 @@ extern "C" void rand_initialize(void);
 extern "C" void time_init(void);
 extern void RCUCollectorInit(VPNum vp);
 extern "C" void init_workqueues(void);
-void (*calibrate_delay)(void);
+//void (*calibrate_delay)(void);
+extern "C" void calibrate_delay(void);
 extern "C" void generic_calibrate_delay(void);
 extern "C" void k42devfsInit();
 extern "C" void unnamed_dev_init(void);
@@ -92,8 +93,10 @@ ConfigureLinuxDelayedFinal(VPNum vp)
 void
 ConfigureLinuxEnv(VPNum vp,PageAllocatorRef pa)
 {
+#if 0
     if (vp==0)
 	calibrate_delay = &generic_calibrate_delay;
+#endif
 
     LinuxEnvInit(vp);
     RCUCollectorInit(vp);

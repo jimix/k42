@@ -82,7 +82,7 @@ void* __ioremap_explicit(unsigned long pa, unsigned long ea,
     void* vaddr = (void*)ioMap(ea, pa, size);
     err_printf("Explicit IO remap: %016lx[%lx] %p\n", pa, size, vaddr);
     tassert((uval)vaddr, err_printf("Out of allocated I/O mapping range\n"));
-    return eeh_ioremap(pa, vaddr);
+    return vaddr;
 }
 
 

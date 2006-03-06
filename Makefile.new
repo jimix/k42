@@ -164,6 +164,9 @@ $(B)/prom.o \
         $(B)/pacaData.o \
 $(B)/slb_low.o \
 	$(B)/udbg.o \
+                     $(B)/pci_direct_iommu.o \
+                     $(B)/smp_processor_id.o \
+                     $(B)/pSeries_reconfig.o \
 		     $(B)/unimplemented.o			\
 		     $(B)/k42_boot_data.o			\
 		     $(S)/os/kexceptobjs.o			\
@@ -203,8 +206,19 @@ $(B)/%.o: $(L)/arch/ppc64/kernel/%.S
 	      -gdwarf2 -D__ASSEMBLY__ \
 	      -isystem $(shell $(CC) -print-file-name=include) -c $< -o $@
 
-OBJS += $(B)/prom_init.o
+OBJS += $(B)/prom_init.o $(B)/pci_direct_iommu.o $(B)/smp_processor_id.o
 $(B)/%.o: $(L)/arch/ppc64/kernel/%.c
+	$(call status, CC, $@)
+	$(CC) -m64 -nostdinc \
+	      -isystem $(shell $(CC) -print-file-name=include) \
+	      -D__KERNEL__ -I$(L)/include -Wall -Wstrict-prototypes \
+	      -Wno-trigraphs -fno-strict-aliasing -fno-common \
+	      -ffreestanding -fomit-frame-pointer -g -msoft-float -pipe \
+	      -mminimal-toc -mtraceback=none -mcall-aixdesc \
+	      -Wdeclaration-after-statement -mno-minimal-toc -c $< -o $@
+
+OBJS += $(B)/smp_processor_id.o
+$(B)/%.o: $(L)/lib/%.c
 	$(call status, CC, $@)
 	$(CC) -m64 -nostdinc \
 	      -isystem $(shell $(CC) -print-file-name=include) \

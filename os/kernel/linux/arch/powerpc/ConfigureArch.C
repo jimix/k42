@@ -149,7 +149,7 @@ ConfigureLinuxHWBase(VPNum vp)
     {
 	LinuxEnv le(SysCall);
 	StartBootMem();
-#if 1
+#if 0
 	// Mambo needs to support openpic on all platforms.
 
 	// OF tree missing nodes that would tell Linux code to make this call
