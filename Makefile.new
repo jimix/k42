@@ -165,7 +165,6 @@ $(B)/prom.o \
 $(B)/slb_low.o \
 	$(B)/udbg.o \
                      $(B)/pci_direct_iommu.o \
-                     $(B)/smp_processor_id.o \
                      $(B)/pSeries_reconfig.o \
 		     $(B)/unimplemented.o			\
 		     $(B)/k42_boot_data.o			\
