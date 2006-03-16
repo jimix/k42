@@ -732,11 +732,17 @@ baseServers_ldeps1 = libemu.a liblk26.a libvirtfs.a libfs.a libsrv.a
 baseServers_ldeps = $(addprefix $(O)/install/lib/$(HOST)/$(D)Deb/, \
 		      $(baseServers_ldeps1))
 
-$(S)/os/servers/baseServers/baseServers: $(baseServers_ldeps)
-$(S)/os/servers/baseServers/baseServers: lflags = $(baseServers_lflags)
-$(S)/os/servers/baseServers/baseServers: $(baseServers_objs)
+$(S)/os/servers/baseServers/baseServers.dbg: $(baseServers_ldeps)
+$(S)/os/servers/baseServers/baseServers.dbg: lflags = $(baseServers_lflags)
+$(S)/os/servers/baseServers/baseServers.dbg: $(baseServers_objs)
 	$(call status, CXX, $@)
 	$(CXX) $(baseServers_objs) $(lflags) -o $@
+
+baseServers_dep = $(S)/os/servers/baseServers/baseServers.dbg
+
+$(S)/os/servers/baseServers/baseServers: $(baseServers_dep)
+	$(call status, STRIP, $@)
+	$(STRIP) -s $< -o $@
 
 ###############################################################################
 
