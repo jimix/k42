@@ -56,7 +56,7 @@ endif
 .PHONY: all dirs config clean
 
 # Default target is just the directory skeleton and our bootable kernel.
-all: dirs $(S)/os/k42-vmlinux
+all: dirs $(S)/os/servers/baseServers/baseServers $(S)/os/k42-vmlinux
 
 # Just print some debug information and exit.
 config:
@@ -153,19 +153,24 @@ $(S)/os/k42-vmlinux: $(B)/vmlinux.lds				\
 		     $(B)/head.o				\
 		     $(B)/entry.o				\
 		     $(B)/prom_init.o				\
-$(B)/pSeries_setup.o \
-$(B)/maple_time.o \
-$(B)/maple_pci.o \
-$(B)/rtas_pci.o \
-$(B)/setup.o \
-$(B)/lmb.o \
-$(B)/prom.o \
- $(B)/hash_utils.o $(B)/u3_iommu.o $(B)/hash_low.o $(B)/hash_native.o $(B)/stab.o $(B)/slb.o \
-        $(B)/pacaData.o \
-$(B)/slb_low.o \
-	$(B)/udbg.o \
-                     $(B)/pci_direct_iommu.o \
-                     $(B)/pSeries_reconfig.o \
+                     $(B)/pSeries_setup.o			\
+                     $(B)/maple_time.o				\
+                     $(B)/maple_pci.o				\
+                     $(B)/rtas_pci.o				\
+                     $(B)/setup.o				\
+                     $(B)/lmb.o					\
+                     $(B)/prom.o				\
+                     $(B)/hash_utils.o				\
+                     $(B)/u3_iommu.o				\
+                     $(B)/hash_low.o				\
+                     $(B)/hash_native.o				\
+                     $(B)/stab.o				\
+                     $(B)/slb.o					\
+                     $(B)/pacaData.o				\
+                     $(B)/slb_low.o				\
+                     $(B)/udbg.o				\
+                     $(B)/pci_direct_iommu.o			\
+                     $(B)/pSeries_reconfig.o			\
 		     $(B)/unimplemented.o			\
 		     $(B)/k42_boot_data.o			\
 		     $(S)/os/kexceptobjs.o			\
@@ -646,6 +651,94 @@ $(S)/lib/libc/alloc/%.o: $(H)/lib/libc/alloc/%.C
 	$(call status, CXX, $@)
 	$(CXX) -c $(lflags) $(iflags) $(lib_libc_alloc_flags) $< -o $@
 
+###############################################################################
+
+CFLAGS = -DTARGET_MACHINE="$(HOST)" -D__GNU_AS__ -U$(HOST) -DGCC3	    \
+         -Wa,-strip-local-absolute -fPIC -mminimal-toc -Wall -Werror -O0 -g \
+         -DK42 -D_REENTRANT -D__BIG_ENDIAN__ -nostdinc
+
+IFLAGS = -I$(O)/install/include					\
+         -I$(U)/$(D)Deb.Img.4/usr/powerpc64-linux/include	\
+         -I$(L)/include						\
+         -I$(O)/install/gcc-include/arch/$(HOST)		\
+         -I$(O)/install/include/stubgen/arch/$(HOST)
+
+$(S)/os/servers/bootServers.o: cflags = $(CFLAGS)
+
+$(S)/os/servers/bootServers.o: iflags = -I$(O)/os/servers \
+                                        -I$(H)/os/servers $(IFLAGS)
+
+$(S)/os/servers/bootServers.o: $(S)/os/servers/bootServers.s
+	$(call status, CXX, $@)
+	$(CXX) $(cflags) $(iflags) -c $^ -o $@
+
+###############################################################################
+
+bootServers_tool = $(O)/install/tools/Linux_$(BUILD)/$(HOST)/mkserv
+
+bootServers_dep1 = $(S)/os/servers/baseServers/servers.list
+bootServers_dep2 = $(S)/os/servers/reboot/servers.list
+bootServers_deps = $(bootServers_dep1) $(bootServers_dep2)
+
+bootServers_iflags = -t gasBE -F $(bootServers_dep1) -F $(bootServers_dep2)
+
+$(S)/os/servers/bootServers.s: $(bootServers_deps) $(bootServers_tool)
+	$(call status, MKSERV, $@)
+	$(bootServers_tool) $(bootServers_iflags) -o $@
+
+###############################################################################
+
+baseServers_objs1 = baseServer.o fileSystemServices.o FileSystemDev.o	\
+                    DevFSBlk.o XDevFSBlk.o DevFSDir.o XFileSystemDev.o	\
+                    XDevFSDir.o DevFSRemote.o XDevFSRemote.o		\
+                    SysFSAttrFile.o XSysFSAttrFile.o MountPointMgrImp.o	\
+                    XMountPointMgr.o Login.o SysVSharedMem.o		\
+                    SysVSemaphores.o SysVMessages.o Util.o XLogin.o	\
+                    XSysVSharedMem.o XSysVSemaphores.o XSysVMessages.o	\
+                    LinuxPTY.o IOForwarder.o IOForwarderConsole.o	\
+                    printk.o StreamServerPipe.o XStreamServerPipe.o	\
+                    FileSystemNFS.o NFSHandle.o NFSMount.o NFSClient.o	\
+                    ServerFileBlockNFS.o ServerFileDirNFS.o		\
+                    mount_clnt.o mount_xdr.o nfs_clnt.o nfs_xdr.o	\
+                    XFileSystemNFS.o FileSystemK42RamFS.o		\
+                    ServerFileBlockK42RamFS.o ServerFileDirK42RamFS.o	\
+                    FileInfoK42RamFS.o XFileSystemK42RamFS.o		\
+                    loadImage.o KFSDebug.o KFSDisk.o SuperBlock.o	\
+                    PSOBasicRW.o RecordMap.o LSOBasic.o LSOBasicFile.o	\
+                    LSOBasicDir.o LSOBasicSymlink.o ObjToken.o		\
+                    PSODiskBlock.o ServerObject.o FileSystemKFS.o	\
+                    XFileSystemKFS.o FileSystemKFSK42.o			\
+                    ServerFileBlockKFS.o FSFileKFS.o FSFileKFSK42.o	\
+                    KFSGlobals.o PSOPreallocExtent.o PSOSmall.o		\
+                    PSOSmallMeta.o BlockCache.o BlockCacheK42.o		\
+                    KFSDHash.o TimerEventBC.o crtServer.o		\
+                    PrivilegedServiceWrapper.o ResMgr.o XResMgr.o	\
+                    ProcessLinuxServer.o XProcessLinuxServer.o		\
+                    StreamServerSocket.o XStreamServerSocket.o
+
+baseServers_objs2 = $(L)/pty.k42lib.o $(L)/util.k42lib.o
+
+baseServers_objs = $(addprefix $(S)/os/servers/baseServers/, \
+                     $(baseServers_objs1)) $(baseServers_objs2)
+
+baseServers_lflags = -static -Wl,-e,_k42start				\
+                     -L$(O)/install/lib/powerpc/fullDeb			\
+                     -L$(U)/fullDeb.Img.4/usr/klib			\
+                     -Wl,--whole-archive -lemu -Wl,--no-whole-archive	\
+                     -llk26 -lvirtfs -lfs -lsrv -lbase -lc
+
+baseServers_ldeps1 = libemu.a liblk26.a libvirtfs.a libfs.a libsrv.a
+
+baseServers_ldeps = $(addprefix $(O)/install/lib/$(HOST)/$(D)Deb/, \
+		      $(baseServers_ldeps1))
+
+$(S)/os/servers/baseServers/baseServers: $(baseServers_ldeps)
+$(S)/os/servers/baseServers/baseServers: lflags = $(baseServers_lflags)
+$(S)/os/servers/baseServers/baseServers: $(baseServers_objs)
+	$(call status, CXX, $@)
+	$(CXX) $(baseServers_objs) $(lflags) -o $@
+
+###############################################################################
 
 # Now that OBJS is totally expanded, generate our directory list from it.
 DIRS = $(sort $(foreach obj, $(OBJS), $(dir $(obj))))
