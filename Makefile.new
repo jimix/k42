@@ -678,7 +678,8 @@ bootServers_tool = $(O)/install/tools/Linux_$(BUILD)/$(HOST)/mkserv
 
 bootServers_dep1 = $(S)/os/servers/baseServers/servers.list
 bootServers_dep2 = $(S)/os/servers/reboot/servers.list
-bootServers_deps = $(bootServers_dep1) $(bootServers_dep2)
+bootServers_deps = $(bootServers_dep1) $(bootServers_dep2) \
+		   $(S)/os/servers/baseServers/baseServers
 
 bootServers_iflags = -t gasBE -F $(bootServers_dep1) -F $(bootServers_dep2)
 
