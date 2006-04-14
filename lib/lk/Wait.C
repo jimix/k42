@@ -163,7 +163,8 @@ static void __wake_up_common(wait_queue_head_t *q, unsigned int mode, int nr_exc
  * @mode: which threads
  * @nr_exclusive: how many wake-one or wake-many threads to wake up
  */
-void __wake_up(wait_queue_head_t *q, unsigned int mode, int nr_exclusive)
+void __wake_up(wait_queue_head_t *q, unsigned int mode, int nr_exclusive,
+               void *key)
 {
 	unsigned long flags;
 
