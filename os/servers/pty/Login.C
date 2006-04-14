@@ -46,6 +46,7 @@ Login::ConsoleProcess(char* argv[], char* envp[]) {
     err_printf("baseServers is proxy to start %s\n",argv[0]);
 
     int tty = open("/dev/ptmx",O_RDWR|O_NOCTTY);
+    tassertMsg(tty > 0, "open of /dev/ptmx returned %d\n", tty);
     unsigned int ptyNum=99;
     int ret = ioctl(tty, TIOCGPTN, &ptyNum);
     int pty_unlocked = 0;
