@@ -22,7 +22,7 @@ SCRIPTS=hwconsole ktwd kvictim reboot_kpower run_simip run_mambo \
 
 FILES=victims.conf watson.conf torolab.conf toronto.conf ozlabs.conf \
 	lanl.conf bluewookie_austin.conf \
-	arl.conf arl_austin.conf generic_hw.conf \
+	arl.conf arl_austin.conf generic_hw.conf mambo-120305.tcl \
 	mambo.tcl mambo-120604.tcl mambo-05222005.tcl utils.tcl
 
 INSTALL=install
