@@ -1,2 +1,4 @@
-# Format is (with no leading space)
-#<IP Address> <remote path> <local path>
+9.2.224.107 /a/kitch0/homes/kitch0/kitchawa/k42-packages/lam-mpi /opt/lam-mpi
+9.2.220.37  /a/kix/homes/kix/awaterl                             /home/awaterl
+9.2.220.37  /a/kix/homes/kix/dilma                               /home/dilma
+9.2.208.204 /home/apw/devel/ltp/ltp-full-20050505                /opt/ltp
