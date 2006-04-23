@@ -25,6 +25,8 @@
 #include <sys/HVChan.H>
 #include <sys/GDBIO.H>
 
+extern "C" void udbg_printf(const char *fmt, ...);
+
 extern char bootData[BOOT_DATA_MAX];
 
 BootPrintf::StaticStuff BootPrintf::staticStuff;
@@ -238,10 +240,14 @@ _BootInfo = &b;
     uval physStart = 0;
     uval physEnd = _BootInfo->physEnd;
 
+    udbg_printf("Initializing memory: %p ...\n", memory);
+    //    asm volatile("trap");
     memory->init(physStart, physEnd, virtBase, allocStart, allocEnd);
 
+    udbg_printf("Initializing boot printf ...\n");
     BootPrintf::Init(memory);
 
+    udbg_printf("Testing boot printf ...\n");
     BootPrintf::Printf("MemoryMgrPrimitive allocStart %lx allocEnd %lx\n",
 		       allocStart, allocEnd);
 
@@ -304,13 +310,13 @@ _BootInfo = &b;
     /* NOTREACHED */
 }
 
-extern "C" void udbg_printf(const char *fmt, ...);
-
 /* This is our entry point from the Linux boot program.  This should be
  * the first K42 code executed in the process of bringing a machine up.
  */
 extern "C" void start_kernel(void)
 {
+  udbg_printf("K42 research operating system is now booting ...\n");
+
   /* Fill out the first part from Linux's systemcfg structure.  */
   b.eye_catcher[0] = systemcfg->eye_catcher[0];
   b.version.major = systemcfg->version.major;
