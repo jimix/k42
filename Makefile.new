@@ -53,10 +53,13 @@ endif
 endif
 
 # Our non-file targets.
-.PHONY: all dirs config clean
+.PHONY: k42-vmlinux k42-zImage dirs config clean
 
 # Default target is just the directory skeleton and our bootable kernel.
-all: dirs $(S)/os/servers/baseServers/baseServers $(S)/os/k42-vmlinux
+k42-vmlinux: dirs $(S)/os/servers/baseServers/baseServers $(S)/os/k42-vmlinux
+
+# For some machines we need a compressed kernel.
+k42-zImage: dirs $(S)/os/servers/baseServers/baseServers $(S)/os/k42-zImage
 
 # Just print some debug information and exit.
 config:
@@ -74,14 +77,14 @@ zobjs = $(S)/os/boot2/crt0.o $(S)/os/boot2/string.o $(S)/os/boot2/prom.o \
 	$(S)/os/boot2/main.o $(S)/os/boot2/zlib.o $(S)/os/boot2/div64.o \
 	$(S)/os/boot2/imagesize.o
 OBJS += $(zobjs)
+$(S)/os/k42-zImage: lflags = -Ttext 0x9000000 -e _start \
+                             -T $(L)/arch/ppc64/boot/zImage.lds
 $(S)/os/k42-zImage: $(S)/os/boot/kernel-vmlinux.strip.o	\
 		    $(L)/arch/ppc64/boot/zImage.lds	\
 		    $(zobjs)				\
 		    $(S)/os/boot2/addnote
 	$(call status, LD, $@)
-	$(LD32) -Ttext 0x00400000 -e _start \
-                -T $(L)/arch/ppc64/boot/zImage.lds \
-                $(zobjs) $(S)/os/boot/kernel-vmlinux.strip.o -o $@
+	$(LD32) $(lflags) $(zobjs) $(S)/os/boot/kernel-vmlinux.strip.o -o $@
 	$(call status, ADDNOTE, $@)
 	$(S)/os/boot2/addnote $@
 
