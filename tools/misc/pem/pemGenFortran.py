@@ -3,7 +3,7 @@
 #
 # (C) Copyright IBM Corp. 2004
 #
-# $Id: pemGenFortran.py,v 1.18 2005/06/04 01:00:42 pfs Exp $
+# $Id: pemGenFortran.py,v 1.24 2006/04/20 13:58:32 steve Exp $
 #
 # Generate Fortran++ classes for XML event descriptions
 # 
@@ -36,7 +36,10 @@ def genFiles(layer, layerEvents, outputDir):
             fd = open(os.path.join(outputDir, "trace" + classId + ".c"), 'w')
             sys.stdout = fd
         
-        wrappers = genCWrappers(layer, classId, layerEvents)
+        if pemGlobals.dialect == 'AIX':
+            wrappers = genAixCWrappers(layer, classId, layerEvents)
+        else:
+            wrappers = genCWrappers(layer, classId, layerEvents)
 
         if pemGlobals.dummyOutput == 0:
             sys.stdout = sys.__stdout__
@@ -76,14 +79,25 @@ def genCPreamble():
     print ' * (C) Copyright IBM Corp. 2004'
     print ' */'
     print ''
-    print '#include <trace/traceK42.h>'
+    if pemGlobals.dialect == 'K42':
+        print '#include <trace/traceK42.h>'
     print '\n'
 
 def genCWrappers(layerId, classId, layerEvents):
 
+    genCPreamble()
+
+    if pemGlobals.dialect == 'K42':
+        wrappers = genK42Wrappers(layerId, classId, layerEvents)
+    else:
+        wrappers = genGenericWrappers(layerId, classId, layerEvents)
+    
+    return wrappers
+
+def genK42Wrappers(layerId, classId, layerEvents):
+
     wrappers = []
     classIdUpper = string.upper(classId)
-    genCPreamble()
     print "#include <trace/trace" + classId + ".h>\n"
         
     # generate the trace event macros/inlines
@@ -134,6 +148,13 @@ def genCWrappers(layerId, classId, layerEvents):
             print "(TRACE_" + classIdUpper + "_MAJOR_ID, *minorId," + \
                   pemEvent.getLayerIdMacro(layerId),
         else:
+            # add a NULL if there are string args
+            whichArg = 0
+            for arg in args:
+                if arg == 'string':
+                    print "\t\t((char *)data"+str(whichArg) + ")[len"+str(whichArg) + \
+                          "] = '\\0';"
+                whichArg = whichArg + 1
             print "\t\ttraceDefaultGeneric (",
             print "TRACE_" + classIdUpper + "_MAJOR_ID, *minorId," + \
                   pemEvent.getLayerIdMacro(layerId) + ",",
@@ -145,6 +166,122 @@ def genCWrappers(layerId, classId, layerEvents):
             whichArg = whichArg + 1
         print ");"
         print "\t}"
+        print "}\n"
+
+    return wrappers
+
+def genGenericWrappers(layerId, classId, layerEvents):
+
+    print '#define uval unsigned int'
+    print '#define uval16 unsigned short'
+    print '#define uval32 unsigned long'
+    print '#define uval64 unsigned long long'
+    print "#include <trace" + classId + ".h>\n"
+        
+    wrappers = []
+    classIdUpper = string.upper(classId)
+    # a list of lists of data arguments
+    dataArgs = []
+    for anEvent in layerEvents[classId]:
+        args = []
+        for field in anEvent._fieldSeq:
+            args.append(anEvent.getFieldType(field))
+        if dataArgs.count(args) == 0:
+            dataArgs.append(args)
+
+    # generate all the inlines
+    for args in dataArgs:
+        (words, strings) = countWordsAndStrings(args)
+
+        print 'inline void'
+        fName = getMethodName(classId, args)
+        wrappers.append(fName)
+	fName = string.lower(fName)
+        print fName + "(uval16 * minorId",
+        whichArg = 0
+        for arg in args:
+            if arg == 'string':
+                print ", "+ pemTypes.getCType(arg) + " data" + str(whichArg),
+                print ", int len" + str(whichArg),
+            else:
+                print ", "+ pemTypes.getCType(arg) +" * data"+ str(whichArg),
+            whichArg = whichArg+1
+        print ") {"
+
+        if strings == 0:
+            print "\t\tnotifyEvent" + str(len(args)) + "(",
+            print "(("+pemEvent.getLayerIdMacro(layerId) + "<<20)|(TRACE_"\
+                  + classIdUpper + "_MAJOR_ID<<14)|(*minorId))",
+                  
+        else:
+            print "\t\tnotifyEventGeneric (",
+            print "(("+pemEvent.getLayerIdMacro(layerId) + "<<20)|(TRACE_"\
+                  + classIdUpper + "_MAJOR_ID<<14)|(*minorId))" + ",",
+            print str(words) + ", " + str(strings),
+        whichArg = 0
+        for arg in args:
+            if arg == 'string':  print ", data" + str(whichArg),
+            else:                print ", *data" + str(whichArg),
+            whichArg = whichArg + 1
+        print ");"
+        print "}"
+
+        print "#ifdef __GNUC__"
+        print "void "+fName+"_() __attribute__ ((weak,alias(\""+fName+"\")));"
+        print "#endif"
+
+        print '\n'
+
+    return wrappers
+
+def genAixCWrappers(layerId, classId, layerEvents):
+
+    wrappers = []
+    classIdUpper = string.upper(classId)
+    genCPreamble()
+    print '#include "trace' + classId + '.h"\n'
+
+    for anEvent in layerEvents[classId]:
+        args = []
+        for field in anEvent._fieldSeq:
+            args.append(anEvent.getFieldType(field))
+
+        fName = "Trace" + anEvent.getQualifiedSpecifier()
+        wrappers.append(fName)
+        fNameLower = string.lower(fName)
+        print fNameLower + " ( ",
+        whichArg = 0
+        printComma = 0
+        for arg in args:
+            if printComma == 1: print ", ",
+            else:               printComma = 1
+            if arg == 'string':
+                print pemTypes.getCType(arg) + " data" + str(whichArg),
+                print ", int len" + str(whichArg),
+            else:
+                print pemTypes.getCType(arg) +" * data"+ str(whichArg),
+            whichArg = whichArg+1
+        print ") {"
+        # add a NULL if there are string args
+        whichArg = 0
+        for arg in args:
+            if arg == 'string':
+                print "\t((char *)data"+str(whichArg) + ")[len"+str(whichArg) + \
+                      "] = '\\0';"
+            whichArg = whichArg + 1
+        # now call the mixed case C function
+        print "\t" + fName + " ( ",
+        whichArg = 0
+        printComma = 0
+        for arg in args:
+            if printComma == 1: print ", ",
+            else:               printComma = 1
+            if arg == 'string':
+                print "data" + str(whichArg),
+            else:
+                print "*data"+ str(whichArg),
+            whichArg = whichArg+1
+        print " );"
         print "}\n"
 
     return wrappers

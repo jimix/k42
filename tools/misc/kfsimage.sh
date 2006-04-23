@@ -19,7 +19,7 @@ fi
 # received a copy of the License along with K42; see the file LICENSE.html
 # in the top-level directory for more details.
 #
-#  $Id: kfsimage.sh,v 1.3 2004/03/07 00:43:19 lbsoares Exp $
+#  $Id: kfsimage.sh,v 1.4 2005/10/05 17:07:01 dilma Exp $
 # ############################################################################
 #
 # This script creates a kfs disk image for a given file hierarchy (directory)
@@ -73,6 +73,10 @@ echo "Creating disk " $DISK
 mkfs.kfs -d $diskname || exit
 echo "Disk " $diskname "created"
 
+# set IFS to newline to allow for filename with whitespaces
+IFS="
+"
+
 #copy files
 for file in `find $srcdir -type f -o -type l`; do
     dest=${file##$srcdir}
@@ -80,7 +84,3 @@ for file in `find $srcdir -type f -o -type l`; do
 done
 
 echo "Creation of KFS image (file $diskname) has finished."
-
-
-
-

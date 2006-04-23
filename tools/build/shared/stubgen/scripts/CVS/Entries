@@ -1,9 +1,9 @@
-/Makefile/1.15/Thu Jun 21 21:53:21 2001//D2005.09.07.14.00.00
-/fixupname.awk/1.8/Mon Jun 23 18:48:18 2003//D2005.09.07.14.00.00
-/genhdr.awk/1.45/Wed Nov 12 02:29:10 2003//D2005.09.07.14.00.00
-/genmangle.awk/1.11/Wed Mar  6 20:41:22 2002//D2005.09.07.14.00.00
-/genprog.awk/1.85/Fri Oct  8 21:40:10 2004//D2005.09.07.14.00.00
-/gentmp.awk/1.15/Fri Oct  8 21:40:11 2004//D2005.09.07.14.00.00
-/stubgen.sh/1.59/Fri Aug 20 17:30:49 2004//D2005.09.07.14.00.00
-/xcoff_type.awk/1.7/Wed Dec  3 18:52:55 2003//D2005.09.07.14.00.00
+/Makefile/1.15/Thu Jun 21 21:53:21 2001//
+/fixupname.awk/1.8/Mon Jun 23 18:48:18 2003//
+/genhdr.awk/1.45/Wed Nov 12 02:29:10 2003//
+/genmangle.awk/1.11/Wed Mar  6 20:41:22 2002//
+/genprog.awk/1.85/Fri Oct  8 21:40:10 2004//
+/gentmp.awk/1.15/Fri Oct  8 21:40:11 2004//
+/stubgen.sh/1.59/Fri Aug 20 17:30:49 2004//
+/xcoff_type.awk/1.7/Wed Dec  3 18:52:55 2003//
 D

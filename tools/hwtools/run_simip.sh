@@ -7,16 +7,32 @@
 # in the top-level directory for more details.
 #
 
-: ${HW_VERBOSE:=0}
-if [ $HW_VERBOSE -ge 3 ] ; then
-    set -x;
+source ${0%/*}/kconf_lib
+set -e
+
+VICTIM=$1
+if [ -n "$VICTIM" ]; then
+    HW_VICTIM=$VICTIM
 fi
 
-VICTIM=$1;
+kconf_flatten_export mambo
 
-HOST=$kserial
 
-let IPPORT=$TW_BASE_PORT+2
-let ENVPORT=$TW_BASE_PORT+4
+HOST=$(kconf_get $HW_VICTIM kserial)
+
+if [ -z "$TW_BASE_PORT" -o "$TW_BASE_PORT" = "#" ]; then
+	bp=$(kconf_get $HW_VICTIM TW_BASE_PORT)
+	if [ "$bp" = "#" ] ; then
+	    bp=$(kconf_get $HW_VICTIM MAMBO_SIMULATOR_PORT);
+	fi
+	if [ "$bp" = "#" ] ; then
+	    bp=$MAMBO_SIMULATOR_PORT;
+	fi
+else
+	let bp=$TW_BASE_PORT
+fi
+
+let IPPORT=$bp+2
+let ENVPORT=$bp+4
 echo simip $HOST:$IPPORT $HOST:$ENVPORT
 exec simip $HOST:$IPPORT $HOST:$ENVPORT

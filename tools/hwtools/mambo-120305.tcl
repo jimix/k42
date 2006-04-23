@@ -8,7 +8,7 @@
 # received a copy of the License along with K42; see the file LICENSE.html
 # in the top-level directory for more details.
 #
-#  $Id: mambo-102505.tcl,v 1.1 2005/10/25 20:51:39 apw Exp $
+#  $Id: mambo-120305.tcl,v 1.2 2006/03/10 01:23:48 mostrows Exp $
 # ############################################################################
 # This file is specifically for mambo
 #
@@ -28,6 +28,18 @@
 #
 # See also k42.tcl and utils.tcl
 
+proc safe_include_file { name } {
+    global env
+    global include_name
+    set include_name $name
+    if { [ file exists $name ] } {
+	puts "Including $name"
+	uplevel 1 { source $include_name }
+    } elseif { [ file exists $env(MAMBO_DIR)/$name ] } {
+	puts "Including $env(MAMBO_DIR)/$name"
+	uplevel 1 { source $env(MAMBO_DIR)/$include_name }
+    }
+}
 
 if { [info exists env(MAMBO_EXTRA_TCL)] } {
     puts "eval $env(MAMBO_EXTRA_TCL)"
@@ -36,68 +48,73 @@ if { [info exists env(MAMBO_EXTRA_TCL)] } {
     puts "no MAMBO_EXTRA_TCL found."
 }
 
-if { [lsearch [display configures] cfg]==-1 } {
-   # cfg has not be created as a configuration yet so go ahead and follow
+if { [lsearch [display configures] myconf]==-1 } {
+   # myconf has not be created as a configuration yet so go ahead and follow
    # our default conventions.
    if [info exists env(MAMBO_TYPE)] {    
-       define dup $env(MAMBO_TYPE) cfg
+       define dup $env(MAMBO_TYPE) myconf
    } else {
-       define dup gpul cfg
+       define dup gpul myconf
    }
 }
 
+
+if { [info exists env(MAMBO_CONF_TCL)] } {
+    safe_include_file $env(MAMBO_CONF_TCL)
+}
+
 if { [ info exists env(MAMBO_MAPLE) ] } {
-    cfg config pic/start 0xf8040000
-    cfg config pic/end 0xf807ffff
-    cfg config pic/little_endian 0
+    myconf config pic/start 0xf8040000
+    myconf config pic/end 0xf807ffff
+    myconf config pic/little_endian 0
     
     set isa_base 0xf4000000
     
-    cfg config rtc/start [add64 $isa_base 0x900]
-    cfg config rtc/end [add64 $isa_base 0x90f]
-    cfg config uart0 on
-    cfg config uart0/start [add64 $isa_base 0x3f8]
-    cfg config uart0/end [add64 $isa_base 0x3ff]
-    cfg config uart1/start [add64 $isa_base 0x2f8]
-    cfg config uart1/end [add64 $isa_base 0x2ff]
+    myconf config rtc/start [add64 $isa_base 0x900]
+    myconf config rtc/end [add64 $isa_base 0x90f]
+    myconf config uart0 on
+    myconf config uart0/start [add64 $isa_base 0x3f8]
+    myconf config uart0/end [add64 $isa_base 0x3ff]
+    myconf config uart1/start [add64 $isa_base 0x2f8]
+    myconf config uart1/end [add64 $isa_base 0x2ff]
     
 } else {
     if { [ info exists env(MAMBO_OPENPIC) ] } {
-	cfg config pic/start 0xf8040000
-	cfg config pic/end 0xf807ffff
+	myconf config pic/start 0xf8040000
+	myconf config pic/end 0xf807ffff
 	if { [ info exists env(MAMBO_OPENPIC_LE) ] } {
-	    cfg config pic/little_endian 1
+	    myconf config pic/little_endian 1
 	} else {
-	    cfg config pic/little_endian 0
+	    myconf config pic/little_endian 0
 	}
     }
 }
 
 if { [ info exists env(MAMBO_NUM_CPUS) ] } {
-    cfg config cpus $env(MAMBO_NUM_CPUS)
+    myconf config cpus $env(MAMBO_NUM_CPUS)
 }
 
 if { [ info exists env(MAMBO_ROM_FILE) ] } {
-    cfg config mcm 0 ROM_file $env(MAMBO_ROM_FILE)
+    myconf config mcm 0 ROM_file $env(MAMBO_ROM_FILE)
     #mysim mcm 0 config  ROM_file $env(MAMBO_ROM_FILE)
 }
 
 
 if { ! [info exists mambo_no_memory_config] } {
-  if { [catch [cfg config memory_size "$env(MAMBO_MEM)M"]] } {}
+  if { [catch [myconf config memory_size "$env(MAMBO_MEM)M"]] } {}
 }
 
 
 if { [lsearch [display machines] mysim]==-1 } {
    # mysim has not be created as a simulation yet so go ahead and follow
    # our default conventions.
-    define machine cfg mysim
+    define machine myconf mysim
 }
 
+if { [info exists env(MAMBO_MODIFY_TCL)] } {
+    safe_include_file $env(MAMBO_MODIFY_TCL)
+}
 
-#if { ! [info exists mambo_no_memory_config] } {
-#  if { [catch [mysim modify memory_file $env(MAMBO_GARB_FNAME)]] } {}
-#}
 
 if { ! [info exists mambo_no_debug] && 
      [info exists env(MAMBO_DEBUG_PORT) ] } {
@@ -122,7 +139,6 @@ if { [info exists env(MAMBO_BOOT_FILE) ] } {
 } else {
     mysim load elf "mamboboot.tok"
 }
-
 
 if { [ info exists env(MAMBO_MAPLE) ] } {
     set root [ mysim of find_device / ]
@@ -170,14 +186,7 @@ if { [ info exists env(MAMBO_MAPLE) ] } {
     
 }
 
-
-set mamborc /dev/null
-if { [info exists env(HOME) ] &&
-     [ file exists $env(HOME)/.mamborc ] } {
-    set mamborc $env(HOME)/.mamborc
-}
-source $mamborc
-
+safe_include_file $env(HOME)/.mamborc
 
 if { ! [info exists mambo_skip_os_tcl] &&
      [ info exists env(MAMBO_OS_TCL) ]} {

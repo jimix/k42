@@ -18,6 +18,10 @@ use IPC::Open2;
 use Sys::Hostname;
 use POSIX ":sys_wait_h";
 use POSIX qw(setsid);
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+use lib "$Bin/../../lib";
+use KConf;
 
 sub success($){
   my $x = shift;
@@ -33,21 +37,6 @@ sub dbglog($){
   }
 }
 
-sub parseConfig($){
-  my $victim = shift;
-  my $hwcfg;
-  open CONFIG, "kvictim all $victim|"
-    or die "FAIL: Failed to read config: $!\n";
-
-  my $line;
-  while($line = <CONFIG>){
-    $line =~ /^(\S*) (.*)$/;
-    $hwcfg->{$1} = $2;
-  }
-  $hwcfg->{machine}=$victim;
-  close CONFIG;
-  return $hwcfg;
-}
 
 # We can't use "getlogin" because it is broken on AIX
 my $username = (split /\s/, `whoami`)[0];
@@ -56,22 +45,37 @@ my $victim = shift @ARGV;
 my $breaklocks = shift @ARGV;
 my $msg = join " ", @ARGV;
 
-my $hwcfg = parseConfig($victim);
+my $kserial;
+my $kconf = KConf->new();
+if (defined $ENV{$victim . "_kserial"}){
+  $kserial = $ENV{$victim . "_kserial"};
+} else {
+  $kserial = $kconf->get_field($victim, "kserial");
+}
+
+my $machine = $kconf->get_field($victim, "machine");
+if (!defined $machine) {
+  $machine = $victim;
+}
 
 if (!defined $victim){
   die "Error! Action requires a victim (machine) name";
 }
 
-my $ipaddr = gethostbyname($hwcfg->{kserial}) || 
-  die "gethostbyname $!";
+my $ipaddr = gethostbyname($kserial) || die "gethostbyname $!";
 
 my $paddr   = sockaddr_in(4242, $ipaddr);
 my $proto   = getprotobyname('tcp');
 socket(SOCK, PF_INET, SOCK_STREAM, $proto)	|| die "socket: $!";
 
-connect(SOCK, $paddr) || die "connect to $hwcfg->{kserial}: $!";
+connect(SOCK, $paddr) || die "connect to $kserial: $!";
 
-my $cmd = "thinver 3;ktw $username $victim $breaklocks $msg; disconnect\n";
+my $cmd = "thinver 3;" .
+	  "owner $username;" .
+	  "breaklocks $breaklocks;" .
+	  "victim $machine;" .
+	  "msg $msg;" .
+	  "ktw; disconnect\n";
 
 dbglog("Write to ktwd: $cmd\n");
 syswrite(SOCK, $cmd);

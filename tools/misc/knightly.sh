@@ -7,7 +7,7 @@
 # received a copy of the License along with K42; see the file
 # LICENSE.html in the top-level directory for more details.
 #
-#  $Id: knightly.sh,v 1.107 2005/08/31 15:37:20 apw Exp $
+#  $Id: knightly.sh,v 1.113 2006/01/26 15:35:28 butrico Exp $
 # ############################################################################
 
 #####
@@ -47,6 +47,7 @@ usage: $prog [options]
     -S <type>    Machine type being simulated
     -f <filesystem> Build this file system
     -z <mail subject> Use this string as subject if sending mail
+    -i		 Save part of the install tree
 
 EOF
 }
@@ -65,7 +66,7 @@ clear_env () {
     # bash makes PATH, PS1, and LOGNAME readonly ...
     # Some of us depend on our environment to specify the timezone
 
-    var_list=$(env | cut -d'=' -f1 | egrep -v '^PATH|PS1|LOGNAME|TZ')
+    var_list=$(env | cut -d'=' -f1 | egrep -v '^PATH|PS1|LOGNAME|TZ|GCC3_EXEC|GXX3_EXEC')
     for var in $var_list; do
 	unset $var
     done
@@ -331,7 +332,7 @@ EOF
 	export MAMBO_EXIT="yes"
 	export MAMBO_DIR=$(cd ${simulator_location} && pwd -P)
 	export MAMBO_TYPE=${simul_mtype}
-	timeout=7200
+	timeout=10800
 	info "Running mambo regress"
     else
 	info "Running hw regress on ${victim}"
@@ -343,6 +344,10 @@ EOF
     export OPTIMIZATION=${deb} 
     export K42_NFS_HOST=`hostname`
     test "$verbose" = "yes" && k42console_extra_opts="$k42console_extra_opts -v 3"
+
+    # Make sure the log contains a record of how this run was invoked
+    echo k42console -B killsteal -R -D `pwd` -t ${timeout} $k42console_extra_opts >> $reg_log;
+
     k42console -B killsteal -R -D `pwd` -t ${timeout} $k42console_extra_opts \
 		    >>$reg_log 2>&1;
 
@@ -425,7 +430,14 @@ The regression test failed! ${linux_status}
 You can find the log in:
     $reg_log
 
+Here are the likely causes of failure:
+
+$(egrep --binary-files=text -B 1 -A 2 \
+    'Linux regress failed|ltp.sh: Failed| FAIL |ERROR: file' $reg_log |
+      tail -n 50)
+
 Here are the last 50 lines:
+
 $(tail -50 ${reg_log} | indent)
 
 EOF
@@ -481,6 +493,23 @@ EOF
     return $status
 }
 
+#
+# save part of the install tree
+#
+function copy_install_tree() {
+    local deb=$1
+    local build_dir=$2
+    local result_dir=$3
+
+    local source_dir=${build_dir}/install/powerpc/$deb/
+    local target_dir=${result_dir}/install/powerpc/
+
+    mkdir -p ${target_dir}
+    cp -pr ${source_dir} ${target_dir}
+    rm -rf ${target_dir}/{deb}/kitchroot/boot/boot_image
+    rm -rf ${target_dir}/{deb}/kitchroot/klib/*
+}
+
 #####
 # End of handy dandy functions
 #####
@@ -528,6 +557,7 @@ simulator_location=""	# aka K42_MAMBO_DIR
 simul_mtype="percs" 	# type of machine being simulated
 use_fsystem="NFS"	# use this file system type
 mail_sub=""		# part of mail subject
+save_install="no"	# save part of the install tree
 
 
 #extra options for hwconsole
@@ -536,7 +566,7 @@ k42console_extra_opts=""
 #
 # Process Options
 #
-while getopts "mkxcbhvrFPDINn:t:C:L:M:d:R:p:H:s:S:f:z:" Option; do
+while getopts "mkxcbhvrFPDINin:t:C:L:M:d:R:p:H:s:S:f:z:" Option; do
     if [ "$verbose" = "yes" ]; then
 	echo $Option $OPTARG
     fi
@@ -605,6 +635,8 @@ while getopts "mkxcbhvrFPDINn:t:C:L:M:d:R:p:H:s:S:f:z:" Option; do
     f)  use_fsystem=$OPTARG	# use this file system type
 	;;
     z)  mail_sub="$OPTARG"	# use this subject if sending mail
+	;;
+    i)	save_install="yes"	# save part of the install tree
 	;;
     *)  echo "Illegal option: $Option"
 	usage
@@ -965,6 +997,10 @@ for deb in $build_list; do
 	regress_time="$date    regress not done"
     fi
     echo "$regress_time" >> ${reg_hist}-${deb}
+
+    if [ "$save_install" = "yes" ]; then
+	copy_install_tree $deb $build_dir $result_log_dir
+    fi
 done
 
 #

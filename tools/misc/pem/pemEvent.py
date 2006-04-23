@@ -3,7 +3,7 @@
 #
 # (C) Copyright IBM Corp. 2004
 #
-# $Id: pemEvent.py,v 1.49 2005/08/01 22:32:48 pfs Exp $
+# $Id: pemEvent.py,v 1.51 2006/02/28 19:21:58 cascaval Exp $
 #
 # Class that defines an XML event
 # 
@@ -347,7 +347,8 @@ class event:
     # -----------------------------------------------------------------------
     def getFieldFormat(self, fieldName):
         if self._fieldFormat.has_key(fieldName):
-            return self._fieldFormat[fieldName]
+            return pemTypes.getFieldFormat(self.getFieldType(fieldName), \
+                                           self._fieldFormat[fieldName])
         return pemTypes.getDefaultFieldFormat(self.getFieldType(fieldName))
 
     # -----------------------------------------------------------------------
@@ -429,6 +430,7 @@ class event:
         if self.isStateChangeEvent():   return self._stateChange[0]
         return None
 
+    # \todo: need to replace all field occurences
     def getStateChangeNewState(self):
         if self.isStateChangeEvent():   
 	    if self.hasField(self._stateChange[1]):

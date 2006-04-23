@@ -5,7 +5,7 @@
 # received a copy of the license along with K42; see the file LICENSE.html
 # in the top-level directory for more details.
 #
-# $Id: obj.tcl,v 1.3 2005/08/19 23:11:20 bseshas Exp $
+# $Id: obj.tcl,v 1.4 2005/10/18 00:00:08 jappavoo Exp $
 
 proc BasicObjSupport {} {
 
@@ -47,7 +47,7 @@ proc BasicObjSupport {} {
 		puts "coid=$c root=$r type=$t"
 		return "$c $r $t"
 	}
-
+       
 	proc processObjs {filter func {limit 9999}} {
 		set kount 0
 		set retval {}
@@ -79,6 +79,9 @@ proc BasicObjSupport {} {
 
 	set helpDB(printObjs) "Prints the coid, root ptr and type of all currently \
 	allocated objects"
+
+        proc rtnObj {c r t} { return "coid=$c root=$r type=$t" }
+
 	proc printObjs {filter} {
 		if [openObjectStream] {
 			while { [set obj [getObject]] != {} } {

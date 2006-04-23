@@ -7,13 +7,37 @@
 # in the top-level directory for more details.
 #
 
-: ${HW_VERBOSE:=0}
-if [ $HW_VERBOSE -ge 3 ] ; then
-    set -x;
+source ${0%/*}/kconf_lib
+set -e
+
+VICTIM=$1
+if [ -n "$VICTIM" ]; then
+    HW_VICTIM=$VICTIM
 fi
 
-
 export MAMBO_BOOT_FILE=$HW_BOOT_FILE
+FILE=$MAMBO_BOOT_FILE
+
+kconf_flatten_export $HW_VICTIM
+
+
+if [ -z "$HW_CMDLINE" ] ; then
+    if [ "$HW_CMDLINE_FILE" -a -r "$HW_CMDLINE_FILE" ] ; then
+	HW_CMDLINE=`cat $HW_CMDLINE_FILE`
+    fi
+fi
+
+if [ "$HW_CMDLINE" ] ; then
+    OFFSET=$(objdump -h  $HW_BOOT_FILE | \
+	    gawk -- '{if($2=="__builtin_cmdline") {print strtonum("0x" $6);}}')
+    SIZE=$(objdump -h  $HW_BOOT_FILE | \
+	    gawk -- '{if($2=="__builtin_cmdline") {print strtonum("0x" $3);}}')
+    if [ $OFFSET -ne 0  ] ; then
+	dd if=/dev/zero of=$FILE bs=1 seek=$OFFSET conv=notrunc count=$SIZE
+	echo -n $HW_CMDLINE | dd of=$FILE bs=1 seek=$OFFSET conv=notrunc
+    fi
+fi
+
 
 if [ -z "${MAMBO_TCL_INIT}" -o ! -f "${MAMBO_TCL_INIT}" ] ; then
     export MAMBO_TCL_INIT=`dirname $0`/../lib/mambo${MAMBO_TCL_STAMP}.tcl
@@ -22,7 +46,10 @@ if [ -z "${MAMBO_TCL_INIT}" -o ! -f "${MAMBO_TCL_INIT}" ] ; then
     fi
 fi
 
+
+
 : ${MAMBO_DEBUG_PORT:=1234}
+
 : ${MAMBO_SIMULATOR_PORT:=$[$TW_BASE_PORT-2]}
 : ${MAMBO_MEM:=128}
 : ${MAMBO_GARB_FNAME:=/dev/zero}
@@ -31,6 +58,7 @@ fi
 : ${MAMBO_ZVAL_START:="---- start ztrace ----"}
 : ${MAMBO_ZVAL_STOP:="---- stop ztrace ----"}
 : ${MAMBO_ZVAL_FILE:=$PWD/zval.out}
+
 
 if [ "$MAMBO_DIR" -a -d $MAMBO_DIR ]; then
     export PATH=$MAMBO_DIR/bin:$MAMBO_DIR/bin/emitter:$PATH;

@@ -3,7 +3,7 @@
 #
 # (C) Copyright IBM Corp. 2004
 #
-# $Id: pemGenPEMAPI.py,v 1.34 2005/08/22 14:09:32 dilma Exp $
+# $Id: pemGenPEMAPI.py,v 1.36 2006/04/13 20:12:29 steve Exp $
 #
 # Script to generate PEM API
 # 
@@ -92,6 +92,13 @@ def genFiles(layer, layerEvents, outputDir):
             print "#ifdef TRACE_STUBS"
             print "#include <stdio.h>"
             print "#endif"
+            print "\n"
+
+        if pemGlobals.dialect == 'AIX':
+            print "/* following for AIX trace hooks */"
+            # print "#include <sys/trcctl.h>"    ...not sure this is necessary 
+            print "#include <sys/trcmacros.h>"
+            print "#include <sys/trchkid.h>"
             print "\n"
 
         if pemGlobals.dialect != 'K42':
@@ -195,7 +202,10 @@ def genInlineMethods(events, classId):
         #    genK42MethodBody(anEvent, hasListFields)
         #else:
         #    genAPIMethodBody(anEvent, hasListFields)
-        genMethodBody(anEvent, hasListFields)
+        if pemGlobals.dialect == 'AIX':
+            genAIXMethodBody(anEvent, hasListFields)
+        else:
+            genMethodBody(anEvent, hasListFields)
         
         if pemGlobals.genTraceStubs > 0: print "#endif"
         print "}\n"
@@ -289,6 +299,102 @@ def genMethodBody(anEvent, hasListFields):
     if pemGlobals.dialect == 'K42':
         print "\t}"
 
+# ------------------------------------------------------------------------
+# generates a method body using the AIX macros tracing data structures
+# ------------------------------------------------------------------------
+def genAIXMethodBody(anEvent, hasListFields):
+
+    args = anEvent.packFields()
+    sortedKeys = args.keys()
+    sortedKeys.sort()
+    stringsCount = anEvent.countStrings()
+
+    # assume pemGlobals.dialect == 'AIX':
+    print "\tif TRC_ISON(0) {"
+    funcNamePrefix = "\tTRCGENT"
+    castUint64 = 'unsigned long long'
+
+    # for now treat all events as with ListFields, fill a temp buffer
+    # with PEM event and write out as AIX generic event.
+    # later change to use AIX macros for words 0,1,2,3,4 & 5, however
+    # these write different bits for 32 vs 64 bit applications
+
+    hasListFields = 1
+
+    if hasListFields:
+        # take the args and the list and pack it into an array of bytes
+        print '\t\tunsigned char ___tmpBuffer[1024];'
+        print '\t\tunsigned int ___listLength = 0;'
+        if stringsCount > 0: print '\t\tunsigned int i;'
+        currentKey = 0          # where are we with the other fields
+        firstPacked = 0         # how many args are packed in this arg
+        for f in anEvent.getTraceFields():
+            if anEvent.isListField(f):
+                fieldSize = pemTypes.getTypeRawSize(anEvent.getFieldType(f),
+                                                    f+"[i]")
+                memcpy = '\t\tmemcpy(&___tmpBuffer[___listLength],'
+
+                if anEvent.getFieldType(f) == 'string':
+                    print '\t\tfor(i = 0; i <', anEvent.getListCount(f), \
+                          '; i++) {'
+                    print '\t', memcpy, f + "[i]", ",", fieldSize, ');'
+                    print '\t\t\t ___listLength +=', fieldSize, ';\n\t\t}'
+                else:
+                    fieldSize = fieldSize + '*' + anEvent.getListCount(f)
+                    print memcpy, '(char *)', f, ",", fieldSize, ');'
+                    print '\t\t___listLength +=', fieldSize, ';'
+            else:
+                fieldSize = pemTypes.getTypeRawSize(anEvent.getFieldType(f),f)
+                # if args[currentKey].count(f) == 1:
+                if args[currentKey].count(f) == 1 and anEvent.getFieldType(f) != 'string':
+                    if firstPacked == 0:
+                        # argument found as packed
+                        print '\t\t*(', castUint64,\
+                              '*)&___tmpBuffer[___listLength] =',\
+                              args[currentKey], ';'
+                        print '\t\t___listLength += 8;'
+                        firstPacked = 1
+                        byteSize = 0
+                    byteSize = byteSize + int(fieldSize)
+                    if byteSize == 8:
+                        currentKey = currentKey + 1
+                        firstPacked = 0
+                else:
+                    # argument has not been packed
+                    print '\t\tmemcpy(&___tmpBuffer[___listLength],',
+                    if anEvent.getFieldType(f) != 'string': print '(char *)&',
+                    print f, ',', fieldSize, ');'
+                    print '\t\t___listLength +=', fieldSize, ';'
+
+        # print "\t"+ funcNamePrefix +"Pre"+ str(len(args)-2) +"Bytes (",
+        # print "\t"+ funcNamePrefix +"Bytes (",
+
+        # arg1 = channel (always 0), arg2 = hookid, 32-bits HHH0SSSS
+        # HHH = hooked, here the same for all PEM events
+        # SSSS = 16 bit subid or 16 bit hookdata
+        print "\t"+ funcNamePrefix +"( 0, 0x02000000, \n\t\t\t",
+
+        # emit code to generate PEM EventId ar arg3, the "data word"
+        genNotifyEventId(anEvent)
+        print ",\n\t\t\t___listLength, ___tmpBuffer);"
+
+    elif len(args) < 8 and stringsCount == 0:
+        print "\t" + funcNamePrefix + str(len(args)) + "(",
+        genNotifyEventId(anEvent)
+        for arg in sortedKeys:
+            print ",\n\t\t\t" + args[arg],
+        print ");"
+    else:
+        print "\t" + funcNamePrefix + "Generic(",
+        genNotifyEventId(anEvent)
+        print ",\n\t\t\t",str(len(args)-stringsCount),"/* word(s) */,",
+        print str(stringsCount), "/* string(s) */",
+        for arg in sortedKeys:
+            print ",\n\t\t\t" + args[arg],
+        print ");"
+
+    print "\t}"
+
 # -----------------------------------------------------------------------
 # generates a method body using notifyEvent from the PEM API
 # -----------------------------------------------------------------------
@@ -297,6 +403,8 @@ def genNotifyEventId(anEvent):
         print pemEvent.getEventMajorIdMacro(anEvent.getClassId()),
         print ",\n\t\t\t"+pemEvent.getEventSpecifierMacro(anEvent),
         print ", \n\t\t\t" + pemEvent.getLayerIdMacro(anEvent.getLayerId()),
+    elif pemGlobals.dialect == 'AIX':
+        print "TRACE_" + anEvent.getQualifiedSpecifier(),
     else:
         print "TRACE_" + anEvent.getQualifiedSpecifier(),
 

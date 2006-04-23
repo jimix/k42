@@ -16,6 +16,11 @@ use IPC::Open2;
 use Sys::Hostname;
 use POSIX ":sys_wait_h";
 use POSIX qw(setsid);
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+use lib "$Bin/../../lib";
+use KConf;
+
 my $verbose = 0;
 my $imgver = 0;
 my $site;
@@ -26,6 +31,7 @@ my $breaklocks;
 my $timeout;
 my $hwcfg;
 my $printenv;
+my $kconf = KConf->new();
 
 sub success($){
   my $x = shift;
@@ -159,34 +165,28 @@ sub waitProcess($) {
 
 ##############################################################################
 #
-# Read from kvictim
+# Read from kconf
 #
 #
 sub parseConfig($){
   my $victim = shift;
-  my $hwcfg;
-
-  if ($victim eq "") {
-    $hwcfg->{machine}="not-a-machine";
-    return $hwcfg;
+  my $hwcfg = $kconf->flatten($victim);
+  if (!defined $hwcfg) {
+    die "Can't get config for $victim\n";
   }
-
-  open CONFIG, "kvictim all $victim|"
-    or die "FAIL: Failed to read config: $!\n";
-
-  my $line;
-  while($line = <CONFIG>){
-    $line =~ /^(\S*) (.*)$/;
-    $hwcfg->{$1} = $2;
-    $ENV{$victim . "_" . $1} = $2;
-    if(!defined $ENV{$1}){
-      $ENV{$1} = $2;
+  foreach my $k (keys %{$hwcfg}) {
+    my $env_name = $victim . "_" . $k;
+    if (defined $ENV{$env_name}) {
+      $hwcfg->{$k} = $ENV{$env_name};
+    } else {
+      $ENV{$env_name} = $hwcfg->{$k};
     }
   }
-  $hwcfg->{machine}=$victim;
-  $ENV{$victim . "_" . $machine} = $victim;
-
-  close CONFIG;
+  # The hw config may be an "alias" of a machine, in which case it
+  # may specify "machine" explicitly.
+  if (!defined $hwcfg->{machine}) {
+    $hwcfg->{machine}=$victim;
+  }
   return $hwcfg;
 }
 
@@ -195,8 +195,7 @@ sub parseConfig($){
 # Talk to ktwd and get console lock, do no start ktwd
 #
 #
-sub lockOnlyConsole($$$){
-  my $victim = shift;
+sub lockOnlyConsole($$){
   my $breaklocks = shift;
   my $msg = shift;
   my $ipaddr = gethostbyname($hwcfg->{kserial}) || 
@@ -214,8 +213,8 @@ sub lockOnlyConsole($$$){
   if(defined $msg && $msg ne ""){
     $msg = "msg " . $msg . ";";
   }
-  syswrite(SOCK, "owner $username; victim $victim; " .
-	   $msg . "$breaklocks lock; disconnect\n");
+  syswrite(SOCK, "owner $username; victim $hwcfg->{machine}; " .
+	   $msg . " " . $breaklocks . " lock; disconnect\n");
   my $line;
   while(defined($line = <SOCK>)){
     dbglog "lock: $line";
@@ -280,14 +279,14 @@ sub poweroff($){
 #
 #
 sub status(){
-  my $vic = shift;
-  my %hosts ;
-
-  open(HOSTS, "kvictim victim_type=hw kserial |");
-  while(<HOSTS>){
-    my ($vic, $kserial) = split;
-    $hosts{$kserial}=1;
+  my $vic;
+  my @vics = $kconf->match_key("victim_type", "hw");
+  my %hosts;
+  foreach my $v (@vics){
+    my $x = $kconf->flatten($v);
+    $hosts{$x->{kserial}} = 1;
   }
+
   foreach my $h (keys %hosts){
     my $ipaddr = gethostbyname($h) || next;
     my $paddr   = sockaddr_in(4242, $ipaddr);
@@ -451,9 +450,9 @@ while($#bindings != -1){
 }
 
 # Get the name of our site
-my @v = split /\s+/, `kvictim site name`;
-chomp @v;
-$site = $v[1];
+my $s = $kconf->flatten("site");
+$site = $s->{name};
+$ENV{site_name} = $site;
 
 if($status==1 && !defined $machine){
   status;
@@ -508,7 +507,7 @@ if(defined $breaklocks && $breaklocks ne "kill"
 }
 
 if($acquire==1) {
-  lockOnlyConsole($machine, $breaklocks, $lockMsg);
+  lockOnlyConsole($breaklocks, $lockMsg);
   exit 0;
 }
 
@@ -532,7 +531,7 @@ if(!defined $bootfile){
 my $tw_port;
 
 if ($hwcfg->{victim_type} eq "hw") {
-  if(!lockOnlyConsole($machine, $breaklocks, $lockMsg)) {
+  if(!lockOnlyConsole($breaklocks, $lockMsg)) {
     die "Failed to lock victim\n";
   }
 }
@@ -591,7 +590,6 @@ if (defined $hwcfg->{sync_cmd}) {
 }
 
 sleep 1;
-
 
 my $fg_cmd = "$hwcfg->{fg_cmd} $machine";
 $waitfor = run_command($fg_cmd,0);

@@ -7,19 +7,17 @@
 # received a copy of the License along with K42; see the file LICENSE.html
 # in the top-level directory for more details.
 #
-#  $Id: lpar_run.sh,v 1.3 2005/03/03 22:53:46 mostrows Exp $
+#  $Id: lpar_run.sh,v 1.4 2006/01/18 22:01:35 mostrows Exp $
 # ############################################################################
 
 LPAR=$1
 
+source ${0%/*}/kconf_lib
+set -e
+
 if [ -z "$LPAR" ] ; then
     echo "Usage: lpar_run <lpar_name>";
     exit 1;
-fi
-
-: ${HW_VERBOSE:=0}
-if [ $HW_VERBOSE -ge 3 ] ; then
-    set -x;
 fi
 
 : ${LPAR_MEM:=256MB:256MB}

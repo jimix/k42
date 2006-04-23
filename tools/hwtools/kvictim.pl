@@ -7,11 +7,11 @@
 # received a copy of the License along with K42; see the file LICENSE.html
 # in the top-level directory for more details.
 #
-#  $Id: kvictim.pl,v 1.4 2005/02/10 18:22:32 mostrows Exp $
+#  $Id: kvictim.pl,v 1.5 2006/01/18 22:01:35 mostrows Exp $
 # ############################################################################
 
 use POSIX;
-
+use Getopt::Long;
 sub usage(){
 print << "USAGE_EOF"
 Usage:
@@ -105,97 +105,6 @@ USAGE_EOF
 # values (perhaps site-specific values or machine-type specific
 # values) that can be easily associated with victims.
 
-
-# victims.conf in the lib directory (../../lib, ../lib) relative to kvictim is
-# the default config file
-my @sysconfs;
-
-my $do_debug = 0;
-sub debug($) {
-  my $x = shift;
-  if ($do_debug == 0) { return; }
-  print "# $x";
-}
-
-
-my $exec = $0;
-my $basepath = $exec;
-$basepath =~s/^(.*)kvictim/$1..\/lib\//;
-my $sysconf = $basepath . "victims.conf";
-
-if(! -r $sysconf) {
-  $basepath = $exec;
-  $basepath =~s/^(.*)kvictim/$1..\/..\/lib\//;
-  $sysconf = $basepath . "victims.conf";
-}
-
-my @homeconfs = ( "$ENV{HOME}/.victims.conf",
-		  "/home/" . getpwuid(getuid) . "/.victims.conf" );
-
-my $homeconf;
-while($#homeconfs >= 0) {
-  $homeconf = shift @homeconfs;
-  last if(-r $homeconf );
-  undef $homeconf;
-}
-
-my @conf;
-
-if(defined $homeconf){
-  debug "Add file $homeconf\n";
-  unshift @conf, $homeconf;
-}
-debug "Add file $sysconf\n";
-unshift @conf, $sysconf;
-
-$victims->{kvictim}->{confpath} = $basepath;
-
-my %files;
-my $num_read = 0;
-while($#conf!=-1){
-  $conf = shift @conf;
-
-  next if(!-r "$conf");
-
-  next if($files{$conf}==1);
-
-  $files{$conf} = 1;
-
-  my $lineno = 0;
-  open DATA, "<$conf";
-  while(<DATA>){
-    ++$lineno;
-    my $line = $_;
-    next if(/^#/);
-
-    next if(/^\s*$/);
-    my @words = split;
-    chomp @words;
-    if($words[0] eq "include"){
-      $file = $words[1];
-      if (-r $file) {
-	debug "Add include file $file\n";
-	unshift @conf, $file;
-      } elsif (-r "$basepath/$file") {
-	debug "Add include file $basepath/$file\n";
-	unshift @conf, "$basepath/$file";
-      }
-      next;
-    }
-      if(!/^\s*([\S^\.]+)\.([\S^=]+)\s*=\s*(\S.*)\s*$/){
-	die "Malformed line: $conf:$lineno\n";
-      }
-    $victims->{$1}->{$2} = $3;
-  }
-  close DATA;
-  ++$num_read;
-}
-
-if($num_read == 0){
-  die "Can't read any configuration file!!!\n";
-}
-
-
 #
 # Return a flat hash of all values for a given victim name
 #
@@ -247,43 +156,27 @@ sub lookup($$$){
   }
 }
 
-
-if($ARGV[0] eq "--usage" ||
-   $ARGV[0] eq "--help"){
-  usage();
-  exit 0;
-}
-if($#ARGV==-1) {
-  print STDERR "No victim specified to look up\n";
-  exit -1;
-}
-
-my $start = shift @ARGV; 
-
-
-if($start eq 'all') {
-  #
-  # Print out  field, value pairs,  for each field defined
-  # for the specified victim.
-  #
-  $start = shift @ARGV;
-
-  if(!defined $victims->{$start}){
-    print STDERR "Victim '$start' is not defined\n";
-    exit 2;
+sub print_all($@) {
+  my $vic = shift;
+  my $prefix = shift;
+  if(!defined $victims->{$vic}){
+    print STDERR "Victim '$vic' is not defined\n";
+    return 2;
   }
-
-  my $vals = flatten($start);
+  my $vals = flatten($vic);
   foreach my $field (sort (keys %{$vals})){
-    print "$field $vals->{$field}\n";
+    if (defined $prefix) {
+      print "$prefix.$field $vals->{$field}\n";
+    } else {
+      print "$field $vals->{$field}\n";
+    }
   }
-  exit 0;
+  return 0
 }
 
-
-if($start=~/([A-Za-z0-9_]*)=([A-Za-z0-9_]*)/){
-  my $field=$1;
-  my $val=$2;
+sub print_match($$) {
+  my $field = shift;
+  my $val = shift;
   foreach my $vic (sort (keys %{$victims})){
     my @input = @ARGV;
     push @input, $field;
@@ -295,15 +188,201 @@ if($start=~/([A-Za-z0-9_]*)=([A-Za-z0-9_]*)/){
       print join("\t", @output) . "\n";
     }
   }
+  return 0;
+}
+
+
+
+
+# victims.conf in the lib directory (../../lib, ../lib) relative to kvictim is
+# the default config file
+my @sysconfs;
+
+my $do_debug = 0;
+sub debug($) {
+  my $x = shift;
+  if ($do_debug == 0) { return; }
+  print "# $x";
+}
+
+my $oldstyle = 0;
+my $exec = $0;
+my @defconf;
+my @conf_files;
+my $basepath = $exec;
+
+if ($0 =~/kvictim/) {
+  $oldstyle = 1;
+}
+
+$basepath =~s/^(.*)$exec/$1..\/lib\//;
+my $sysconf = $basepath . "victims.conf";
+
+if(! -r $sysconf) {
+  $basepath = $exec;
+  $basepath =~s/^(.*)kvictim/$1..\/..\/lib\//;
+  $sysconf = $basepath . "victims.conf";
+}
+
+my @homeconfs = ( "$ENV{HOME}/.victims.conf",
+		  "/home/" . getpwuid(getuid) . "/.victims.conf" );
+
+my $homeconf;
+while($#homeconfs >= 0) {
+  $homeconf = shift @homeconfs;
+  last if(-r $homeconf );
+  undef $homeconf;
+}
+
+
+if(defined $homeconf){
+  debug "Add file $homeconf\n";
+  unshift @defconf, $homeconf;
+}
+debug "Add file $sysconf\n";
+unshift @defconf, $sysconf;
+
+$victims->{kvictim}->{confpath} = $basepath;
+
+
+
+#
+# $confs - ref to array containing conf files to read
+# $func  - function to call for each line
+# @func_args - args to function
+#
+sub read_conf_files($$@) {
+  my $confs = shift;
+  my $func = shift;
+  my @func_args = @_;
+  my %files;
+  my $num_read = 0;
+  while ($#{@{$confs}}!=-1) {
+    $conf = shift @{$confs};
+
+    next if(!-r "$conf");
+    next if($files{$conf}==1);
+
+    $files{$conf} = 1;
+
+    my $lineno = 0;
+    open DATA, "<$conf";
+    while (<DATA>) {
+      ++$lineno;
+      my $line = $_;
+      next if(/^#/);
+
+      next if(/^\s*$/);
+      my @words = split;
+      chomp @words;
+      if ($words[0] eq "include") {
+	$file = $words[1];
+	if (-r $file) {
+	  debug "Add include file $file\n";
+	  unshift @{$confs}, $file;
+	} elsif (-r "$basepath/$file") {
+	  debug "Add include file $basepath/$file\n";
+	  unshift @{$confs} , "$basepath/$file";
+	}
+	next;
+      }
+      if (!/^\s*([\S^\.]+)\.([\S^=]+)\s*=\s*(\S.*)\s*$/) {
+	die "Malformed line: $conf:$lineno\n";
+      }
+      $func->(@func_args, $1, $2, $3);
+    }
+    close DATA;
+    ++$num_read;
+  }
+  if($num_read == 0){
+    die "Can't read any configuration file!!!\n";
+  }
+}
+
+sub store_conf_line($$$$) {
+  my $victims = shift;
+  (my $l1, my $l2, my $l3) = @_;
+  $victims->{$l1}->{$l2} = $l3;
+#  print "Parse line $l1 $l2 $l3\n";
+}
+
+if($ARGV[0] eq "--usage" ||
+   $ARGV[0] eq "--help"){
+  usage();
   exit 0;
 }
-my @output;
+if($#ARGV==-1) {
+  print STDERR "No victim specified to look up\n";
+  exit -1;
+}
 
-if(!defined $victims->{$start}){
-  print STDERR "Victim '$start' is not defined\n";
-  exit 1;
+if ($oldstyle == 1) {
+  my $start = shift @ARGV; 
+
+  push @conf_files, @defconf;
+
+  read_conf_files(\@conf_files, *store_conf_line, $victims);
+
+  if($start eq 'all') {
+    #
+    # Print out  field, value pairs,  for each field defined
+    # for the specified victim.
+    #
+    exit print_all(shift @ARGV);
+  }
+
+  if($start=~/([A-Za-z0-9_]*)=([A-Za-z0-9_]*)/){
+    my $field=$1;
+    my $val=$2;
+    exit print_match($field, $val);
+  }
+  my @output;
+
+  if(!defined $victims->{$start}){
+    print STDERR "Victim '$start' is not defined\n";
+    exit 1;
+  }
+
+
+  lookup($start, \@ARGV, \@output);
+  print join("\t", @output) . "\n";
+
+  exit 0;
 }
 
 
-lookup($start, \@ARGV, \@output);
-print join("\t", @output) . "\n";
+Getopt::Long::Configure("bundling");
+my $no_defaults = 0;
+my $do_dump;
+my @targets;
+GetOptions('conffile|c=s@' => \@conf_files, # Specify config files to read
+	   'nodefault|n+'   => \$no_defaults, # Don't read default configs
+	   'dump|d+'	=> \$do_dump,		# Dump processed config
+	   'show|s=s@'	=> \@targets,		# Victims to show
+);
+
+if ($no_defaults == 0) {
+  push @conf_files, @defconf;
+}
+
+print join(" ", @conf_files) . " $nodefaults\n";
+print join(" ", @defconf) . " $nodefaults\n";
+
+if ($do_dump) {
+  sub dump_conf_line($$$) {
+    (my $l1, my $l2, my $l3) = @_;
+    $victims->{$l1}->{$l2} = $l3;
+    print "$l1.$l2=$l3\n";
+  }
+  read_conf_files(\@conf_files, *dump_conf_line);
+  exit 0;
+}
+
+
+read_conf_files(\@conf_files, *store_conf_line, $victims);
+
+if ($#targets >= 1) {
+  map { print_all $_, $_ } @targets;
+} elsif($#targets == 0) {
+  print_all $targets[0];
+}

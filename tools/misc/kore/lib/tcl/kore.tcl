@@ -5,7 +5,7 @@
 # received a copy of the license along with K42; see the file LICENSE.html
 # in the top-level directory for more details.
 #
-# $Id: kore.tcl,v 1.4 2005/08/19 23:02:18 bseshas Exp $
+# $Id: kore.tcl,v 1.5 2005/12/23 22:06:58 jappavoo Exp $
 
 proc KoreSupport {} {
     global env
@@ -30,16 +30,16 @@ proc KoreSupport {} {
 #            puts "KORE: *** sourcing $file\n"
             source $file
         } else {
-#            puts "KORE: searching $korePath for $file\n"
+            # puts "KORE: searching $korePath for $file\n"
             foreach p $korePath {
-#                puts "KORE: checking $p for $file"
+                # puts "KORE: checking $p for $file"
                 if [file readable "$p/$file"] {
-#                    puts "KORE: found $file in $p"
+                    puts "KORE: found $file in $p"
                     return [source "$p/$file"]
                 }
             }
         }
-        puts "KORE: *** $file not found (korePath = $korePath)"
+        # puts "KORE: *** $file not found (korePath = $korePath)"
         return -1
     }
     proc koreStartCmdLine {} {

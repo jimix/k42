@@ -3,7 +3,7 @@
 #
 # (C) Copyright IBM Corp. 2004
 #
-# $Id: pemTypes.py,v 1.5 2005/05/09 21:01:23 cascaval Exp $
+# $Id: pemTypes.py,v 1.6 2006/02/28 19:21:58 cascaval Exp $
 #
 # Type handling routines
 #
@@ -87,3 +87,23 @@ def getDefaultFieldFormat(fieldType):
         'uint64': '%llx',
         }
     return formatTable[fieldType]
+
+def getFieldFormat(fieldType, fieldFormat):
+    formatTable = {
+        'string': 's',
+        'int' : 'd',
+        'int32': 'd',
+        'hex': 'x',
+        }
+    modifierTable = {
+        'string': '',
+        'uint8' : '',
+        'uint16': '',
+        'uint32': 'l',
+        'uint64': 'll',
+        }
+    if formatTable.has_key(fieldFormat):
+        return '%' + modifierTable[fieldType] + formatTable[fieldFormat]
+    else:
+        return fieldFormat
+    

@@ -6,7 +6,7 @@
 # received a copy of the License along with K42; see the file LICENSE.html
 # in the top-level directory for more details.
 #
-#  $Id: README,v 1.1 2005/08/20 22:31:07 bseshas Exp $
+#  $Id: README,v 1.2 2005/10/19 04:12:44 cyeoh Exp $
 # ############################################################################
 
 
@@ -33,9 +33,10 @@ KORE README
 2. Running KORE
 
 	Start /kbin/oisServer on victim machine
-	Make sure gdb is in PATH 
+	Make sure the correct gdb is in PATH 
 	Edit kore.sh for the victim's name, TCL_LIBPATH to point to <PATH>
-	Also edit the other variables accordingly
+	Also edit the other variables accordingly. Note that environment 
+	  variables can be set instead of editing the kore.sh file directly.
 	run kore.sh
 
 3. Components of KORE

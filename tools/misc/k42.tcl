@@ -8,7 +8,7 @@
 # received a copy of the License along with K42; see the file LICENSE.html
 # in the top-level directory for more details.
 #
-#  $Id: k42.tcl,v 1.10 2005/04/28 17:40:17 bob Exp $
+#  $Id: k42.tcl,v 1.11 2005/10/25 20:54:22 apw Exp $
 # ############################################################################
 #
 # There are some tcl variable that control the behavior of this file
@@ -105,9 +105,6 @@ if [info exists env(MAMBO_EXT2_DISK_EXTRA)] {
 
 # This is necessary to allow gdb to function (set breakpoints)
 if { ! [info exists k42_no_debug]  } {
-  mysim modify kdebug_enable 1
-  mysim modify kdebug_virtual 0xc000000000000000
-  mysim modify kdebug_real    0x0000000000000000
   puts "To debug mambo with gdb: attach [pid]"
 }
 

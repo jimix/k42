@@ -307,6 +307,23 @@ proc COSupport {} {
 	proc getRepTypes {rep} {
 		return [isa $rep COSTransObject]
 	}
+
+        proc COToRoot {coid} {
+            processObjs $coid iCObj
+        }
+
+        proc iCObj {c r t} {
+            return $r
+        }
+
+        proc getCOField {field coid} {
+            set root [COToRoot $coid]
+            set values [getField $field $root COSMissHandlerBase]
+            foreach rep [getReps $root] {
+                lappend values [getField $field $rep COSTransObject]
+            }
+            return $values
+        }
 }
 
 COSupport

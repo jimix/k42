@@ -10,7 +10,7 @@
 # more recent runs of nightly SDET, restricting itself to the 4-way
 # data so trends can be better seen.
 #
-#  $Id: sdet-k4-trim-4way.gp,v 1.8 2005/08/26 16:33:36 apw Exp $
+#  $Id: sdet-k4-trim-4way.gp,v 1.9 2005/09/20 13:00:19 apw Exp $
 # ############################################################################
 
 set terminal png
@@ -24,7 +24,7 @@ set xdata time
 set timefmt "%Y-%m-%d"
 set format x "%b %Y"
 set xtics rotate
-set yrange [2700:3500]
+set yrange [2700:3550]
 set xrange ["2004-03-06":]
 set pointsize 0.17
 

@@ -13,17 +13,19 @@ endif
 BINDIR=$(PREFIX)/bin
 LIBDIR=$(PREFIX)/lib
 
-SCRIPTS=hwconsole ktwd kvictim reboot_kpower run_simip run_mambo \
-	run_systemsim \
+SCRIPTS=hwconsole ktwd kvictim kconf reboot_kpower run_simip run_mambo \
+	run_systemsim hw_install kconf_lib \
 	vhype_install kernel_install conloop reboot_serial ksitevalues \
 	pxe_install kbladed conwrap lpar_prep lpar_run thinwire_lpar \
 	thinwire_hw thinwire_blade thinwire_mambo reboot_kpower_ozlabs \
-	reboot_k0 shutdown_k0
+	reboot_k0 shutdown_k0 yaboot_install
 
 FILES=victims.conf watson.conf torolab.conf toronto.conf ozlabs.conf \
 	lanl.conf bluewookie_austin.conf \
-	arl.conf arl_austin.conf generic_hw.conf mambo-120305.tcl \
-	mambo.tcl mambo-120604.tcl mambo-05222005.tcl utils.tcl
+	arl.conf arl_austin.conf generic_hw.conf \
+	mambo.tcl mambo-120604.tcl mambo-05222005.tcl \
+	mambo-090805.tcl utils.tcl KConf.pm mambo-102505.tcl mambo-120305.tcl \
+	mambo-111105.tcl
 
 INSTALL=install
 

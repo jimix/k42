@@ -10,20 +10,23 @@
 # Usage: thinwire_mambo <victim> <breaklocks> <lock message>
 
 VICTIM=$1
-
-: ${HW_VERBOSE:=0}
-if [ $HW_VERBOSE -ge 3 ] ; then
-    set -x;
+if [ -n "$VICTIM" ]; then
+    HW_VICTIM=$VICTIM
 fi
 
-if [ -z "$TW_BASE_PORT" ] ; then
+source ${0%/*}/kconf_lib
+set -e
+
+
+if [ -z "$MAMBO_SIMULATOR_PORT" ] ; then
+    MAMBO_SIMULATOR_PORT=`kconf_get $HW_VICTIM MAMBO_SIMULATOR_PORT`;
+fi
+if [ -z "$MAMBO_SIMULATOR_PORT" -o "$MAMBO_SIMULATOR_PORT" = "#" ] ; then
     exit -1;
 fi
 
-bp=$TW_BASE_PORT
-
 target=localhost:$MAMBO_SIMULATOR_PORT
-
+let bp=$MAMBO_SIMULATOR_PORT+1
 if [ $HW_VERBOSE -ge 4 ] ; then
     debug="-debug -verbose"
 fi

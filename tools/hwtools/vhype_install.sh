@@ -7,25 +7,23 @@
 # received a copy of the License along with K42; see the file LICENSE.html
 # in the top-level directory for more details.
 #
-#  $Id: vhype_install.sh,v 1.4 2004/12/30 23:54:55 mostrows Exp $
+#  $Id: vhype_install.sh,v 1.6 2006/01/18 22:01:35 mostrows Exp $
 # ############################################################################
 
 FILE=$1
 VICTIM=$2
 USERNAME=`whoami`
 
-: ${HW_VERBOSE:=0}
-if [ $HW_VERBOSE -ge 3 ] ; then
-    set -x;
-fi
+source ${0%/*}/kconf_lib
+set -e
 
 if [ -z "$FILE" -o -z "$VICTIM" ] ; then
     echo "Usage: vhype_install <file1>,<file2>,... <victim>";
     exit 1;
 fi
 
-if [ -z "$HW_IMGLOC" ] ;then
-    HW_IMGLOC=`kvictim $VICTIM HW_IMGLOC |cut -f2`
+if [ -z "$HW_INSTALL" ] ;then
+    HW_INSTALL=`kconf_get $VICTIM HW_INSTALL`
 fi
 
 while [ -n "$FILE" ] ; do
@@ -35,7 +33,7 @@ while [ -n "$FILE" ] ; do
     else
 	FILE=
     fi
-    cp $f $HW_IMGLOC/$USERNAME || (echo "Failed to copy $f" ; exit 1);
+    $HW_INSTALL $VICTIM $f $USERNAME
 done
 
 if [ -e "$HW_IMGLOC/$USERNAME/grub.conf" ] ; then

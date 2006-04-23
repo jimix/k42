@@ -8,6 +8,10 @@
 #
 use lib '/u/kitchawa/lib/perl';
 use Net::Telnet;
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+use lib "$Bin/../../lib";
+use KConf;
 
 my $verbose = $ENV{HW_VERBOSE};
 my $retries = 0;
@@ -27,13 +31,31 @@ sub dbglog($){
 }
 
 my $victim = $ARGV[0];
+my $kpower;
+my $port;
 
-my $cmd = "kvictim $victim kpower outlet";
-dbglog("++ $cmd\n");
-my @output = split '\s+', `$cmd`;
+if (defined $ENV{$victim . "_kpower"}) {
+  $kpower = $ENV{$victim . "_kpower"};
+}
 
-my $kpower = $output[1];
-my $port = $output[2];
+if (defined $ENV{$victim . "_outlet"}) {
+  $port = $ENV{$victim . "_outlet"};
+}
+
+if (!defined $port || !defined $kpower) {
+  my $kconf = KConf->new();
+  my $cfg = $kconf->flatten($victim);
+  die "Invalid victim '$victim'.\n" if (!defined $cfg);
+
+  if (!defined $kpower) {
+    $kpower = $cfg->{kpower};
+  }
+
+  if (!defined $port) {
+    $port = $cfg->{outlet};
+  }
+}
+
 
 my $t;
 $t = new Net::Telnet();
@@ -88,12 +110,29 @@ my @bladepower = ({ 'read'=> 'username:', 'write'=>"k42"},
 #		     'write'=>"power -T system:blade[" . $port . "] -on"},
 		   { 'read'=> 'OK' });
 
+my @haw_bladepower = ({ 'read'=> 'username:', 'write'=>"hwconsole"}, 
+		   { 'read'=> 'password:', 'write'=>"hw1234hw"}, 
+		   { 'read'=> 'system.*>', 
+#		     'write'=>"sol -T system:blade[" . $port . "] -off"},
+#		   { 'read'=> 'system.*>', 
+#		     'write'=>"power -T system:blade[" . $port . "] -off"},
+#		   { 'read'=> 'system.*>', 
+#		     'write'=>"sol -T system:blade[" . $port . "] -on"},
+#		   { 'read'=> 'system.*>', 
+		     'write'=>"power -T system:blade[" . $port . "] -cycle"},
+#		   { 'read'=> 'system.*>', 
+#		     'write'=>"reset -T system:blade[" . $port . "]:sp"},
+#		   { 'read'=> 'system.*>', 
+#		     'write'=>"power -T system:blade[" . $port . "] -on"},
+		   { 'read'=> 'OK' });
+
 
 my $talk = {'kpower' => \@kpowerTalk,
 	    'kpower2' => \@kpower2Talk,
 	    'kpower3' => \@kpower3Talk,
 	    'kpower4' => \@kpower4Talk,
-	    'kblade' => \@bladepower};
+	    'kblade' => \@bladepower,
+	    'hc935-27' => \@haw_bladepower};
 
 # We step through the conversation sequence defined in the talk array for
 # the selected programmable power supply.  If at any point we encounter an

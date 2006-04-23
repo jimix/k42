@@ -6,7 +6,7 @@
  * received a copy of the license along with K42; see the file LICENSE.html
  * in the top-level directory for more details.
  *
- * $Id: thinwire3.c,v 1.9 2005/07/14 19:49:34 mostrows Exp $
+ * $Id: thinwire3.c,v 1.13 2006/04/04 23:55:14 mostrows Exp $
  *****************************************************************************/
 /*****************************************************************************
  * Module Description: thinwire (de)multiplexor program
@@ -234,10 +234,12 @@ static void
 default_detach(struct iochan *ic)
 {
     Message("detach stream %d", ic->stream_id);
+    close(polled_fd[ic->poll_idx].fd);
     polled_fd[ic->poll_idx].fd = 0;
     polled_fd[ic->poll_idx].events = 0;
     ic->fd = 0;
     ic->state = NULL;
+    ic->status = 0;
     streams[ic->stream_id] = NULL;
 }
 
@@ -311,13 +313,16 @@ static int
 serial_read(struct iochan* ic, char *buf, int len, int block)
 {
     int cnt;
-    bitSet(ic->fd, TIOCM_RTS);
+    if (hw_flowcontrol)
+	bitSet(ic->fd, TIOCM_RTS);
 
     cnt = read(ic->fd, buf, len);
     if (cnt < len) {
 	ic->status  &= ~POLLIN;
     }
-    bitClear(ic->fd, TIOCM_RTS);
+
+    if (hw_flowcontrol)
+	bitClear(ic->fd, TIOCM_RTS);
     return cnt;
 }
 
@@ -333,7 +338,7 @@ serial_write(struct iochan *ic, char *buf, int len, int block)
 static void
 serial_setSpeed(struct iochan *ic, char *buf, int len)
 {
-    unsigned char reply[32];
+    char reply[32];
     struct termios t;
     int speed;
 
@@ -516,6 +521,7 @@ tcp_detach_listen(struct iochan *ic)
     Message("detach tcp stream %d", ic->stream_id);
     ic->state = tcp_listen_state;
     ic->fd = (int)ic->data;
+    ic->status = 0;
     polled_fd[ic->poll_idx].fd = ic->fd;
     polled_fd[ic->poll_idx].events = POLLIN;
 }
@@ -878,12 +884,14 @@ void VictimWrite(char *buf, int len)
     }
 }
 
-void
+int
 StreamWrite(int id, char *buf, int len, int block_for_connect)
 {
     int n;
     int total = 0;
     int orig = len;
+
+    if (!streams[id]) return -1;
 
   restart:
     if (! (streams[id]->status & STREAM_READY)) {
@@ -899,7 +907,7 @@ StreamWrite(int id, char *buf, int len, int block_for_connect)
     if (! (streams[id]->status & STREAM_READY)) {
 	/* Here we know block_for_connect == 0 ,
 	 *  so non-blocking, thus quietly abort */
-	return;
+	return -1;
     }
 
     if (verbose) {
@@ -912,7 +920,10 @@ StreamWrite(int id, char *buf, int len, int block_for_connect)
 	    streams[id]->detach(streams[id]);
 	    if (block_for_connect) goto restart;
 	    Message("Aborted write\n");
-	    return;
+	    if (total == 0) {
+		return -1;
+	    }
+	    return total;
 	} else {
 	    buf += n;
 	    len -= n;
@@ -924,7 +935,7 @@ StreamWrite(int id, char *buf, int len, int block_for_connect)
 	Message("StreamWrite: %d/%d bytes to stream %d fd %d",
 		total, orig, id, streams[id]->fd);
     }
-
+    return total;
 }
 
 int
@@ -933,6 +944,7 @@ StreamRead(int id, char *buf, int len, int block_for_connect)
     int n;
     n = 0;
 
+    if (!streams[id]) return -1;
 
   restart:
     if (! (streams[id]->status & STREAM_READY)) {
@@ -1004,25 +1016,24 @@ int DoSelect(int base)
 }
 
 
+int loop = 1;
 
 int ProcessPackets(char *buf, int len)
 {
     unsigned int pktlen, chan;
     static char inbuf[5 + MAX_PACKET_LEN];
+    int line = 0;
+    int ret;
 
     while (len) {
-	/* If character is not one of the characters that can
-	 * begin a thinwire packet, write it to channel 0 */
-	const char headers[] = "0#A!?S$/";
-	if (!strchr(headers, buf[0])) {
-	    if (debug)
-		Message("Stray char: %c", buf[0]);
-	    StreamWrite(0, buf, 1, 0);
-	    ++buf;
-	    --len;
-	    continue;
-	}
 	if (len < 5) {
+	    /* If character is not one of the characters that can
+	     * begin a thinwire packet, write it to channel 0 */
+	    const char headers[] = "0#A!?S$/";
+	    if (!strchr(headers, buf[0])) {
+		line = __LINE__;
+		goto stray;
+	    }
 	    break;
 	}
 	pktlen = ((((unsigned char) buf[1]) - ' ') << 12) |
@@ -1031,29 +1042,37 @@ int ProcessPackets(char *buf, int len)
 	if (pktlen > MAX_PACKET_LEN) {
 	    Message("packet length (%d) exceeds maximum (%d)",
 		  pktlen, MAX_PACKET_LEN);
-	    StreamWrite(0, buf, 1, 0);
-	    ++buf;
-	    --len;
-	    continue;
+	    line = __LINE__;
+	    goto stray;
 	}
+
 	chan = buf[4] - ' ';
 	if (chan >= MAX_STREAMS) {
-	    StreamWrite(0, buf, 1, 0);
-	    ++buf;
-	    --len;
-	    continue;
+	    line = __LINE__;
+	    goto stray;
 	}
+
 	/* 0 -- write command */
 	if ('0' == buf[0] || '#' == buf[0]) {
+	    /* 0 command cannot follow stray chars */
+	    if (line && buf[0] == '0') {
+		line = __LINE__;
+		goto stray;
+	    }
+
 	    if (len < (5 + pktlen)) {
 		break;
 	    }
 	    if (debug) {
-		Message("ProcessPackets, got '0' chan %d, pktlen %d len %d",
-			chan, pktlen, len);
+		Message("ProcessPackets, got '%c' chan %d, pktlen %d len %d",
+			buf[0],chan, pktlen, len);
 	    }
 
-	    StreamWrite(chan, buf + 5, pktlen, 1);
+	    ret = StreamWrite(chan, buf + 5, pktlen, 1);
+	    if (ret < 0) {
+		line = __LINE__;
+		goto stray;
+	    }
 
 	    /* No ack for "#" style writes */
 	    if ('0' != buf[0]) {
@@ -1069,6 +1088,7 @@ int ProcessPackets(char *buf, int len)
 		inbuf[4] = ' ' + chan;
 		VictimWrite(inbuf, 5);
 	    }
+	    continue;
 	}
 
 	/* A -- read command */
@@ -1085,6 +1105,7 @@ int ProcessPackets(char *buf, int len)
 	    VictimWrite(inbuf, pktlen + 5);
 	    buf += 5;
 	    len -= 5;
+	    continue;
 	}
 
 	/* ! -- select command */
@@ -1110,6 +1131,7 @@ int ProcessPackets(char *buf, int len)
 
 	    buf += 5;
 	    len -= 5;
+	    continue;
 	}
 
 	/* ! -- select command, 4-bit encoding*/
@@ -1135,11 +1157,13 @@ int ProcessPackets(char *buf, int len)
 
 	    buf += 5;
 	    len -= 5;
+	    continue;
 	}
 
 	/* S -- speed setting command, 4-bit encoding*/
 	else if ('S' == buf[0]) {
 	    if (len < (5 + pktlen)) {
+		Message("Short packet: %d %d\n", len, pktlen);
 		break;
 	    }
 
@@ -1152,57 +1176,22 @@ int ProcessPackets(char *buf, int len)
 
 	    buf += pktlen;
 	    len -= pktlen;
-
-
+	    continue;
 	}
 
 	/* $ -- exit command */
 	else if ('$' == buf[0]) {
 	    Fatal("received termination request", buf[0]);
+	    continue;
 	}
 
-	/* / -- echo/dump command */
-	else if ('/' == buf[0]) {
-	    /*
-	     * If the victim gets into real trouble, it wants to dump
-	     * characters out over the serial line as simply as possible.
-	     * A "/   " sequence (slash with three spaces for the length)
-	     * puts us into "echo" mode where we simply read characters
-	     * from the victim and print them.  We currently have no
-	     * termination sequence for echo mode.
-	     */
-	    Message("received a \"/\" from victim.  Entering \"echo\" mode");
-	    if (len > 5) {
-		fprintf(stdout, "%.*s", len-5, buf+5);
-		fflush(stdout);
-	    }
-	    for (;;) {
-		len = VictimRead(inbuf, sizeof(inbuf));
-		if (len > 0) {
-		    fprintf(stdout, "%.*s", len, inbuf);
-		    fflush(stdout);
-		}
-	    }
-	}
-
-	/* unknown command */
-	else {
-	    int i = 0;
-	    for (;i<len; i+=8) {
-		Message("buf: '%c'(%x) '%c'(%x) '%c'(%x) '%c'(%x) "
-			"'%c'(%x) '%c'(%x) '%c'(%x) '%c'(%x)",
-			buf[i],buf[i],
-			buf[i+1],buf[i+1],
-			buf[i+2],buf[i+2],
-			buf[i+3],buf[i+3],
-			buf[i+4],buf[i+4],
-			buf[i+5],buf[i+5],
-			buf[i+6],buf[i+6],
-			buf[i+7],buf[i+7]);
-	    }
-
-	    Fatal("unknown channel indicator '%c' %x", buf[0], buf[0]);
-	}
+      stray:
+	if (debug)
+	    Message("Stray char (%d): %c", line, buf[0]);
+	StreamWrite(0, buf, 1, 0);
+	++buf;
+	--len;
+	continue;
     }
 
     return (len);

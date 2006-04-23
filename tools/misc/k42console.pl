@@ -12,8 +12,14 @@ use Getopt::Long;
 Getopt::Long::Configure qw(no_ignore_case);
 use Sys::Hostname;
 use Socket;
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+use lib "$Bin/../../lib";
+use KConf;
 
 
+
+my $kconf = KConf->new();
 my $verbose = 0;
 my $imgver = 0;
 
@@ -35,22 +41,28 @@ sub dbglog($){
 
 ##############################################################################
 #
-# Read from kvictim
+# Read from kconf
 #
 #
 sub parseConfig($){
   my $victim = shift;
-  my $hwcfg;
-  open CONFIG, "kvictim all $victim|"
-    or die "FAIL: Failed to read config: $!\n";
-
-  my $line;
-  while($line = <CONFIG>){
-    $line =~ /^(\S*) (.*)$/;
-    $hwcfg->{$1} = $2;
+  my $hwcfg = $kconf->flatten($victim);
+  if (!defined $hwcfg) {
+    die "Can't get config for $victim\n";
   }
-  $hwcfg->{machine}=$victim;
-  close CONFIG;
+  foreach my $k (keys %{$hwcfg}) {
+    my $env_name = $victim . "_" . $k;
+    if (defined $ENV{$env_name}) {
+      $hwcfg->{$k} = $ENV{$env_name};
+    } else {
+      $ENV{$env_name} = $hwcfg->{$k};
+    }
+  }
+  # The hw config may be an "alias" of a machine, in which case it
+  # may specify "machine" explicitly.
+  if (!defined $hwcfg->{machine}) {
+    $hwcfg->{machine}=$victim;
+  }
   return $hwcfg;
 }
 
@@ -589,7 +601,7 @@ my $defenv = [ { 'name' => 'K42_ARCH',
 	       },
 
 	       { 'name' => 'MAMBO_TCL_STAMP',
-		 'value' => '-05222005',
+		 'value' => '-111105'
 	       },
 
 	       { 'name' => 'MAMBO_UTIL_TCL',
@@ -697,6 +709,16 @@ my $defenv = [ { 'name' => 'K42_ARCH',
 		   }
 		   return undef;
 		 },
+	       },
+
+	       # If defined initialize the mambonet driver
+	       { 'name' => 'K42_INIT_MAMBONET',
+		 'setval' => sub ($) {
+		   if (defined $ENV{K42_INIT_MAMBONET}) {
+		     return $ENV{K42_INIT_MAMBONET};
+		   }
+		   return undef;
+		 },
 	       }
 	     ];
 
@@ -749,9 +771,8 @@ if($verbose>0){
 }
 
 # Get the name of our site
-my @v = split /\s+/, `kvictim site name`;
-chomp @v;
-$site = $v[1];
+my $s = $kconf->flatten("site");
+$site = $s->{name};
 
 readUserValues;
 

@@ -21,18 +21,37 @@ use Socket;
 use POSIX ":sys_wait_h";
 use POSIX qw(strftime);
 use Config;
+use Getopt::Long;
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+use lib "$Bin/../../lib";
+use KConf;
 
 
 my $basedir;
 BEGIN{
   use Cwd 'abs_path';
-  $basedir = abs_path(dirname($0)) . '/../';
+  $basedir = "$Bin/..";
 }
 
 $ENV{PATH} = $ENV{PATH} . ":$basedir/bin";
 my $lockdir = "$basedir/lock";
 my $ktwdlog = "/dev/null";
+my $hostname = (split /\./, hostname())[0];
+my @conf_files;
 
+GetOptions('conf|c=s@'	=> \@conf_files,
+	   'name|n=s'	=> \$hostname,
+	   'dir|d=s'	=> \$lockdir,
+	   'log|l=s'	=> \$ktwdlog);
+
+my %conf_arg;
+if ($#conf_files != -1) {
+  $conf_arg{ConfFiles} = \@conf_files;
+  $conf_arg{NoDefaults} = 1;
+}
+
+my $kconf = KConf->new(%conf_arg);
 
 my %signo;
 my @signame;
@@ -74,76 +93,23 @@ sub lockfile($){
   return "$lockdir/lock_${victim}";
 }
 
+
+##############################################################################
+#
+# Read from kvictim
+#
+#
 sub parseConfig($){
   my $victim = shift;
-
-  open CONFIG, "kvictim $victim kserial ktw " .
-	       "TW_BASE_PORT serial1_speed serial2_speed| ";
-
-  my $line = <CONFIG>;
-
-  close CONFIG;
-
-  if($line eq ""){
-    return undef;
-  }
-
-  (my $machine, my $conshost, my $ktw, my $port, my $s1, my $s2) = 
-    split /\s+/, $line;
-
-  my $cfg;
-
-  $cfg->{machines} = $machine;
-  $cfg->{kserial} = $conshost;
-  $cfg->{ktwtty} = $ktw;
-  $cfg->{portbase} = $port;
-
-  if($s1 ne "#") {
-    $cfg->{speed1} = $s1;
-  }
-  if($s2 ne "#") {
-    $cfg->{speed2} = $s2;
-  }
-  return $cfg;
+  my $hwcfg = $kconf->flatten($victim);
+  $hwcfg->{machine}=$victim;
+  return $hwcfg;
 }
 
 
 
 $|=1; #autoflush
 
-sub getStatus(\@){
-  my $targets = shift;
-  my @name = split /\./, hostname();
-  my %thash;
-  foreach my $x (@{$targets}) {
-    $thash{$x} = 1;
-  }
-  my @vics = split /\s+/,  `kvictim kserial=$name[0]`;
-  foreach my $x (@vics) {
-    next if($thash{$x} != 1);
-
-    my @words;
-    my $pid;
-    my $user;
-    my $line;
-    if(open(LOCKFILE, "<" . lockfile($x))) {
-      $line = <LOCKFILE>;
-      @words = split /\s+/, $line;
-      close(LOCKFILE);
-    }
-    $pid = $words[0];
-    $user = $words[1];
-    shift @words;
-    shift @words;
-
-    my $extra;
-    if($pid && ! -d "/proc/$pid"){
-      $pid = "";
-    }
-    output sprintf("%8.8s $x\t$pid\t$user " . 
-		   join(" ",@words) . "\n", $name[0]);
-  }
-}
 
 sub readLockFile($){
   my $victim = shift;
@@ -220,8 +186,8 @@ sub runktw($$$$$){
   my $breaklock = shift;
   my $message = shift;
   my $thinver = shift;
-  my $ktwtty = $hwcfg->{ktwtty};
-  my $portbase = $hwcfg->{portbase};
+  my $ktwtty = $hwcfg->{ktw};
+  my $portbase = $hwcfg->{TW_BASE_PORT};
 
   # Maintain a reference to socket fd
   open(SOCKET, ">&STDERR");
@@ -237,10 +203,10 @@ sub runktw($$$$$){
 
   my @args;
   push @args, "thinwire" . $thinver;
-  if(defined $hwcfg->{speed2} && defined $hwcfg->{speed1}){
+  if(defined $hwcfg->{serial2_speed} && defined $hwcfg->{serial1_speed}){
     push @args, "-s";
-    push @args, $hwcfg->{speed1};
-    push @args, $hwcfg->{speed2};
+    push @args, $hwcfg->{serial1_speed};
+    push @args, $hwcfg->{serial2_speed};
   }
   push @args, $ktwtty;
   for(my $parts = 0; $parts < 8; ++$parts) {
@@ -324,7 +290,7 @@ sub setVictim(@) {
   my @words = @_;
   if ($#words>0) {
     my $vic = @words[1];
-    my @name = split /\./, hostname();
+    my @name = split /\./, $hostname;
 
     $hwcfg = parseConfig($vic);
     if(!defined $hwcfg){
@@ -333,7 +299,7 @@ sub setVictim(@) {
 
     if($hwcfg->{kserial} ne $name[0]){
       die "FAILURE: Wrong host. Use $hwcfg->{kserial} " . 
-	$name[0] . " for victim $vic";
+	$hwcfg->{kserial} . " for victim $vic";
     }
     $victim = $vic;
     output "Handling victim: $victim\n";
@@ -354,29 +320,137 @@ sub setMsg(@) {
   output "Set msg: $msg\n";
 }
 
-my $settings = [ { 'name' => 'tw_args',
-		   'action' => sub(@) {
-		     my @words = @_;
-		     print "Got tw_args: $words[0] $words[1]\n";
-		     return 0;
-		   }
+sub doStatus(@) {
+  my @words = @_;
+  my @targets;
+  if($#words == 0 || $words[1] eq "all") {
+    @targets = $kconf->match_key("kserial", $hostname);
+  } else {
+    @targets = ($words[1]);
+  }
+
+  my @vics = $kconf->match_key("kserial", $hostname, @targets);
+  foreach my $x (@vics) {
+    my @words;
+    my $pid;
+    my $user;
+    my $line;
+    if(open(LOCKFILE, "<" . lockfile($x))) {
+      $line = <LOCKFILE>;
+      @words = split /\s+/, $line;
+      close(LOCKFILE);
+    }
+    $pid = $words[0];
+    $user = $words[1];
+    shift @words;
+    shift @words;
+
+    my $extra;
+    if($pid && ! -d "/proc/$pid"){
+      $pid = "";
+    }
+    output sprintf("%8.8s %10.10s\t$pid\t$user " . 
+		   join(" ",@words) . "\n", $hostname, $x);
+  }
+}
+
+sub doRelease(@) {
+      if(!defined $victim){
+	return;
+      }
+      if(!defined $owner){
+	return;
+      }
+      my @l = readLockFile($victim);
+      if($l[0]>0 && ($owner eq $l[1] || $breaklock==1 || $breaklock==3)){
+	kill $signo{TERM}, $l[0];
+      }
+      if($owner eq $l[1] || $breaklock==2 || $breaklock==3){
+	unlink lockfile($victim);
+      }
+}
+
+sub doKTW(@) {
+  my @words = @_;
+  # Use predefined victim/owner or expect them to follow
+  if($#words >= 2){
+    $owner = $words[1];
+    my @r;
+    push @r, "victim" , $words[2];
+    setVictim(@r);
+
+    if($#words > 2){
+      my @w;
+      push @w , "breaklock" , $words[3];
+      setBreakLock(@w);
+    }
+    if($#words > 3){
+      $msg = $words[4];
+    }
+  }	
+  if(!defined $owner){
+    die "FAILURE: No owner defined\n";
+  }elsif(!defined $victim){
+    die "FAILURE: No victim defined\n";
+  }else{
+    $ktwpid = runktw($victim, $owner, $breaklock, $msg, $thinver);
+  }
+}
+
+my $settings = { 'tw_args' =>
+		 {
+		  'action' => sub(@) {
+		    my @words = @_;
+		    print "Got tw_args: $words[0] $words[1]\n";
+		    return 0;
+		  }
 		 },
-		 { 'name' => 'breaklock',
-		   'action' => *setBreakLock
+		 'breaklock' =>
+		 {
+		  'action' => *setBreakLock
 		 },
-		 { 'name' => 'lock',
-		   'action' => *getLock
+		 'ktw' => 
+		 {
+		  'action' => *doKTW,
 		 },
-		 { 'name' => 'victim',
-		   'action' => *setVictim
+		 'lock' =>
+		 {
+		  'action' => *getLock
 		 },
-		 { 'name' => 'owner',
-		   'action' => *setOwner
+		 'victim' =>
+		 {
+		  'action' => *setVictim
 		 },
-		 { 'name' => 'msg',
-		   'action' => *setMsg
+		 'owner' =>
+		 {
+		  'action' => *setOwner
 		 },
-	       ];
+		 'msg' =>
+		 {
+		  'action' => *setMsg
+		 },
+		 'disconnect' =>
+		 {
+		  'action' => sub(@) {
+		    exit;
+		  }
+		 },
+		 'status' =>
+		 {
+		  'action' => *doStatus
+		 },
+		 'thinver' =>
+		 {
+		  'action' => sub(@) {
+		    my @words = @_;
+		    $thinver = $words[1];
+		  }
+		 },
+		 'release' =>
+		 {
+		  'action' => *doRelease,
+		 },
+	       };
 
 # allow multiple commands per line, with ";"
 READCONFIG:while(1){
@@ -392,75 +466,9 @@ READCONFIG:while(1){
     $cmd=~s/^\s+(\S.*)$/$1/;
     my @words = split /\s+/, $cmd;
 
-    foreach my $q (@{$settings}) {
-      next if ($q->{name} ne $words[0]);
-      $q->{action}(@words);
+    if (defined $settings->{$words[0]}) {
+      $settings->{$words[0]}->{action}(@words);
       next CMDS;
-    }
-
-    if($words[0] eq "ktw"){
-      my $msg;
-      # Use predefined victim/owner or expect them to follow
-      if($#words >= 2){
-	$owner = $words[1];
-	my @r;
-	push @r, "victim" , $words[2];
-	setVictim(@r);
-
-	if($#words > 2){
-	  my @w;
-	  push @w , "breaklock" , $words[3];
-	  setBreakLock(@w);
-	}
-	if($#words > 3){
-	  $msg = $words[4];
-	}
-      }	
-      if(!defined $owner){
-	output "No owner defined\n";
-      }elsif(!defined $victim){
-	output "No vicitm defined\n";
-      }else{
-	$ktwpid = runktw($victim, $owner, $breaklock, $msg, $thinver);
-      }
-    } elsif($words[0] eq "breaklock"){
-
-      setBreakLock($words[1]);
-    } elsif($words[0] eq "thinver"){
-
-      $thinver = $words[1];
-
-    } elsif($words[0] eq "disconnect") {
-
-      exit;
-
-    } elsif($words[0] eq "release") {
-
-      if(!defined $victim){
-	next;
-      }
-      if(!defined $owner){
-	next;
-      }
-      my @l = readLockFile($victim);
-      if($l[0]>0 && ($owner eq $l[1] || $breaklock==1 || $breaklock==3)){
-	kill $signo{TERM}, $l[0];
-      }
-      if($owner eq $l[1] || $breaklock==2 || $breaklock==3){
-	unlink lockfile($victim);
-      }
-
-    } elsif($words[0] eq "status") {
-
-      my @k;
-      if($#words == 0 || $words[1] eq "all") {
-	my @name = split /\./, hostname();
-	@k = sort(split '\n', `kvictim kserial=$name[0]`);
-      } else {
-	@k = ($words[1]);
-      }
-      getStatus(@k);
-
     }
   }
 }

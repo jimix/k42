@@ -3,7 +3,7 @@
 #
 # (C) Copyright IBM Corp. 2004
 #
-# $Id: pemGenCPP.py,v 1.54 2005/06/29 22:16:54 cascaval Exp $
+# $Id: pemGenCPP.py,v 1.57 2006/04/17 19:10:54 steve Exp $
 #
 # Generate C++ classes for XML event descriptions
 #
@@ -171,7 +171,8 @@ def genRecordConstructor(anEvent):
                     print '\t\t', _fieldName, '= (', _fieldType, ')', \
                           '((__tmp8bytes >>', \
                           '((8-((i*',_fieldTypeSize,')&0x7)-',_fieldTypeSize, \
-                          ')*8)) &', ((1<<int(_fieldTypeSize)*8)-1) ,');'
+                          ')*8)) &', (str((1<<int(_fieldTypeSize)*8)-1)+'UL'),\
+                          ');'
                 else:
                     print '\t\t', _fieldName, '= __tmp8bytes;'
 
@@ -211,7 +212,7 @@ def genRecordConstructor(anEvent):
                     print '\t\t', _fieldName, '= (', _fieldType, ')', \
                           '((__tmp8bytes >>', \
                           ((8-byteOffset-int(_fieldTypeSize))*8),\
-                          ') &', ((1<<int(_fieldTypeSize)*8)-1) ,');'
+                          ') &', (str((1<<int(_fieldTypeSize)*8)-1)+'UL') ,');'
                 else:
                     print '\t\t', _fieldName, '= __tmp8bytes;'
                 byteOffset = (byteOffset + int(_fieldTypeSize)) % 8
@@ -644,6 +645,63 @@ def genEventSwitch(allEvents, allClassIds, outputDir):
 
 
 # -----------------------------------------------------------------------
+# generate the MPI getRank
+# -----------------------------------------------------------------------
+def genGetRank(allEvents, allClassIds, outputDir):
+    fd = None
+    if pemGlobals.dummyOutput == 0:
+        fd = open(os.path.join(outputDir, "getRank.cc"), 'w')
+        sys.stdout = fd
+    genPreamble(None)
+    print '#include "PemEvents.H"'
+    print '\n'
+    print 'using namespace PEM;\n'
+
+    print 'TraceRecord *pemRecord = NULL;'
+    print 'int64       rank = -1;'
+
+    print 'int64 getRank(const TraceRecord &r, const char endianEnc) {'
+    print '\tswitch(r.getEventId()) {'
+
+    for layer in allEvents.keys():
+        for classId in allEvents[layer].keys():
+            for anEvent in allEvents[layer][classId]:
+                if anEvent.hasField( "mpiRank" ):
+                    print '\tcase', anEvent.getEventId(), ':'
+                    print '\t\tpemRecord = new', anEvent.getQualifiedClassName(),\
+                          '(r, endianEnc);'
+                    print '\t\trank = ((', anEvent.getQualifiedClassName(),\
+                          ' * )pemRecord)->get_mpiRank();'
+                    print '\t\tdelete pemRecord;'
+                    print '\t\treturn rank;'
+
+                elif anEvent.hasField( "execRank" ):
+                    print '\tcase', anEvent.getEventId(), ':'
+                    print '\t\tpemRecord = new', anEvent.getQualifiedClassName(),\
+                          '(r, endianEnc);'
+                    print '\t\trank = ((', anEvent.getQualifiedClassName(),\
+                          ' * )pemRecord)->get_execRank();'
+                    print '\t\tdelete pemRecord;'
+                    print '\t\treturn rank;'
+
+                elif anEvent.hasField( "rank" ):
+                    print '\tcase', anEvent.getEventId(), ':'
+                    print '\t\tpemRecord = new', anEvent.getQualifiedClassName(),\
+                          '(r, endianEnc);'
+                    print '\t\trank = ((', anEvent.getQualifiedClassName(),\
+                          ' * )pemRecord)->get_rank();'
+                    print '\t\tdelete pemRecord;'
+                    print '\t\treturn rank;'
+
+    print '\tdefault: return -1; // unknown'
+    print '\t}'
+    print '}'
+
+    if pemGlobals.dummyOutput == 0:
+        sys.stdout = sys.__stdout__
+        fd.close()
+
+# -----------------------------------------------------------------------
 # generate the AIX trace reader switch
 # -----------------------------------------------------------------------
 def genAIXTraceReader(allEvents, allClassIds, outputDir):
@@ -664,75 +722,121 @@ def genAIXTraceReader(allEvents, allClassIds, outputDir):
     print 'using namespace PEM;'
     print 'using namespace std;'
     print ''
-
-
-    # defines
+    print ''
+    print '// Calin will fix this so that it is not global'
+    print 'extern int endianEncoding = 0;'
+    print ''
     print '#define DEFAULT_PEM_TRACE_FILE "pemTraceFile.trc"'
-    print '#define PEM_MAX_CPUS 128'
+    print '#define MAX_PEM_TRACES 128'
     print ''
     print 'static char * aixFields;              // -> start of hook data'
     print 'static uint32 aix_cpuid;              // processor number'
     print 'static uint32 aix_tid;                // thread id'
+    print 'static uint64 aix_timestamp;          // trace record timestamp'
+    print 'static int32  aix_trace_number;       // trace file num from hookdata'
     print ''
-    print 'extern int merge_cpu_traces;  // set on in aix2pem if -m option specified'
+    print 'extern int merge_traces;  // set on in aix2pem if -m option specified'
+    print 'extern uint32 num_trace_threads;'
     print ''
-
-    # prototypes
-    print 'extern "C" int pem_write_hdr(trc_loginfo_t *info, uint64 time);'
-    print 'extern "C" void pem_write(trc_read_t *r);'
-    print 'extern "C" void pem_write_close();'
-    print ''
-
-    # global variables
-    print 'static TraceOutputStream pemTraceFile[PEM_MAX_CPUS];'
-    print '\n'
-
-    print 'static uint32 current_time_upper = 0;'
-    print '\n'
-
-    # don't need the following - just need to ensure some event in each 
-    # cycle or wrap the the lower 32-bit timestamp. can use AIX 00A event
-    print 'void check_for_wrap( uint64 timestamp ) {'
-    print '//  TraceRecord *pemRecord = NULL;'
-    print '//  int time_upper = timestamp >> 32;'
-    print '//  if (time_upper != current_time_upper) {'
-    print '//    current_time_upper = time_upper;'
-    print '//    for(int i = 0; i < PEM_MAX_CPUS; i++) {'
-    print '//      if(pemTraceFile[i].is_open()) {'
-    print '//        pemRecord = new OSLayer::Control::Heartbeat_Event (timestamp,timestamp,i,aix_cpuid,aix_tid);'
-    print '//        pemRecord->write(pemTraceFile[i]);'
-    print '//        delete pemRecord;'
-    print '//      }'
-    print '//    }'
-    print '//  }'
+    print 'extern "C" {'
+    print 'int pem_write_hdr(trc_loginfo_t *info, uint64 time);'
+    print 'void pem_write(trc_read_t *r);'
+    print 'void pem_write_close();'
+    print 'int pem_add_trace_thread( uint64 tid, uint32 trace_number );'
+    print 'int pem_get_trace_number( trc_read_t *r );'
     print '}'
-    print '\n'
-    
-    print 'int pem_write_hdr(trc_loginfo_t *info, uint64 time ) {'
     print ''
-    print '  for(int i = 0; i < info->trci_traced_cpus; i++) {'
+    print 'static TraceOutputStream pemTraceFile[MAX_PEM_TRACES];'
+    print 'static uint32 current_time_upper = 0;'
+    print ''
+    print 'void check_for_wrap( uint64 timestamp ) {'
+    print '// no longer do this, should ensure at least one pem record '
+    print '// in each 32 bit ticker cycle'
+    print '}'
+    print ''
+    print 'int open_trace_file( int trace_number, uint64 time ) {'
     print '    char filename[1024];'
-    print '    sprintf(filename, "%s.%d", DEFAULT_PEM_TRACE_FILE, i);'
-    print '    pemTraceFile[i].open(filename, PEM_DEFAULT_TRACE_ALIGNMENT);'
-    print '    if(pemTraceFile[i].fail()) {'
+    print '    sprintf(filename, "%s.%d", DEFAULT_PEM_TRACE_FILE, trace_number);'
+    print '    pemTraceFile[trace_number].open(filename, PEM_DEFAULT_TRACE_ALIGNMENT);'
+    print '    if(pemTraceFile[trace_number].fail()) {'
     print '       fprintf(stderr, "Failed to open %s\\n", filename);'
     print '       return 1;'
     print '    }'
     print ''
     print '    TraceHeader h;'
-    print '    h.setPhysicalProcessor(i);'
-    print '    h.setTicksPerSecond( 7272812500 );  // from hook 00A (on lpar07)'
-    print '    h.setInitTimestamp(time);'
-    print '    h.write(pemTraceFile[i]);'
-    print ''
-    print '    // if user specified merged traces, just do the .0 tracefile'
-    print '    if ( merge_cpu_traces ) break;'
-    print '  }'
-    print '  current_time_upper = time >> 32;'
-    print '  return 0;'
+    print '    h.setPhysicalProcessor(trace_number);'
+    print '    // for ticksPerSec take default, for current machine'
+    print '    // h.setTicksPerSecond( 7272812500 ); // from hook 00A (on lpar07)'
+    print '    //h.setInitTimestamp(time);'
+    print '    h.write(pemTraceFile[trace_number]);'
+    print '    return 0;'
     print '}'
-    print '\n'
-
+    print ''
+    print 'void pem_write_close()'
+    print '{'
+    print '   int i;'
+    print '   for(i = 0; i < MAX_PEM_TRACES; i++)'
+    print '     if(pemTraceFile[i].is_open()) {'
+    print '        cerr << "closing processor " << i << endl;'
+    print '        pemTraceFile[i].close();'
+    print '     }'
+    print '}'
+    print ''
+    print 'int pem_write_hdr(trc_loginfo_t *info, uint64 time ) {'
+    print '  int rc;  '
+    print ''
+    print '  current_time_upper = time >> 32;'
+    print '  if ( merge_traces ) {'
+    print '    rc = open_trace_file( 0, time );'
+    print '    return rc;'
+    print '  }'
+    print '  else {'
+    print '    // do nothing now, open trace when get startTrace event'
+    print '    return 0;'
+    print '  }'
+    print '}'
+    print ''
+    print 'void process_trace_info( PEM::TraceRecord &r) {'
+    print '  uint64 threadId;'
+    print '  uint64 trace_number;'
+    print '  int rc;'
+    print '  if(r.getEventId() == OSLayer::Info::AixStartPemTrace_Event::eventId()){'
+    print '    OSLayer::Info::AixStartPemTrace_Event *ev ='
+    print '      (OSLayer::Info::AixStartPemTrace_Event *)getEvent(r, endianEncoding);'
+    print '    trace_number = ev->get_traceNumber();'
+    print '    if ( trace_number != aix_trace_number ) {'
+    print '       fprintf(stderr,"AixStartPemTrace: invalid trace number %d hdr number %d\\n",'
+    print '               trace_number,aix_trace_number);'
+    print '       return;'
+    print '    }'
+    print '    if ( open_trace_file( trace_number, aix_timestamp ) != 0 ) {'
+    print '       fprintf(stderr,"failed to open trace file %d\\n",trace_number);'
+    print '       return;'
+    print '    }'
+    print '  }'
+    print '  if(r.getEventId() == OSLayer::Info::AixAssociateThread_Event::eventId()){'
+    print '    OSLayer::Info::AixAssociateThread_Event *ev ='
+    print '      (OSLayer::Info::AixAssociateThread_Event *)getEvent(r, endianEncoding);'
+    print '    trace_number = ev->get_traceNumber();'
+    print '    if ( trace_number != aix_trace_number ) {'
+    print '       fprintf(stderr,"AixAssociateThread: invalid trace number %d hdr number %d\\n",'
+    print '               trace_number,aix_trace_number);'
+    print '       return;'
+    print '    }'
+    print '    threadId = ev->get_threadId();'
+    print '    rc = pem_add_trace_thread( threadId, trace_number );'
+    print '    fprintf(stderr,"process AixAssociateThread: add_trace_thread rc = %d\\n",rc);'
+    print '  }'
+    print '  if(r.getEventId() == LIBLayer::LibC::LibuttMallocCC_Event::eventId()){'
+    print '    LIBLayer::LibC::LibuttMallocCC_Event *ev ='
+    print '      (LIBLayer::LibC::LibuttMallocCC_Event *)getEvent(r, endianEncoding);'
+    print '    threadId = ev->get_threadId();'
+    print '    rc = pem_add_trace_thread( threadId, aix_trace_number );'
+    print '    if ( rc == 0 )'
+    print '       fprintf(stderr,"process LibuttMallocCC: add_trace_thread rc = %d\\n",rc);'
+    print '  }'
+    print '}'
+    print ''
     print 'void pem_write(trc_read_t *r) {'
     print '  //static int firstRecord = 1;'
     print '  //if(firstRecord) { pem_write_hdr(r); firstRecord = 0; }'
@@ -754,7 +858,10 @@ def genAIXTraceReader(allEvents, allClassIds, outputDir):
     print ''
     print '  aix_cpuid = (r->trcr_flags&TRCRF_CPUIDOK ? r->trcri_cpuid : 0);'
     print '  aix_tid = r->trcri_tid;'
-    print '  switch(r->trchi_hookid) {'
+    print '  aix_timestamp = r->trcri_timestamp;'
+    print '  aix_trace_number = pem_get_trace_number(r);'
+    print ''
+    print '  switch(r->trcri_hookid) {'
 
     for layer in allEvents.keys():
         for classId in allEvents[layer].keys():
@@ -784,22 +891,12 @@ def genAIXTraceReader(allEvents, allClassIds, outputDir):
     print '\tdefault: pemRecord = NULL; break;'
     print '  }'
     print '  if(pemRecord != NULL) {'
-    print '    if ( merge_cpu_traces == 1 )'
-    print '      pemRecord->write(pemTraceFile[0]);'
-    print '    else'
-    print '      pemRecord->write(pemTraceFile[r->trcri_cpuid]);'
+    print '    if ( merge_traces == 0 )'
+    print '       process_trace_info( *pemRecord );'
+    print '    if (aix_trace_number >= 0)'
+    print '       pemRecord->write(pemTraceFile[aix_trace_number]);'
     print '    delete pemRecord;'
     print '  }'
-    print '}'
-    print '\n'
-    
-    print 'void pem_write_close()'
-    print '{'
-    print '   for(int i = 0; i < PEM_MAX_CPUS; i++)'
-    print '     if(pemTraceFile[i].is_open()) {'
-    print '        cerr << "closing processor " << i << endl;'
-    print '        pemTraceFile[i].close();'
-    print '     }'
     print '}'
     
     if pemGlobals.dummyOutput == 0:
@@ -867,6 +964,9 @@ def genAllClasses(allEvents, allClassIds, outputDir):
 
         if pemGlobals.dialect == 'AIX':
             genAIXTraceReader(allEvents, allClassIds, outputDir)
+
+        if pemGlobals.dialect == 'MPI':
+            genGetRank(allEvents, allClassIds, outputDir)
 
 # ----------------------------------------------------------------------------
 # generate the PE2 methods

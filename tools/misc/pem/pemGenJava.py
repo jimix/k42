@@ -3,7 +3,7 @@
 #
 # (C) Copyright IBM Corp. 2004
 #
-# $Id: pemGenJava.py,v 1.54 2005/08/01 22:32:49 pfs Exp $
+# $Id: pemGenJava.py,v 1.55 2006/01/31 16:31:26 cascaval Exp $
 #
 # Generate Java classes for XML event descriptions
 #
@@ -159,24 +159,8 @@ def genStreamConstructor(anEvent):
         print '\t\ttry {'
         
     # read the fields off the payload 
-    for field in anEvent.getTraceFields():
-        if anEvent.isListField(field):
-            listLength = getListLength(anEvent, field)
-            print '\t\t', anEvent.getFieldName(field), '= new', \
-                  getJavaListFieldType(anEvent, field), \
-                  '[(int)', listLength, '];'
-            print '\t\tfor(int i = 0; i <', listLength, '; i++)'
-            print '\t\t\t', anEvent.getFieldName(field), '[i] =', \
-                  string.join(('recordStr.read', \
-                               getJavaReaderType(anEvent, field), \
-                               '()'), ''), \
-                               ';'
-                
-        else:
-            print '\t\t', anEvent.getFieldName(field), '=', \
-                  string.join(('recordStr.read', \
-                               getJavaReaderType(anEvent, field),'()'),''), \
-                               ';'
+    readFields(anEvent)
+
     if len(anEvent._fieldSeq) > 0:
         print '\t\t} catch(java.io.EOFException ex) { } // fields added to event'
 
@@ -205,10 +189,35 @@ def genJavaRecordConstructor(anEvent):
 
         print '\t\ttry {'
     # read the fields off the payload 
+    readFields(anEvent)
+
+    if len(anEvent._fieldSeq) > 0:
+        print '\t\t} catch(java.io.EOFException ex) { // fields added to event'
+        print '\t\t} catch (IOException ex) {'
+        print '\t\t\t throw new TraceException(ex.toString());'
+        print '\t\t}'
+
+    print '\t}'
+
+
+def readFields(anEvent):
+    byteOffset = 0 # force reloading next field
+
     for field in anEvent.getTraceFields():
+	# list and string fields need to be aligned to 64 bit boundaries
+        if (anEvent.isListField(field) or \
+	    anEvent.getFieldType(field) == 'string') and \
+	    byteOffset != 0:
+	    print 'recordStr.skipBytes(', str(8-byteOffset), ');'
         if anEvent.isListField(field):
+            _fieldName = anEvent.getFieldName(field) + "[i]"
+            _fieldTypeSize = pemTypes.getTypeRawSize(anEvent.getFieldType(field), \
+        	                                             _fieldName)
             listLength = getListLength(anEvent, field)
-            print '\t\t', anEvent.getFieldName(field), '= new', \
+	    # byteOffset = (byteOffset + int(listLength)*int(_fieldTypeSize)) % 8
+	    # HACK!! assume lists are padded to 64 bits
+	    byteOffset = 0
+	    print '\t\t', anEvent.getFieldName(field), '= new', \
                   getJavaListFieldType(anEvent, field), \
                   '[(int)', listLength, '];'
             print '\t\tfor(int i = 0; i <', listLength, '; i++)'
@@ -219,18 +228,16 @@ def genJavaRecordConstructor(anEvent):
                                ';'
                 
         else:
+            _fieldName = anEvent.getFieldName(field)
+            _fieldTypeSize = pemTypes.getTypeRawSize(anEvent.getFieldType(field), \
+                                                     _fieldName)
+	    if anEvent.getFieldType(field) != 'string': 
+	          byteOffset = (byteOffset + int(_fieldTypeSize)) % 8
             print '\t\t', anEvent.getFieldName(field), '=', \
                   string.join(('recordStr.read', \
                                getJavaReaderType(anEvent, field),'()'),''), \
                                ';'
 
-    if len(anEvent._fieldSeq) > 0:
-        print '\t\t} catch(java.io.EOFException ex) { // fields added to event'
-        print '\t\t} catch (IOException ex) {'
-        print '\t\t\t throw new TraceException(ex.toString());'
-        print '\t\t}'
-
-    print '\t}'
 
 # -----------------------------------------------------------------------
 # -----------------------------------------------------------------------

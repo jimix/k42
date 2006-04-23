@@ -6,10 +6,12 @@
 # received a copy of the license along with K42; see the file LICENSE.html
 # in the top-level directory for more details.
 #
-
 VICTIM=$1
 CHANNEL=$2
 RAWCON=$3
+
+source ${0%/*}/kconf_lib
+set -e
 
 ME=$(whoami)
 
@@ -19,9 +21,9 @@ else
     RAWCON="-noraw"
 fi
 
-VIC=($(kvictim $VICTIM kserial TW_BASE_PORT))
-KSERIAL=${VIC[1]}
-PORT=${VIC[2]}
+
+KSERIAL=`kconf_get $VICTIM kserial`
+PORT=`kconf_get $VICTIM TW_BASE_PORT`
 PORT=$[ $PORT + $CHANNEL]
 while true; do 
     if ! hwconsole -s -m $VICTIM |grep $ME ; then
