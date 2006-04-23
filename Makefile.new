@@ -77,14 +77,14 @@ zobjs = $(S)/os/boot2/crt0.o $(S)/os/boot2/string.o $(S)/os/boot2/prom.o \
 	$(S)/os/boot2/main.o $(S)/os/boot2/zlib.o $(S)/os/boot2/div64.o \
 	$(S)/os/boot2/imagesize.o
 OBJS += $(zobjs)
-$(S)/os/k42-zImage: lflags = -Ttext 0x9000000 -e _start \
+$(S)/os/k42-zImage: zlflags = -Ttext 0x9000000 -e _start \
                              -T $(L)/arch/ppc64/boot/zImage.lds
 $(S)/os/k42-zImage: $(S)/os/boot/kernel-vmlinux.strip.o	\
 		    $(L)/arch/ppc64/boot/zImage.lds	\
 		    $(zobjs)				\
 		    $(S)/os/boot2/addnote
 	$(call status, LD, $@)
-	$(LD32) $(lflags) $(zobjs) $(S)/os/boot/kernel-vmlinux.strip.o -o $@
+	$(LD32) $(zlflags) $(zobjs) $(S)/os/boot/kernel-vmlinux.strip.o -o $@
 	$(call status, ADDNOTE, $@)
 	$(S)/os/boot2/addnote $@
 
