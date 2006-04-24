@@ -190,7 +190,6 @@ start(BootInfo *bootInfo)
     struct KernelInitArgs kernelInitArgs;
     MemoryMgrPrimitiveKern *memory = &kernelInitArgs.memory;
     _BootInfo = bootInfo;
-_BootInfo = &b;
     _OnSim = _BootInfo->onSim;
     _OnHV  = _BootInfo->onHV;
 
@@ -359,7 +358,7 @@ extern "C" void start_kernel(void)
   b.controlFlags = 0x0;
   b.availCPUs = 0x1;
   b.masterCPU = 0x0;
-  b.cpu_version = 0x70;
+  b.cpu_version = b.processor >> 16;
   b.clock_frequency = 0x77359400;
   b.bus_frequency = 0x77359400;
   b.timebase_frequency = 0x77359400;
