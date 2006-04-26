@@ -641,6 +641,12 @@ iflags = -I$(L)/include						\
 jflags = -I$(L)/arch/k42/include $(iflags)
 
 
+os_kernel_mem_flags = -I$(H)/os/kernel \
+                      -I$(H)/os/kernel/mem
+$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/powerpc/%.C
+	$(call status, CXX, $@)
+	$(CXX) -c $(kflags) $(iflags) $(os_kernel_mem_flags) $< -o $@
+
 os_kernel_linux_flags = -I$(H)/os/kernel \
                         -I$(H)/os/kernel/linux
 $(S)/os/kernel/linux/%.o: $(H)/os/kernel/linux/arch/powerpc/%.C
