@@ -239,14 +239,10 @@ start(BootInfo *bootInfo)
     uval physStart = 0;
     uval physEnd = _BootInfo->physEnd;
 
-    udbg_printf("Initializing memory: %p ...\n", memory);
-    //    asm volatile("trap");
     memory->init(physStart, physEnd, virtBase, allocStart, allocEnd);
 
-    udbg_printf("Initializing boot printf ...\n");
     BootPrintf::Init(memory);
 
-    udbg_printf("Testing boot printf ...\n");
     BootPrintf::Printf("MemoryMgrPrimitive allocStart %lx allocEnd %lx\n",
 		       allocStart, allocEnd);
 
@@ -314,8 +310,6 @@ start(BootInfo *bootInfo)
  */
 extern "C" void start_kernel(void)
 {
-  udbg_printf("K42 research operating system is now booting ...\n");
-
   /* Fill out the first part from Linux's systemcfg structure.  */
   b.eye_catcher[0] = systemcfg->eye_catcher[0];
   b.version.major = systemcfg->version.major;
@@ -335,6 +329,9 @@ extern "C" void start_kernel(void)
   b.dCacheL1LineSize = systemcfg->dCacheL1LineSize;
   b.iCacheL1Size = systemcfg->iCacheL1Size;
   b.iCacheL1LineSize = systemcfg->iCacheL1LineSize;
+
+  extern unsigned long lmb_end_of_DRAM(void);
+  b.physEnd = lmb_end_of_DRAM();
 
   /* Fill in the rest with K42-specific values.  */
   b.rtas.entry = 0x1ff4000;
@@ -362,7 +359,6 @@ extern "C" void start_kernel(void)
   b.clock_frequency = 0x77359400;
   b.bus_frequency = 0x77359400;
   b.timebase_frequency = 0x77359400;
-  b.physEnd = 0x8000000;
   b.kernelImage = 0x0;
   b.kernelImageSize = 0x3000000;
   b.rebootImage = 0x6000000;
