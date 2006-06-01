@@ -5,13 +5,13 @@
 # Basic build configuration.
 D = full
 OS = $(shell uname -s)
-BUILD = i686
-HOST = powerpc
+BUILD = $(shell uname -m)
+TARGET = powerpc
 
 # Build our source and output paths from above.
 O = ..
 H = .
-S = $(O)/$(HOST)/$(D)Deb
+S = $(O)/$(TARGET)/$(D)Deb
 B = $(S)/os/kexec
 U = /u/kitchawa/k42-packages
 L = ../linux-030
@@ -63,7 +63,7 @@ k42-zImage: dirs $(S)/os/servers/baseServers/baseServers $(S)/os/k42-zImage
 
 # Just print some debug information and exit.
 config:
-	@echo build $(D)-debug K42 on $(BUILD) $(OS) for $(HOST) from $(OBJS)
+	@echo build $(D)-debug K42 on $(BUILD) $(OS) for $(TARGET) from $(OBJS)
 
 # Delete everything we built.
 clean:
@@ -591,8 +591,8 @@ libkobjs = $(S)/lib/libc/alloc/AllocCell.o $(S)/lib/libc/alloc/AllocPool.o \
            $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o		   \
            $(S)/usr/XUsrTst.o
 
-OBJS += $(O)/install/lib/$(HOST)/$(D)Deb/libk.a
-$(O)/install/lib/$(HOST)/$(D)Deb/libk.a: $(libkobjs)
+OBJS += $(O)/install/lib/$(TARGET)/$(D)Deb/libk.a
+$(O)/install/lib/$(TARGET)/$(D)Deb/libk.a: $(libkobjs)
 	$(call status, AR, $@)
 	$(AR) crs $@ $?
 
@@ -656,15 +656,15 @@ $(S)/lib/libc/alloc/%.o: $(H)/lib/libc/alloc/%.C
 
 ###############################################################################
 
-CFLAGS = -DTARGET_MACHINE="$(HOST)" -D__GNU_AS__ -U$(HOST) -DGCC3	    \
+CFLAGS = -DTARGET_MACHINE="$(TARGET)" -D__GNU_AS__ -U$(TARGET) -DGCC3	    \
          -Wa,-strip-local-absolute -fPIC -mminimal-toc -Wall -Werror -O0 -g \
          -DK42 -D_REENTRANT -D__BIG_ENDIAN__ -nostdinc
 
 IFLAGS = -I$(O)/install/include					\
          -I$(U)/$(D)Deb.Img.4/usr/powerpc64-linux/include	\
          -I$(L)/include						\
-         -I$(O)/install/gcc-include/arch/$(HOST)		\
-         -I$(O)/install/include/stubgen/arch/$(HOST)
+         -I$(O)/install/gcc-include/arch/$(TARGET)		\
+         -I$(O)/install/include/stubgen/arch/$(TARGET)
 
 $(S)/os/servers/bootServers.o: cflags = $(CFLAGS)
 
@@ -677,7 +677,7 @@ $(S)/os/servers/bootServers.o: $(S)/os/servers/bootServers.s
 
 ###############################################################################
 
-bootServers_tool = $(O)/install/tools/Linux_$(BUILD)/$(HOST)/mkserv
+bootServers_tool = $(O)/install/tools/Linux_$(BUILD)/$(TARGET)/mkserv
 
 bootServers_dep1 = $(S)/os/servers/baseServers/servers.list
 bootServers_dep2 = $(S)/os/servers/reboot/servers.list
@@ -726,14 +726,14 @@ baseServers_objs = $(addprefix $(S)/os/servers/baseServers/, \
                      $(baseServers_objs1)) $(baseServers_objs2)
 
 baseServers_lflags = -static -Wl,-e,_k42start				\
-                     -L$(O)/install/lib/powerpc/fullDeb			\
-                     -L$(U)/fullDeb.Img.4/usr/klib			\
+                     -L$(O)/install/lib/powerpc/$(D)Deb			\
+                     -L$(U)/$(D)Deb.Img.4/usr/klib			\
                      -Wl,--whole-archive -lemu -Wl,--no-whole-archive	\
                      -llk26 -lvirtfs -lfs -lsrv -lbase -lc
 
 baseServers_ldeps1 = libemu.a liblk26.a libvirtfs.a libfs.a libsrv.a
 
-baseServers_ldeps = $(addprefix $(O)/install/lib/$(HOST)/$(D)Deb/, \
+baseServers_ldeps = $(addprefix $(O)/install/lib/$(TARGET)/$(D)Deb/, \
 		      $(baseServers_ldeps1))
 
 $(S)/os/servers/baseServers/baseServers.dbg: $(baseServers_ldeps)

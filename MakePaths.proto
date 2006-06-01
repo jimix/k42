@@ -659,6 +659,14 @@ export SPEC_PKG=$(K42_PKGDIR)/$(SPECDIR)/$(SPECVER)/$(OPTIMIZATION)
 
 endif
 
+ifeq "$(K42_SITE)" "unm"
+  export K42_PKGHOST:=192.168.0.3
+  export K42_PACKAGES:=/u/kitchawa/k42-packages
+  export K42_PKGROOTPATH := $(K42_PACKAGES)
+  export LINUXSRCROOT:=/home/bridges/k42/linux-$(LINUXVER)
+  export K42_PKGVER := 4
+  export K42_CONFIG := ~/k42/k42-config
+endif
 
 
 ifeq "$(K42_SITE)" "toronto"
