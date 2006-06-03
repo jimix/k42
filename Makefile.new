@@ -805,43 +805,43 @@ $(O)/install/include/sys/%.h: $(H)/lib/libc/alloc/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
-miscpowerpcincludes = asm.h asmdef.h alloca.H hardware.H expedient.H volatileFrame.H asdef.h trap.h pwrPC.H simSupport.H bits.h
+misc_powerpc_includes = asm.h asmdef.h alloca.H hardware.H expedient.H volatileFrame.H asdef.h trap.h pwrPC.H simSupport.H bits.h
 
-miscarchincludes = $(addprefix $(O)/install/include/misc/arch/$(TARGET)/, $(misc$(TARGET)includes))
-libincludes += $(miscarchincludes)
+misc_arch_includes = $(addprefix $(O)/install/include/misc/arch/$(TARGET)/, $(misc$(TARGET)_includes))
+libincludes += $(misc_arch_includes)
 $(O)/install/include/misc/arch/$(TARGET)/%.h: $(H)/lib/libc/misc/arch/$(TARGET)/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
-miscincludes = asm.h asmdef.h alloca.H hardware.H expedient.H volatileFrame.H linkage.H ListSimple.H ListArraySimple.H ListArraySimple.C ListSimpleKey.H ListSimpleKeyLocked.H ListSimpleLocked.H  StringShort.H BitStructure.H macros.H StringTable.H StringTable.I utilities.H baseStdio.H simpleThread.H  SSAC.H SSACSimplePartitionedArray.H SSACSimplePartitionedArray.C testSupport.H HashSimple.H BitVec.H DHashTable.H AutoList.H AutoList.I BaseRandom.H HashNonBlocking.H HashNonBlocking.I AtomicBitVec64.H BlockSet.H DiskMountInfoList.H Callback.H SharedBufferProducer.H SharedBufferProducerUser.H SharedBufferConsumer.H SharedBufferConsumerUser.H
-libincludes += $(addprefix $(O)/install/include/misc/, $(miscincludes))
+misc_includes = asm.h asmdef.h alloca.H hardware.H expedient.H volatileFrame.H linkage.H ListSimple.H ListArraySimple.H ListArraySimple.C ListSimpleKey.H ListSimpleKeyLocked.H ListSimpleLocked.H  StringShort.H BitStructure.H macros.H StringTable.H StringTable.I utilities.H baseStdio.H simpleThread.H  SSAC.H SSACSimplePartitionedArray.H SSACSimplePartitionedArray.C testSupport.H HashSimple.H BitVec.H DHashTable.H AutoList.H AutoList.I BaseRandom.H HashNonBlocking.H HashNonBlocking.I AtomicBitVec64.H BlockSet.H DiskMountInfoList.H Callback.H SharedBufferProducer.H SharedBufferProducerUser.H SharedBufferConsumer.H SharedBufferConsumerUser.H
+libincludes += $(addprefix $(O)/install/include/misc/, $(misc_includes))
 $(O)/install/include/misc/%.h: $(H)/lib/libc/misc/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
-syspowerpcincludes =  sysTypes.H macdefs.H config.H types.H ppccore.H extRegs.H
+sys_powerpc_includes =  sysTypes.H macdefs.H config.H types.H ppccore.H extRegs.H
 
-sysarchincludes = $(addprefix $(O)/install/include/sys/arch/$(TARGET)/, $(sys$(TARGET)includes))
-libincludes += $(sysarchincludes)
+sys_arch_includes = $(addprefix $(O)/install/include/sys/arch/$(TARGET)/, $(sys$(TARGET)_includes))
+libincludes += $(sys_arch_includes)
 $(O)/install/include/sys/arch/$(TARGET)/%.h: $(H)/lib/libc/sys/arch/$(TARGET)/%>h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
-sysincludes = systemAccess.H sysTypes.H sysIncs.H BaseProcess.H ProcessWrapper.H ProcessSet.H ProcessSetUser.H macdefs.H config.H types.H ppccore.H kinclude.H SysStatus.H TAssert.H ProcessClient.H ProcessLinux.H LinuxCreds.H ResMgrWrapper.H SystemMiscWrapper.H MountPointMgrClient.H MountPointMgrCommon.H SMTMgr.H ProcessLinuxClient.H ShMemBuf.H ShMemClnt.H InitStep.H Initialization.H hostSysTypes.H bswap.h extRegs.H
-libincludes += $(addprefix $(O)/install/include/sys/, $(sysincludes))
+sys_includes = systemAccess.H sysTypes.H sysIncs.H BaseProcess.H ProcessWrapper.H ProcessSet.H ProcessSetUser.H macdefs.H config.H types.H ppccore.H kinclude.H SysStatus.H TAssert.H ProcessClient.H ProcessLinux.H LinuxCreds.H ResMgrWrapper.H SystemMiscWrapper.H MountPointMgrClient.H MountPointMgrCommon.H SMTMgr.H ProcessLinuxClient.H ShMemBuf.H ShMemClnt.H InitStep.H Initialization.H hostSysTypes.H bswap.h extRegs.H
+libincludes += $(addprefix $(O)/install/include/sys/, $(sys_includes))
 $(O)/install/include/sys/%.h: $(H)/lib/libc/sys/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
-usrpowerpcincludes = ProgExecArch.H
-usrarchincludes = $(addprefix $(O)/install/include/usr/arch/$(TARGET)/, $(usr$(TARGET)includes))
-libincludes += $(usrarchincludes)
+usr_powerpc_includes = ProgExecArch.H
+usr_arch_includes = $(addprefix $(O)/install/include/usr/arch/$(TARGET)/, $(usr$(TARGET)_includes))
+libincludes += $(usr_arch_includes)
 $(O)/install/include/usr/arch/$(TARGET)/%.h: $(H)/lib/libc/usr/arch/$(TARGET)/%>h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
-usrincludes = ProgExec.H runProcessCommon.H
-libincludes += $(addprefix $(O)/install/include/usr/, $(usrincludes))
+usr_includes = ProgExec.H runProcessCommon.H
+libincludes += $(addprefix $(O)/install/include/usr/, $(usr_includes))
 $(O)/install/include/usr/%.h: $(H)/lib/libc/usr/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
@@ -851,28 +851,28 @@ $(O)/install/include/sys/%.h: $(H)/lib/libc/usr/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
-schedulerpowerpcincludes = DispatcherDefault.H DispatcherDefaultExp.H
-schedulerarchincludes = $(addprefix $(O)/install/include/scheduler/arch/$(TARGET)/, $(scheduler$(TARGET)includes))
-libincludes += $(schedulerarchincludes)
+scheduler_powerpc_includes = DispatcherDefault.H DispatcherDefaultExp.H
+scheduler_arch_includes = $(addprefix $(O)/install/include/scheduler/arch/$(TARGET)/, $(scheduler$(TARGET)_includes))
+libincludes += $(scheduler_arch_includes)
 $(O)/install/include/scheduler/arch/$(TARGET)/%.h: $(H)/lib/libc/scheduler/arch/$(TARGET)/%>h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
-schedulerincludes = Thread.H Scheduler.H DispatcherDefault.H DispatcherDefaultExp.H SchedulerTimer.H SchedulerService.H VPSet.H DispatcherMgr.H CachePaddedArray.H
-libincludes += $(addprefix $(O)/install/include/scheduler/, $(schedulerincludes))
+scheduler_includes = Thread.H Scheduler.H DispatcherDefault.H DispatcherDefaultExp.H SchedulerTimer.H SchedulerService.H VPSet.H DispatcherMgr.H CachePaddedArray.H
+libincludes += $(addprefix $(O)/install/include/scheduler/, $(scheduler_includes))
 $(O)/install/include/scheduler/%.h: $(H)/lib/libc/scheduler/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
-tracepowerpcincludes = traceReserve.H
-tracearchincludes = $(addprefix $(O)/install/include/trace/arch/$(TARGET)/, $(trace$(TARGET)includes))
-libincludes += $(tracearchincludes)
+trace_powerpc_includes = traceReserve.H
+trace_arch_includes = $(addprefix $(O)/install/include/trace/arch/$(TARGET)/, $(trace$(TARGET)_includes))
+libincludes += $(trace_arch_includes)
 $(O)/install/include/trace/arch/$(TARGET)%.h: $(H)/lib/libc/trace/arch/$(TARGET)/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
-traceincludes = traceCore.H traceReserve.H traceLib.H tracePack.H traceK42.h
-libincludes += $(addprefix $(O)/install/include/trace/, $(traceincludes))
+trace_includes = traceCore.H traceReserve.H traceLib.H tracePack.H traceK42.h
+libincludes += $(addprefix $(O)/install/include/trace/, $(trace_includes))
 $(O)/install/include/trace/%.h: $(H)/lib/libc/trace/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
