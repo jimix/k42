@@ -7,7 +7,6 @@ D = full
 OS = $(shell uname -s)
 BUILD = $(shell uname -m)
 TARGET = powerpc
-VPATH = /home/bridges/k42/kitchsrc
 
 # Build our source and output paths from above.
 O = ..
@@ -57,10 +56,12 @@ endif
 endif
 
 # Our non-file targets.
-.PHONY: k42-vmlinux k42-zImage includes dirs config clean
+.PHONY: k42-vmlinux k42-zImage includes servers dirs config all clean
 
 # Default target is just the directory skeleton and our bootable kernel.
 k42-vmlinux: dirs includes $(S)/os/servers/baseServers/baseServers $(S)/os/k42-vmlinux
+
+all: k42-vmlinux servers
 
 # For some machines we need a compressed kernel.
 k42-zImage: dirs $(S)/os/servers/baseServers/baseServers $(S)/os/k42-zImage
@@ -760,19 +761,42 @@ $(S)/os/servers/baseServers/baseServers: $(baseServers_dep)
 # targets
 stubgen_targets = $(1)/stub/Stub%.H $(1)/meta/Meta%.H $(1)/meta/TplMeta%.H  $(1)/xobj/X%.H $(1)/xobj/TplX%.H $(1)/Stub%.C $(1)/X%.C $(1)/tmpl/TplX%.I
 
-# Generate and compile stubs in servers/sample
+# Generate and compile stubs and server in servers/sample
 $(call stubgen_targets, $(S)/os/servers/sample): $(H)/os/servers/sample/%.H
 	$(call status, STUBGEN, $@)
 	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) $(CFLAGS) -w -I. $(IFLAGS) -D_IN_STUBGEN
 
+server_lflags = -Wl,-dynamic-linker,/usr/klib/ld64.so.1 \
+		-Wl,-rpath,/klib:/usr/klib \
+		-L$(O)/install/lib/$(TARGET)/$(D)Deb \
+		-L$(O)/install/$(TARGET)/$(D)Deb/kitchroot/klib \
+	        -L$(U)/$(D)Deb.Img.4/usr/klib \
+               -lk42sys -lc
+
 $(S)/os/servers/sample/%.o: cflags = $(CFLAGS)
 $(S)/os/servers/sample/%.o: iflags = -I$(O)/os/servers \
                                      -I$(H)/os/servers $(IFLAGS)
+
+# Note - we don't yet build SampleServiceWrapper.o so we don't have it in OBJS
+# yet
+#
+$(OBJS) += $(addprefix $(S)/os/servers/sample/, sample.o SampleServiceServer.o sample.o StubSampleService.o XSampleService.o)
 $(S)/os/servers/sample/%.o: $(S)/os/servers/sample/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(cflags) $(iflags) -c $^ -o $@
 
+$(S)/os/servers/sample/sampleServer.dbg: $(addprefix $(S)/os/servers/sample/, sample.o SampleServiceServer.o XSampleService.o)
+	$(call status, LD, $@)
+	$(CXX) -o $@ $^ $(server_lflags)
+
+$(S)/os/servers/sample/sampleServer: $(S)/os/servers/sample/sampleServer.dbg
+	$(call status, STRIP, $@)
+	$(CP) $< $@
+	$(STRIP) $@
+
+servers: $(S)/os/servers/sample/sampleServer
 ###############################################################################
+
 # Rules for moving include files into place
 libincludes := 
 
