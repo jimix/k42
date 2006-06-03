@@ -7,6 +7,7 @@ D = full
 OS = $(shell uname -s)
 BUILD = $(shell uname -m)
 TARGET = powerpc
+VPATH = /home/bridges/k42/kitchsrc
 
 # Build our source and output paths from above.
 O = ..
@@ -15,6 +16,7 @@ S = $(O)/$(TARGET)/$(D)Deb
 B = $(S)/os/kexec
 U = /u/kitchawa/k42-packages
 L = ../linux-030
+TOOLS = $(O)/install/tools/$(OS)_$(BUILD)/$(TARGET)
 
 # 64-bit cross-compile tools.
 CROSS_COMPILE = powerpc64-linux-
@@ -39,6 +41,7 @@ HOSTCFLAGS = -g -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer
 MKDIR = mkdir
 GZIP = gzip
 CP = cp
+STUBGEN = $(TOOLS)/stubgen/stubgen
 
 # If V=1, we echo the commands as normal, if V=2, show out-of-date depends.
 V = 0
@@ -751,7 +754,26 @@ $(S)/os/servers/baseServers/baseServers: $(baseServers_dep)
 
 ###############################################################################
 
-# Rules for moving makefiles into place
+# Rules for generating stubs
+
+# Call for expanding a stub directory into a full set of stub generator
+# targets
+stubgen_targets = $(1)/stub/Stub%.H $(1)/meta/Meta%.H $(1)/meta/TplMeta%.H  $(1)/xobj/X%.H $(1)/xobj/TplX%.H $(1)/Stub%.C $(1)/X%.C $(1)/tmpl/TplX%.I
+
+# Generate and compile stubs in servers/sample
+$(call stubgen_targets, $(S)/os/servers/sample): $(H)/os/servers/sample/%.H
+	$(call status, STUBGEN, $@)
+	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) $(CFLAGS) -w -I. $(IFLAGS) -D_IN_STUBGEN
+
+$(S)/os/servers/sample/%.o: cflags = $(CFLAGS)
+$(S)/os/servers/sample/%.o: iflags = -I$(O)/os/servers \
+                                     -I$(H)/os/servers $(IFLAGS)
+$(S)/os/servers/sample/%.o: $(S)/os/servers/sample/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(cflags) $(iflags) -c $^ -o $@
+
+###############################################################################
+# Rules for moving include files into place
 libincludes := 
 
 stdlibincs = ctype.h float.h limits.h string.h 
