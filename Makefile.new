@@ -38,6 +38,7 @@ HOSTCC = gcc
 HOSTCFLAGS = -g -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer
 MKDIR = mkdir
 GZIP = gzip
+CP = cp
 
 # If V=1, we echo the commands as normal, if V=2, show out-of-date depends.
 V = 0
@@ -53,10 +54,10 @@ endif
 endif
 
 # Our non-file targets.
-.PHONY: k42-vmlinux k42-zImage dirs config clean
+.PHONY: k42-vmlinux k42-zImage includes dirs config clean
 
 # Default target is just the directory skeleton and our bootable kernel.
-k42-vmlinux: dirs $(S)/os/servers/baseServers/baseServers $(S)/os/k42-vmlinux
+k42-vmlinux: dirs includes $(S)/os/servers/baseServers/baseServers $(S)/os/k42-vmlinux
 
 # For some machines we need a compressed kernel.
 k42-zImage: dirs $(S)/os/servers/baseServers/baseServers $(S)/os/k42-zImage
@@ -748,6 +749,115 @@ $(S)/os/servers/baseServers/baseServers: $(baseServers_dep)
 	$(call status, STRIP, $@)
 	$(STRIP) -s $< -o $@
 
+###############################################################################
+
+# Rules for moving makefiles into place
+libincludes := 
+
+stdlibincs = ctype.h float.h limits.h string.h 
+libincludes += $(addprefix $(O)/install/include/, $(stdlibincs))
+$(O)/install/include/%.h: $(H)/lib/libc/stdlib/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+cobjsysincs = COSMgr.H COSMgrObject.H COSMissHandler.H COSTransObject.H COSconsts.h COVTable.H TransEntry.H COSDefaultObject.H COSBreakpointObject.H TransPageDescList.H TransPageDescHash.H TransPageDesc.H ActiveThrdCnt.H CODesc.H
+libincludes += $(addprefix $(O)/install/include/cobj/sys/, $(cobjsysincs))
+$(O)/install/include/cobj/sys/%.h: $(H)/lib/libc/cobj/sys/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+cobjincs = CObjRep.H CObjRoot.H CObjRootSingleRep.H CObjRootMultiRep.H ObjectRefs.H  XHandleTrans.H XObjectList.H BaseObj.H Obj.H ObjectHandle.H TypeMgr.H TypeMgrServer.H TypeFactory.H Example.H CObjRepArbiter.H CObjRepArbiterTarget.H CObjRootArbiter.H DataTransfer.H DTType.H CObjGlobals.H Factory.H COListServer.H COList.H
+libincludes += $(addprefix $(O)/install/include/cobj/, $(cobjincs))
+$(O)/install/include/cobj/%.h: $(H)/lib/libc/cobj/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+	
+allocincs = alloc.H AllocPool.H LMalloc.H AllocCell.H PageAllocatorUser.H PageAllocatorDefault.H MemoryMgrPrimitive.H AllocRegionManager.H MemDesc.H VAllocServices.H AllocStats.H DataChunk.H AllocStats.H PMalloc.H ObjCache.H
+libincludes += $(addprefix $(O)/install/include/alloc/, $(allocincs))
+$(O)/install/include/alloc/%.h: $(H)/lib/libc/alloc/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+libincludes += $(O)/install/include/sys/PageAllocator.H $(O)/install/include/sys/LeakProof.H
+$(O)/install/include/sys/%.h: $(H)/lib/libc/alloc/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+miscpowerpcincludes = asm.h asmdef.h alloca.H hardware.H expedient.H volatileFrame.H asdef.h trap.h pwrPC.H simSupport.H bits.h
+
+miscarchincludes = $(addprefix $(O)/install/include/misc/arch/$(TARGET)/, $(misc$(TARGET)includes))
+libincludes += $(miscarchincludes)
+$(O)/install/include/misc/arch/$(TARGET)/%.h: $(H)/lib/libc/misc/arch/$(TARGET)/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+miscincludes = asm.h asmdef.h alloca.H hardware.H expedient.H volatileFrame.H linkage.H ListSimple.H ListArraySimple.H ListArraySimple.C ListSimpleKey.H ListSimpleKeyLocked.H ListSimpleLocked.H  StringShort.H BitStructure.H macros.H StringTable.H StringTable.I utilities.H baseStdio.H simpleThread.H  SSAC.H SSACSimplePartitionedArray.H SSACSimplePartitionedArray.C testSupport.H HashSimple.H BitVec.H DHashTable.H AutoList.H AutoList.I BaseRandom.H HashNonBlocking.H HashNonBlocking.I AtomicBitVec64.H BlockSet.H DiskMountInfoList.H Callback.H SharedBufferProducer.H SharedBufferProducerUser.H SharedBufferConsumer.H SharedBufferConsumerUser.H
+libincludes += $(addprefix $(O)/install/include/misc/, $(miscincludes))
+$(O)/install/include/misc/%.h: $(H)/lib/libc/misc/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+syspowerpcincludes =  sysTypes.H macdefs.H config.H types.H ppccore.H extRegs.H
+
+sysarchincludes = $(addprefix $(O)/install/include/sys/arch/$(TARGET)/, $(sys$(TARGET)includes))
+libincludes += $(sysarchincludes)
+$(O)/install/include/sys/arch/$(TARGET)/%.h: $(H)/lib/libc/sys/arch/$(TARGET)/%>h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+sysincludes = systemAccess.H sysTypes.H sysIncs.H BaseProcess.H ProcessWrapper.H ProcessSet.H ProcessSetUser.H macdefs.H config.H types.H ppccore.H kinclude.H SysStatus.H TAssert.H ProcessClient.H ProcessLinux.H LinuxCreds.H ResMgrWrapper.H SystemMiscWrapper.H MountPointMgrClient.H MountPointMgrCommon.H SMTMgr.H ProcessLinuxClient.H ShMemBuf.H ShMemClnt.H InitStep.H Initialization.H hostSysTypes.H bswap.h extRegs.H
+libincludes += $(addprefix $(O)/install/include/sys/, $(sysincludes))
+$(O)/install/include/sys/%.h: $(H)/lib/libc/sys/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+usrpowerpcincludes = ProgExecArch.H
+usrarchincludes = $(addprefix $(O)/install/include/usr/arch/$(TARGET)/, $(usr$(TARGET)includes))
+libincludes += $(usrarchincludes)
+$(O)/install/include/usr/arch/$(TARGET)/%.h: $(H)/lib/libc/usr/arch/$(TARGET)/%>h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+usrincludes = ProgExec.H runProcessCommon.H
+libincludes += $(addprefix $(O)/install/include/usr/, $(usrincludes))
+$(O)/install/include/usr/%.h: $(H)/lib/libc/usr/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+libincludes += $(O)/install/include/sys/GDBIO.H
+$(O)/install/include/sys/%.h: $(H)/lib/libc/usr/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+schedulerpowerpcincludes = DispatcherDefault.H DispatcherDefaultExp.H
+schedulerarchincludes = $(addprefix $(O)/install/include/scheduler/arch/$(TARGET)/, $(scheduler$(TARGET)includes))
+libincludes += $(schedulerarchincludes)
+$(O)/install/include/scheduler/arch/$(TARGET)/%.h: $(H)/lib/libc/scheduler/arch/$(TARGET)/%>h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+schedulerincludes = Thread.H Scheduler.H DispatcherDefault.H DispatcherDefaultExp.H SchedulerTimer.H SchedulerService.H VPSet.H DispatcherMgr.H CachePaddedArray.H
+libincludes += $(addprefix $(O)/install/include/scheduler/, $(schedulerincludes))
+$(O)/install/include/scheduler/%.h: $(H)/lib/libc/scheduler/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+tracepowerpcincludes = traceReserve.H
+tracearchincludes = $(addprefix $(O)/install/include/trace/arch/$(TARGET)/, $(trace$(TARGET)includes))
+libincludes += $(tracearchincludes)
+$(O)/install/include/trace/arch/$(TARGET)%.h: $(H)/lib/libc/trace/arch/$(TARGET)/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+traceincludes = traceCore.H traceReserve.H traceLib.H tracePack.H traceK42.h
+libincludes += $(addprefix $(O)/install/include/trace/, $(traceincludes))
+$(O)/install/include/trace/%.h: $(H)/lib/libc/trace/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+OBJS += $(libincludes)
+
+includes: $(libincludes)
 ###############################################################################
 
 # Now that OBJS is totally expanded, generate our directory list from it.
