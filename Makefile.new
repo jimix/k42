@@ -767,10 +767,39 @@ $(S)/os/servers/baseServers/baseServers: $(baseServers_dep)
 	$(STRIP) -s $< -o $@
 
 ###############################################################################
+# Generate stubs and compile kernel objects
 
-# Rules for generating stubs
+OBJS += $(addprefix $(S)/os/kernel/init/, $(kinitobjs))
+kernel_init_cflags = -fno-rtti -nostdinc++ -fno-exceptions -MD -DKERNEL $(CFLAGS)
+kernel_init_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/init $(IFLAGS)
 
-# Generate and compile stubs and server in servers/sample
+$(call stubgen_targets, $(S)/os/kernel/init): $(H)/os/kernel/init/%.H
+	$(call status, STUBGEN, $@)
+	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) $(kernel_init_cflags) \
+		-w -I. $(kernel_init_iflags) -D_IN_STUBGEN
+
+$(S)/os/kernel/init/%.o: $(S)/os/kernel/init/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_init_cflags) $(kernel_init_iflags) -c $^ -o $@
+
+$(S)/os/kernel/init/%.o: $(S)/os/kernel/init/arch/$(TARGET)/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_init_cflags) $(kernel_init_iflags) -c $^ -o $@
+
+$(S)/os/kernel/init/%.o: $(H)/os/kernel/init/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_init_cflags) $(kernel_init_iflags) -c $^ -o $@
+
+$(S)/os/kernel/init/%.o: $(H)/os/kernel/init/arch/$(TARGET)/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_init_cflags) $(kernel_init_iflags) -c $^ -o $@
+
+$(S)/os/kernel/init/%.o: $(H)/os/kernel/init/arch/$(TARGET)/%.S
+	$(call status, CXX, $@)
+	$(CXX) -MD $(CFLAGS) -D__ASSEMBLEY_ $(kernel_init_iflags) -c $^ -o $@
+
+###############################################################################
+# Generate and compile stubs and server in servers
 $(call stubgen_targets, $(S)/os/servers/sample): $(H)/os/servers/sample/%.H
 	$(call status, STUBGEN, $@)
 	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) $(CFLAGS) -w -I. $(IFLAGS) -D_IN_STUBGEN
