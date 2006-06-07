@@ -14,6 +14,7 @@ H = .
 S = $(O)/$(TARGET)/$(D)Deb
 B = $(S)/os/kexec
 U = /u/kitchawa/k42-packages
+IMG = $(U)/$(D)Deb.Img.4
 L = ../linux-030
 TOOLS = $(O)/install/tools/$(OS)_$(BUILD)/$(TARGET)
 
@@ -41,6 +42,19 @@ MKDIR = mkdir
 GZIP = gzip
 CP = cp
 STUBGEN = $(TOOLS)/stubgen/stubgen
+
+# Target machine flags
+CFLAGS = -DTARGET_MACHINE="$(TARGET)" -D__GNU_AS__ -U$(TARGET) -DGCC3	    \
+         -Wa,-strip-local-absolute -fPIC -mminimal-toc -Wall -Werror -O0 -g \
+         -DK42 -D_REENTRANT -D__BIG_ENDIAN__ -nostdinc
+
+CXXFLAGS = -fno-rtti -nostdinc++ -fno-exceptions $(CFLAGS)
+
+IFLAGS = -I$(O)/install/include					\
+         -I$(IMG)/usr/powerpc64-linux/include	\
+         -I$(L)/include						\
+         -I$(O)/install/gcc-include/arch/$(TARGET)		\
+         -I$(O)/install/include/stubgen/arch/$(TARGET)
 
 ################################################################################
 # Functions for supporting later targets
@@ -625,39 +639,23 @@ $(S)/os/kernel/bilge/%.o: $(H)/os/kernel/bilge/arch/powerpc/%.C
                -D__BIG_ENDIAN__ -nostdinc -I. \
                -I$(H)/os/kernel/bilge \
                -I$(O)/install/include \
-               -I$(U)/$(D)Deb.Img.4/usr/powerpc64-linux/include \
+               -I$(IMG)/usr/powerpc64-linux/include \
                -I$(L)/include \
                -I$(O)/install/gcc-include/arch/powerpc \
                -I$(O)/install/include/stubgen/arch/powerpc  \
                -I$(H)/os/kernel $< -o $@
 
-$(S)/os/kernel/init/%.o: $(H)/os/kernel/init/arch/powerpc/%.C
-	$(call status, CXX, $@)
-	$(CXX) -c -fno-rtti -nostdinc++ -fno-exceptions \
-               -DTARGET_MACHINE="powerpc" -D__GNU_AS__ -Upowerpc -DGCC3 \
-               -MD -Wa,-strip-local-absolute -fPIC -mminimal-toc  -DKERNEL \
-               -Wall -Werror -O0 -g -DKFS_ENABLED -DK42 -D_REENTRANT \
-               -D__BIG_ENDIAN__ -nostdinc -I. \
-               -I$(H)/os/kernel/init \
-               -I$(O)/install/include \
-               -I$(U)/$(D)Deb.Img.4/usr/powerpc64-linux/include \
-               -I$(L)/include \
-               -I$(O)/install/gcc-include/arch/powerpc \
-               -I$(O)/install/include/stubgen/arch/powerpc  \
-               -I$(H)/os/kernel $< -o $@
-
-lflags = -fno-rtti -nostdinc++ -fno-exceptions -DTARGET_MACHINE="powerpc" \
+lflags = -fno-rtti -nostdinc++ -fno-exceptions -DTARGET_MACHINE="$(TARGET)" \
         -D__GNU_AS__ -Upowerpc -DGCC3 -MD -Wa,-strip-local-absolute	  \
         -fPIC -mminimal-toc -Wall -Werror -O0 -g			  \
         -DKFS_ENABLED -DK42 -D_REENTRANT -D__BIG_ENDIAN__ -nostdinc
 kflags = $(lflags) -DKERNEL
 iflags = -I$(L)/include						\
          -I$(O)/install/include					\
-         -I$(O)/install/gcc-include/arch/powerpc		\
-         -I$(O)/install/include/stubgen/arch/powerpc		\
-         -I$(U)/$(D)Deb.Img.4/usr/powerpc64-linux/include
+         -I$(O)/install/gcc-include/arch/$(TARGET)		\
+         -I$(O)/install/include/stubgen/arch/$(TARGET)		\
+         -I$(IMG)/usr/powerpc64-linux/include
 jflags = -I$(L)/arch/k42/include $(iflags)
-
 
 os_kernel_linux_flags = -I$(H)/os/kernel \
                         -I$(H)/os/kernel/linux
@@ -673,17 +671,6 @@ $(S)/lib/libc/alloc/%.o: $(H)/lib/libc/alloc/%.C
 	$(CXX) -c $(lflags) $(iflags) $(lib_libc_alloc_flags) $< -o $@
 
 ###############################################################################
-
-CFLAGS = -DTARGET_MACHINE="$(TARGET)" -D__GNU_AS__ -U$(TARGET) -DGCC3	    \
-         -Wa,-strip-local-absolute -fPIC -mminimal-toc -Wall -Werror -O0 -g \
-         -DK42 -D_REENTRANT -D__BIG_ENDIAN__ -nostdinc
-
-IFLAGS = -I$(O)/install/include					\
-         -I$(U)/$(D)Deb.Img.4/usr/powerpc64-linux/include	\
-         -I$(L)/include						\
-         -I$(O)/install/gcc-include/arch/$(TARGET)		\
-         -I$(O)/install/include/stubgen/arch/$(TARGET)
-
 $(S)/os/servers/bootServers.o: cflags = $(CFLAGS)
 
 $(S)/os/servers/bootServers.o: iflags = -I$(O)/os/servers \
@@ -745,7 +732,7 @@ baseServers_objs = $(addprefix $(S)/os/servers/baseServers/, \
 
 baseServers_lflags = -static -Wl,-e,_k42start				\
                      -L$(O)/install/lib/powerpc/$(D)Deb			\
-                     -L$(U)/$(D)Deb.Img.4/usr/klib			\
+                     -L$(IMG)/usr/klib			\
                      -Wl,--whole-archive -lemu -Wl,--no-whole-archive	\
                      -llk26 -lvirtfs -lfs -lsrv -lbase -lc
 
@@ -770,7 +757,7 @@ $(S)/os/servers/baseServers/baseServers: $(baseServers_dep)
 # Generate stubs and compile kernel objects
 
 OBJS += $(addprefix $(S)/os/kernel/init/, $(kinitobjs))
-kernel_init_cflags = -fno-rtti -nostdinc++ -fno-exceptions -MD -DKERNEL $(CFLAGS)
+kernel_init_cflags = $(CXXFLAGS) -MD -DKERNEL 
 kernel_init_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/init $(IFLAGS)
 
 $(call stubgen_targets, $(S)/os/kernel/init): $(H)/os/kernel/init/%.H
@@ -800,18 +787,20 @@ $(S)/os/kernel/init/%.o: $(H)/os/kernel/init/arch/$(TARGET)/%.S
 
 ###############################################################################
 # Generate and compile stubs and server in servers
+
+# sampleServer
 $(call stubgen_targets, $(S)/os/servers/sample): $(H)/os/servers/sample/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) $(CFLAGS) -w -I. $(IFLAGS) -D_IN_STUBGEN
+	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) $(CXXFLAGS) -w -I. $(IFLAGS) -D_IN_STUBGEN
 
 server_lflags = -Wl,-dynamic-linker,/usr/klib/ld64.so.1 \
 		-Wl,-rpath,/klib:/usr/klib \
 		-L$(O)/install/lib/$(TARGET)/$(D)Deb \
 		-L$(O)/install/$(TARGET)/$(D)Deb/kitchroot/klib \
-	        -L$(U)/$(D)Deb.Img.4/usr/klib \
+	        -L$(IMG)/usr/klib \
                -lk42sys -lc
 
-$(S)/os/servers/sample/%.o: cflags = $(CFLAGS)
+$(S)/os/servers/sample/%.o: cflags = $(CXXFLAGS)
 $(S)/os/servers/sample/%.o: iflags = -I$(O)/os/servers \
                                      -I$(H)/os/servers $(IFLAGS)
 
@@ -846,24 +835,27 @@ $(O)/install/include/%.h: $(H)/lib/libc/stdlib/%.h
 
 cobjsysincs = COSMgr.H COSMgrObject.H COSMissHandler.H COSTransObject.H COSconsts.h COVTable.H TransEntry.H COSDefaultObject.H COSBreakpointObject.H TransPageDescList.H TransPageDescHash.H TransPageDesc.H ActiveThrdCnt.H CODesc.H
 lib_includes += $(addprefix $(O)/install/include/cobj/sys/, $(cobjsysincs))
+$(O)/install/include/cobj/sys/%.H: $(H)/lib/libc/cobj/sys/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
 $(O)/install/include/cobj/sys/%.h: $(H)/lib/libc/cobj/sys/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
 cobjincs = CObjRep.H CObjRoot.H CObjRootSingleRep.H CObjRootMultiRep.H ObjectRefs.H  XHandleTrans.H XObjectList.H BaseObj.H Obj.H ObjectHandle.H TypeMgr.H TypeMgrServer.H TypeFactory.H Example.H CObjRepArbiter.H CObjRepArbiterTarget.H CObjRootArbiter.H DataTransfer.H DTType.H CObjGlobals.H Factory.H COListServer.H COList.H
 lib_includes += $(addprefix $(O)/install/include/cobj/, $(cobjincs))
-$(O)/install/include/cobj/%.h: $(H)/lib/libc/cobj/%.h
+$(O)/install/include/cobj/%.H: $(H)/lib/libc/cobj/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 	
 allocincs = alloc.H AllocPool.H LMalloc.H AllocCell.H PageAllocatorUser.H PageAllocatorDefault.H MemoryMgrPrimitive.H AllocRegionManager.H MemDesc.H VAllocServices.H AllocStats.H DataChunk.H AllocStats.H PMalloc.H ObjCache.H
 lib_includes += $(addprefix $(O)/install/include/alloc/, $(allocincs))
-$(O)/install/include/alloc/%.h: $(H)/lib/libc/alloc/%.h
+$(O)/install/include/alloc/%.H: $(H)/lib/libc/alloc/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
 lib_includes += $(O)/install/include/sys/PageAllocator.H $(O)/install/include/sys/LeakProof.H
-$(O)/install/include/sys/%.h: $(H)/lib/libc/alloc/%.h
+$(O)/install/include/sys/%.H: $(H)/lib/libc/alloc/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
@@ -874,10 +866,22 @@ lib_includes += $(misc_arch_includes)
 $(O)/install/include/misc/arch/$(TARGET)/%.h: $(H)/lib/libc/misc/arch/$(TARGET)/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
+$(O)/install/include/misc/arch/$(TARGET)/%.H: $(H)/lib/libc/misc/arch/$(TARGET)/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
 
 misc_includes = asm.h asmdef.h alloca.H hardware.H expedient.H volatileFrame.H linkage.H ListSimple.H ListArraySimple.H ListArraySimple.C ListSimpleKey.H ListSimpleKeyLocked.H ListSimpleLocked.H  StringShort.H BitStructure.H macros.H StringTable.H StringTable.I utilities.H baseStdio.H simpleThread.H  SSAC.H SSACSimplePartitionedArray.H SSACSimplePartitionedArray.C testSupport.H HashSimple.H BitVec.H DHashTable.H AutoList.H AutoList.I BaseRandom.H HashNonBlocking.H HashNonBlocking.I AtomicBitVec64.H BlockSet.H DiskMountInfoList.H Callback.H SharedBufferProducer.H SharedBufferProducerUser.H SharedBufferConsumer.H SharedBufferConsumerUser.H
 lib_includes += $(addprefix $(O)/install/include/misc/, $(misc_includes))
 $(O)/install/include/misc/%.h: $(H)/lib/libc/misc/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+$(O)/install/include/misc/%.H: $(H)/lib/libc/misc/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+$(O)/install/include/misc/%.I: $(H)/lib/libc/misc/%.I
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+$(O)/install/include/misc/%.C: $(H)/lib/libc/misc/%.C
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
@@ -885,7 +889,7 @@ sys_powerpc_includes =  sysTypes.H macdefs.H config.H types.H ppccore.H extRegs.
 
 sys_arch_includes = $(addprefix $(O)/install/include/sys/arch/$(TARGET)/, $(sys$(TARGET)_includes))
 lib_includes += $(sys_arch_includes)
-$(O)/install/include/sys/arch/$(TARGET)/%.h: $(H)/lib/libc/sys/arch/$(TARGET)/%>h
+$(O)/install/include/sys/arch/$(TARGET)/%.H: $(H)/lib/libc/sys/arch/$(TARGET)/%>H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
@@ -894,35 +898,41 @@ lib_includes += $(addprefix $(O)/install/include/sys/, $(sys_includes))
 $(O)/install/include/sys/%.h: $(H)/lib/libc/sys/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
+$(O)/install/include/sys/%.H: $(H)/lib/libc/sys/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
 
 usr_powerpc_includes = ProgExecArch.H
 usr_arch_includes = $(addprefix $(O)/install/include/usr/arch/$(TARGET)/, $(usr$(TARGET)_includes))
 lib_includes += $(usr_arch_includes)
-$(O)/install/include/usr/arch/$(TARGET)/%.h: $(H)/lib/libc/usr/arch/$(TARGET)/%>h
+$(O)/install/include/usr/arch/$(TARGET)/%.H: $(H)/lib/libc/usr/arch/$(TARGET)/%>H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
 usr_includes = ProgExec.H runProcessCommon.H
 lib_includes += $(addprefix $(O)/install/include/usr/, $(usr_includes))
-$(O)/install/include/usr/%.h: $(H)/lib/libc/usr/%.h
+$(O)/install/include/usr/%.H: $(H)/lib/libc/usr/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
 lib_includes += $(O)/install/include/sys/GDBIO.H
-$(O)/install/include/sys/%.h: $(H)/lib/libc/usr/%.h
+$(O)/install/include/sys/%.H: $(H)/lib/libc/usr/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
 scheduler_powerpc_includes = DispatcherDefault.H DispatcherDefaultExp.H
 scheduler_arch_includes = $(addprefix $(O)/install/include/scheduler/arch/$(TARGET)/, $(scheduler$(TARGET)_includes))
 lib_includes += $(scheduler_arch_includes)
-$(O)/install/include/scheduler/arch/$(TARGET)/%.h: $(H)/lib/libc/scheduler/arch/$(TARGET)/%>h
+$(O)/install/include/scheduler/arch/$(TARGET)/%.H: $(H)/lib/libc/scheduler/arch/$(TARGET)/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
 scheduler_includes = Thread.H Scheduler.H DispatcherDefault.H DispatcherDefaultExp.H SchedulerTimer.H SchedulerService.H VPSet.H DispatcherMgr.H CachePaddedArray.H
 lib_includes += $(addprefix $(O)/install/include/scheduler/, $(scheduler_includes))
 $(O)/install/include/scheduler/%.h: $(H)/lib/libc/scheduler/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+$(O)/install/include/scheduler/%.H: $(H)/lib/libc/scheduler/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
@@ -936,6 +946,9 @@ $(O)/install/include/trace/arch/$(TARGET)%.h: $(H)/lib/libc/trace/arch/$(TARGET)
 trace_includes = traceCore.H traceReserve.H traceLib.H tracePack.H traceK42.h
 lib_includes += $(addprefix $(O)/install/include/trace/, $(trace_includes))
 $(O)/install/include/trace/%.h: $(H)/lib/libc/trace/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+$(O)/install/include/trace/%.H: $(H)/lib/libc/trace/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
