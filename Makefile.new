@@ -64,6 +64,10 @@ IFLAGS = -I$(O)/install/include					\
 stubgen_targets = $(1)/stub/Stub%.H $(1)/meta/Meta%.H $(1)/meta/TplMeta%.H  \
     $(1)/xobj/X%.H $(1)/xobj/TplX%.H $(1)/Stub%.C $(1)/X%.C $(1)/tmpl/TplX%.I
 
+stubgen_objects = $(1)/stub/Stub$(2).H $(1)/meta/Meta$(2).H \
+    $(1)/meta/TplMeta$(2).H $(1)/xobj/X$(2).H $(1)/xobj/TplX$(2).H \
+    $(1)/Stub$(2).C $(1)/X$(2).C $(1)/tmpl/TplX$(2).I
+
 # Call for printing status of commands in different forms
 # If V=1, we echo the commands as normal, if V=2, show out-of-date depends.
 V = 0
@@ -757,6 +761,10 @@ $(S)/os/servers/baseServers/baseServers: $(baseServers_dep)
 # Generate stubs and compile kernel objects
 
 OBJS += $(addprefix $(S)/os/kernel/init/, $(kinitobjs))
+OBJS += $(call stubgen_objects, $(S)/os/kernel/init,AsyncTester)
+OBJS += $(call stubgen_objects, $(S)/os/kernel/init,ServerState)
+OBJS += $(call stubgen_objects, $(S)/os/kernel/init,InitServer)
+
 kernel_init_cflags = $(CXXFLAGS) -MD -DKERNEL 
 kernel_init_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/init $(IFLAGS)
 
@@ -789,6 +797,8 @@ $(S)/os/kernel/init/%.o: $(H)/os/kernel/init/arch/$(TARGET)/%.S
 # Generate and compile stubs and server in servers
 
 # sampleServer
+OBJS += $(call stubgen_objects, $(S)/os/servers/sample,SampleServer)
+
 $(call stubgen_targets, $(S)/os/servers/sample): $(H)/os/servers/sample/%.H
 	$(call status, STUBGEN, $@)
 	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) $(CXXFLAGS) -w -I. $(IFLAGS) -D_IN_STUBGEN
@@ -807,7 +817,7 @@ $(S)/os/servers/sample/%.o: iflags = -I$(O)/os/servers \
 # Note - we don't yet build SampleServiceWrapper.o so we don't have it in OBJS
 # yet
 #
-$(OBJS) += $(addprefix $(S)/os/servers/sample/, sample.o SampleServiceServer.o sample.o StubSampleService.o XSampleService.o)
+$(OBJS) += $(addprefix $(S)/os/servers/sample/, sample.o SampleServiceServer.o sample.o StubSampleService.o XSampleService.o sampleServer sampleServer.dbg)
 $(S)/os/servers/sample/%.o: $(S)/os/servers/sample/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(cflags) $(iflags) -c $^ -o $@
