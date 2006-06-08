@@ -771,7 +771,8 @@ kernel_init_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/init $(IFLAGS)
 
 $(call stubgen_targets, $(S)/os/kernel/init): $(H)/os/kernel/init/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) $(kernel_init_cxxflags) \
+	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) \
+		$(filter-out -MD, $(kernel_init_cxxflags)) \
 		-w -I. $(kernel_init_iflags) -D_IN_STUBGEN
 
 $(S)/os/kernel/init/%.o: $(S)/os/kernel/init/%.C
@@ -791,7 +792,7 @@ $(S)/os/kernel/init/%.o: $(H)/os/kernel/init/arch/$(TARGET)/%.C
 	$(CXX) $(kernel_init_cxxflags) $(kernel_init_iflags) -c $^ -o $@
 
 $(S)/os/kernel/init/%.o: $(H)/os/kernel/init/arch/$(TARGET)/%.S
-	$(call status, CXX, $@)
+	$(call status, AS, $@)
 	$(CXX) -MD $(CFLAGS) -D__ASSEMBLEY_ $(kernel_init_iflags) -c $^ -o $@
 
 # kexceptobjs.o subobjects
@@ -800,12 +801,13 @@ OBJS += $(call stubgen_objects, $(S)/os/kernel/exception,CPUContainer)
 
 # Should these flags be based off of $(kflags), etc?
 kernel_except_cxxflags = $(CXXFLAGS) -MD -DKERNEL 
-kernel_except_cflags = $(CFLAGS) -MD -DKERNEL 
+kernel_except_cflags = $(CFLAGS) -DKERNEL 
 kernel_except_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/exception $(IFLAGS)
 
 $(call stubgen_targets, $(S)/os/kernel/exception): $(H)/os/kernel/exception/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) $(kernel_except_cxxflags) \
+	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) \
+		$(filter-out -MD, $(kernel_except_cxxflags)) \
 		-w -I. $(kernel_except_iflags) -D_IN_STUBGEN
 
 $(S)/os/kernel/exception/%.o: $(S)/os/kernel/exception/%.C
@@ -825,7 +827,7 @@ $(S)/os/kernel/exception/%.o: $(H)/os/kernel/exception/arch/$(TARGET)/%.C
 	$(CXX) $(kernel_except_cxxflags) $(kernel_except_iflags) -c $^ -o $@
 
 $(S)/os/kernel/exception/%.o: $(H)/os/kernel/exception/arch/$(TARGET)/%.S
-	$(call status, CXX, $@)
+	$(call status, AS, $@)
 	$(CXX) $(kernel_except_cflags) $(CFLAGS) -D__ASSEMBLEY_ $(kernel_except_iflags) -c $^ -o $@
 
 # ktraceobjs subobjects
@@ -844,7 +846,7 @@ OBJS += $(addprefix $(S)/os/kernel/sys/, $(ksysobjs))
 
 # Should these flags be based off of $(kflags), etc?
 kernel_sys_cxxflags = $(CXXFLAGS) -MD -DKERNEL 
-kernel_sys_cflags = $(CFLAGS) -MD -DKERNEL 
+kernel_sys_cflags = $(CFLAGS) -DKERNEL 
 kernel_sys_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/sys $(IFLAGS)
 
 $(S)/os/kernel/sys/%.o: $(H)/os/kernel/sys/%.C
@@ -852,8 +854,52 @@ $(S)/os/kernel/sys/%.o: $(H)/os/kernel/sys/%.C
 	$(CXX) $(kernel_sys_cxxflags) $(kernel_sys_iflags) -c $^ -o $@
 
 $(S)/os/kernel/sys/%.o: $(H)/os/kernel/sys/arch/$(TARGET)/%.S
-	$(call status, CXX, $@)
+	$(call status, AS, $@)
 	$(CXX) $(kernel_sys_cflags) $(CFLAGS) -D__ASSEMBLEY_ $(kernel_sys_iflags) -c $^ -o $@
+
+# kmemobjs.o subobjects
+OBJS += $(addprefix $(S)/os/kernel/mem/, $(kmemobjs))
+
+# Add each stub in kmemobjs to the list of objects to make/clean
+kernel_mem_stubobjs = $(filter Stub%.o, $(kmemobjs))
+kernel_mem_stubnames = $(patsubst Stub%.o, % ,$(kernel_mem_stubobjs))
+OBJS += $(foreach stubname, $(kernel_mem_stubnames), $(call stubgen_objects, $(S)/os/kernel/mem,$(stubname)))
+
+printobjs:
+	echo stubobjs: $(kernel_mem_stubobjs)
+	echo stubnames: $(kernel_mem_stubnames)
+	echo objs: $(OBJS)
+
+# Should these flags be based off of $(kflags), etc?
+kernel_mem_cxxflags = $(CXXFLAGS) -MD -DKERNEL 
+kernel_mem_cflags = $(CFLAGS) -DKERNEL 
+kernel_mem_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/mem $(IFLAGS)
+
+$(call stubgen_targets, $(S)/os/kernel/mem): $(H)/os/kernel/mem/%.H
+	$(call status, STUBGEN, $@)
+	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) \
+		$(filter-out -MD, $(kernel_mem_cxxflags)) \
+		-w -I. $(kernel_mem_iflags) -D_IN_STUBGEN
+
+$(S)/os/kernel/mem/%.o: $(S)/os/kernel/mem/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_mem_cxxflags) $(kernel_mem_iflags) -c $^ -o $@
+
+$(S)/os/kernel/mem/%.o: $(S)/os/kernel/mem/arch/$(TARGET)/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_mem_cxxflags) $(kernel_mem_iflags) -c $^ -o $@
+
+$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_mem_cxxflags) $(kernel_mem_iflags) -c $^ -o $@
+
+$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(TARGET)/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_mem_cxxflags) $(kernel_mem_iflags) -c $^ -o $@
+
+$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(TARGET)/%.S
+	$(call status, AS, $@)
+	$(CXX) $(kernel_mem_cflags) $(CFLAGS) -D__ASSEMBLEY_ $(kernel_mem_iflags) -c $^ -o $@
 
 ###############################################################################
 # Generate and compile stubs and server in servers
@@ -870,7 +916,7 @@ server_lflags = -Wl,-dynamic-linker,/usr/klib/ld64.so.1 \
 		-L$(O)/install/lib/$(TARGET)/$(D)Deb \
 		-L$(O)/install/$(TARGET)/$(D)Deb/kitchroot/klib \
 	        -L$(IMG)/usr/klib \
-               -lk42sys -lc
+                -lk42sys -lc
 
 $(S)/os/servers/sample/%.o: cflags = $(CXXFLAGS)
 $(S)/os/servers/sample/%.o: iflags = -I$(O)/os/servers \
