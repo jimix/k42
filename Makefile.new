@@ -774,6 +774,7 @@ $(call stubgen_targets, $(S)/os/kernel/init): $(H)/os/kernel/init/%.H
 	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) \
 		$(filter-out -MD, $(kernel_init_cxxflags)) \
 		-w -I. $(kernel_init_iflags) -D_IN_STUBGEN
+	$(RM) -f $(shell basename $< .H).stubgen.d
 
 $(S)/os/kernel/init/%.o: $(S)/os/kernel/init/%.C
 	$(call status, CXX, $@)
@@ -809,6 +810,7 @@ $(call stubgen_targets, $(S)/os/kernel/exception): $(H)/os/kernel/exception/%.H
 	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) \
 		$(filter-out -MD, $(kernel_except_cxxflags)) \
 		-w -I. $(kernel_except_iflags) -D_IN_STUBGEN
+	$(RM) -f $(shell basename $< .H).stubgen.d
 
 $(S)/os/kernel/exception/%.o: $(S)/os/kernel/exception/%.C
 	$(call status, CXX, $@)
@@ -880,6 +882,7 @@ $(call stubgen_targets, $(S)/os/kernel/mem): $(H)/os/kernel/mem/%.H
 	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) \
 		$(filter-out -MD, $(kernel_mem_cxxflags)) \
 		-w -I. $(kernel_mem_iflags) -D_IN_STUBGEN
+	$(RM) -f $(shell basename $< .H).stubgen.d
 
 $(S)/os/kernel/mem/%.o: $(S)/os/kernel/mem/%.C
 	$(call status, CXX, $@)
@@ -910,6 +913,7 @@ OBJS += $(call stubgen_objects, $(S)/os/servers/sample,SampleServer)
 $(call stubgen_targets, $(S)/os/servers/sample): $(H)/os/servers/sample/%.H
 	$(call status, STUBGEN, $@)
 	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) $(CXXFLAGS) -w -I. $(IFLAGS) -D_IN_STUBGEN
+	$(RM) -f $(shell basename $< .H).stubgen.d
 
 server_lflags = -Wl,-dynamic-linker,/usr/klib/ld64.so.1 \
 		-Wl,-rpath,/klib:/usr/klib \
