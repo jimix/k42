@@ -77,6 +77,76 @@ extern code lolita_insert_pteg_idx;
 extern code lolita_insert_pteg_HV_patch;
 extern code locore_sdr1_HV_patch;
 
+/* A collection of SLB debugging routines.  */
+#if 0
+union slb_entry {
+	struct
+	{
+		uval64	vsid:52;
+		uval64	ks:1;
+		uval64	kp:1;
+		uval64	n:1;
+		uval64	l:1;
+		uval64	c:1;
+		uval64	_zeroes1:7; /* is this lp selection? */
+		uval64	esid:36;
+		uval64	v:1;
+		uval64	_zeroes2:15;
+		uval64	index:12;
+	} bits;
+	struct
+	{
+		uval64 vsid;
+		uval64 esid;
+	} words;
+#define slb_vsid	words.vsid
+#define slb_esid	words.esid
+};
+
+void print_slb_entry(const char *prefix, int index, union slb_entry *curr)
+{
+	err_printf("%s %2d: %013lx %c %c %c %c %c %09lx %c %03x\n",
+		prefix, index, (uval)curr->bits.vsid,
+		(curr->bits.ks? 'S': ' '),
+		(curr->bits.kp? 'P': ' '),
+		(curr->bits.n ? 'N': ' '),
+		(curr->bits.l ? 'L': ' '),
+		(curr->bits.c ? 'C': ' '),
+		(uval)curr->bits.esid,
+		(curr->bits.v ? 'V': ' '),
+		(uval32)curr->bits.index);
+}
+
+int get_slb_entry(int index, union slb_entry *slbe)
+{
+  asm("isync;"
+      "slbmfee %[esid], %[index];"
+      "slbmfev %[vsid], %[index];"
+      "isync;"
+      : [esid]  "=&r" (slbe->words.esid),
+        [vsid]  "=&r" (slbe->words.vsid)
+      : [index] "r" (index)
+      : "memory");
+
+  return 0;
+}
+
+int slb_dump()
+{
+  int i;
+  union slb_entry entry;
+
+  for (i = 0; i < 64; i++) {
+    get_slb_entry(i, &entry);
+    if (entry.bits.v) {
+      print_slb_entry("H", i, &entry);
+    }
+  }
+
+  return 0;
+}
+#endif
+
 static void
 copyExceptionCode(MemoryMgrPrimitiveKern *memory, uval exc, codeAddress src,
 		  codeAddress srcEnd)

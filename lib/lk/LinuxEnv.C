@@ -245,6 +245,65 @@ __k42_local_bh_enable(void)
     Scheduler::Enable();
 }
 
+void sub_preempt_count(int val)
+{
+        int old_count, new_count;
+	int old_hardirq, new_hardirq;
+	int old_softirq, new_softirq;
+	int old_preempt, new_preempt;
+
+        /* Underflow?  */
+        BUG_ON(val > preempt_count());
+        /* Is the spinlock portion underflowing?  */
+        BUG_ON((val < PREEMPT_MASK) && !(preempt_count() & PREEMPT_MASK));
+
+        old_count = preempt_count();
+
+	new_count = old_count - val;
+
+	old_hardirq = old_count & HARDIRQ_MASK;
+	old_softirq = old_count & SOFTIRQ_MASK;
+	old_preempt = old_count & PREEMPT_MASK;
+
+	new_hardirq = new_count & HARDIRQ_MASK;
+	new_softirq = new_count & SOFTIRQ_MASK;
+	new_preempt = new_count & PREEMPT_MASK;
+
+	Scheduler::Disable();
+
+	/* Hardirq going from unmasked to masked?  */
+	if (old_hardirq == 0 && new_hardirq > 0)
+	    passertMsg(0, "Hardirq going from unmasked to masked\n");
+
+	/* Hardirq going from masked to unmasked?  */
+	if (old_hardirq > 0 && new_hardirq == 0)
+ 	    passertMsg(0, "Hardirq going from masked to unmasked\n");
+
+	/* Softirq going from unmasked to masked?  */
+	if (old_softirq == 0 && new_softirq > 0)
+  	    passertMsg(0, "Softirq going from unmasked to masked\n");
+
+	/* Softirq going from masked to unmasked?  */
+	if (old_softirq > 0 && new_softirq == 0) {
+	    LinuxEnv::DisabledUnbarGroup(Thread::GROUP_LINUX_SOFTIRQ);
+	    Scheduler::DisabledJoinGroupSelf(Thread::GROUP_LINUX_SOFTIRQ);
+	}
+
+	/* Preempt going from unmasked to masked?  */
+	if (old_preempt == 0 && new_preempt > 0) {
+  	    Scheduler::DisabledLeaveGroupSelf(Thread::GROUP_LINUX_SYSCALL);
+	    LinuxEnv::DisabledBarGroup(Thread::GROUP_LINUX_SYSCALL);
+	}
+
+	/* Preempt going from masked to unmasked?  */
+	if (old_preempt > 0 && new_preempt == 0)
+            passertMsg(0, "Preempt going from masked to unmasked\n");
+
+	preempt_count() = new_count;
+
+	Scheduler::Enable();
+}
+
 extern "C" void __local_irq_disable(void);
 void
 __local_irq_disable(void)

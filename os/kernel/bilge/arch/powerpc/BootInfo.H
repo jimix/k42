@@ -46,9 +46,10 @@ typedef unsigned long	ptr64;
 #define PLATFORM_PSERIES      0x0100
 #define PLATFORM_PSERIES_LPAR 0x0101
 #define PLATFORM_ISERIES_LPAR 0x0201
+#define PLATFORM_LPAR         0x0001
 #define PLATFORM_POWERMAC     0x0400
-
-
+#define PLATFORM_MAPLE        0x0500
+#define PLATFORM_BPA          0x1000
 
 /* This is taken from linux include/asm-ppc64/naca.h */
 /* Must be kept in sync */

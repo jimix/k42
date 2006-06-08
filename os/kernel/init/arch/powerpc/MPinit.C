@@ -249,7 +249,9 @@ secondaryStart(uval64 kernelInitArgsP)
     pingMsg(__LINE__);
     //MemoryMgrPrimitiveKern *memory = &kernelInitArgs.memory;
     pingMsg(__LINE__);
+#if 0
     setHID();
+#endif
 
     /*
      * Initialize Performance Monitoring Hardware to a known state

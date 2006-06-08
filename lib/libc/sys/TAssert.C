@@ -75,7 +75,6 @@ void raiseError(void)
 void
 pre_tassert(const char * /* failedexpr */, const char *fname, uval lineno)
 {
-    while(1);
     err_printf("ERROR: file \"%s\", line %ld\n", fname, lineno);
 }
 

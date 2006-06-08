@@ -25,9 +25,12 @@
 #include <sys/HVChan.H>
 #include <sys/GDBIO.H>
 
-extern "C" void udbg_printf(const char *fmt, ...);
+#define MSR_SIM		0x0000000020000000
+#define MSR_MAMBO       0x0000000010000000
 
 extern char bootData[BOOT_DATA_MAX];
+
+extern uval physical_serial_port_addr;
 
 BootPrintf::StaticStuff BootPrintf::staticStuff;
 
@@ -49,7 +52,7 @@ extern code kernVirtStart;
 
 extern "C" void marctest();
 
-extern "C" unsigned long lmb_alloc(unsigned long size, unsigned long align);
+extern "C" unsigned long lmb_alloc_base(u64 size, u64 align, u64 max_addr);
 
 extern void scanLMBForMem(MemoryMgrPrimitiveKern* memory);
 
@@ -75,6 +78,7 @@ void print(const char* x)
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
+#if 0
 void
 setHID() {
 
@@ -131,6 +135,7 @@ setHID() {
 	hidInit = 1;
     }
 }
+#endif
 extern uval FIXME_LOGPTES;
 
 
@@ -193,7 +198,10 @@ start(BootInfo *bootInfo)
     _OnSim = _BootInfo->onSim;
     _OnHV  = _BootInfo->onHV;
 
+    //We rely on Linux's __970_cpu_preinit to deal with this for us.
+#if 0
     if (!_OnHV) setHID();
+#endif
 
     kernelInitArgs.vp = 0;
     kernelInitArgs.barrierP = 0;
@@ -226,15 +234,12 @@ start(BootInfo *bootInfo)
     uval allocEnd = PAGE_ROUND_DOWN(virtBase + _BootInfo->kernelImage +
 						_BootInfo->kernelImageSize);
 #else
-
-
-
     uval spill = 35 * 1024 * 1024;
-    uval allocStart = virtBase + lmb_alloc(spill, 8);
+    uval allocStart = virtBase + lmb_alloc_base(spill, 8, SEGMENT_SIZE);
+    allocStart = PAGE_ROUND_UP(allocStart);
     uval allocEnd = allocStart + spill;
+    allocEnd = PAGE_ROUND_DOWN(allocEnd);
 #endif
-
-
 
     uval physStart = 0;
     uval physEnd = _BootInfo->physEnd;
@@ -310,6 +315,8 @@ start(BootInfo *bootInfo)
  */
 extern "C" void start_kernel(void)
 {
+  long msr;
+
   /* Fill out the first part from Linux's systemcfg structure.  */
   b.eye_catcher[0] = systemcfg->eye_catcher[0];
   b.version.major = systemcfg->version.major;
@@ -317,7 +324,6 @@ extern "C" void start_kernel(void)
   b.platform = systemcfg->platform;
   b.processor = systemcfg->processor;
   b.processorCount = systemcfg->processorCount;
-  b.physicalMemorySize = systemcfg->physicalMemorySize;
   b.tb_orig_stamp = systemcfg->tb_orig_stamp;
   b.tb_ticks_per_sec = systemcfg->tb_ticks_per_sec;
   b.tb_to_xs = systemcfg->tb_to_xs;
@@ -329,9 +335,28 @@ extern "C" void start_kernel(void)
   b.dCacheL1LineSize = systemcfg->dCacheL1LineSize;
   b.iCacheL1Size = systemcfg->iCacheL1Size;
   b.iCacheL1LineSize = systemcfg->iCacheL1LineSize;
+  b.physicalMemorySize = systemcfg->physicalMemorySize;
 
   extern unsigned long lmb_end_of_DRAM(void);
   b.physEnd = lmb_end_of_DRAM();
+
+  asm volatile("mfmsr %0" : "=r" (msr));
+  if (msr & MSR_SIM) {
+    b.onSim = (msr & MSR_MAMBO) ? SIM_MAMBO : SIM_SIMOSPPC;
+  } else {
+    b.onSim = SIM_NONE;
+  }
+
+  if (b.platform == PLATFORM_POWERMAC) {
+    b.naca.serialPortAddr = 0x80013020;
+  } else if (b.platform == PLATFORM_MAPLE) {
+    b.naca.serialPortAddr = physical_serial_port_addr;
+  } else {
+    b.naca.serialPortAddr = 0x0;
+  }
+
+  /* Should be 0 for a cold boot, 1 for a fast reboot.  */
+  b.wireInit = 0;
 
   /* Fill in the rest with K42-specific values.  */
   b.rtas.entry = 0x1ff4000;
@@ -347,9 +372,8 @@ extern "C" void start_kernel(void)
   b.prom.stdout = 0x8;
   b.prom.disp_node = 0x0;
   b.onHV = 0x0;
-  b.onSim = 0x2;
   b.wireChanOffset = 0x0;
-  b.wireInit = 0x0;
+
   b.argString = 0x0;
   b.argLength = 0x0;
   b.controlFlags = 0x0;

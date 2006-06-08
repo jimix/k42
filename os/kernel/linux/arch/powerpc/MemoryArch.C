@@ -35,6 +35,7 @@ extern "C" {
 
 extern PageHash* pageHash;
 
+extern struct ExceptionLocal *exceptionLocalDbg;
 
 extern "C" void * ioremap(unsigned long addr, unsigned long size);
 extern "C" void * __ioremap(unsigned long addr,
@@ -53,6 +54,16 @@ __ioremap(unsigned long addr, unsigned long size, unsigned long flags)
     tassert((uval)vaddr, err_printf("Out of I/O mapping range\n"));
     return vaddr;
 }
+
+#if 0
+extern "C" unsigned long get_last_pte(void);
+
+unsigned long get_last_pte(void)
+{
+  u64 last_pte = exceptionLocalDbg->lolitaState2.hv_r0;
+  return last_pte;
+}
+#endif
 
 void*
 ioremap(unsigned long addr, unsigned long size)

@@ -107,8 +107,10 @@ ThinWireChan::ClassInit(VPNum vp, MemoryMgrPrimitive *memory)
     char *speed  = NULL;;
     ComPort *serial = NULL;
 
-    if (_BootInfo->naca.serialPortAddr) {
-	comBase = ioReserveAndMap(_BootInfo->naca.serialPortAddr, 1);
+    uval addr = _BootInfo->naca.serialPortAddr;
+
+    if (addr) {
+	comBase = ioReserveAndMap(addr, 1);
 	_base = comBase;
     }
 
@@ -150,6 +152,13 @@ ThinWireChan::ClassInit(VPNum vp, MemoryMgrPrimitive *memory)
 	    oldSpeed = newSpeed;
 	}
 	port = serial = new(memory) ZilogPort(comBase, oldSpeed, 1);
+    } else if (_BootInfo->platform == PLATFORM_MAPLE) {
+	newSpeed = 19200;
+	oldSpeed = 19200;
+	if (_BootInfo->wireInit) {
+	    oldSpeed = newSpeed;
+	}
+	port = serial =new(memory) UARTPort(comBase, oldSpeed, 1);
     } else {
 	newSpeed = 115200;
 	oldSpeed = 9600;
