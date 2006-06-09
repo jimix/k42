@@ -6,17 +6,17 @@
 D = full
 OS = $(shell uname -s)
 BUILD = $(shell uname -m)
-TARGET = powerpc
+HOST = powerpc
 
 # Build our source and output paths from above.
 O = ..
 H = .
-S = $(O)/$(TARGET)/$(D)Deb
+S = $(O)/$(HOST)/$(D)Deb
 B = $(S)/os/kexec
 U = /u/kitchawa/k42-packages
 IMG = $(U)/$(D)Deb.Img.4
 L = ../linux-030
-TOOLS = $(O)/install/tools/$(OS)_$(BUILD)/$(TARGET)
+TOOLS = $(O)/install/tools/$(OS)_$(BUILD)/$(HOST)
 
 # 64-bit cross-compile tools.
 CROSS_COMPILE = powerpc64-linux-
@@ -36,15 +36,15 @@ OBJCOPY32 = $(CROSS32_COMPILE)objcopy
 STRIP32 = $(CROSS32_COMPILE)strip
 
 # Build machine native-compile tools.
-HOSTCC = gcc
-HOSTCFLAGS = -g -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer
+BUILDCC = gcc
+BUILDCFLAGS = -g -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer
 MKDIR = mkdir
 GZIP = gzip
 CP = cp
 STUBGEN = $(TOOLS)/stubgen/stubgen
 
 # Target machine flags
-CFLAGS = -DTARGET_MACHINE="$(TARGET)" -D__GNU_AS__ -U$(TARGET) -DGCC3	    \
+CFLAGS = -DTARGET_MACHINE="$(HOST)" -D__GNU_AS__ -U$(HOST) -DGCC3	    \
          -Wa,-strip-local-absolute -fPIC -mminimal-toc -Wall -Werror -O0 -g \
          -DK42 -D_REENTRANT -D__BIG_ENDIAN__ -nostdinc
 
@@ -53,8 +53,8 @@ CXXFLAGS = -fno-rtti -nostdinc++ -fno-exceptions $(CFLAGS)
 IFLAGS = -I$(O)/install/include					\
          -I$(IMG)/usr/powerpc64-linux/include	\
          -I$(L)/include						\
-         -I$(O)/install/gcc-include/arch/$(TARGET)		\
-         -I$(O)/install/include/stubgen/arch/$(TARGET)
+         -I$(O)/install/gcc-include/arch/$(HOST)		\
+         -I$(O)/install/include/stubgen/arch/$(HOST)
 
 ################################################################################
 # Functions for supporting later targets
@@ -96,7 +96,7 @@ all: k42-vmlinux servers
 
 # Just print some debug information and exit.
 config:
-	@echo build $(D)-debug K42 on $(BUILD) $(OS) for $(TARGET) from $(OBJS)
+	@echo build $(D)-debug K42 on $(BUILD) $(OS) for $(HOST) from $(OBJS)
 
 # Delete everything we built.
 clean:
@@ -131,7 +131,7 @@ kimagez = $(kimage).gz
 $(S)/os/boot/kernel-vmlinux.strip.o: $(S)/os/boot/kernel-vmlinux.strip.c \
 				     $(kimagez)
 	$(call status, CC, $@)
-	$(CC32) $(HOSTCFLAGS) -fno-builtin -c $< -o $@
+	$(CC32) $(BUILDCFLAGS) -fno-builtin -c $< -o $@
 	$(call status, OBJCOPY, $@)
 	$(OBJCOPY32) $@ --add-section=.kernel:vmlinux.strip=$(kimagez) \
 		 	--set-section-flags=$(sflags)
@@ -154,13 +154,13 @@ $(S)/os/k42-vmlinux.strip: $(S)/os/k42-vmlinux
 # A tool that adds a note to the final 32-bit kernel.
 OBJS += $(S)/os/boot2/addnote
 $(S)/os/boot2/addnote: $(L)/arch/ppc64/boot/addnote.c
-	$(call status, HOSTCC, $@)
-	$(HOSTCC) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(HOSTCFLAGS) $< -o $@
+	$(call status, BUILDCC, $@)
+	$(BUILDCC) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(BUILDCFLAGS) $< -o $@
 
 # A small object that will tell Linux what our kernel size is.
 $(S)/os/boot2/imagesize.o: $(S)/os/boot2/imagesize.c
 	$(call status, CC, $@)
-	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(HOSTCFLAGS) \
+	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(BUILDCFLAGS) \
                 -I$(L)/include -fno-builtin -c $< -o $@
 
 # Sanity check: kimage=vmlinux kimagez=arch/ppc64/boot/kernel-vmlinux.strip.gz
@@ -178,12 +178,12 @@ $(S)/os/boot2/imagesize.c: $(kimage)
 $(S)/os/boot2/%.o: $(L)/arch/ppc64/boot/%.S
 	$(call status, AS, $@)
 	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d \
-		-D__ASSEMBLY__ $(HOSTCFLAGS) \
+		-D__ASSEMBLY__ $(BUILDCFLAGS) \
                 -I$(L)/include -fno-builtin -traditional -c $< -o $@
 
 $(S)/os/boot2/%.o: $(L)/arch/ppc64/boot/%.c
 	$(call status, CC, $@)
-	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(HOSTCFLAGS) \
+	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(BUILDCFLAGS) \
                 -I$(L)/include -fno-builtin -c $< -o $@
 
 # The 64-bit K42 kernel proper, with debug symbols.
@@ -627,21 +627,21 @@ libkobjs = $(S)/lib/libc/alloc/AllocCell.o $(S)/lib/libc/alloc/AllocPool.o \
            $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o		   \
            $(S)/usr/XUsrTst.o
 
-OBJS += $(O)/install/lib/$(TARGET)/$(D)Deb/libk.a
-$(O)/install/lib/$(TARGET)/$(D)Deb/libk.a: $(libkobjs)
+OBJS += $(O)/install/lib/$(HOST)/$(D)Deb/libk.a
+$(O)/install/lib/$(HOST)/$(D)Deb/libk.a: $(libkobjs)
 	$(call status, AR, $@)
 	$(AR) crs $@ $?
 
 
-lflags = -fno-rtti -nostdinc++ -fno-exceptions -DTARGET_MACHINE="$(TARGET)" \
+lflags = -fno-rtti -nostdinc++ -fno-exceptions -DTARGET_MACHINE="$(HOST)" \
         -D__GNU_AS__ -Upowerpc -DGCC3 -MD -Wa,-strip-local-absolute	  \
         -fPIC -mminimal-toc -Wall -Werror -O0 -g			  \
         -DKFS_ENABLED -DK42 -D_REENTRANT -D__BIG_ENDIAN__ -nostdinc
 kflags = $(lflags) -DKERNEL
 iflags = -I$(L)/include						\
          -I$(O)/install/include					\
-         -I$(O)/install/gcc-include/arch/$(TARGET)		\
-         -I$(O)/install/include/stubgen/arch/$(TARGET)		\
+         -I$(O)/install/gcc-include/arch/$(HOST)		\
+         -I$(O)/install/include/stubgen/arch/$(HOST)		\
          -I$(IMG)/usr/powerpc64-linux/include
 jflags = -I$(L)/arch/k42/include $(iflags)
 
@@ -670,7 +670,7 @@ $(S)/os/servers/bootServers.o: $(S)/os/servers/bootServers.s
 
 ###############################################################################
 
-bootServers_tool = $(O)/install/tools/Linux_$(BUILD)/$(TARGET)/mkserv
+bootServers_tool = $(O)/install/tools/Linux_$(BUILD)/$(HOST)/mkserv
 
 bootServers_dep1 = $(S)/os/servers/baseServers/servers.list
 bootServers_dep2 = $(S)/os/servers/reboot/servers.list
@@ -726,7 +726,7 @@ baseServers_lflags = -static -Wl,-e,_k42start				\
 
 baseServers_ldeps1 = libemu.a liblk26.a libvirtfs.a libfs.a libsrv.a
 
-baseServers_ldeps = $(addprefix $(O)/install/lib/$(TARGET)/$(D)Deb/, \
+baseServers_ldeps = $(addprefix $(O)/install/lib/$(HOST)/$(D)Deb/, \
 		      $(baseServers_ldeps1))
 
 $(S)/os/servers/baseServers/baseServers.dbg: $(baseServers_ldeps)
@@ -755,7 +755,7 @@ kernel_init_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/init -I$(IMG)/use/powerpc
 
 $(call stubgen_targets, $(S)/os/kernel/init): $(H)/os/kernel/init/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) \
+	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
 		$(filter-out -MD, $(kernel_init_cxxflags)) \
 		-w -I. $(kernel_init_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
@@ -764,11 +764,11 @@ $(S)/os/kernel/init/%.o: $(S)/os/kernel/init/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_init_cxxflags) $(kernel_init_iflags) -c $^ -o $@
 
-$(S)/os/kernel/init/%.E: $(H)/os/kernel/init/arch/$(TARGET)/%.C
+$(S)/os/kernel/init/%.E: $(H)/os/kernel/init/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
 	$(CXX) -E $(kernel_init_cxxflags) $(kernel_init_iflags) $< -o $@
 
-$(S)/os/kernel/init/%.o: $(S)/os/kernel/init/arch/$(TARGET)/%.C
+$(S)/os/kernel/init/%.o: $(S)/os/kernel/init/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_init_cxxflags) $(kernel_init_iflags) -c $^ -o $@
 
@@ -776,11 +776,11 @@ $(S)/os/kernel/init/%.o: $(H)/os/kernel/init/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_init_cxxflags) $(kernel_init_iflags) -c $^ -o $@
 
-$(S)/os/kernel/init/%.o: $(H)/os/kernel/init/arch/$(TARGET)/%.C
+$(S)/os/kernel/init/%.o: $(H)/os/kernel/init/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_init_cxxflags) $(kernel_init_iflags) -c $^ -o $@
 
-$(S)/os/kernel/init/%.o: $(H)/os/kernel/init/arch/$(TARGET)/%.S
+$(S)/os/kernel/init/%.o: $(H)/os/kernel/init/arch/$(HOST)/%.S
 	$(call status, AS, $@)
 	$(CXX) -MD $(CFLAGS) -D__ASSEMBLEY_ $(kernel_init_iflags) -c $^ -o $@
 
@@ -795,7 +795,7 @@ kernel_except_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/exception $(IFLAGS)
 
 $(call stubgen_targets, $(S)/os/kernel/exception): $(H)/os/kernel/exception/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) \
+	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
 		$(filter-out -MD, $(kernel_except_cxxflags)) \
 		-w -I. $(kernel_except_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
@@ -804,7 +804,7 @@ $(S)/os/kernel/exception/%.o: $(S)/os/kernel/exception/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_except_cxxflags) $(kernel_except_iflags) -c $^ -o $@
 
-$(S)/os/kernel/exception/%.o: $(S)/os/kernel/exception/arch/$(TARGET)/%.C
+$(S)/os/kernel/exception/%.o: $(S)/os/kernel/exception/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_except_cxxflags) $(kernel_except_iflags) -c $^ -o $@
 
@@ -812,11 +812,11 @@ $(S)/os/kernel/exception/%.o: $(H)/os/kernel/exception/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_except_cxxflags) $(kernel_except_iflags) -c $^ -o $@
 
-$(S)/os/kernel/exception/%.o: $(H)/os/kernel/exception/arch/$(TARGET)/%.C
+$(S)/os/kernel/exception/%.o: $(H)/os/kernel/exception/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_except_cxxflags) $(kernel_except_iflags) -c $^ -o $@
 
-$(S)/os/kernel/exception/%.o: $(H)/os/kernel/exception/arch/$(TARGET)/%.S
+$(S)/os/kernel/exception/%.o: $(H)/os/kernel/exception/arch/$(HOST)/%.S
 	$(call status, AS, $@)
 	$(CXX) $(kernel_except_cflags) $(CFLAGS) -D__ASSEMBLEY_ $(kernel_except_iflags) -c $^ -o $@
 
@@ -843,7 +843,7 @@ $(S)/os/kernel/sys/%.o: $(H)/os/kernel/sys/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_sys_cxxflags) $(kernel_sys_iflags) -c $^ -o $@
 
-$(S)/os/kernel/sys/%.o: $(H)/os/kernel/sys/arch/$(TARGET)/%.S
+$(S)/os/kernel/sys/%.o: $(H)/os/kernel/sys/arch/$(HOST)/%.S
 	$(call status, AS, $@)
 	$(CXX) $(kernel_sys_cflags) $(CFLAGS) -D__ASSEMBLEY_ $(kernel_sys_iflags) -c $^ -o $@
 
@@ -862,7 +862,7 @@ kernel_mem_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/mem $(IFLAGS)
 
 $(call stubgen_targets, $(S)/os/kernel/mem): $(H)/os/kernel/mem/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) \
+	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
 		$(filter-out -MD, $(kernel_mem_cxxflags)) \
 		-w -I. $(kernel_mem_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
@@ -871,7 +871,7 @@ $(S)/os/kernel/mem/%.o: $(S)/os/kernel/mem/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_mem_cxxflags) $(kernel_mem_iflags) -c $^ -o $@
 
-$(S)/os/kernel/mem/%.o: $(S)/os/kernel/mem/arch/$(TARGET)/%.C
+$(S)/os/kernel/mem/%.o: $(S)/os/kernel/mem/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_mem_cxxflags) $(kernel_mem_iflags) -c $^ -o $@
 
@@ -879,11 +879,11 @@ $(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_mem_cxxflags) $(kernel_mem_iflags) -c $^ -o $@
 
-$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(TARGET)/%.C
+$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_mem_cxxflags) $(kernel_mem_iflags) -c $^ -o $@
 
-$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(TARGET)/%.S
+$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(HOST)/%.S
 	$(call status, AS, $@)
 	$(CXX) $(kernel_mem_cflags) $(CFLAGS) -D__ASSEMBLEY_ $(kernel_mem_iflags) -c $^ -o $@
 
@@ -903,7 +903,7 @@ kernel_proc_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/proc $(IFLAGS)
 
 $(call stubgen_targets, $(S)/os/kernel/proc): $(H)/os/kernel/proc/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) \
+	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
 		$(filter-out -MD, $(kernel_proc_cxxflags)) \
 		-w -I. $(kernel_proc_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
@@ -916,7 +916,7 @@ $(S)/os/kernel/proc/%.o: $(H)/os/kernel/proc/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_proc_cxxflags) $(kernel_proc_iflags) -c $^ -o $@
 
-$(S)/os/kernel/proc/%.o: $(H)/os/kernel/proc/arch/$(TARGET)/%.C
+$(S)/os/kernel/proc/%.o: $(H)/os/kernel/proc/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_proc_cxxflags) $(kernel_proc_iflags) -c $^ -o $@
 
@@ -933,7 +933,7 @@ kernel_stub_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/stubtest $(IFLAGS)
 
 $(call stubgen_targets, $(S)/os/kernel/stubtest): $(H)/os/kernel/stubtest/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) \
+	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
 		$(filter-out -MD, $(kernel_stub_cxxflags)) \
 		-w -I. $(kernel_stub_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
@@ -962,7 +962,7 @@ kernel_bilge_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/bilge $(IFLAGS)
 
 $(call stubgen_targets, $(S)/os/kernel/bilge): $(H)/os/kernel/bilge/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) \
+	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
 		$(filter-out -MD, $(kernel_bilge_cxxflags)) \
 		-w -I. $(kernel_bilge_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
@@ -990,7 +990,7 @@ $(S)/os/kernel/bilge/%.o: $(S)/os/kernel/bilge/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_bilge_cxxflags) $(kernel_bilge_iflags) -c $< -o $@
 
-$(S)/os/kernel/bilge/%.o: $(S)/os/kernel/bilge/arch/$(TARGET)/%.C
+$(S)/os/kernel/bilge/%.o: $(S)/os/kernel/bilge/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_bilge_cxxflags) $(kernel_bilge_iflags) -c $< -o $@
 
@@ -998,11 +998,11 @@ $(S)/os/kernel/bilge/%.o: $(H)/os/kernel/bilge/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_bilge_cxxflags) $(kernel_bilge_iflags) -c $< -o $@
 
-$(S)/os/kernel/bilge/%.o: $(H)/os/kernel/bilge/arch/$(TARGET)/%.C
+$(S)/os/kernel/bilge/%.o: $(H)/os/kernel/bilge/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_bilge_cxxflags) $(kernel_bilge_iflags) -c $< -o $@
 
-$(S)/os/kernel/bilge/%.o: $(H)/os/kernel/bilge/arch/$(TARGET)/%.S
+$(S)/os/kernel/bilge/%.o: $(H)/os/kernel/bilge/arch/$(HOST)/%.S
 	$(call status, AS, $@)
 	$(CXX) $(kernel_bilge_cflags) $(CFLAGS) -D__ASSEMBLEY_ $(kernel_bilge_iflags) -c $< -o $@
 ###############################################################################
@@ -1013,13 +1013,13 @@ OBJS += $(call stubgen_objects, $(S)/os/servers/sample,SampleServer)
 
 $(call stubgen_targets, $(S)/os/servers/sample): $(H)/os/servers/sample/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(TARGET) $< -o $(shell dirname $@) $(CXXFLAGS) -w -I. $(IFLAGS) -D_IN_STUBGEN
+	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) $(CXXFLAGS) -w -I. $(IFLAGS) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
 
 server_lflags = -Wl,-dynamic-linker,/usr/klib/ld64.so.1 \
 		-Wl,-rpath,/klib:/usr/klib \
-		-L$(O)/install/lib/$(TARGET)/$(D)Deb \
-		-L$(O)/install/$(TARGET)/$(D)Deb/kitchroot/klib \
+		-L$(O)/install/lib/$(HOST)/$(D)Deb \
+		-L$(O)/install/$(HOST)/$(D)Deb/kitchroot/klib \
 	        -L$(IMG)/usr/klib \
                 -lk42sys -lc
 
@@ -1084,12 +1084,12 @@ $(O)/install/include/sys/%.H: $(H)/lib/libc/alloc/%.H
 
 misc_powerpc_includes = asm.h asmdef.h alloca.H hardware.H expedient.H volatileFrame.H asdef.h trap.h pwrPC.H simSupport.H bits.h
 
-misc_arch_includes = $(addprefix $(O)/install/include/misc/arch/$(TARGET)/, $(misc$(TARGET)_includes))
+misc_arch_includes = $(addprefix $(O)/install/include/misc/arch/$(HOST)/, $(misc_$(HOST)_includes))
 lib_includes += $(misc_arch_includes)
-$(O)/install/include/misc/arch/$(TARGET)/%.h: $(H)/lib/libc/misc/arch/$(TARGET)/%.h
+$(O)/install/include/misc/arch/$(HOST)/%.h: $(H)/lib/libc/misc/arch/$(HOST)/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
-$(O)/install/include/misc/arch/$(TARGET)/%.H: $(H)/lib/libc/misc/arch/$(TARGET)/%.H
+$(O)/install/include/misc/arch/$(HOST)/%.H: $(H)/lib/libc/misc/arch/$(HOST)/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
@@ -1110,9 +1110,9 @@ $(O)/install/include/misc/%.C: $(H)/lib/libc/misc/%.C
 
 sys_powerpc_includes =  sysTypes.H macdefs.H config.H types.H ppccore.H extRegs.H
 
-sys_arch_includes = $(addprefix $(O)/install/include/sys/arch/$(TARGET)/, $(sys$(TARGET)_includes))
+sys_arch_includes = $(addprefix $(O)/install/include/sys/arch/$(HOST)/, $(sys_$(HOST)_includes))
 lib_includes += $(sys_arch_includes)
-$(O)/install/include/sys/arch/$(TARGET)/%.H: $(H)/lib/libc/sys/arch/$(TARGET)/%>H
+$(O)/install/include/sys/arch/$(HOST)/%.H: $(H)/lib/libc/sys/arch/$(HOST)/%>H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
@@ -1126,9 +1126,9 @@ $(O)/install/include/sys/%.H: $(H)/lib/libc/sys/%.H
 	$(CP) $< $@
 
 usr_powerpc_includes = ProgExecArch.H
-usr_arch_includes = $(addprefix $(O)/install/include/usr/arch/$(TARGET)/, $(usr$(TARGET)_includes))
+usr_arch_includes = $(addprefix $(O)/install/include/usr/arch/$(HOST)/, $(usr_$(HOST)_includes))
 lib_includes += $(usr_arch_includes)
-$(O)/install/include/usr/arch/$(TARGET)/%.H: $(H)/lib/libc/usr/arch/$(TARGET)/%>H
+$(O)/install/include/usr/arch/$(HOST)/%.H: $(H)/lib/libc/usr/arch/$(HOST)/%>H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
@@ -1144,9 +1144,9 @@ $(O)/install/include/sys/%.H: $(H)/lib/libc/usr/%.H
 	$(CP) $< $@
 
 scheduler_powerpc_includes = DispatcherDefault.H DispatcherDefaultExp.H
-scheduler_arch_includes = $(addprefix $(O)/install/include/scheduler/arch/$(TARGET)/, $(scheduler$(TARGET)_includes))
+scheduler_arch_includes = $(addprefix $(O)/install/include/scheduler/arch/$(HOST)/, $(scheduler_$(HOST)_includes))
 lib_includes += $(scheduler_arch_includes)
-$(O)/install/include/scheduler/arch/$(TARGET)/%.H: $(H)/lib/libc/scheduler/arch/$(TARGET)/%.H
+$(O)/install/include/scheduler/arch/$(HOST)/%.H: $(H)/lib/libc/scheduler/arch/$(HOST)/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
@@ -1160,9 +1160,9 @@ $(O)/install/include/scheduler/%.H: $(H)/lib/libc/scheduler/%.H
 	$(CP) $< $@
 
 trace_powerpc_includes = traceReserve.H
-trace_arch_includes = $(addprefix $(O)/install/include/trace/arch/$(TARGET)/, $(trace$(TARGET)_includes))
+trace_arch_includes = $(addprefix $(O)/install/include/trace/arch/$(HOST)/, $(trace_$(HOST)_includes))
 lib_includes += $(trace_arch_includes)
-$(O)/install/include/trace/arch/$(TARGET)%.h: $(H)/lib/libc/trace/arch/$(TARGET)/%.h
+$(O)/install/include/trace/arch/$(HOST)/%.h: $(H)/lib/libc/trace/arch/$(HOST)/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
