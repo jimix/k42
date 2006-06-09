@@ -249,7 +249,7 @@ SGERR=$?; if [ $SGERR -ne 0 ]; then errtrap; fi
 #
 # all done
 #
-echo "$PROMPT done"
+# echo "$PROMPT done"
 exit 0
 #return
 
