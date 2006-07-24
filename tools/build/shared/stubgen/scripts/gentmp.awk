@@ -179,7 +179,7 @@ function createStandardFunc()
   printf("\t__attribute__((aligned(sizeof(uval))));\n")			  > XF;
 
   printf("\n")								  > XF;
-  printf("void\n")							  > XF;
+  printf("template<> void\n")						  > XF;
   printf("%s<INSTNAME>::init()\n{\n",TMclass)				  > XF;
   if (parent_class != "Obj") {
       printf("    %s<INSTNAME>::init();\n",Meta_parent)			  > XF;
