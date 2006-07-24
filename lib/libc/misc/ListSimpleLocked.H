@@ -27,7 +27,7 @@ template<class ALLOC> class ListSimpleLockedBase :
 
 protected:
 uval
-ListSimpleLockedBase::find(uval datum)
+find(uval datum)
 {
     int rc;
     lock.acquire();
@@ -37,7 +37,7 @@ ListSimpleLockedBase::find(uval datum)
 }
 
 void
-ListSimpleLockedBase::add(uval datum)
+add(uval datum)
 {
     lock.acquire();
     ListSimpleBase<ALLOC>::add(datum);
@@ -45,7 +45,7 @@ ListSimpleLockedBase::add(uval datum)
 }
 
 void
-ListSimpleLockedBase::addToEndOfList(uval datum)
+addToEndOfList(uval datum)
 {
     lock.acquire();
     ListSimpleBase<ALLOC>::addToEndOfList(datum);
@@ -53,7 +53,7 @@ ListSimpleLockedBase::addToEndOfList(uval datum)
 }
 
 uval
-ListSimpleLockedBase::addUnique(uval datum)
+addUnique(uval datum)
 {
     int rc = 0;				// assume failure
     lock.acquire();
@@ -67,7 +67,7 @@ ListSimpleLockedBase::addUnique(uval datum)
 }
 
 uval
-ListSimpleLockedBase::remove(uval datum)
+remove(uval datum)
 {
     int rc;
     lock.acquire();
@@ -77,7 +77,7 @@ ListSimpleLockedBase::remove(uval datum)
 }
 
 uval
-ListSimpleLockedBase::removeHead(uval & datum)
+removeHead(uval & datum)
 {
     int rc;
     lock.acquire();
@@ -87,7 +87,7 @@ ListSimpleLockedBase::removeHead(uval & datum)
 }
 
 uval
-ListSimpleLockedBase::getHead(uval & datum)
+getHead(uval & datum)
 {
     int rc = 0;
     lock.acquire();
@@ -101,7 +101,7 @@ ListSimpleLockedBase::getHead(uval & datum)
 
 /* both the locks on this list and the parameter list must be held */
 void
-ListSimpleLockedBase::locked_transferTo(ListSimpleLockedBase<ALLOC>
+locked_transferTo(ListSimpleLockedBase<ALLOC>
                                         &locked_list)
 {
     ListSimpleBase<ALLOC>::transferTo(locked_list);
