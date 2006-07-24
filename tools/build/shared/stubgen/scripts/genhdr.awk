@@ -447,15 +447,15 @@ function build__tmpfile( from, to)
 # build the variables
   for( i = from; i <= to; i++ ) {
     if( functype[i] == "V" ) {
-      printf("void (%s::*__Virtual__%s__Var%d)() = "           \
-	     "(void (%s::*)())(&%s::%s);\n",  	               \
-	     xclass, xclass, i, xclass, xclass, mangledfunctionname[i] );
-    } else {
-      printf("void (%s::*__Virtual__%s__Var%d)() = "            \
-	     "(void (%s::*)())(&%s::%s);\n",  	                \
-	     mclass, mclass, i, mclass, mclass, mangledfunctionname[i] );
-    }
+      used_class = xclass;
+    }else{
+      used_class = mclass;
+    }    
+    printf("typeof(&%s::%s) __Virtual__%s__Var%d = &%s::%s;\n", 
+	   used_class, mangledfunctionname[i], used_class, i, used_class, mangledfunctionname[i]);
+
     printf("\n");
+
   }
   printf("void (Dummy%s::*__VAR_SIZE_VIRTUAL__%s)() = &Dummy%s::__SIZE_VIRTUAL__;\n", xclass, nclass, xclass);
   printf("void (Dummy%s::*__VAR_SIZE_VIRTUAL__%s)() = &Dummy%s::__SIZE_VIRTUAL__;\n", mclass, mclass, mclass);
