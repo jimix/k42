@@ -172,9 +172,8 @@ public:
     uval getNumNonEmpty() { return numValues.value(); }
     typedef enum { FOUND, ALLOCATED } AllocateStatus;
     typedef enum { FAILURE, SUCCESS, LOCALFAILURE } OpStatus;
-    typedef enum {
-	LOCKALL, LOCKONEATATIME, LOCKNONE
-    } DHashTableBase::OpDirective;
+    typedef enum { LOCKALL, LOCKONEATATIME, LOCKNONE } OpDirective;
+    
     typedef uval OpArg;
     DHashTableBase(uval numEntries,uval minEntries, uval skipCount) :
 	requestCount() {
