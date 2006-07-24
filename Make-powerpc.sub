@@ -1,0 +1,16 @@
+##############################################################################
+# kitchsrc/Make-powerpc.sub 
+# Define general powerpc64-specific compiler information
+##############################################################################
+
+# XXX We define FULLHOST as the full name of the host architecture. HOST
+# should be moved to this in the future, but currently stays as is for
+# compatibility reasons XXX
+FULLHOST = powerpc64
+CROSS_COMPILE = powerpc64-linux-
+CROSS32_COMPILE = powerpc-linux-
+powerpc_CFLAGS = -D__BIG_ENDIAN__
+powerpc_IFLAGS =
+powerpc_KERN_LFLAGS = -m elf64ppc -Bstatic -e 0xc000000000000000 \
+	-Ttext 0xc000000000000000 -defsym kernVirtStart=0xC000000000000000
+

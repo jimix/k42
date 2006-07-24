@@ -1,0 +1,30 @@
+# The 64-bit K42 kernel proper, with debug symbols.
+OBJS += $(S)/os/k42-vmlinux
+$(S)/os/k42-vmlinux: $(B)/vmlinux.lds                           \
+		     $(B)/kbootobjs.o				\
+                     $(L)/core.k42lib.o                         \
+                     $(L)/util.k42lib.o                         \
+                     $(S)/os/ktraceobjs.o                       \
+                     $(S)/os/ksysobjs.o                         \
+                     $(S)/os/kstubobjs.o                        \
+                     $(S)/os/kbilgeobjs.o                       \
+                     $(S)/os/kinitobjs.o                        \
+                     $(S)/os/kmemobjs.o                         \
+                     $(S)/os/kprocobjs.o                        \
+                     $(S)/os/klinobjs.o                         \
+                     $(S)/os/servers/bootServers.o              \
+                     $(O)/install/lib/powerpc/$(D)Deb/libsrv.a  \
+                     $(O)/install/lib/powerpc/$(D)Deb/liblk26.a \
+                     $(O)/install/lib/powerpc/$(D)Deb/libk.a
+	$(call status, LD, $@)
+	$(LD) $($(HOST)_KERN_LFLAGS) -T $< $(filter-out $<, $^) -o $@
+
+OBJS += $(S)/os/k42-vmlinux.strip
+$(S)/os/k42-vmlinux.strip: $(S)/os/k42-vmlinux
+	$(call status, STRIP, $@)
+	$(STRIP) -s $< -o $@
+
+OBJS += $(S)/os/k42-vmlinux.gz
+$(S)/os/k42-vmlinux.gz: $(S)/os/k42-vmlinux.strip
+	$(call status, GZIP, $@)
+	$(GZIP) -f -9 < $^ > $@

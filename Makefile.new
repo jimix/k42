@@ -1,5 +1,11 @@
 # ##########################-*-makefile-*- ###################################
-# Recursive make considered harmful.
+# 1. Recursive make considered harmful.
+# 2. BUILD = system arch on which we are configuring and compiling
+#    TARGET = system arch for which new compilers tool will generate code
+#    HOST = system on which K42 will run
+# 3. Object/executables go into separate tree from sourcea
+# 4. Included makefiles use pattern rules 
+# 5. Included makefiles included directly from top-level makefile
 # ############################################################################
 
 # Basic build configuration.
@@ -7,6 +13,7 @@ D = full
 OS = $(shell uname -s)
 BUILD = $(shell uname -m)
 HOST = powerpc
+TARGET = $(BUILD)
 
 # Build our source and output paths from above.
 O = ..
@@ -18,8 +25,10 @@ IMG = $(U)/$(D)Deb.Img.4
 L = ../linux-030
 TOOLS = $(O)/install/tools/$(OS)_$(BUILD)/$(HOST)
 
+# Include makefile that defines host-specific information
+include Make-$(HOST).sub
+
 # 64-bit cross-compile tools.
-CROSS_COMPILE = powerpc64-linux-
 CC = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++
 AR = $(CROSS_COMPILE)ar
@@ -29,7 +38,6 @@ NM = $(CROSS_COMPILE)nm
 AR = $(CROSS_COMPILE)ar
 
 # 32-bit cross-compile tools.
-CROSS32_COMPILE = powerpc-linux-
 CC32 = $(CROSS32_COMPILE)gcc
 LD32 = $(CROSS32_COMPILE)ld
 OBJCOPY32 = $(CROSS32_COMPILE)objcopy
@@ -44,20 +52,25 @@ CP = cp
 STUBGEN = $(TOOLS)/stubgen/stubgen
 
 # Target machine flags
-CFLAGS = -DTARGET_MACHINE="$(HOST)" -D__GNU_AS__ -U$(HOST) -DGCC3	    \
+#
+# XXX Note that where the code refers to TARGET_MACHINE, it should instead
+# refer to HOST_MACHINE. The TARGET_MACHINE macro currently exists
+# for compatibility reasons with the old makefile system XXX
+CFLAGS = -DTARGET_MACHINE="$(HOST)" -DHOST_MACHINE="$(FULLHOST)" \
+         -D__GNU_AS__ -U$(HOST) -DGCC3	    \
          -Wa,-strip-local-absolute -fPIC -mminimal-toc -Wall -Werror -O0 -g \
-         -DK42 -D_REENTRANT -D__BIG_ENDIAN__ -nostdinc
+         -DK42 -D_REENTRANT -nostdinc $($(HOST)_CFLAGS)
 
 CXXFLAGS = -fno-rtti -nostdinc++ -fno-exceptions $(CFLAGS)
 
 IFLAGS = -I$(O)/install/include					\
-         -I$(IMG)/usr/powerpc64-linux/include	\
+         -I$(IMG)/usr/$(FULLHOST)-linux/include	\
          -I$(L)/include						\
          -I$(O)/install/gcc-include/arch/$(HOST)		\
          -I$(O)/install/include/stubgen/arch/$(HOST)
 
 ################################################################################
-# Functions for supporting later targets
+# Functions for supporting later targets in included makefiles
 
 # Call for expanding a stub directory into a full set of stub generator
 # targets
@@ -104,210 +117,24 @@ clean:
 	$(RM) $(wildcard $(OBJS))
 
 ################################################################################
-# Real Rules begin here - $(OBJS) contains targets we build that directories
-# need to be created for and that we clean
-
-# The final kernel, wrapped by a 32-bit boot program.
-OBJS  = $(S)/os/k42-zImage
-zobjs = $(S)/os/boot2/crt0.o $(S)/os/boot2/string.o $(S)/os/boot2/prom.o \
-	$(S)/os/boot2/main.o $(S)/os/boot2/zlib.o $(S)/os/boot2/div64.o \
-	$(S)/os/boot2/imagesize.o
-OBJS += $(zobjs)
-$(S)/os/k42-zImage: zlflags = -Ttext 0x9000000 -e _start \
-                             -T $(L)/arch/ppc64/boot/zImage.lds
-$(S)/os/k42-zImage: $(S)/os/boot/kernel-vmlinux.strip.o	\
-		    $(L)/arch/ppc64/boot/zImage.lds	\
-		    $(zobjs)				\
-		    $(S)/os/boot2/addnote
-	$(call status, LD, $@)
-	$(LD32) $(zlflags) $(zobjs) $(S)/os/boot/kernel-vmlinux.strip.o -o $@
-	$(call status, ADDNOTE, $@)
-	$(S)/os/boot2/addnote $@
-
-# A dummy object that we wrap the K42 kernel in.
-sflags = .kernel:vmlinux.strip=contents,alloc,load,readonly,data
-kimage = $(S)/os/k42-vmlinux
-kimagez = $(kimage).gz
-$(S)/os/boot/kernel-vmlinux.strip.o: $(S)/os/boot/kernel-vmlinux.strip.c \
-				     $(kimagez)
-	$(call status, CC, $@)
-	$(CC32) $(BUILDCFLAGS) -fno-builtin -c $< -o $@
-	$(call status, OBJCOPY, $@)
-	$(OBJCOPY32) $@ --add-section=.kernel:vmlinux.strip=$(kimagez) \
-		 	--set-section-flags=$(sflags)
-
-OBJS += $(S)/os/boot/kernel-vmlinux.strip.c
-$(S)/os/boot/kernel-vmlinux.strip.c:
-	$(call status, TOUCH, $@)
-	touch $@
-
-OBJS += $(S)/os/k42-vmlinux.gz
-$(S)/os/k42-vmlinux.gz: $(S)/os/k42-vmlinux.strip
-	$(call status, GZIP, $@)
-	$(GZIP) -f -9 < $^ > $@
-
-OBJS += $(S)/os/k42-vmlinux.strip
-$(S)/os/k42-vmlinux.strip: $(S)/os/k42-vmlinux
-	$(call status, STRIP, $@)
-	$(STRIP) -s $< -o $@
-
-# A tool that adds a note to the final 32-bit kernel.
-OBJS += $(S)/os/boot2/addnote
-$(S)/os/boot2/addnote: $(L)/arch/ppc64/boot/addnote.c
-	$(call status, BUILDCC, $@)
-	$(BUILDCC) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(BUILDCFLAGS) $< -o $@
-
-# A small object that will tell Linux what our kernel size is.
-$(S)/os/boot2/imagesize.o: $(S)/os/boot2/imagesize.c
-	$(call status, CC, $@)
-	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(BUILDCFLAGS) \
-                -I$(L)/include -fno-builtin -c $< -o $@
-
-# Sanity check: kimage=vmlinux kimagez=arch/ppc64/boot/kernel-vmlinux.strip.gz
-OBJS += $(S)/os/boot2/imagesize.c
-$(S)/os/boot2/imagesize.c: $(kimage)
-	$(call status, LS, $@)
-	ls -l $< | awk \
-          '{printf "unsigned long vmlinux_filesize = %d;\n", $$5}' > $@
-	$(call status, NM, $@)
-	$(NM) -n $< | tail -n 1 | awk \
-          '{printf "unsigned long vmlinux_memsize = 0x%s;\n", substr($$1,8)}' \
-            >> $@
-
-# These are the rules for the new 32-bit Linux zImage boot program.
-$(S)/os/boot2/%.o: $(L)/arch/ppc64/boot/%.S
-	$(call status, AS, $@)
-	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d \
-		-D__ASSEMBLY__ $(BUILDCFLAGS) \
-                -I$(L)/include -fno-builtin -traditional -c $< -o $@
-
-$(S)/os/boot2/%.o: $(L)/arch/ppc64/boot/%.c
-	$(call status, CC, $@)
-	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(BUILDCFLAGS) \
-                -I$(L)/include -fno-builtin -c $< -o $@
-
-# The 64-bit K42 kernel proper, with debug symbols.
-OBJS += $(S)/os/k42-vmlinux
-$(S)/os/k42-vmlinux: $(B)/vmlinux.lds				\
-		     $(B)/head.o				\
-		     $(B)/entry.o				\
-		     $(B)/prom_init.o				\
-                     $(B)/pSeries_setup.o			\
-                     $(B)/maple_time.o				\
-                     $(B)/maple_pci.o				\
-                     $(B)/rtas_pci.o				\
-                     $(B)/setup.o				\
-                     $(B)/lmb.o					\
-                     $(B)/prom.o				\
-                     $(B)/hash_utils.o				\
-                     $(B)/u3_iommu.o				\
-                     $(B)/hash_low.o				\
-                     $(B)/hash_native.o				\
-                     $(B)/stab.o				\
-                     $(B)/slb.o					\
-                     $(B)/pacaData.o				\
-                     $(B)/slb_low.o				\
-                     $(B)/udbg.o				\
-                     $(B)/pci_direct_iommu.o			\
-                     $(B)/pSeries_reconfig.o			\
-		     $(B)/unimplemented.o			\
-		     $(B)/k42_boot_data.o			\
-		     $(S)/os/kexceptobjs.o			\
-		     $(L)/core.k42lib.o				\
-		     $(L)/util.k42lib.o				\
-		     $(S)/os/ktraceobjs.o			\
-		     $(S)/os/ksysobjs.o				\
-		     $(S)/os/kstubobjs.o			\
-		     $(S)/os/kbilgeobjs.o			\
-		     $(S)/os/kinitobjs.o			\
-		     $(S)/os/kmemobjs.o				\
-		     $(S)/os/kprocobjs.o			\
-		     $(S)/os/klinobjs.o				\
-		     $(S)/os/servers/bootServers.o		\
-		     $(O)/install/lib/powerpc/$(D)Deb/libsrv.a	\
-		     $(O)/install/lib/powerpc/$(D)Deb/liblk26.a	\
-		     $(O)/install/lib/powerpc/$(D)Deb/libk.a
-	$(call status, LD, $@)
-	$(LD) -m elf64ppc -T $< \
-	      -Bstatic -e 0xc000000000000000 -Ttext 0xc000000000000000 \
-	      -defsym kernVirtStart=0xC000000000000000 \
-	      $(filter-out $<, $^) -o $@
-
-OBJS += $(B)/vmlinux.lds
-$(B)/vmlinux.lds: $(L)/arch/ppc64/kernel/vmlinux.lds.S
-	$(call status, CC, $@)
-	$(CC) -m64 -E -nostdinc -D__KERNEL__ -I$(L)/include -P -C \
-	      -isystem $(shell $(CC) -print-file-name=include) \
-	      -Uppc64 -D__ASSEMBLY__ $< -o $@
-
-OBJS += $(B)/head.o $(B)/entry.o $(B)/pSeries_setup.o $(B)/rtas_pci.o \
-        $(B)/setup.o $(B)/lmb.o $(B)/prom.o $(B)/mpic.o $(B)/u3_iommu.o \
-	$(B)/udbg.o $(B)/maple_time.o $(B)/maple_pci.o
-$(B)/%.o: $(L)/arch/ppc64/kernel/%.S
-	$(call status, CC, $@)
-	$(CC) -m64 -nostdinc  -D__KERNEL__ -I$(L)/include \
-	      -gdwarf2 -D__ASSEMBLY__ \
-	      -isystem $(shell $(CC) -print-file-name=include) -c $< -o $@
-
-OBJS += $(B)/prom_init.o $(B)/pci_direct_iommu.o $(B)/smp_processor_id.o
-$(B)/%.o: $(L)/arch/ppc64/kernel/%.c
-	$(call status, CC, $@)
-	$(CC) -m64 -nostdinc \
-	      -isystem $(shell $(CC) -print-file-name=include) \
-	      -D__KERNEL__ -I$(L)/include -Wall -Wstrict-prototypes \
-	      -Wno-trigraphs -fno-strict-aliasing -fno-common \
-	      -ffreestanding -fomit-frame-pointer -g -msoft-float -pipe \
-	      -mminimal-toc -mtraceback=none -mcall-aixdesc \
-	      -Wdeclaration-after-statement -mno-minimal-toc -c $< -o $@
-
-OBJS += $(B)/smp_processor_id.o
-$(B)/%.o: $(L)/lib/%.c
-	$(call status, CC, $@)
-	$(CC) -m64 -nostdinc \
-	      -isystem $(shell $(CC) -print-file-name=include) \
-	      -D__KERNEL__ -I$(L)/include -Wall -Wstrict-prototypes \
-	      -Wno-trigraphs -fno-strict-aliasing -fno-common \
-	      -ffreestanding -fomit-frame-pointer -g -msoft-float -pipe \
-	      -mminimal-toc -mtraceback=none -mcall-aixdesc \
-	      -Wdeclaration-after-statement -mno-minimal-toc -c $< -o $@
-
-OBJS += $(B)/hash_utils.o $(B)/hash_native.o $(B)/stab.o $(B)/slb.o \
-        $(B)/pacaData.o
-$(B)/%.o: $(L)/arch/ppc64/mm/%.c
-	$(call status, CC, $@)
-	$(CC) -m64 -nostdinc \
-	      -isystem $(shell $(CC) -print-file-name=include) \
-	      -D__KERNEL__ -I$(L)/include -Wall -Wstrict-prototypes \
-	      -Wno-trigraphs -fno-strict-aliasing -fno-common \
-	      -ffreestanding -fomit-frame-pointer -g -msoft-float -pipe \
-	      -mminimal-toc -mtraceback=none -mcall-aixdesc \
-	      -Wdeclaration-after-statement -mno-minimal-toc -c $< -o $@
-
-OBJS += $(B)/hash_low.o $(B)/slb_low.o
-$(B)/%.o: $(L)/arch/ppc64/mm/%.S
-	$(call status, CC, $@)
-	$(CC) -m64 -nostdinc  -D__KERNEL__ -I$(L)/include \
-	      -gdwarf2 -D__ASSEMBLY__ \
-	      -isystem $(shell $(CC) -print-file-name=include) -c $< -o $@
-
-OBJS += $(B)/unimplemented.o
-$(B)/unimplemented.o: $(H)/os/boot/arch/powerpc/unimplemented.c
-	$(call status, CC, $@)
-	$(CC) -g -nostdinc -Wall -Wstrict-prototypes \
-	      -Wno-trigraphs -fno-strict-aliasing -fno-common \
-	      -ffreestanding -fomit-frame-pointer -c $< -o $@
-
-OBJS += $(B)/k42_boot_data.o
-$(B)/k42_boot_data.o: $(H)/os/boot/arch/powerpc/k42_boot_data.c
-	$(call status, CC, $@)
-	$(CC) -g -nostdinc -Wall -Wstrict-prototypes \
-	      -Wno-trigraphs -fno-strict-aliasing -fno-common \
-	      -ffreestanding -fomit-frame-pointer -c $< -o $@
+# Real Rules begin here
+# 
+# A number of special variables are used over the course of the included
+# makefiles. In particular:
+# - $(OBJS) contains targets we build that directories
+#   need to be created for and that we clean
 
 # Rule for how to incrementally link our kernel objects.
 $(S)/os/k%objs.o:
 	$(call status, LD, $@)
 	$(LD) -r $^ -o $@
+
+# Include rules for how to build the kernel itself
+include os/Make.sub
+
+# Include rules for how to build the necessary boot objects and scripts
+# for a particular architecture and wrap the kernel appropriately
+include os/boot/arch/$(HOST)/Make.sub
 
 OBJS += $(S)/os/kinitobjs.o
 kinitobjs = StubAsyncTester.o StubServerState.o StubInitServer.o	\

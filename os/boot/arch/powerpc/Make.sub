@@ -1,0 +1,149 @@
+# ##########################-*-Make.sub-*- ###################################
+
+# The final kernel, wrapped by a 32-bit boot program.
+OBJS  = $(S)/os/k42-zImage
+zobjs = $(S)/os/boot2/crt0.o $(S)/os/boot2/string.o $(S)/os/boot2/prom.o \
+        $(S)/os/boot2/main.o $(S)/os/boot2/zlib.o $(S)/os/boot2/div64.o \
+        $(S)/os/boot2/imagesize.o
+OBJS += $(zobjs)
+$(S)/os/k42-zImage: zlflags = -Ttext 0x9000000 -e _start \
+                             -T $(L)/arch/ppc64/boot/zImage.lds
+$(S)/os/k42-zImage: $(S)/os/boot/kernel-vmlinux.strip.o \
+                    $(L)/arch/ppc64/boot/zImage.lds     \
+                    $(zobjs)                            \
+                    $(S)/os/boot2/addnote
+	$(call status, LD, $@)
+	$(LD32) $(zlflags) $(zobjs) $(S)/os/boot/kernel-vmlinux.strip.o -o $@
+	$(call status, ADDNOTE, $@)
+	$(S)/os/boot2/addnote $@
+
+# A dummy object that we wrap the K42 kernel in.
+sflags = .kernel:vmlinux.strip=contents,alloc,load,readonly,data
+kimage = $(S)/os/k42-vmlinux
+kimagez = $(kimage).gz
+$(S)/os/boot/kernel-vmlinux.strip.o: $(S)/os/boot/kernel-vmlinux.strip.c \
+                                     $(kimagez)
+	$(call status, CC, $@)
+	$(CC32) $(BUILDCFLAGS) -fno-builtin -c $< -o $@
+	$(call status, OBJCOPY, $@)
+	$(OBJCOPY32) $@ --add-section=.kernel:vmlinux.strip=$(kimagez) \
+                        --set-section-flags=$(sflags)
+
+OBJS += $(S)/os/boot/kernel-vmlinux.strip.c
+$(S)/os/boot/kernel-vmlinux.strip.c:
+	$(call status, TOUCH, $@)
+	touch $@
+
+# A tool that adds a note to the final 32-bit kernel.
+OBJS += $(S)/os/boot2/addnote
+$(S)/os/boot2/addnote: $(L)/arch/ppc64/boot/addnote.c
+	$(call status, BUILDCC, $@)
+	$(BUILDCC) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(BUILDCFLAGS) $< -o $@
+
+# A small object that will tell Linux what our kernel size is.
+$(S)/os/boot2/imagesize.o: $(S)/os/boot2/imagesize.c
+	$(call status, CC, $@)
+	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(BUILDCFLAGS) \
+                -I$(L)/include -fno-builtin -c $< -o $@
+
+# Sanity check: kimage=vmlinux kimagez=arch/ppc64/boot/kernel-vmlinux.strip.gz
+OBJS += $(S)/os/boot2/imagesize.c
+$(S)/os/boot2/imagesize.c: $(kimage)
+	$(call status, LS, $@)
+	ls -l $< | awk \
+          '{printf "unsigned long vmlinux_filesize = %d;\n", $$5}' > $@
+	$(call status, NM, $@)
+	$(NM) -n $< | tail -n 1 | awk \
+          '{printf "unsigned long vmlinux_memsize = 0x%s;\n", substr($$1,8)}' \            >> $@
+
+# These are the rules for the new 32-bit Linux zImage boot program.
+$(S)/os/boot2/%.o: $(L)/arch/ppc64/boot/%.S
+	$(call status, AS, $@)
+	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d \
+                -D__ASSEMBLY__ $(BUILDCFLAGS) \
+                -I$(L)/include -fno-builtin -traditional -c $< -o $@
+
+$(S)/os/boot2/%.o: $(L)/arch/ppc64/boot/%.c
+	$(call status, CC, $@)
+	$(CC32) -Wp,-MD,$(S)/os/boot2/.$(notdir $@).d $(BUILDCFLAGS) \
+                -I$(L)/include -fno-builtin -c $< -o $@
+
+OBJS += $(B)/kbootobjs.o
+kbootobjs +=  head.o entry.o prom_init.o pSeries_setup.o maple_time.o \
+	      maple_pci.o rtas_pci.o setup.o lmb.o prom.o hash_utils.o \
+              u3_iommu.o  hash_low.o hash_native.o stab.o slb.o pacaData.o \
+              slb_low.o udbg.o pci_direct_iommu.o pSeries_reconfig.o \
+              unimplemented.o k42_boot_data.o                       
+$(B)/kbootobjs.o: $(addprefix $(B)/, $(kbootobjs)) $(S)/os/kexceptobjs.o
+
+OBJS += $(B)/vmlinux.lds
+$(B)/vmlinux.lds: $(L)/arch/ppc64/kernel/vmlinux.lds.S
+	$(call status, CC, $@)
+	$(CC) -m64 -E -nostdinc -D__KERNEL__ -I$(L)/include -P -C \
+              -isystem $(shell $(CC) -print-file-name=include) \
+              -Uppc64 -D__ASSEMBLY__ $< -o $@
+
+OBJS += $(B)/head.o $(B)/entry.o $(B)/pSeries_setup.o $(B)/rtas_pci.o \
+        $(B)/setup.o $(B)/lmb.o $(B)/prom.o $(B)/mpic.o $(B)/u3_iommu.o \
+        $(B)/udbg.o $(B)/maple_time.o $(B)/maple_pci.o
+$(B)/%.o: $(L)/arch/ppc64/kernel/%.S
+	$(call status, CC, $@) 
+	$(CC) -m64 -nostdinc  -D__KERNEL__ -I$(L)/include \
+              -gdwarf2 -D__ASSEMBLY__ \
+              -isystem $(shell $(CC) -print-file-name=include) -c $< -o $@
+
+OBJS += $(B)/prom_init.o $(B)/pci_direct_iommu.o $(B)/smp_processor_id.o
+$(B)/%.o: $(L)/arch/ppc64/kernel/%.c
+	$(call status, CC, $@)
+	$(CC) -m64 -nostdinc \
+              -isystem $(shell $(CC) -print-file-name=include) \
+              -D__KERNEL__ -I$(L)/include -Wall -Wstrict-prototypes \
+              -Wno-trigraphs -fno-strict-aliasing -fno-common \
+              -ffreestanding -fomit-frame-pointer -g -msoft-float -pipe \
+              -mminimal-toc -mtraceback=none -mcall-aixdesc \
+              -Wdeclaration-after-statement -mno-minimal-toc -c $< -o $@
+
+OBJS += $(B)/smp_processor_id.o
+$(B)/%.o: $(L)/lib/%.c
+	$(call status, CC, $@)
+	$(CC) -m64 -nostdinc \
+              -isystem $(shell $(CC) -print-file-name=include) \
+              -D__KERNEL__ -I$(L)/include -Wall -Wstrict-prototypes \
+              -Wno-trigraphs -fno-strict-aliasing -fno-common \
+              -ffreestanding -fomit-frame-pointer -g -msoft-float -pipe \
+              -mminimal-toc -mtraceback=none -mcall-aixdesc \
+              -Wdeclaration-after-statement -mno-minimal-toc -c $< -o $@
+
+OBJS += $(B)/hash_utils.o $(B)/hash_native.o $(B)/stab.o $(B)/slb.o \
+        $(B)/pacaData.o
+$(B)/%.o: $(L)/arch/ppc64/mm/%.c
+	$(call status, CC, $@)
+	$(CC) -m64 -nostdinc \
+              -isystem $(shell $(CC) -print-file-name=include) \
+              -D__KERNEL__ -I$(L)/include -Wall -Wstrict-prototypes \
+              -Wno-trigraphs -fno-strict-aliasing -fno-common \
+              -ffreestanding -fomit-frame-pointer -g -msoft-float -pipe \
+              -mminimal-toc -mtraceback=none -mcall-aixdesc \
+              -Wdeclaration-after-statement -mno-minimal-toc -c $< -o $@
+
+OBJS += $(B)/hash_low.o $(B)/slb_low.o
+$(B)/%.o: $(L)/arch/ppc64/mm/%.S
+	$(call status, CC, $@)
+	$(CC) -m64 -nostdinc  -D__KERNEL__ -I$(L)/include \
+              -gdwarf2 -D__ASSEMBLY__ \
+              -isystem $(shell $(CC) -print-file-name=include) -c $< -o $@
+
+OBJS += $(B)/unimplemented.o
+$(B)/unimplemented.o: $(H)/os/boot/arch/powerpc/unimplemented.c
+	$(call status, CC, $@)
+	$(CC) -g -nostdinc -Wall -Wstrict-prototypes \
+              -Wno-trigraphs -fno-strict-aliasing -fno-common \
+              -ffreestanding -fomit-frame-pointer -c $< -o $@
+
+OBJS += $(B)/k42_boot_data.o
+$(B)/k42_boot_data.o: $(H)/os/boot/arch/powerpc/k42_boot_data.c
+	$(call status, CC, $@)
+	$(CC) -g -nostdinc -Wall -Wstrict-prototypes \
+              -Wno-trigraphs -fno-strict-aliasing -fno-common \
+              -ffreestanding -fomit-frame-pointer -c $< -o $@
+
