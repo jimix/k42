@@ -18,6 +18,9 @@
 class Callback {
 public:
    virtual void complete(SysStatus success) = 0;
+
+   DEFINE_NOOP_NEW(Callback);
+   virtual ~Callback() { }
 };
 
 #endif /* !defined(__MISC_CALLBACK_H_) */

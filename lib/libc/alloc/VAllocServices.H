@@ -55,6 +55,9 @@ public:
     // get info about a block of memory
     virtual uval nodeID(void *block) = 0;
     virtual uval mallocID(void *block) = 0;
+    
+    DEFINE_NOOP_NEW(VAllocServices);
+    virtual ~VAllocServices() { }
 };
 
 // version for the regular memory (user/paged kernel) class
