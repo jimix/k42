@@ -103,6 +103,8 @@ public:
      * N.B. this method is used by ppc.C from exception level.
      */
     virtual void switchToAddressSpace()=0;
+    DEFINE_NOOP_NEW(SegmentTable);
+    virtual ~SegmentTable() { }
 };
 
 class SegmentTable_Hardware: public SegmentTable {

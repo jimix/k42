@@ -33,6 +33,8 @@ public:
     public:
 	virtual uval getMemDesc(uval addr) = 0;
 	virtual void freeMemDesc(uval addr) = 0;
+        DEFINE_NOOP_NEW(MemDescHash);
+        virtual ~MemDescHash() { }
     };
   
 protected:

@@ -39,6 +39,8 @@ public:
     struct Msg {
 	virtual void handle() = 0;
 	virtual SysStatus send(DispatcherID dspid) = 0;
+        DEFINE_NOOP_NEW(Msg);
+        virtual ~Msg() { }
     };
 
     struct MsgAsync : Msg {
@@ -61,6 +63,7 @@ public:
 	}
 	virtual SysStatus send(DispatcherID dspid);
 	void reply();
+
     };
 
     static SysStatus SendAsyncUval(MPMsgMgr *mgr, DispatcherID target,

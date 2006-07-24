@@ -66,6 +66,9 @@ public:
     }
     virtual void CPUDead(uval killGlobal);
     virtual void init();
+
+    virtual ~HWInterrupt() { }
+
 private:
     static uval SecondaryPrompt(uval maxSecondary);
     static HWInterrupt* controller;

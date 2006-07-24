@@ -48,6 +48,7 @@ public:
      * use it without knowing the full Thread structure.
      */
     void        *attachment;
+
 protected:
     // dynamic properties of the thread
     Thread      *next;            // pointer to other thread in a list
@@ -254,6 +255,10 @@ public:
     virtual uval isCurrentlyMigratable()=0;
     virtual void blocked()=0;
     virtual void yielded()=0;
+
+    DEFINE_NOOP_NEW(Thread);
+    virtual ~ThreadMigratable() { }
+
 };
 
 inline uval
