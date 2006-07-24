@@ -132,7 +132,36 @@ function build__variables_with_sig( from, to )
   }
 #  printf("void (Dummy%s::*__VAR_SIZE_VIRTUAL__%s)() = &Dummy%s::__SIZE_VIRTUAL__;\n", xclass, xclass, xclass);
 #  printf("void (DummyMeta%s::*__VAR_SIZE_VIRTUAL__Meta%s)() = &DummyMeta%s::__SIZE_VIRTUAL__;\n", xclass, xclass, xclass);
+
 }
+
+function remove_parameter_defaults( from, to )
+{
+  for( i = from; i <= to; i++ ) {
+    # strip parens
+    sub(/\(/, "", class_signature[i])
+      sub(/\)/, "", class_signature[i])
+
+    sig = ""
+    # split arguments into array 'args'
+      arg_size = split(class_signature[i], args,",");
+
+    for( j = 1; j <= arg_size; j++){
+      if( j>1) sig = sig ",";
+      $0 = args[j];
+
+      if(/=/){
+        split($0, sides,"=");
+        sig = sig sides[1];
+      }
+      else{
+        sig = sig args[j];
+      }
+    }
+    class_signature[i] = "(" sig ")";
+  }
+}
+
 
 # ######################################################################
 #
@@ -163,6 +192,7 @@ END{
     xclass = "X" iclass;
     build__xclass(parent_class[k]);
     build__xmethods(clsstart[k],clsend[k]);
+    remove_parameter_defaults(clsstart[k],clsend[k]);
     build__variables_with_sig(clsstart[k],clsend[k]);
   }
 }
