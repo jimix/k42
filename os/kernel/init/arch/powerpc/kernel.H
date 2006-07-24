@@ -18,6 +18,8 @@ uval ioReserve(uval len);
 uval ioMap(uval vaddr, uval paddr, uval len);
 uval ioReserveAndMap(uval paddr, uval len);
 
+struct ExceptionLocal;
+
 class InvertedPageTable;
 struct RfiState;
 struct KernelInitArgs {
