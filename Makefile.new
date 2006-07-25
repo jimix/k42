@@ -159,40 +159,14 @@ include lib/libc/cobj/Make.sub
 include lib/libc/cobj/sys/Make.sub
 include lib/libc/fslib/Make.sub
 include lib/libc/io/Make.sub
-#include lib/libc/scheduler/Make.sub
+include lib/libc/misc/Make.sub
+include lib/libc/scheduler/Make.sub
 #include lib/libc/stdlib/Make.sub
 #include lib/libc/sync/Make.sub
 #include lib/libc/sys/Make.sub
 #include lib/libc/usr/Make.sub
 
-libkobjs+=            $(S)/lib/libc/misc/BaseRandom.o				   \
-           $(S)/lib/libc/misc/BlockSet.o				   \
-           $(S)/lib/libc/misc/DiskMountInfoList.o			   \
-           $(S)/lib/libc/misc/HashSimple.o				   \
-           $(S)/lib/libc/misc/ListSimple.o				   \
-           $(S)/lib/libc/misc/ListSimpleKey.o				   \
-           $(S)/lib/libc/misc/SharedBufferConsumer.o			   \
-           $(S)/lib/libc/misc/SharedBufferProducer.o			   \
-           $(S)/lib/libc/misc/SharedBufferProducerUser.o		   \
-           $(S)/lib/libc/misc/expedient.o				   \
-           $(S)/lib/libc/misc/fpr_save_restore.o			   \
-           $(S)/lib/libc/misc/hardware.o $(S)/lib/libc/misc/linkage.o	   \
-           $(S)/lib/libc/misc/simSupport.o				   \
-           $(S)/lib/libc/misc/testSupport.o				   \
-           $(S)/lib/libc/misc/volatileFrame.o				   \
-           $(S)/lib/libc/scheduler/DispatcherDefault.o			   \
-           $(S)/lib/libc/scheduler/DispatcherDefaultAsm.o		   \
-           $(S)/lib/libc/scheduler/DispatcherDefaultExp.o		   \
-           $(S)/lib/libc/scheduler/DispatcherMgr.o			   \
-           $(S)/lib/libc/scheduler/Scheduler.o				   \
-           $(S)/lib/libc/scheduler/SchedulerService.o			   \
-           $(S)/lib/libc/scheduler/SchedulerTimer.o			   \
-           $(S)/lib/libc/scheduler/StubSchedulerService.o		   \
-           $(S)/lib/libc/scheduler/Thread.o				   \
-           $(S)/lib/libc/scheduler/TimerEvent.o				   \
-           $(S)/lib/libc/scheduler/TimerRequest.o			   \
-           $(S)/lib/libc/scheduler/XSchedulerService.o			   \
-           $(S)/lib/libc/stdlib/baseAtoi.o				   \
+libkobjs+=           $(S)/lib/libc/stdlib/baseAtoi.o				   \
            $(S)/lib/libc/stdlib/baseFgets.o				   \
            $(S)/lib/libc/stdlib/baseSprintf.o				   \
            $(S)/lib/libc/stdlib/baseStrtol.o				   \
@@ -444,31 +418,6 @@ $(O)/install/include/sys/%.H: $(H)/lib/libc/alloc/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
-misc_powerpc_includes = asm.h asmdef.h alloca.H hardware.H expedient.H volatileFrame.H asdef.h trap.h pwrPC.H simSupport.H bits.h
-
-misc_arch_includes = $(addprefix $(O)/install/include/misc/arch/$(HOST)/, $(misc_$(HOST)_includes))
-lib_includes += $(misc_arch_includes)
-$(O)/install/include/misc/arch/$(HOST)/%.h: $(H)/lib/libc/misc/arch/$(HOST)/%.h
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-$(O)/install/include/misc/arch/$(HOST)/%.H: $(H)/lib/libc/misc/arch/$(HOST)/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-misc_includes = asm.h asmdef.h alloca.H hardware.H expedient.H volatileFrame.H linkage.H ListSimple.H ListArraySimple.H ListArraySimple.C ListSimpleKey.H ListSimpleKeyLocked.H ListSimpleLocked.H  StringShort.H BitStructure.H macros.H StringTable.H StringTable.I utilities.H baseStdio.H simpleThread.H  SSAC.H SSACSimplePartitionedArray.H SSACSimplePartitionedArray.C testSupport.H HashSimple.H BitVec.H DHashTable.H AutoList.H AutoList.I BaseRandom.H HashNonBlocking.H HashNonBlocking.I AtomicBitVec64.H BlockSet.H DiskMountInfoList.H Callback.H SharedBufferProducer.H SharedBufferProducerUser.H SharedBufferConsumer.H SharedBufferConsumerUser.H
-lib_includes += $(addprefix $(O)/install/include/misc/, $(misc_includes))
-$(O)/install/include/misc/%.h: $(H)/lib/libc/misc/%.h
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-$(O)/install/include/misc/%.H: $(H)/lib/libc/misc/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-$(O)/install/include/misc/%.I: $(H)/lib/libc/misc/%.I
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-$(O)/install/include/misc/%.C: $(H)/lib/libc/misc/%.C
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
 
 sys_powerpc_includes =  sysTypes.H macdefs.H config.H types.H ppccore.H extRegs.H
 
@@ -502,22 +451,6 @@ $(O)/install/include/usr/%.H: $(H)/lib/libc/usr/%.H
 
 lib_includes += $(O)/install/include/sys/GDBIO.H
 $(O)/install/include/sys/%.H: $(H)/lib/libc/usr/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-scheduler_powerpc_includes = DispatcherDefault.H DispatcherDefaultExp.H
-scheduler_arch_includes = $(addprefix $(O)/install/include/scheduler/arch/$(HOST)/, $(scheduler_$(HOST)_includes))
-lib_includes += $(scheduler_arch_includes)
-$(O)/install/include/scheduler/arch/$(HOST)/%.H: $(H)/lib/libc/scheduler/arch/$(HOST)/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-scheduler_includes = Thread.H Scheduler.H DispatcherDefault.H DispatcherDefaultExp.H SchedulerTimer.H SchedulerService.H VPSet.H DispatcherMgr.H CachePaddedArray.H
-lib_includes += $(addprefix $(O)/install/include/scheduler/, $(scheduler_includes))
-$(O)/install/include/scheduler/%.h: $(H)/lib/libc/scheduler/%.h
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-$(O)/install/include/scheduler/%.H: $(H)/lib/libc/scheduler/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
