@@ -16,12 +16,20 @@ allocincs = alloc.H AllocPool.H LMalloc.H AllocCell.H           \
 OBJS += $(addprefix $(S)/lib/libc/alloc/, $(libkcallocobjs))
 libkobjs += $(addprefix $(S)/lib/libc/alloc/, $(libkcallocobjs))
 lib_includes += $(addprefix $(O)/install/include/alloc/, $(allocincs))
+lib_includes += $(O)/install/include/sys/PageAllocator.H \
+		$(O)/install/include/sys/LeakProof.H
 
 # Rules for building objects and installing include files
 
 $(O)/install/include/alloc/%.H: $(H)/lib/libc/alloc/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
+
+$(O)/install/include/sys/%.H: $(H)/lib/libc/alloc/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+# Rules for building objects
 
 lib_libc_alloc_flags = -I$(S)/lib/libc/alloc	\
                        -I$(H)/lib/libc		\
