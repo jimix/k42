@@ -74,7 +74,7 @@ kbootobjs +=  head.o entry.o prom_init.o pSeries_setup.o maple_time.o \
               u3_iommu.o  hash_low.o hash_native.o stab.o slb.o pacaData.o \
               slb_low.o udbg.o pci_direct_iommu.o pSeries_reconfig.o \
               unimplemented.o k42_boot_data.o                       
-$(B)/kbootobjs.o: $(addprefix $(B)/, $(kbootobjs)) $(S)/os/kexceptobjs.o
+$(B)/kbootobjs.o: $(addprefix $(B)/, $(kbootobjs))
 
 OBJS += $(B)/vmlinux.lds
 $(B)/vmlinux.lds: $(L)/arch/ppc64/kernel/vmlinux.lds.S
