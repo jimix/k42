@@ -1,10 +1,12 @@
-OBJS += $(S)/os/kbilgeobjs.o
-kbilgeobjs = StubWire.o StubTestSwitch.o StubTestScheduler.o		\
-             StubKernSimDisk.o StubKernToyDisk.o StubKernBogusDisk.o	\
-             StubNetDev.o StubPrivilegedService.o StubSystemMisc.o	\
-             StubFSFRSwap.o StubDiskSwap.o StubIPSock.o			\
-             StubKBootParms.o StubBuildDate.o openfirm.o		\
-             openfirmnote.o simos.o thinwireArch.o PerfMon.o		\
+# The built objects in this directory
+libkbilgeobjs = StubBuildDate.o	StubDiskSwap.o StubFSFRSwap.o \
+                StubIPSock.o StubKBootParms.o StubKernBogusDisk.o \
+                StubKernSimDisk.o StubKernToyDisk.o StubNetDev.o \
+                StubPrivilegedService.o StubSystemMisc.o \
+                StubTestScheduler.o StubTestSwitch.o StubWire.o				   
+
+kbilgeobjs = $(libkbilgeobjs) \
+             openfirm.o openfirmnote.o simos.o thinwireArch.o PerfMon.o	\
              SocketCreate.o HWPerfMon.o HWPerfMonPulsar.o		\
              HWPerfMon630.o HWPerfMonGPUL.o libksup.o thinwire.o	\
              Wire.o ThinIP.o resourcePrint.o ThinWireMgr.o		\
@@ -20,11 +22,17 @@ kbilgeobjs = StubWire.o StubTestSwitch.o StubTestScheduler.o		\
              XKernBogusDisk.o XNetDev.o XPrivilegedService.o		\
              XSystemMisc.o XFSFRSwap.o XDiskSwap.o XIPSock.o		\
              XKBootParms.o XBuildDate.o
-$(S)/os/kbilgeobjs.o: $(addprefix $(S)/os/kernel/bilge/, $(kbilgeobjs))
 
-# kbilgeobjs.o subobjects
 
+# Define variables used by the top-level makefile for building the
+# kernel library and cleaning built objects
+
+OBJS += $(S)/os/kbilgeobjs.o
 OBJS += $(addprefix $(S)/os/kernel/bilge/, $(kbilgeobjs))
+libkobjs += $(addprefix $(S)/os/kernel/bilge/, $(libkbilgeobjs))
+
+# Rules for building objects in this directory
+$(S)/os/kbilgeobjs.o: $(addprefix $(S)/os/kernel/bilge/, $(kbilgeobjs))
 
 # Add each stub in kbilgeobjs to the list of objects to make/clean
 kernel_bilge_stubobjs = $(filter Stub%.o, $(kbilgeobjs))
@@ -81,3 +89,4 @@ $(S)/os/kernel/bilge/%.o: $(H)/os/kernel/bilge/arch/$(HOST)/%.C
 $(S)/os/kernel/bilge/%.o: $(H)/os/kernel/bilge/arch/$(HOST)/%.S
 	$(call status, AS, $@)
 	$(CXX) $(kernel_bilge_cflags) $(CFLAGS) -D__ASSEMBLEY_ $(kernel_bilge_iflags) -c $< -o $@
+

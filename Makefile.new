@@ -124,6 +124,10 @@ clean:
 # makefiles. In particular:
 # - $(OBJS) contains targets we build that directories
 #   need to be created for and that we clean
+# - $(libkobjs) contains objects that need to be included in the 
+#   libk.a kernel library
+# - $(lib_includes) include files that need to be installed
+# - $(build_servers) servers that need to be built
 
 # Rule for how to incrementally link our kernel objects.
 $(S)/os/k%objs.o:
@@ -131,13 +135,13 @@ $(S)/os/k%objs.o:
 	$(LD) -r $^ -o $@
 
 # Include rules for how to build the kernel itself
+# Current subobjects are: kbootobjs.o kinitobjs.o kexceptobjs.o
+#         kmemobjs.o kprocobjs.o kstubobjs.o kbilgeobjs.o 
+#         ktraceobjs.o ksysobjs.o klinobjs.o
 include os/Make.sub
 
-# Include rules for how to build the necessary boot objects and scripts
-# for a particular architecture and wrap the kernel appropriately
+# Makefiles from kernel objects 
 include os/boot/arch/$(HOST)/Make.sub
-
-# Makefiles from os/kernel
 include os/kernel/init/Make.sub
 include os/kernel/exception/Make.sub
 include os/kernel/mem/Make.sub
@@ -148,57 +152,20 @@ include os/kernel/trace/Make.sub
 include os/kernel/sys/Make.sub
 include os/kernel/linux/Make.sub
 
-libkobjs = $(S)/lib/libc/alloc/AllocCell.o $(S)/lib/libc/alloc/AllocPool.o \
-           $(S)/lib/libc/alloc/AllocRegionManager.o			   \
-           $(S)/lib/libc/alloc/AllocStats.o				   \
-           $(S)/lib/libc/alloc/DataChunk.o				   \
-           $(S)/lib/libc/alloc/GMalloc.o $(S)/lib/libc/alloc/LMalloc.o	   \
-           $(S)/lib/libc/alloc/LMallocOpt.o				   \
-           $(S)/lib/libc/alloc/LeakProof.o				   \
-           $(S)/lib/libc/alloc/MemDesc.o				   \
-           $(S)/lib/libc/alloc/MemoryMgrPrimitive.o			   \
-           $(S)/lib/libc/alloc/ObjCache.o				   \
-           $(S)/lib/libc/alloc/PMalloc.o				   \
-           $(S)/lib/libc/alloc/PageAllocatorDefault.o			   \
-           $(S)/lib/libc/alloc/PageAllocatorUser.o			   \
-           $(S)/lib/libc/alloc/VAllocServices.o				   \
-           $(S)/lib/libc/alloc/alloctst.o $(S)/lib/libc/cobj/BaseObj.o	   \
-           $(S)/lib/libc/cobj/COList.o					   \
-           $(S)/lib/libc/cobj/COListServer.o				   \
-           $(S)/lib/libc/cobj/CObjRep.o					   \
-           $(S)/lib/libc/cobj/CObjRepArbiter.o				   \
-           $(S)/lib/libc/cobj/CObjRepArbiterCallCounter.o		   \
-           $(S)/lib/libc/cobj/CObjRepArbiterTarget.o			   \
-           $(S)/lib/libc/cobj/CObjRepMediator.o				   \
-           $(S)/lib/libc/cobj/CObjRoot.o				   \
-           $(S)/lib/libc/cobj/CObjRootArbiter.o				   \
-           $(S)/lib/libc/cobj/CObjRootMediator.o			   \
-           $(S)/lib/libc/cobj/CObjRootMultiRep.o			   \
-           $(S)/lib/libc/cobj/CObjRootSingleRep.o			   \
-           $(S)/lib/libc/cobj/DataTransfer.o				   \
-           $(S)/lib/libc/cobj/Factory.o					   \
-           $(S)/lib/libc/cobj/MediatedThreadTable.o			   \
-           $(S)/lib/libc/cobj/Obj.o $(S)/lib/libc/cobj/ObjectHandle.o	   \
-           $(S)/lib/libc/cobj/StubCOListServer.o			   \
-           $(S)/lib/libc/cobj/StubObj.o					   \
-           $(S)/lib/libc/cobj/StubTypeMgrServer.o			   \
-           $(S)/lib/libc/cobj/TypeMgr.o					   \
-           $(S)/lib/libc/cobj/TypeMgrServer.o				   \
-           $(S)/lib/libc/cobj/XCOListServer.o				   \
-           $(S)/lib/libc/cobj/XHandleTrans.o $(S)/lib/libc/cobj/XObj.o	   \
-           $(S)/lib/libc/cobj/XObjectList.o				   \
-           $(S)/lib/libc/cobj/XTypeMgrServer.o				   \
-           $(S)/lib/libc/cobj/arbiterMethods.o				   \
-           $(S)/lib/libc/cobj/missHandlingtest.o			   \
-           $(S)/lib/libc/cobj/sys/ActiveThrdCnt.o			   \
-           $(S)/lib/libc/cobj/sys/COSDefaultObject.o			   \
-           $(S)/lib/libc/cobj/sys/COSMgrObject.o			   \
-           $(S)/lib/libc/cobj/sys/TransPageDesc.o			   \
-           $(S)/lib/libc/cobj/sys/TransPageDescHash.o			   \
-           $(S)/lib/libc/cobj/sys/TransPageDescList.o			   \
-           $(S)/lib/libc/cobj/sys/defaultFuncs.o			   \
-           $(S)/lib/libc/cobj/sys/mediateMethods.o			   \
-           $(S)/lib/libc/fslib/FSNode.o					   \
+# Include rules for how to make libk.a 
+
+include lib/libc/alloc/Make.sub
+include lib/libc/cobj/Make.sub
+include lib/libc/cobj/sys/Make.sub
+#include lib/libc/fslib/Make.sub
+#include lib/libc/io/Make.sub
+#include lib/libc/scheduler/Make.sub
+#include lib/libc/stdlib/Make.sub
+#include lib/libc/sync/Make.sub
+#include lib/libc/sys/Make.sub
+#include lib/libc/usr/Make.sub
+
+libkobjs+= $(S)/lib/libc/fslib/FSNode.o					   \
            $(S)/lib/libc/fslib/StubFSNode.o				   \
            $(S)/lib/libc/fslib/XFSNode.o $(S)/lib/libc/io/DirBuf.o	   \
            $(S)/lib/libc/io/IO.o $(S)/lib/libc/io/IOForkManager.o	   \
@@ -294,20 +261,6 @@ libkobjs = $(S)/lib/libc/alloc/AllocCell.o $(S)/lib/libc/alloc/AllocPool.o \
            $(S)/lib/libc/usr/align.o $(S)/lib/libc/usr/gdb-stub.o	   \
            $(S)/lib/libc/usr/memoryMap.o				   \
            $(S)/lib/libc/usr/runProcessCommon.o				   \
-           $(S)/os/kernel/bilge/StubBuildDate.o				   \
-           $(S)/os/kernel/bilge/StubDiskSwap.o				   \
-           $(S)/os/kernel/bilge/StubFSFRSwap.o				   \
-           $(S)/os/kernel/bilge/StubIPSock.o				   \
-           $(S)/os/kernel/bilge/StubKBootParms.o			   \
-           $(S)/os/kernel/bilge/StubKernBogusDisk.o			   \
-           $(S)/os/kernel/bilge/StubKernSimDisk.o			   \
-           $(S)/os/kernel/bilge/StubKernToyDisk.o			   \
-           $(S)/os/kernel/bilge/StubNetDev.o				   \
-           $(S)/os/kernel/bilge/StubPrivilegedService.o			   \
-           $(S)/os/kernel/bilge/StubSystemMisc.o			   \
-           $(S)/os/kernel/bilge/StubTestScheduler.o			   \
-           $(S)/os/kernel/bilge/StubTestSwitch.o			   \
-           $(S)/os/kernel/bilge/StubWire.o				   \
            $(S)/os/kernel/exception/StubCPUContainer.o			   \
            $(S)/os/kernel/init/StubAsyncTester.o			   \
            $(S)/os/kernel/init/StubInitServer.o				   \
@@ -383,12 +336,6 @@ $(S)/os/kernel/linux/%.o: $(H)/os/kernel/linux/arch/powerpc/%.C
 	$(call status, CXX, $@)
 	$(CXX) -c $(kflags) $(jflags) $(os_kernel_linux_flags) $< -o $@
 
-lib_libc_alloc_flags = -I$(S)/lib/libc/alloc	\
-                       -I$(H)/lib/libc		\
-                       -I$(H)/lib/libc/alloc
-$(S)/lib/libc/alloc/%.o: $(H)/lib/libc/alloc/%.C
-	$(call status, CXX, $@)
-	$(CXX) -c $(lflags) $(iflags) $(lib_libc_alloc_flags) $< -o $@
 
 ###############################################################################
 $(S)/os/servers/bootServers.o: cflags = $(CFLAGS)
@@ -521,27 +468,6 @@ lib_includes :=
 stdlibincs = ctype.h float.h limits.h string.h 
 lib_includes += $(addprefix $(O)/install/include/, $(stdlibincs))
 $(O)/install/include/%.h: $(H)/lib/libc/stdlib/%.h
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-cobjsysincs = COSMgr.H COSMgrObject.H COSMissHandler.H COSTransObject.H COSconsts.h COVTable.H TransEntry.H COSDefaultObject.H COSBreakpointObject.H TransPageDescList.H TransPageDescHash.H TransPageDesc.H ActiveThrdCnt.H CODesc.H
-lib_includes += $(addprefix $(O)/install/include/cobj/sys/, $(cobjsysincs))
-$(O)/install/include/cobj/sys/%.H: $(H)/lib/libc/cobj/sys/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-$(O)/install/include/cobj/sys/%.h: $(H)/lib/libc/cobj/sys/%.h
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-cobjincs = CObjRep.H CObjRoot.H CObjRootSingleRep.H CObjRootMultiRep.H ObjectRefs.H  XHandleTrans.H XObjectList.H BaseObj.H Obj.H ObjectHandle.H TypeMgr.H TypeMgrServer.H TypeFactory.H Example.H CObjRepArbiter.H CObjRepArbiterTarget.H CObjRootArbiter.H DataTransfer.H DTType.H CObjGlobals.H Factory.H COListServer.H COList.H
-lib_includes += $(addprefix $(O)/install/include/cobj/, $(cobjincs))
-$(O)/install/include/cobj/%.H: $(H)/lib/libc/cobj/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-	
-allocincs = alloc.H AllocPool.H LMalloc.H AllocCell.H PageAllocatorUser.H PageAllocatorDefault.H MemoryMgrPrimitive.H AllocRegionManager.H MemDesc.H VAllocServices.H AllocStats.H DataChunk.H AllocStats.H PMalloc.H ObjCache.H
-lib_includes += $(addprefix $(O)/install/include/alloc/, $(allocincs))
-$(O)/install/include/alloc/%.H: $(H)/lib/libc/alloc/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 

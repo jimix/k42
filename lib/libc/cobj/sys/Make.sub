@@ -1,0 +1,34 @@
+libkcobjsysobjs = ActiveThrdCnt.o COSDefaultObject.o COSMgrObject.o  \
+                  TransPageDesc.o TransPageDescHash.o                \
+                  TransPageDescList.o defaultFuncs.o mediateMethods.o
+
+cobjsysincs = COSMgr.H COSMgrObject.H COSMissHandler.H             \
+              COSTransObject.H COSconsts.h COVTable.H TransEntry.H \
+              COSDefaultObject.H COSBreakpointObject.H             \
+              TransPageDescList.H TransPageDescHash.H              \
+              TransPageDesc.H ActiveThrdCnt.H CODesc.H
+
+# Top-level variables that use need to know about these objs
+OBJS += $(addprefix $(S)/lib/libc/cobj/sys/, $(libkcobjsysobjs))
+libkobjs += $(addprefix $(S)/lib/libc/cobj/sys/, $(libkcobjsysobjs))
+lib_includes += $(addprefix $(O)/install/include/cobj/sys/, $(cobjsysincs))
+
+$(O)/install/include/cobj/sys/%.H: $(H)/lib/libc/cobj/sys/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/cobj/sys/%.h: $(H)/lib/libc/cobj/sys/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+lib_libc_cobj_sys_iflags = -I$(S)/lib/libc/cobj/sys	\
+                           -I$(H)/lib/libc	        \
+                           -I$(H)/lib/libc/cobj/sys
+
+$(S)/lib/libc/cobj/sys/%.o: $(H)/lib/libc/cobj/sys/%.C
+	$(call status, CXX, $@)
+	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_cobj_sys_iflags) $< -o $@
+
+$(S)/lib/libc/cobj/sys/%.o: $(H)/lib/libc/cobj/sys/arch/$(HOST)/%.S
+	$(call status, AS, $@)
+	$(CXX) $(CFLAGS) -D__ASSEMBLEY_ $(lib_libc_cobj_sys_iflags) -c $^ -o $@
