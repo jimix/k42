@@ -1,0 +1,3 @@
+OBJS += $(S)/os/ktraceobjs.o
+ktraceobjs = trace.o tracePrint.o traceUtils.o
+$(S)/os/ktraceobjs.o: $(addprefix $(S)/os/kernel/trace/, $(ktraceobjs))

@@ -1,0 +1,23 @@
+OBJS += $(S)/os/kbilgeobjs.o
+kbilgeobjs = StubWire.o StubTestSwitch.o StubTestScheduler.o		\
+             StubKernSimDisk.o StubKernToyDisk.o StubKernBogusDisk.o	\
+             StubNetDev.o StubPrivilegedService.o StubSystemMisc.o	\
+             StubFSFRSwap.o StubDiskSwap.o StubIPSock.o			\
+             StubKBootParms.o StubBuildDate.o openfirm.o		\
+             openfirmnote.o simos.o thinwireArch.o PerfMon.o		\
+             SocketCreate.o HWPerfMon.o HWPerfMonPulsar.o		\
+             HWPerfMon630.o HWPerfMonGPUL.o libksup.o thinwire.o	\
+             Wire.o ThinIP.o resourcePrint.o ThinWireMgr.o		\
+             SocketWire.o FSRamSwap.o FSSwap.o FSFRSwap.o DiskSwap.o	\
+             TestSwitch.o TestScheduler.o KernToyDisk.o			\
+             KernBogusDisk.o ToyBlockDev.o SystemMisc.o			\
+             PrivilegedService.o LocalConsole.o StreamServerConsole.o	\
+             NetDev.o BlockDevBase.o COSMgrObjectKernObject.o		\
+             LazyState.o SystemControl.o MIPKernelMethods.o KParms.o	\
+             KBootParms.o BuildDate.o SysEnviron.o ZilogPort.o		\
+             UARTPort.o HVChan.o XWire.o XTestSwitch.o			\
+             XTestScheduler.o XKernSimDisk.o XKernToyDisk.o		\
+             XKernBogusDisk.o XNetDev.o XPrivilegedService.o		\
+             XSystemMisc.o XFSFRSwap.o XDiskSwap.o XIPSock.o		\
+             XKBootParms.o XBuildDate.o
+$(S)/os/kbilgeobjs.o: $(addprefix $(S)/os/kernel/bilge/, $(kbilgeobjs))

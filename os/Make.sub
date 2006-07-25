@@ -2,7 +2,7 @@
 OBJS += $(S)/os/k42-vmlinux
 $(S)/os/k42-vmlinux: $(B)/vmlinux.lds                           \
 		     $(B)/kbootobjs.o				\
-		     $(S)/kexceptobjs.o				\
+		     $(S)/os/kexceptobjs.o			\
                      $(L)/core.k42lib.o                         \
                      $(L)/util.k42lib.o                         \
                      $(S)/os/ktraceobjs.o                       \

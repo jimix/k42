@@ -137,112 +137,16 @@ include os/Make.sub
 # for a particular architecture and wrap the kernel appropriately
 include os/boot/arch/$(HOST)/Make.sub
 
-OBJS += $(S)/os/kinitobjs.o
-kinitobjs = StubAsyncTester.o StubServerState.o StubInitServer.o	\
-            XAsyncTester.o locore.o MPinit.o KernelInit.o		\
-            AsyncTester.o SysFacts.o idt.o memoryMapKern.o kinit.o	\
-            initKernelMappings.o KernelExit.o XServerState.o		\
-            XInitServer.o ServerState.o InitServer.o
-$(S)/os/kinitobjs.o: $(addprefix $(S)/os/kernel/init/, $(kinitobjs))
-
-OBJS += $(S)/os/kexceptobjs.o
-kexceptobjs = StubCPUContainer.o lolita.o ExceptionLocalAsm.o		\
-              DispatchQueue.o IPCTargetTable.o CPUDomainAnnex.o		\
-              ProcessAnnex.o ProcessAnnexArch.o ExceptionLocal.o	\
-              ExceptionExp.o MPMsgMgrException.o HWInterrupt.o		\
-              KernelTimer.o HWIOCommon.o KernelInfoMgr.o		\
-              IPCRetryManager.o FaultNotificationMgr.o XCPUContainer.o
-$(S)/os/kexceptobjs.o: $(addprefix $(S)/os/kernel/exception/, $(kexceptobjs))
-
-OBJS += $(S)/os/kmemobjs.o
-kmemobjs = StubRegionDefault.o StubFR.o StubRegionPerProcessor.o	\
-           StubRegionRedZone.o StubFRComputation.o			\
-           StubFRKernelPinned.o StubFRPA.o StubFRVA.o			\
-           StubRegionFSComm.o StubRegionReplicated.o StubFRCRW.o	\
-           StubFRLTransTable.o StubKernelPagingTransport.o		\
-           StubKernelPagingTransportPA.o StubKernelPagingTransportVA.o	\
-           XFR.o InvertedPageTable.o CopyPage.o	\
-           PageAllocatorKernPinned.o PageAllocatorKernUnpinned.o	\
-           RegionDefault.o RegionReplicated.o RegionPerProcessor.o	\
-           PageFaultTest.o FR.o FRPlaceHolder.o FCMStartup.o FCM.o	\
-           FCMDefault.o FCMFile.o FCMDefaultRoot.o FCMReal.o		\
-           FCMComputation.o FCMPrimitiveKernel.o FCMFixed.o		\
-           FCMPrimitive.o FCMSharedTrivial.o FCMPartitionedTrivial.o	\
-           FCMCommon.o FCMCommonMultiRep.o FCMCommonMultiRepRoot.o	\
-           FCMDefaultMultiRep.o FCMDefaultMultiRepRoot.o		\
-           FCMPrimitiveKernelMultiRep.o					\
-           FCMPrimitiveKernelMultiRepRoot.o PageDescData.o PageList.o	\
-           SegmentTable.o PageSet.o PageSetDense.o SegmentHATPrivate.o	\
-           HATDefault.o HATKernel.o FRVA.o FRPA.o FRPANonPageable.o	\
-           FRPANonPageableRamOnly.o FRCRW.o RegionRedZone.o		\
-           PageFaultNotification.o FRComputation.o FRCommon.o		\
-           FRKernelPinned.o PMRoot.o FreeFrameList.o PMLeaf.o PMKern.o	\
-           RegionFSComm.o VAllocServicesKern.o MemDescKern.o		\
-           AllocRegionManagerKern.o PMallocKern.o PageCopy.o Pin.o	\
-           FRLTransTable.o FCMLTransTable.o RegionList.o		\
-           SharedBufferProducerKernel.o SharedBufferConsumerKernel.o	\
-           KernelPagingTransport.o KernelPagingTransportPA.o		\
-           KernelPagingTransportVA.o PMLeafExp.o PMLeafChunk.o		\
-           FreeFrameListChunk.o SyncService.o XRegionDefault.o		\
-           XRegionPerProcessor.o XRegionRedZone.o XFRComputation.o	\
-           XFRKernelPinned.o XFRPA.o XFRVA.o XRegionFSComm.o		\
-           XRegionReplicated.o XFRCRW.o XFRLTransTable.o		\
-           XKernelPagingTransport.o XKernelPagingTransportPA.o		\
-           XKernelPagingTransportVA.o
-$(S)/os/kmemobjs.o: $(addprefix $(S)/os/kernel/mem/, $(kmemobjs))
-
-OBJS += $(S)/os/kprocobjs.o
-kprocobjs = StubProcessSetKern.o StubProcessServer.o			\
-            ProcessReplicated.o ProcessShared.o Process.o		\
-            kernRunProcess.o ProgExec.o ProcessDefaultKern.o		\
-            ProcessVPList.o ProcessVPListArch.o ProcessSetKern.o	\
-            ProcessServer.o SysCallInitKern.o XProcessSetKern.o		\
-            XProcessServer.o
-$(S)/os/kprocobjs.o: $(addprefix $(S)/os/kernel/proc/, $(kprocobjs))
-
-OBJS += $(S)/os/kstubobjs.o
-kstubobjs = StubBonnie.o client.o Bonnie.o XBonnie.o
-$(S)/os/kstubobjs.o: $(addprefix $(S)/os/kernel/stubtest/, $(kstubobjs))
-
-OBJS += $(S)/os/kbilgeobjs.o
-kbilgeobjs = StubWire.o StubTestSwitch.o StubTestScheduler.o		\
-             StubKernSimDisk.o StubKernToyDisk.o StubKernBogusDisk.o	\
-             StubNetDev.o StubPrivilegedService.o StubSystemMisc.o	\
-             StubFSFRSwap.o StubDiskSwap.o StubIPSock.o			\
-             StubKBootParms.o StubBuildDate.o openfirm.o		\
-             openfirmnote.o simos.o thinwireArch.o PerfMon.o		\
-             SocketCreate.o HWPerfMon.o HWPerfMonPulsar.o		\
-             HWPerfMon630.o HWPerfMonGPUL.o libksup.o thinwire.o	\
-             Wire.o ThinIP.o resourcePrint.o ThinWireMgr.o		\
-             SocketWire.o FSRamSwap.o FSSwap.o FSFRSwap.o DiskSwap.o	\
-             TestSwitch.o TestScheduler.o KernToyDisk.o			\
-             KernBogusDisk.o ToyBlockDev.o SystemMisc.o			\
-             PrivilegedService.o LocalConsole.o StreamServerConsole.o	\
-             NetDev.o BlockDevBase.o COSMgrObjectKernObject.o		\
-             LazyState.o SystemControl.o MIPKernelMethods.o KParms.o	\
-             KBootParms.o BuildDate.o SysEnviron.o ZilogPort.o		\
-             UARTPort.o HVChan.o XWire.o XTestSwitch.o			\
-             XTestScheduler.o XKernSimDisk.o XKernToyDisk.o		\
-             XKernBogusDisk.o XNetDev.o XPrivilegedService.o		\
-             XSystemMisc.o XFSFRSwap.o XDiskSwap.o XIPSock.o		\
-             XKBootParms.o XBuildDate.o
-$(S)/os/kbilgeobjs.o: $(addprefix $(S)/os/kernel/bilge/, $(kbilgeobjs))
-
-OBJS += $(S)/os/ktraceobjs.o
-ktraceobjs = trace.o tracePrint.o traceUtils.o
-$(S)/os/ktraceobjs.o: $(addprefix $(S)/os/kernel/trace/, $(ktraceobjs))
-
-OBJS += $(S)/os/ksysobjs.o
-ksysobjs = KernelInfo.o hcall.o
-$(S)/os/ksysobjs.o: $(addprefix $(S)/os/kernel/sys/, $(ksysobjs))
-
-OBJS += $(S)/os/klinobjs.o
-klinobjs = BootInit.o MemoryArch.o ConfigureArch.o LinuxPIC.o		\
-           StdIOKern.o MemoryK.o Configure.o Interrupt.o LinuxSock.o	\
-           LinuxBlockDev.o LinuxCharDev.o
-$(S)/os/klinobjs.o: $(addprefix $(S)/os/kernel/linux/, $(klinobjs))
-
-
+# Makefiles from os/kernel
+include os/kernel/init/Make.sub
+include os/kernel/exception/Make.sub
+include os/kernel/mem/Make.sub
+include os/kernel/proc/Make.sub
+include os/kernel/stubtest/Make.sub
+include os/kernel/bilge/Make.sub
+include os/kernel/trace/Make.sub
+include os/kernel/sys/Make.sub
+include os/kernel/linux/Make.sub
 
 libkobjs = $(S)/lib/libc/alloc/AllocCell.o $(S)/lib/libc/alloc/AllocPool.o \
            $(S)/lib/libc/alloc/AllocRegionManager.o			   \

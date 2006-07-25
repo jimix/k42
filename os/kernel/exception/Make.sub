@@ -1,0 +1,8 @@
+OBJS += $(S)/os/kexceptobjs.o
+kexceptobjs = StubCPUContainer.o lolita.o ExceptionLocalAsm.o		\
+              DispatchQueue.o IPCTargetTable.o CPUDomainAnnex.o		\
+              ProcessAnnex.o ProcessAnnexArch.o ExceptionLocal.o	\
+              ExceptionExp.o MPMsgMgrException.o HWInterrupt.o		\
+              KernelTimer.o HWIOCommon.o KernelInfoMgr.o		\
+              IPCRetryManager.o FaultNotificationMgr.o XCPUContainer.o
+$(S)/os/kexceptobjs.o: $(addprefix $(S)/os/kernel/exception/, $(kexceptobjs))

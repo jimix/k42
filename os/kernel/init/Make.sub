@@ -1,0 +1,7 @@
+OBJS += $(S)/os/kinitobjs.o
+kinitobjs = StubAsyncTester.o StubServerState.o StubInitServer.o	\
+            XAsyncTester.o locore.o MPinit.o KernelInit.o		\
+            AsyncTester.o SysFacts.o idt.o memoryMapKern.o kinit.o	\
+            initKernelMappings.o KernelExit.o XServerState.o		\
+            XInitServer.o ServerState.o InitServer.o
+$(S)/os/kinitobjs.o: $(addprefix $(S)/os/kernel/init/, $(kinitobjs))

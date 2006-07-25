@@ -1,0 +1,8 @@
+OBJS += $(S)/os/kprocobjs.o
+kprocobjs = StubProcessSetKern.o StubProcessServer.o			\
+            ProcessReplicated.o ProcessShared.o Process.o		\
+            kernRunProcess.o ProgExec.o ProcessDefaultKern.o		\
+            ProcessVPList.o ProcessVPListArch.o ProcessSetKern.o	\
+            ProcessServer.o SysCallInitKern.o XProcessSetKern.o		\
+            XProcessServer.o
+$(S)/os/kprocobjs.o: $(addprefix $(S)/os/kernel/proc/, $(kprocobjs))

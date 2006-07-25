@@ -1,0 +1,36 @@
+OBJS += $(S)/os/kmemobjs.o
+kmemobjs = StubRegionDefault.o StubFR.o StubRegionPerProcessor.o	\
+           StubRegionRedZone.o StubFRComputation.o			\
+           StubFRKernelPinned.o StubFRPA.o StubFRVA.o			\
+           StubRegionFSComm.o StubRegionReplicated.o StubFRCRW.o	\
+           StubFRLTransTable.o StubKernelPagingTransport.o		\
+           StubKernelPagingTransportPA.o StubKernelPagingTransportVA.o	\
+           XFR.o InvertedPageTable.o CopyPage.o	\
+           PageAllocatorKernPinned.o PageAllocatorKernUnpinned.o	\
+           RegionDefault.o RegionReplicated.o RegionPerProcessor.o	\
+           PageFaultTest.o FR.o FRPlaceHolder.o FCMStartup.o FCM.o	\
+           FCMDefault.o FCMFile.o FCMDefaultRoot.o FCMReal.o		\
+           FCMComputation.o FCMPrimitiveKernel.o FCMFixed.o		\
+           FCMPrimitive.o FCMSharedTrivial.o FCMPartitionedTrivial.o	\
+           FCMCommon.o FCMCommonMultiRep.o FCMCommonMultiRepRoot.o	\
+           FCMDefaultMultiRep.o FCMDefaultMultiRepRoot.o		\
+           FCMPrimitiveKernelMultiRep.o					\
+           FCMPrimitiveKernelMultiRepRoot.o PageDescData.o PageList.o	\
+           SegmentTable.o PageSet.o PageSetDense.o SegmentHATPrivate.o	\
+           HATDefault.o HATKernel.o FRVA.o FRPA.o FRPANonPageable.o	\
+           FRPANonPageableRamOnly.o FRCRW.o RegionRedZone.o		\
+           PageFaultNotification.o FRComputation.o FRCommon.o		\
+           FRKernelPinned.o PMRoot.o FreeFrameList.o PMLeaf.o PMKern.o	\
+           RegionFSComm.o VAllocServicesKern.o MemDescKern.o		\
+           AllocRegionManagerKern.o PMallocKern.o PageCopy.o Pin.o	\
+           FRLTransTable.o FCMLTransTable.o RegionList.o		\
+           SharedBufferProducerKernel.o SharedBufferConsumerKernel.o	\
+           KernelPagingTransport.o KernelPagingTransportPA.o		\
+           KernelPagingTransportVA.o PMLeafExp.o PMLeafChunk.o		\
+           FreeFrameListChunk.o SyncService.o XRegionDefault.o		\
+           XRegionPerProcessor.o XRegionRedZone.o XFRComputation.o	\
+           XFRKernelPinned.o XFRPA.o XFRVA.o XRegionFSComm.o		\
+           XRegionReplicated.o XFRCRW.o XFRLTransTable.o		\
+           XKernelPagingTransport.o XKernelPagingTransportPA.o		\
+           XKernelPagingTransportVA.o
+$(S)/os/kmemobjs.o: $(addprefix $(S)/os/kernel/mem/, $(kmemobjs))
