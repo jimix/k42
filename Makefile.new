@@ -67,7 +67,8 @@ IFLAGS = -I$(O)/install/include					\
          -I$(IMG)/usr/$(FULLHOST)-linux/include	\
          -I$(L)/include						\
          -I$(O)/install/gcc-include/arch/$(HOST)		\
-         -I$(O)/install/include/stubgen/arch/$(HOST)
+         -I$(O)/install/include/stubgen/arch/$(HOST)		\
+	 $($(HOST)_IFLAGS)
 
 ################################################################################
 # Functions for supporting later targets in included makefiles
