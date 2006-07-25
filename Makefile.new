@@ -157,47 +157,15 @@ include os/kernel/linux/Make.sub
 include lib/libc/alloc/Make.sub
 include lib/libc/cobj/Make.sub
 include lib/libc/cobj/sys/Make.sub
-#include lib/libc/fslib/Make.sub
-#include lib/libc/io/Make.sub
+include lib/libc/fslib/Make.sub
+include lib/libc/io/Make.sub
 #include lib/libc/scheduler/Make.sub
 #include lib/libc/stdlib/Make.sub
 #include lib/libc/sync/Make.sub
 #include lib/libc/sys/Make.sub
 #include lib/libc/usr/Make.sub
 
-libkobjs+= $(S)/lib/libc/fslib/FSNode.o					   \
-           $(S)/lib/libc/fslib/StubFSNode.o				   \
-           $(S)/lib/libc/fslib/XFSNode.o $(S)/lib/libc/io/DirBuf.o	   \
-           $(S)/lib/libc/io/IO.o $(S)/lib/libc/io/IOForkManager.o	   \
-           $(S)/lib/libc/io/IORingBuffer.o $(S)/lib/libc/io/MemTrans.o	   \
-           $(S)/lib/libc/io/PathName.o $(S)/lib/libc/io/StubBlockDev.o	   \
-           $(S)/lib/libc/io/StubCallBackObj.o				   \
-           $(S)/lib/libc/io/StubFileLinuxClientStream.o			   \
-           $(S)/lib/libc/io/StubFileLinuxServer.o			   \
-           $(S)/lib/libc/io/StubMemTrans.o				   \
-           $(S)/lib/libc/io/StubNameTreeLinux.o				   \
-           $(S)/lib/libc/io/StubPAPageServer.o				   \
-           $(S)/lib/libc/io/StubPacketServer.o				   \
-           $(S)/lib/libc/io/StubSocketServer.o				   \
-           $(S)/lib/libc/io/StubStreamServer.o				   \
-           $(S)/lib/libc/io/StubStreamServerTTY.o			   \
-           $(S)/lib/libc/io/StubSysVMessagesClient.o			   \
-           $(S)/lib/libc/io/StubVAPageServer.o				   \
-           $(S)/lib/libc/io/StubVirtFile.o				   \
-           $(S)/lib/libc/io/XBlockDev.o					   \
-           $(S)/lib/libc/io/XCallBackObj.o				   \
-           $(S)/lib/libc/io/XFileLinuxClientStream.o			   \
-           $(S)/lib/libc/io/XFileLinuxServer.o				   \
-           $(S)/lib/libc/io/XMemTrans.o					   \
-           $(S)/lib/libc/io/XNameTreeLinux.o				   \
-           $(S)/lib/libc/io/XPAPageServer.o				   \
-           $(S)/lib/libc/io/XStreamServer.o				   \
-           $(S)/lib/libc/io/XStreamServerTTY.o				   \
-           $(S)/lib/libc/io/XSysVMessagesClient.o			   \
-           $(S)/lib/libc/io/XVAPageServer.o				   \
-           $(S)/lib/libc/io/XVirtFile.o $(S)/lib/libc/io/cprintf.o	   \
-           $(S)/lib/libc/io/printfBuf.o					   \
-           $(S)/lib/libc/misc/BaseRandom.o				   \
+libkobjs+=            $(S)/lib/libc/misc/BaseRandom.o				   \
            $(S)/lib/libc/misc/BlockSet.o				   \
            $(S)/lib/libc/misc/DiskMountInfoList.o			   \
            $(S)/lib/libc/misc/HashSimple.o				   \

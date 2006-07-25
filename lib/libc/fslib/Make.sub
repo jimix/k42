@@ -1,0 +1,32 @@
+libkfslibobjs = FSNode.o StubFSNode.o XFSNode.o
+
+lib_libc_fslib_stubobjs = $(filter Stub%.o, $(libkfslibobjs))
+lib_libc_fslib_stubnames = $(patsubst Stub%.o, % ,$(lib_libc_fslib_stubobjs))
+lib_libc_fslib_stubfiles = $(foreach stubname, $(lib_libc_fslib_stubnames), $(call stubgen_objects, $(S)/lib/libc/fslib,$(stubname)))
+
+# Top-level variables that use need to know about these objs
+OBJS += $(addprefix $(S)/lib/libc/fslib/, $(libkfslibobjs)) \
+        $(lib_libc_fslib_stubfiles)
+libkobjs += $(addprefix $(S)/lib/libc/fslib/, $(libkfslibobjs))
+
+# Stub source files
+lib_libc_fslib_iflags = -I$(S)/lib/libc/fslib	\
+                        -I$(H)/lib/libc		\
+                        -I$(H)/lib/libc/fslib
+
+$(call stubgen_targets, $(S)/lib/libc/fslib): $(H)/lib/libc/fslib/%.H
+	$(call status, STUBGEN, $@)
+	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
+		$(filter-out -MD, $(CXXFLAGS)) \
+		-w -I. $(IFLAGS) $(lib_libc_fslib_iflags) -D_IN_STUBGEN
+	$(RM) -f $(shell basename $< .H).stubgen.d
+
+# Object files
+
+$(S)/lib/libc/fslib/%.o: $(S)/lib/libc/fslib/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(CXXFLAGS) $(IFLAGS) $(lib_libc_fslib_iflags) -c $< -o $@
+
+$(S)/lib/libc/fslib/%.o: $(H)/lib/libc/fslib/%.C
+	$(call status, CXX, $@)
+	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_fslib_iflags) $< -o $@
