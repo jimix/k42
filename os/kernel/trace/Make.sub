@@ -1,3 +1,14 @@
 OBJS += $(S)/os/ktraceobjs.o
 ktraceobjs = trace.o tracePrint.o traceUtils.o
 $(S)/os/ktraceobjs.o: $(addprefix $(S)/os/kernel/trace/, $(ktraceobjs))
+
+# ktraceobjs subobjects
+OBJS += $(addprefix $(S)/os/kernel/trace/, $(ktraceobjs))
+
+# Should these flags be based off of $(kflags), etc?
+kernel_trace_cxxflags = $(CXXFLAGS) -MD -DKERNEL 
+kernel_trace_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/trace $(IFLAGS)
+
+$(S)/os/kernel/trace/%.o: $(H)/os/kernel/trace/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_trace_cxxflags) $(kernel_trace_iflags) -c $^ -o $@

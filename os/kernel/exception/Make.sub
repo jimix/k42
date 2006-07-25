@@ -6,3 +6,39 @@ kexceptobjs = StubCPUContainer.o lolita.o ExceptionLocalAsm.o		\
               KernelTimer.o HWIOCommon.o KernelInfoMgr.o		\
               IPCRetryManager.o FaultNotificationMgr.o XCPUContainer.o
 $(S)/os/kexceptobjs.o: $(addprefix $(S)/os/kernel/exception/, $(kexceptobjs))
+
+# kexceptobjs.o subobjects
+OBJS += $(addprefix $(S)/os/kernel/exception/, $(kexceptobjs))
+OBJS += $(call stubgen_objects, $(S)/os/kernel/exception,CPUContainer)
+
+# Should these flags be based off of $(kflags), etc?
+kernel_except_cxxflags = $(CXXFLAGS) -MD -DKERNEL 
+kernel_except_cflags = $(CFLAGS) -DKERNEL 
+kernel_except_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/exception $(IFLAGS)
+
+$(call stubgen_targets, $(S)/os/kernel/exception): $(H)/os/kernel/exception/%.H
+	$(call status, STUBGEN, $@)
+	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
+		$(filter-out -MD, $(kernel_except_cxxflags)) \
+		-w -I. $(kernel_except_iflags) -D_IN_STUBGEN
+	$(RM) -f $(shell basename $< .H).stubgen.d
+
+$(S)/os/kernel/exception/%.o: $(S)/os/kernel/exception/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_except_cxxflags) $(kernel_except_iflags) -c $^ -o $@
+
+$(S)/os/kernel/exception/%.o: $(S)/os/kernel/exception/arch/$(HOST)/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_except_cxxflags) $(kernel_except_iflags) -c $^ -o $@
+
+$(S)/os/kernel/exception/%.o: $(H)/os/kernel/exception/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_except_cxxflags) $(kernel_except_iflags) -c $^ -o $@
+
+$(S)/os/kernel/exception/%.o: $(H)/os/kernel/exception/arch/$(HOST)/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_except_cxxflags) $(kernel_except_iflags) -c $^ -o $@
+
+$(S)/os/kernel/exception/%.o: $(H)/os/kernel/exception/arch/$(HOST)/%.S
+	$(call status, AS, $@)
+	$(CXX) $(kernel_except_cflags) $(CFLAGS) -D__ASSEMBLEY_ $(kernel_except_iflags) -c $^ -o $@

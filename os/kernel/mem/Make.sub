@@ -34,3 +34,43 @@ kmemobjs = StubRegionDefault.o StubFR.o StubRegionPerProcessor.o	\
            XKernelPagingTransport.o XKernelPagingTransportPA.o		\
            XKernelPagingTransportVA.o
 $(S)/os/kmemobjs.o: $(addprefix $(S)/os/kernel/mem/, $(kmemobjs))
+
+# kmemobjs.o subobjects
+OBJS += $(addprefix $(S)/os/kernel/mem/, $(kmemobjs))
+
+# Add each stub in kmemobjs to the list of objects to make/clean
+kernel_mem_stubobjs = $(filter Stub%.o, $(kmemobjs))
+kernel_mem_stubnames = $(patsubst Stub%.o, % ,$(kernel_mem_stubobjs))
+OBJS += $(foreach stubname, $(kernel_mem_stubnames), $(call stubgen_objects, $(S)/os/kernel/mem,$(stubname)))
+
+# Should these flags be based off of $(kflags), etc?
+kernel_mem_cxxflags = $(CXXFLAGS) -MD -DKERNEL 
+kernel_mem_cflags = $(CFLAGS) -DKERNEL 
+kernel_mem_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/mem $(IFLAGS)
+
+$(call stubgen_targets, $(S)/os/kernel/mem): $(H)/os/kernel/mem/%.H
+	$(call status, STUBGEN, $@)
+	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
+		$(filter-out -MD, $(kernel_mem_cxxflags)) \
+		-w -I. $(kernel_mem_iflags) -D_IN_STUBGEN
+	$(RM) -f $(shell basename $< .H).stubgen.d
+
+$(S)/os/kernel/mem/%.o: $(S)/os/kernel/mem/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_mem_cxxflags) $(kernel_mem_iflags) -c $^ -o $@
+
+$(S)/os/kernel/mem/%.o: $(S)/os/kernel/mem/arch/$(HOST)/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_mem_cxxflags) $(kernel_mem_iflags) -c $^ -o $@
+
+$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_mem_cxxflags) $(kernel_mem_iflags) -c $^ -o $@
+
+$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(HOST)/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_mem_cxxflags) $(kernel_mem_iflags) -c $^ -o $@
+
+$(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(HOST)/%.S
+	$(call status, AS, $@)
+	$(CXX) $(kernel_mem_cflags) $(CFLAGS) -D__ASSEMBLEY_ $(kernel_mem_iflags) -c $^ -o $@

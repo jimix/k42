@@ -21,3 +21,63 @@ kbilgeobjs = StubWire.o StubTestSwitch.o StubTestScheduler.o		\
              XSystemMisc.o XFSFRSwap.o XDiskSwap.o XIPSock.o		\
              XKBootParms.o XBuildDate.o
 $(S)/os/kbilgeobjs.o: $(addprefix $(S)/os/kernel/bilge/, $(kbilgeobjs))
+
+# kbilgeobjs.o subobjects
+
+OBJS += $(addprefix $(S)/os/kernel/bilge/, $(kbilgeobjs))
+
+# Add each stub in kbilgeobjs to the list of objects to make/clean
+kernel_bilge_stubobjs = $(filter Stub%.o, $(kbilgeobjs))
+kernel_bilge_stubnames = $(patsubst Stub%.o, % ,$(kernel_bilge_stubobjs))
+OBJS += $(foreach stubname, $(kernel_bilge_stubnames), $(call stubgen_objects, $(S)/os/kernel/bilge,$(stubname)))
+
+# Should these flags be based off of $(kflags), etc?
+kernel_bilge_cxxflags = $(CXXFLAGS) -MD -DKERNEL 
+kernel_bilge_cflags = $(CFLAGS) -DKERNEL 
+kernel_bilge_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/bilge $(IFLAGS)
+
+$(call stubgen_targets, $(S)/os/kernel/bilge): $(H)/os/kernel/bilge/%.H
+	$(call status, STUBGEN, $@)
+	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
+		$(filter-out -MD, $(kernel_bilge_cxxflags)) \
+		-w -I. $(kernel_bilge_iflags) -D_IN_STUBGEN
+	$(RM) -f $(shell basename $< .H).stubgen.d
+
+# Special defines for BuildDate target
+DBGLVL='"nodebug"'
+ifeq ($(OBJDIR_OPT_TYPES),fullDeb)
+DBGLVL='"fulldebug"'
+endif
+ifeq ($(OBJDIR_OPT_TYPES),partDeb)
+DBGLVL='"partdebug"'
+endif
+LINKDATE:='"$(shell date)"'
+MAKEUSER:='"$(USER)"'
+REGRESSTS:='"$(shell ls -l $(MKANCHOR)/kitchsrc/RegressStamp|\
+              awk '{printf "%s %s %s",$$6,$$7,$$8}' )"'
+
+$(S)/os/kernel/bilge/BuildDate.o: FORCE
+$(S)/os/kernel/bilge/BuildDate.o: kernel_bilge_cxxflags += -DMAKEUSER=$(MAKEUSER) \
+	-DLINKDATE=$(LINKDATE) -DREGRESSTS=$(REGRESSTS) \
+	-DDBGLVL=$(DBGLVL)
+
+# general pattern rules for targets in bilge
+$(S)/os/kernel/bilge/%.o: $(S)/os/kernel/bilge/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_bilge_cxxflags) $(kernel_bilge_iflags) -c $< -o $@
+
+$(S)/os/kernel/bilge/%.o: $(S)/os/kernel/bilge/arch/$(HOST)/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_bilge_cxxflags) $(kernel_bilge_iflags) -c $< -o $@
+
+$(S)/os/kernel/bilge/%.o: $(H)/os/kernel/bilge/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_bilge_cxxflags) $(kernel_bilge_iflags) -c $< -o $@
+
+$(S)/os/kernel/bilge/%.o: $(H)/os/kernel/bilge/arch/$(HOST)/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_bilge_cxxflags) $(kernel_bilge_iflags) -c $< -o $@
+
+$(S)/os/kernel/bilge/%.o: $(H)/os/kernel/bilge/arch/$(HOST)/%.S
+	$(call status, AS, $@)
+	$(CXX) $(kernel_bilge_cflags) $(CFLAGS) -D__ASSEMBLEY_ $(kernel_bilge_iflags) -c $< -o $@

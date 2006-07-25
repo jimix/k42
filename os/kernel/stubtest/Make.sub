@@ -1,3 +1,29 @@
 OBJS += $(S)/os/kstubobjs.o
 kstubobjs = StubBonnie.o client.o Bonnie.o XBonnie.o
 $(S)/os/kstubobjs.o: $(addprefix $(S)/os/kernel/stubtest/, $(kstubobjs))
+
+# kstubobjs subobjects
+
+OBJS += $(addprefix $(S)/os/kernel/stubtest/, $(kstubobjs))
+
+# Add each stub in kprocobjs to the list of objects to make/clean
+OBJS += $(call stubgen_objects, $(S)/os/kernel/stubtest,Bonnie)))
+
+# Should these flags be based off of $(kflags), etc?
+kernel_stub_cxxflags = $(CXXFLAGS) -MD -DKERNEL 
+kernel_stub_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/stubtest $(IFLAGS)
+
+$(call stubgen_targets, $(S)/os/kernel/stubtest): $(H)/os/kernel/stubtest/%.H
+	$(call status, STUBGEN, $@)
+	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
+		$(filter-out -MD, $(kernel_stub_cxxflags)) \
+		-w -I. $(kernel_stub_iflags) -D_IN_STUBGEN
+	$(RM) -f $(shell basename $< .H).stubgen.d
+
+$(S)/os/kernel/stubtest/%.o: $(S)/os/kernel/stubtest/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_stub_cxxflags) $(kernel_stub_iflags) -c $^ -o $@
+
+$(S)/os/kernel/stubtest/%.o: $(H)/os/kernel/stubtest/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(kernel_stub_cxxflags) $(kernel_stub_iflags) -c $^ -o $@
