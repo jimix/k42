@@ -6,7 +6,7 @@ libkcallocobjs = AllocCell.o AllocPool.o AllocRegionManager.o \
                  PageAllocatorDefault.o PageAllocatorUser.o   \
             	 VAllocServices.o alloctst.o
 
-allocincs = alloc.H AllocPool.H LMalloc.H AllocCell.H           \
+alloc_includes = alloc.H AllocPool.H LMalloc.H AllocCell.H      \
             PageAllocatorUser.H PageAllocatorDefault.H          \
             MemoryMgrPrimitive.H AllocRegionManager.H           \
             MemDesc.H VAllocServices.H AllocStats.H DataChunk.H \
@@ -15,7 +15,7 @@ allocincs = alloc.H AllocPool.H LMalloc.H AllocCell.H           \
 # Top-level variables that use need to know about these objs
 OBJS += $(addprefix $(S)/lib/libc/alloc/, $(libkcallocobjs))
 libkobjs += $(addprefix $(S)/lib/libc/alloc/, $(libkcallocobjs))
-lib_includes += $(addprefix $(O)/install/include/alloc/, $(allocincs))
+lib_includes += $(addprefix $(O)/install/include/alloc/, $(alloc_includes))
 lib_includes += $(O)/install/include/sys/PageAllocator.H \
 		$(O)/install/include/sys/LeakProof.H
 

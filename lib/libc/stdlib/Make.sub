@@ -1,0 +1,32 @@
+# Objects and include files from here
+
+libkstdlibobjs = baseAtoi.o baseFgets.o baseSprintf.o baseStrtol.o isctype.o \
+               memccpy.o memcmp.o string.o
+
+stdlib_includes = ctype.h float.h limits.h string.h 
+
+# Top-level variables that use need to know about these objs
+OBJS += $(addprefix $(S)/lib/libc/stdlib/, $(libkstdlibobjs))
+libkobjs += $(addprefix $(S)/lib/libc/stdlib/, $(libkstdlibobjs))
+lib_includes += $(addprefix $(O)/install/include/, $(stdlib_includes))
+
+# Rules for building objects and installing include files
+
+# Include files
+$(O)/install/include/%.h: $(H)/lib/libc/stdlib/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+	
+# Object files
+
+lib_libc_stdlib_iflags = -I$(S)/lib/libc/stdlib \
+			 -I$(H)/lib/libc        \
+			 -I$(H)/lib/libc/stdlib
+
+$(S)/lib/libc/stdlib/%.o: $(H)/lib/libc/stdlib/%.C
+	$(call status, CXX, $@)
+	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_stdlib_iflags) $< -o $@
+
+$(S)/lib/libc/stdlib/%.o: $(H)/lib/libc/stdlib/%.c
+	$(call status, CC, $@)
+	$(CC) -c $(CFLAGS) $(IFLAGS) $(lib_libc_stdlib_iflags) $< -o $@

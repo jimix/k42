@@ -1,3 +1,4 @@
+
 OBJS += $(S)/os/kinitobjs.o
 kinitobjs = StubAsyncTester.o StubServerState.o StubInitServer.o	\
             XAsyncTester.o locore.o MPinit.o KernelInit.o		\
@@ -5,6 +6,11 @@ kinitobjs = StubAsyncTester.o StubServerState.o StubInitServer.o	\
             initKernelMappings.o KernelExit.o XServerState.o		\
             XInitServer.o ServerState.o InitServer.o
 $(S)/os/kinitobjs.o: $(addprefix $(S)/os/kernel/init/, $(kinitobjs))
+
+libkobjs += $(S)/os/kernel/init/StubAsyncTester.o			   \
+            $(S)/os/kernel/init/StubInitServer.o			   \
+            $(S)/os/kernel/init/StubServerState.o			   \
+            $(S)/os/kernel/init/XAsyncTester.o	
 
 # kinitobjs.o subobjects
 OBJS += $(addprefix $(S)/os/kernel/init/, $(kinitobjs))

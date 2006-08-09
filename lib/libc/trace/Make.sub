@@ -1,0 +1,35 @@
+# Objects and include files from here
+
+libktraceobjs = traceLib.o
+trace_includes = traceCore.H traceReserve.H traceLib.H tracePack.H traceK42.h
+trace_powerpc_includes = traceReserve.H
+
+# Top-level variables that use need to know about these objs
+OBJS += $(addprefix $(S)/lib/libc/trace/, $(libktraceobjs))
+libkobjs += $(addprefix $(S)/lib/libc/trace/, $(libktraceobjs))
+lib_includes += $(addprefix $(O)/install/include/trace/, $(trace_includes))
+lib_includes += $(addprefix $(O)/install/include/trace/arch/$(HOST)/, $(trace_$(HOST)_includes))
+
+# Rules for building objects and installing include files
+
+# Include files
+$(O)/install/include/trace/%.H: $(H)/lib/libc/trace/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/trace/%.h: $(H)/lib/libc/trace/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/trace/arch/$(HOST)/%.H: $(H)/lib/libc/trace/arch/$(HOST)%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+# Object files
+lib_libc_trace_iflags = -I$(S)/lib/libc/trace	\
+                        -I$(H)/lib/libc		\
+                        -I$(H)/lib/libc/trace
+
+$(S)/lib/libc/trace/%.o: $(H)/lib/libc/trace/%.C
+	$(call status, CXX, $@)
+	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_trace_iflags) $< -o $@

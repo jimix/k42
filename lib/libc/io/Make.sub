@@ -13,6 +13,18 @@ libkioobjs += DirBuf.o IO.o IOForkManager.o IORingBuffer.o MemTrans.o \
               XSysVMessagesClient.o XVAPageServer.o XVirtFile.o       \
               cprintf.o printfBuf.o
 
+libio_includes = BlockDev.H Buffer.H CallBackObj.H DirBuf.H DiskClientAsync.H \
+	    DiskClientAsyncRO.H DiskClient.H DiskClientRO.H  		    \
+	    FileLinuxClientStream.H FileLinuxDevNull.H FileLinuxDevRandom.H \
+	    FileLinuxDevZero.H FileLinuxDir.H FileLinuxFile.H FileLinux.H   \
+	    FileLinuxPacket.H FileLinuxPacketUnix.H FileLinuxServer.H       \
+	    FileLinuxSocket.H FileLinuxSocketInet.H FileLinuxSocketUnix.H   \
+	    FileLinuxStream.H FileLinuxStreamTTY.H FileLinuxVirtFile.H	    \
+	    GenState.H IOBufferList.H IOForkManager.H IO.H		    \
+	    IORingBuffer.H iovec.H MemTrans.H NameTreeLinux.H 		    \
+	    PacketServer.H PAPageServer.H PathName.H Socket.H SocketServer.H\
+	    StreamServer.H SysVMessagesClient.H VAPageServer.H VirtFile.H
+
 lib_libc_io_stubobjs = $(filter Stub%.o, $(libkioobjs))
 lib_libc_io_stubnames = $(patsubst Stub%.o, % ,$(lib_libc_io_stubobjs))
 lib_libc_io_stubfiles = $(foreach stubname, $(lib_libc_io_stubnames), $(call stubgen_objects, $(S)/lib/libc/io,$(stubname)))
@@ -22,6 +34,7 @@ lib_libc_io_stubfiles = $(foreach stubname, $(lib_libc_io_stubnames), $(call stu
 OBJS += $(addprefix $(S)/lib/libc/io/, $(libkioobjs)) \
         $(lib_libc_io_stubfiles)
 libkobjs += $(addprefix $(S)/lib/libc/io/, $(libkioobjs))
+lib_includes += $(addprefix $(O)/install/include/io/, $(libio_includes)) 
 
 # Rules for building objects and installing include files
 

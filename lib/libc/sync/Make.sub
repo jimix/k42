@@ -1,0 +1,53 @@
+# Objects and include files from here
+
+libksyncobjs = BLockAsm.o BLockGeneric.o BLockImp.o Barrier.o 		   \
+	       BlockedThreadQueues.o FairBLock.o MPMsgMgr.o		   \
+               MPMsgMgrDisabled.o MPMsgMgrEnabled.o RequestCount.o	   \
+               SLock.o atomic.o
+
+sync_includes = atomic.h Barrier.H BlockedThreadQueues.H BLockGeneric.H	   \
+	    BLock.H FairBLock.H Lock.H MPMsgMgrDisabled.H MPMsgMgrEnabled.H\
+	    MPMsgMgr.H PtrBLock.H PtrSLock.H RecLock.H RequestCount.H	   \
+	    RWLock.H Sem.H SLock.H
+
+sync_powerpc_includes = atomic.h BLock.H FairBLock.H
+
+# Top-level variables that use need to know about these objs
+OBJS += $(addprefix $(S)/lib/libc/sync/, $(libksyncobjs))
+libkobjs += $(addprefix $(S)/lib/libc/sync/, $(libksyncobjs))
+lib_includes += $(addprefix $(O)/install/include/sync/, $(sync_includes))
+lib_includes += $(addprefix $(O)/install/include/sync/arch/$(HOST)/, $(sync_$(HOST)_includes))
+
+# Rules for building objects and installing include files
+
+# Include files
+$(O)/install/include/sync/%.H: $(H)/lib/libc/sync/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/sync/%.h: $(H)/lib/libc/sync/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/sync/arch/$(HOST)/%.H: $(H)/lib/libc/sync/arch/$(HOST)%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/sync/arch/$(HOST)/%.h: $(H)/lib/libc/sync/arch/$(HOST)%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+# Stub source files
+lib_libc_sync_iflags = -I$(S)/lib/libc/sync	\
+                       -I$(H)/lib/libc		\
+                       -I$(H)/lib/libc/sync
+
+# Object files
+
+$(S)/lib/libc/sync/%.o: $(H)/lib/libc/sync/%.C
+	$(call status, CXX, $@)
+	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_sync_iflags) $< -o $@
+
+$(S)/lib/libc/sync/%.o: $(H)/lib/libc/sync/arch/$(HOST)/%.S
+	$(call status, AS, $@)
+	$(CXX) $(CFLAGS) -D__ASSEMBLEY_ $(IFLAGS) $(lib_libc_sync_iflags) -c $^ -o $@

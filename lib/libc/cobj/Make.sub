@@ -11,7 +11,7 @@ libkcobjobjs = BaseObj.o COList.o COListServer.o CObjRep.o           \
                XHandleTrans.o XObj.o XObjectList.o XTypeMgrServer.o  \
                arbiterMethods.o missHandlingtest.o
 
-cobjincs = CObjRep.H CObjRoot.H CObjRootSingleRep.H CObjRootMultiRep.H \
+cobj_includes = CObjRep.H CObjRoot.H CObjRootSingleRep.H CObjRootMultiRep.H \
            ObjectRefs.H XHandleTrans.H XObjectList.H BaseObj.H Obj.H   \
            ObjectHandle.H TypeMgr.H TypeMgrServer.H TypeFactory.H      \
 	   Example.H CObjRepArbiter.H CObjRepArbiterTarget.H           \
@@ -26,7 +26,7 @@ lib_libc_cobj_stubfiles = $(foreach stubname, $(lib_libc_cobj_stubnames), $(call
 OBJS += $(addprefix $(S)/lib/libc/cobj/, $(libkcobjobjs)) \
         $(lib_libc_cobj_stubfiles)
 libkobjs += $(addprefix $(S)/lib/libc/cobj/, $(libkcobjobjs))
-lib_includes += $(addprefix $(O)/install/include/cobj/, $(cobjincs))
+lib_includes += $(addprefix $(O)/install/include/cobj/, $(cobj_includes))
 
 # Rules for building objects and installing include files
 

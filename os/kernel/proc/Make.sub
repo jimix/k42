@@ -1,4 +1,3 @@
-OBJS += $(S)/os/kprocobjs.o
 kprocobjs = StubProcessSetKern.o StubProcessServer.o			\
             ProcessReplicated.o ProcessShared.o Process.o		\
             kernRunProcess.o ProgExec.o ProcessDefaultKern.o		\
@@ -10,6 +9,9 @@ $(S)/os/kprocobjs.o: $(addprefix $(S)/os/kernel/proc/, $(kprocobjs))
 # kprocobjs.o subobjects
 
 OBJS += $(addprefix $(S)/os/kernel/proc/, $(kprocobjs))
+OBJS += $(S)/os/kprocobjs.o
+libkobjs += $(S)/os/kernel/proc/StubProcessSetKern.o \
+	    $(S)/os/kernel/proc/StubProcessServer.o
 
 # Add each stub in kprocobjs to the list of objects to make/clean
 kernel_proc_stubobjs = $(filter Stub%.o, $(kprocobjs))

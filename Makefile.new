@@ -161,71 +161,13 @@ include lib/libc/fslib/Make.sub
 include lib/libc/io/Make.sub
 include lib/libc/misc/Make.sub
 include lib/libc/scheduler/Make.sub
-#include lib/libc/stdlib/Make.sub
-#include lib/libc/sync/Make.sub
-#include lib/libc/sys/Make.sub
-#include lib/libc/usr/Make.sub
+include lib/libc/stdlib/Make.sub
+include lib/libc/sync/Make.sub
+include lib/libc/sys/Make.sub
+include lib/libc/trace/Make.sub
+include lib/libc/usr/Make.sub
 
-libkobjs+=           $(S)/lib/libc/stdlib/baseAtoi.o				   \
-           $(S)/lib/libc/stdlib/baseFgets.o				   \
-           $(S)/lib/libc/stdlib/baseSprintf.o				   \
-           $(S)/lib/libc/stdlib/baseStrtol.o				   \
-           $(S)/lib/libc/stdlib/isctype.o				   \
-           $(S)/lib/libc/stdlib/memccpy.o				   \
-           $(S)/lib/libc/stdlib/memcmp.o $(S)/lib/libc/stdlib/string.o	   \
-           $(S)/lib/libc/sync/BLockAsm.o				   \
-           $(S)/lib/libc/sync/BLockGeneric.o				   \
-           $(S)/lib/libc/sync/BLockImp.o $(S)/lib/libc/sync/Barrier.o	   \
-           $(S)/lib/libc/sync/BlockedThreadQueues.o			   \
-           $(S)/lib/libc/sync/FairBLock.o				   \
-           $(S)/lib/libc/sync/MPMsgMgr.o				   \
-           $(S)/lib/libc/sync/MPMsgMgrDisabled.o			   \
-           $(S)/lib/libc/sync/MPMsgMgrEnabled.o				   \
-           $(S)/lib/libc/sync/RequestCount.o				   \
-           $(S)/lib/libc/sync/SLock.o $(S)/lib/libc/sync/atomic.o	   \
-           $(S)/lib/libc/sys/InitStep.o $(S)/lib/libc/sys/LinuxCreds.o	   \
-           $(S)/lib/libc/sys/ProcessClient.o				   \
-           $(S)/lib/libc/sys/ProcessSet.o				   \
-           $(S)/lib/libc/sys/ResMgrWrapper.o				   \
-           $(S)/lib/libc/sys/SMTMgr.o $(S)/lib/libc/sys/StubInitStep.o	   \
-           $(S)/lib/libc/sys/StubProcessClient.o			   \
-           $(S)/lib/libc/sys/StubProcessLinuxClient.o			   \
-           $(S)/lib/libc/sys/StubShMemBuf.o				   \
-           $(S)/lib/libc/sys/SystemMiscWrapper.o			   \
-           $(S)/lib/libc/sys/TAssert.o $(S)/lib/libc/sys/XInitStep.o	   \
-           $(S)/lib/libc/sys/XProcessClient.o				   \
-           $(S)/lib/libc/sys/XProcessLinuxClient.o			   \
-           $(S)/lib/libc/sys/XShMemBuf.o $(S)/lib/libc/sys/g++sup.o	   \
-           $(S)/lib/libc/sys/ppccore.o $(S)/lib/libc/trace/traceLib.o	   \
-           $(S)/lib/libc/usr/GDBIOKern.o				   \
-           $(S)/lib/libc/usr/ProgExecArch.o				   \
-           $(S)/lib/libc/usr/ProgExecCommon.o				   \
-           $(S)/lib/libc/usr/align.o $(S)/lib/libc/usr/gdb-stub.o	   \
-           $(S)/lib/libc/usr/memoryMap.o				   \
-           $(S)/lib/libc/usr/runProcessCommon.o				   \
-           $(S)/os/kernel/exception/StubCPUContainer.o			   \
-           $(S)/os/kernel/init/StubAsyncTester.o			   \
-           $(S)/os/kernel/init/StubInitServer.o				   \
-           $(S)/os/kernel/init/StubServerState.o			   \
-           $(S)/os/kernel/init/XAsyncTester.o				   \
-           $(S)/os/kernel/mem/StubFR.o $(S)/os/kernel/mem/StubFRCRW.o	   \
-           $(S)/os/kernel/mem/StubFRComputation.o			   \
-           $(S)/os/kernel/mem/StubFRKernelPinned.o			   \
-           $(S)/os/kernel/mem/StubFRLTransTable.o			   \
-           $(S)/os/kernel/mem/StubFRPA.o $(S)/os/kernel/mem/StubFRVA.o	   \
-           $(S)/os/kernel/mem/StubKernelPagingTransport.o		   \
-           $(S)/os/kernel/mem/StubKernelPagingTransportPA.o		   \
-           $(S)/os/kernel/mem/StubKernelPagingTransportVA.o		   \
-           $(S)/os/kernel/mem/StubRegionDefault.o			   \
-           $(S)/os/kernel/mem/StubRegionFSComm.o			   \
-           $(S)/os/kernel/mem/StubRegionPerProcessor.o			   \
-           $(S)/os/kernel/mem/StubRegionRedZone.o			   \
-           $(S)/os/kernel/mem/StubRegionReplicated.o			   \
-           $(S)/os/kernel/mem/XFR.o					   \
-           $(S)/os/kernel/proc/StubProcessServer.o			   \
-           $(S)/os/kernel/proc/StubProcessSetKern.o			   \
-           $(S)/os/kernel/stubtest/StubBonnie.o				   \
-           $(S)/os/kernel/sys/symdefsKern.o				   \
+libkobjs+= \
            $(S)/os/servers/baseServers/StubBaseServers.o		   \
            $(S)/os/servers/baseServers/StubDevFSBlk.o			   \
            $(S)/os/servers/baseServers/StubDevFSDir.o			   \
@@ -405,70 +347,6 @@ build_servers += $(S)/os/servers/sample/sampleServer
 ###############################################################################
 
 # Rules for moving include files into place
-lib_includes := 
-
-stdlibincs = ctype.h float.h limits.h string.h 
-lib_includes += $(addprefix $(O)/install/include/, $(stdlibincs))
-$(O)/install/include/%.h: $(H)/lib/libc/stdlib/%.h
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-lib_includes += $(O)/install/include/sys/PageAllocator.H $(O)/install/include/sys/LeakProof.H
-$(O)/install/include/sys/%.H: $(H)/lib/libc/alloc/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-
-sys_powerpc_includes =  sysTypes.H macdefs.H config.H types.H ppccore.H extRegs.H
-
-sys_arch_includes = $(addprefix $(O)/install/include/sys/arch/$(HOST)/, $(sys_$(HOST)_includes))
-lib_includes += $(sys_arch_includes)
-$(O)/install/include/sys/arch/$(HOST)/%.H: $(H)/lib/libc/sys/arch/$(HOST)/%>H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-sys_includes = systemAccess.H sysTypes.H sysIncs.H BaseProcess.H ProcessWrapper.H ProcessSet.H ProcessSetUser.H macdefs.H config.H types.H ppccore.H kinclude.H SysStatus.H TAssert.H ProcessClient.H ProcessLinux.H LinuxCreds.H ResMgrWrapper.H SystemMiscWrapper.H MountPointMgrClient.H MountPointMgrCommon.H SMTMgr.H ProcessLinuxClient.H ShMemBuf.H ShMemClnt.H InitStep.H Initialization.H hostSysTypes.H bswap.h extRegs.H
-lib_includes += $(addprefix $(O)/install/include/sys/, $(sys_includes))
-$(O)/install/include/sys/%.h: $(H)/lib/libc/sys/%.h
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-$(O)/install/include/sys/%.H: $(H)/lib/libc/sys/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-usr_powerpc_includes = ProgExecArch.H
-usr_arch_includes = $(addprefix $(O)/install/include/usr/arch/$(HOST)/, $(usr_$(HOST)_includes))
-lib_includes += $(usr_arch_includes)
-$(O)/install/include/usr/arch/$(HOST)/%.H: $(H)/lib/libc/usr/arch/$(HOST)/%>H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-usr_includes = ProgExec.H runProcessCommon.H
-lib_includes += $(addprefix $(O)/install/include/usr/, $(usr_includes))
-$(O)/install/include/usr/%.H: $(H)/lib/libc/usr/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-lib_includes += $(O)/install/include/sys/GDBIO.H
-$(O)/install/include/sys/%.H: $(H)/lib/libc/usr/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-trace_powerpc_includes = traceReserve.H
-trace_arch_includes = $(addprefix $(O)/install/include/trace/arch/$(HOST)/, $(trace_$(HOST)_includes))
-lib_includes += $(trace_arch_includes)
-$(O)/install/include/trace/arch/$(HOST)/%.h: $(H)/lib/libc/trace/arch/$(HOST)/%.h
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-trace_includes = traceCore.H traceReserve.H traceLib.H tracePack.H traceK42.h
-lib_includes += $(addprefix $(O)/install/include/trace/, $(trace_includes))
-$(O)/install/include/trace/%.h: $(H)/lib/libc/trace/%.h
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-$(O)/install/include/trace/%.H: $(H)/lib/libc/trace/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
 
 OBJS += $(lib_includes)
 

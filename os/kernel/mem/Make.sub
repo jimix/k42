@@ -35,8 +35,16 @@ kmemobjs = StubRegionDefault.o StubFR.o StubRegionPerProcessor.o	\
            XKernelPagingTransportVA.o
 $(S)/os/kmemobjs.o: $(addprefix $(S)/os/kernel/mem/, $(kmemobjs))
 
+libkmemobjs += StubFR.o StubFRCRW.o StubFRComputation.o StubFRKernelPinned.o \
+           StubFRLTransTable.o StubFRPA.o StubFRVA.o			     \
+	   StubKernelPagingTransport.o StubKernelPagingTransportPA.o	     \
+           StubKernelPagingTransportVA.o StubRegionDefault.o 		     \
+	   StubRegionFSComm.o StubRegionPerProcessor.o StubRegionRedZone.o   \
+           StubRegionReplicated.o XFR.o					   
+
 # kmemobjs.o subobjects
 OBJS += $(addprefix $(S)/os/kernel/mem/, $(kmemobjs))
+libkobjs += $(addprefix $(S)/os/kernel/mem/, $(libkmemobjs))
 
 # Add each stub in kmemobjs to the list of objects to make/clean
 kernel_mem_stubobjs = $(filter Stub%.o, $(kmemobjs))
