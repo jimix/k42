@@ -113,6 +113,8 @@ public:
         this->fd = fd;
     }
     virtual void close() = 0;
+
+    virtual ~Connection() { }
 };
 
 class OISConnection : public Connection {
@@ -765,7 +767,7 @@ public:
 
         if (cons[newConIdx] != NULL) {
             fprintf(stderr, "oops a connection object exists already"
-                    "for conIdx=%d fd=%d\n", newConIdx, fd);
+                    "for conIdx=%d fd=%d\n", (int)newConIdx, fd);
             exit(1);
         }
         con->init(fd);

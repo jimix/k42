@@ -21,6 +21,9 @@ struct IOChan {
     virtual uval isReadable() = 0;
     virtual uval read(char* buf, uval length, uval block = 1) = 0;
     virtual uval write(const char* buf, uval length, uval block = 1) = 0;
+    
+    DEFINE_NOOP_NEW(IOChan);
+    virtual ~IOChan() { }
 };
 
 extern IOChan* getSimConChan_Primitive(MemoryMgrPrimitive *mem, uval chan);

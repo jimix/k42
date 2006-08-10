@@ -65,5 +65,7 @@ public:
 
 	return 0;
     }
+
+    virtual ~KFSFactory() { }
 };
 #endif /* #ifndef __KFS_FACTORY_H_ */

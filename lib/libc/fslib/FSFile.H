@@ -49,6 +49,9 @@ public:
     DEFINE_GLOBAL_NEW(FSFile);
     FSFile() {}
 
+    
+    virtual ~FSFile() { }
+
 #ifdef GATHERING_STATS
     FSFile(FSStats *s) : st(s) {
 	/* empty body */

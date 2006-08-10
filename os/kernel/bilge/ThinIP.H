@@ -154,6 +154,8 @@ public:
     static void DoPolling() {
 	obj->doPolling();
     }
+
+    virtual ~ThinIP() {}
 };
 
 #endif /* #ifndef __THIN_IP_H_ */

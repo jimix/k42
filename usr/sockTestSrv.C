@@ -325,6 +325,7 @@ public:
         this->fd = fd;
     }
     virtual void close() = 0;
+    virtual ~Connection() { }
 };
 
 class CmdConnection : public Connection {

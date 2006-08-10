@@ -417,6 +417,9 @@ class HWPerfMonGPUL : public HWPerfMon {
            value = 0;
            busy = false;
         } 
+
+        DEFINE_NOOP_NEW(PMC);
+        virtual ~PMC() { }
     };
 
     class PMC1: public PMC {

@@ -161,6 +161,9 @@ public:
     virtual SysStatus updateOrAdd(char *name, uval len,
 				  void *anEntry, NameHolderInfo *nhi)=0;
     virtual SysStatus destroy()=0;
+
+    DEFINE_NOOP_NEW(DentryList);
+    virtual ~DentryList() { }
 };
 
 // FIXME: DentryListLinear is leaking rwlock. Leaving it for now, since

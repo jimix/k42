@@ -32,6 +32,8 @@ public:
     static void Print();
     static void Zero();
     virtual SysStatusUval getCounter(uval counter);
+
+    virtual ~PerfMon() { }
 #include __MINC(PerfMon.H)
 #undef INCLASS
 };

@@ -38,6 +38,7 @@ protected:
     uval empty;
     BLock lck;
 public:
+
     struct EmptyArg {
 	uval doNotify;
 	PageFaultNotification *skipFn;
@@ -125,6 +126,10 @@ public:
     DHashTableBase::OpStatus doSetPAddrAndIOComplete(DHashTableBase::OpArg
                                                      addr);
     friend class MasterPageDescData;
+
+    virtual ~LocalPageDescData() { }
+
+
 };
 
 class MasterPageDescData : public LocalPageDescData {

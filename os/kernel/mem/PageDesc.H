@@ -99,6 +99,8 @@ struct PageDesc {
     // to define if you want to remove from the head or if you want a 
     // clean or dirty element specifically
     enum dqtype {DQ_CLEAN, DQ_DIRTY, DQ_HEAD };
+
+   virtual ~PageDesc() { }
 };
 
 #endif /* #ifndef __PAGE_DESC_H_ */

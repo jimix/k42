@@ -36,6 +36,9 @@ public:
     // mallocID this PMalloc is associated with
     virtual uval getMallocID() = 0;
     virtual void checkMallocID(void *addr) = 0;
+    
+    DEFINE_NOOP_NEW(PMalloc);
+    virtual ~PMalloc() { }
 };
 
 /* Default PMalloc classic; historically, the original version */
@@ -54,6 +57,7 @@ public:
     virtual DataChunk* pMalloc(uval numBlocks);
     virtual uval getMallocID() { return mallocID; }
     virtual void checkMallocID(void *addr);
+
 };
 
 
