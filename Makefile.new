@@ -152,7 +152,7 @@ include os/kernel/trace/Make.sub
 include os/kernel/sys/Make.sub
 include os/kernel/linux/Make.sub
 
-# Include rules for how to make libk.a 
+# Include library submakefiles (currently just libk.a)
 
 include lib/libc/alloc/Make.sub
 include lib/libc/cobj/Make.sub
@@ -167,32 +167,25 @@ include lib/libc/sys/Make.sub
 include lib/libc/trace/Make.sub
 include lib/libc/usr/Make.sub
 
+# Include server submakefiles
+
+#include os/servers/baseServers/Make.sub
+include os/servers/dev/Make.sub
+include os/servers/k42Ramfs/Make.sub
+include os/servers/kfs/Make.sub
+include os/servers/mountPoint/Make.sub
+include os/servers/nfs/Make.sub
+include os/servers/pipe/Make.sub
+include os/servers/pty/Make.sub
+include os/servers/sample/Make.sub
+include os/servers/unionfs/Make.sub
+
 libkobjs+= \
            $(S)/os/servers/baseServers/StubBaseServers.o		   \
-           $(S)/os/servers/baseServers/StubDevFSBlk.o			   \
-           $(S)/os/servers/baseServers/StubDevFSDir.o			   \
-           $(S)/os/servers/baseServers/StubDevFSRemote.o		   \
-           $(S)/os/servers/baseServers/StubDevOpener.o			   \
-           $(S)/os/servers/baseServers/StubFRProvider.o			   \
-           $(S)/os/servers/baseServers/StubFileSystemDev.o		   \
            $(S)/os/servers/baseServers/StubProcessLinuxServer.o		   \
            $(S)/os/servers/baseServers/StubResMgr.o			   \
            $(S)/os/servers/baseServers/StubStreamServerSocket.o		   \
-           $(S)/os/servers/baseServers/StubSysFSAttrFile.o		   \
            $(S)/os/servers/baseServers/XBaseServers.o			   \
-           $(S)/os/servers/baseServers/XDevOpener.o			   \
-           $(S)/os/servers/baseServers/XFRProvider.o			   \
-           $(S)/os/servers/k42Ramfs/StubFileSystemK42RamFS.o		   \
-           $(S)/os/servers/kfs/StubFileSystemKFS.o			   \
-           $(S)/os/servers/mountPoint/StubMountPointMgr.o		   \
-           $(S)/os/servers/nfs/StubFileSystemNFS.o			   \
-           $(S)/os/servers/pipe/StubStreamServerPipe.o			   \
-           $(S)/os/servers/pty/StubLogin.o				   \
-           $(S)/os/servers/pty/StubSysVMessages.o			   \
-           $(S)/os/servers/pty/StubSysVSemaphores.o			   \
-           $(S)/os/servers/pty/StubSysVSharedMem.o			   \
-           $(S)/os/servers/sample/StubSampleService.o			   \
-           $(S)/os/servers/unionfs/StubFileSystemUnion.o		   \
            $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o		   \
            $(S)/usr/XUsrTst.o
 
@@ -305,46 +298,6 @@ $(S)/os/servers/baseServers/baseServers: $(baseServers_dep)
 	$(STRIP) -s $< -o $@
 
 ###############################################################################
-# Generate and compile stubs and server in servers
-
-# sampleServer
-OBJS += $(call stubgen_objects, $(S)/os/servers/sample,SampleServer)
-
-$(call stubgen_targets, $(S)/os/servers/sample): $(H)/os/servers/sample/%.H
-	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) $(CXXFLAGS) -w -I. $(IFLAGS) -D_IN_STUBGEN
-	$(RM) -f $(shell basename $< .H).stubgen.d
-
-server_lflags = -Wl,-dynamic-linker,/usr/klib/ld64.so.1 \
-		-Wl,-rpath,/klib:/usr/klib \
-		-L$(O)/install/lib/$(HOST)/$(D)Deb \
-		-L$(O)/install/$(HOST)/$(D)Deb/kitchroot/klib \
-	        -L$(IMG)/usr/klib \
-                -lk42sys -lc
-
-$(S)/os/servers/sample/%.o: cflags = $(CXXFLAGS)
-$(S)/os/servers/sample/%.o: iflags = -I$(O)/os/servers \
-                                     -I$(H)/os/servers $(IFLAGS)
-
-# Note - we don't yet build SampleServiceWrapper.o so we don't have it in OBJS
-# yet
-#
-$(OBJS) += $(addprefix $(S)/os/servers/sample/, sample.o SampleServiceServer.o sample.o StubSampleService.o XSampleService.o sampleServer sampleServer.dbg)
-$(S)/os/servers/sample/%.o: $(S)/os/servers/sample/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(cflags) $(iflags) -c $^ -o $@
-
-$(S)/os/servers/sample/sampleServer.dbg: $(addprefix $(S)/os/servers/sample/, sample.o SampleServiceServer.o XSampleService.o)
-	$(call status, LD, $@)
-	$(CXX) -o $@ $^ $(server_lflags)
-
-$(S)/os/servers/sample/sampleServer: $(S)/os/servers/sample/sampleServer.dbg
-	$(call status, STRIP, $@)
-	$(CP) $< $@
-	$(STRIP) $@
-
-build_servers += $(S)/os/servers/sample/sampleServer
-###############################################################################
 
 # Rules for moving include files into place
 
@@ -365,3 +318,9 @@ dirs: $(DIRS)
 $(DIRS):
 	$(call status, MKDIR, $@)
 	$(MKDIR) $@
+
+showdirs:
+	echo $(DIRS)
+
+showobjs:
+	echo $(OBJS)
