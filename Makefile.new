@@ -70,6 +70,20 @@ IFLAGS = -I$(O)/install/include					\
          -I$(O)/install/include/stubgen/arch/$(HOST)		\
 	 $($(HOST)_IFLAGS)
 
+# Common flags for building specific parts of K42 
+#
+# Linking servers
+srv_lflags = -Wl,-dynamic-linker,/usr/klib/ld64.so.1 \
+             -Wl,-rpath,/klib:/usr/klib \
+	     -L$(O)/install/lib/$(HOST)/$(D)Deb \
+	     -L$(O)/install/$(HOST)/$(D)Deb/kitchroot/klib \
+	     -L$(IMG)/usr/klib \
+	     -llk26 -lvirtfs -lfs -lsrv -lk42sys -lc
+
+srv_ldeps1 = liblk26.a libvirtfs.a libfs.a libsrv.a
+srv_ldeps = $(addprefix $(O)/install/lib/$(HOST)/$(D)Deb/, $(srv_ldeps1)) \
+	    $(O)/install/$(HOST)/$(D)Deb/kitchroot/klib/libk42sys.so
+
 ################################################################################
 # Functions for supporting later targets in included makefiles
 

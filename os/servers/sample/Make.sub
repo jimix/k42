@@ -21,13 +21,6 @@ build_servers += $(S)/os/servers/sample/sampleServer
 srv_sample_iflags = -I$(S)/os/servers/sample \
                     -I$(H)/os/servers/sample
 
-srv_sample_lflags = -Wl,-dynamic-linker,/usr/klib/ld64.so.1 \
-                    -Wl,-rpath,/klib:/usr/klib \
-		    -L$(O)/install/lib/$(HOST)/$(D)Deb \
-		    -L$(O)/install/$(HOST)/$(D)Deb/kitchroot/klib \
-		    -L$(IMG)/usr/klib \
-		    -lk42sys -lc
-
 $(call stubgen_targets, $(S)/os/servers/sample): $(H)/os/servers/sample/%.H
 	$(call status, STUBGEN, $@)
 	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
@@ -45,9 +38,10 @@ $(S)/os/servers/sample/%.o: $(H)/os/servers/sample/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_sample_iflags) -c $< -o $@
 
+$(S)/os/servers/sample/sampleServer.dbg: $(srv_ldeps)
 $(S)/os/servers/sample/sampleServer.dbg: $(addprefix $(S)/os/servers/sample/,sample.o SampleServiceServer.o XSampleService.o)
 	$(call status, LD, $@)
-	$(CXX) -o $@ $^ $(srv_sample_lflags)
+	$(CXX) -o $@ $^ $(srv_lflags)
 
 $(S)/os/servers/sample/sampleServer: $(S)/os/servers/sample/sampleServer.dbg
 	$(call status, STRIP, $@)

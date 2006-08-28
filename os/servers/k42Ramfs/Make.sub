@@ -21,14 +21,6 @@ build_servers += $(S)/os/servers/k42Ramfs/k42RamfsServer
 srv_k42Ramfs_iflags = -I$(S)/os/servers/k42Ramfs \
                       -I$(H)/os/servers/k42Ramfs
 
-# XXX Move these up to the top makefile or somewhere nearby
-srv_k42Ramfs_lflags = -Wl,-dynamic-linker,/usr/klib/ld64.so.1 \
-                    -Wl,-rpath,/klib:/usr/klib \
-		    -L$(O)/install/lib/$(HOST)/$(D)Deb \
-		    -L$(O)/install/$(HOST)/$(D)Deb/kitchroot/klib \
-		    -L$(IMG)/usr/klib \
-		    -llk26 -lvirtfs -lfs -lsrv -lk42sys -lc
-
 $(call stubgen_targets, $(S)/os/servers/k42Ramfs): $(H)/os/servers/k42Ramfs/%.H
 	$(call status, STUBGEN, $@)
 	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
@@ -46,9 +38,10 @@ $(S)/os/servers/k42Ramfs/%.o: $(H)/os/servers/k42Ramfs/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_k42Ramfs_iflags) -c $< -o $@
 
+$(S)/os/servers/k42Ramfs/k42RamfsServer.dbg: $(srv_ldeps)
 $(S)/os/servers/k42Ramfs/k42RamfsServer.dbg: $(addprefix $(S)/os/servers/k42Ramfs/,$(srv_k42Ramfs_misc_objs))
 	$(call status, LD, $@)
-	$(CXX) -o $@ $^ $(srv_k42Ramfs_lflags)
+	$(CXX) -o $@ $^ $(srv_lflags)
 
 $(S)/os/servers/k42Ramfs/k42RamfsServer: $(S)/os/servers/k42Ramfs/k42RamfsServer.dbg
 	$(call status, STRIP, $@)
