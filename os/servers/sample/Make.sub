@@ -41,7 +41,7 @@ $(S)/os/servers/sample/%.o: $(H)/os/servers/sample/%.C
 $(S)/os/servers/sample/sampleServer.dbg: $(srv_ldeps)
 $(S)/os/servers/sample/sampleServer.dbg: $(addprefix $(S)/os/servers/sample/,sample.o SampleServiceServer.o XSampleService.o)
 	$(call status, LD, $@)
-	$(CXX) -o $@ $^ $(srv_lflags)
+	$(CXX) -o $@ $^ $(srv_lflags) $(srv_libs)
 
 $(S)/os/servers/sample/sampleServer: $(S)/os/servers/sample/sampleServer.dbg
 	$(call status, STRIP, $@)

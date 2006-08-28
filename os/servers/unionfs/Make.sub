@@ -22,14 +22,6 @@ build_servers += $(S)/os/servers/unionfs/unionfsServer
 srv_unionfs_iflags = -I$(S)/os/servers/unionfs \
                       -I$(H)/os/servers/unionfs
 
-# XXX Move these up to the top makefile or somewhere nearby
-srv_unionfs_lflags = -Wl,-dynamic-linker,/usr/klib/ld64.so.1 \
-                    -Wl,-rpath,/klib:/usr/klib \
-		    -L$(O)/install/lib/$(HOST)/$(D)Deb \
-		    -L$(O)/install/$(HOST)/$(D)Deb/kitchroot/klib \
-		    -L$(IMG)/usr/klib \
-		    -llk26 -lvirtfs -lfs -lsrv -lk42sys -lc
-
 $(call stubgen_targets, $(S)/os/servers/unionfs): $(H)/os/servers/unionfs/%.H
 	$(call status, STUBGEN, $@)
 	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
@@ -49,7 +41,7 @@ $(S)/os/servers/unionfs/%.o: $(H)/os/servers/unionfs/%.C
 
 $(S)/os/servers/unionfs/unionfsServer.dbg: $(addprefix $(S)/os/servers/unionfs/,$(srv_unionfs_misc_objs))
 	$(call status, LD, $@)
-	$(CXX) -o $@ $^ $(srv_unionfs_lflags)
+	$(CXX) -o $@ $^ $(srv_lflags) $(srv_libs)
 
 $(S)/os/servers/unionfs/unionfsServer: $(S)/os/servers/unionfs/unionfsServer.dbg
 	$(call status, STRIP, $@)

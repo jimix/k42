@@ -77,12 +77,12 @@ srv_lflags = -Wl,-dynamic-linker,/usr/klib/ld64.so.1 \
              -Wl,-rpath,/klib:/usr/klib \
 	     -L$(O)/install/lib/$(HOST)/$(D)Deb \
 	     -L$(O)/install/$(HOST)/$(D)Deb/kitchroot/klib \
-	     -L$(IMG)/usr/klib \
-	     -llk26 -lvirtfs -lfs -lsrv -lk42sys -lc
+	     -L$(IMG)/usr/klib
+srv_libs = -llk26 -lvirtfs -lfs -lsrv -lk42sys -lc
 
 srv_ldeps1 = liblk26.a libvirtfs.a libfs.a libsrv.a
-srv_ldeps = $(addprefix $(O)/install/lib/$(HOST)/$(D)Deb/, $(srv_ldeps1)) \
-	    $(O)/install/$(HOST)/$(D)Deb/kitchroot/klib/libk42sys.so
+srv_lib_deps = $(addprefix $(O)/install/lib/$(HOST)/$(D)Deb/, $(srv_ldeps1)) \
+	       $(O)/install/$(HOST)/$(D)Deb/kitchroot/klib/libk42sys.so
 
 ################################################################################
 # Functions for supporting later targets in included makefiles
@@ -140,6 +140,8 @@ clean:
 #   need to be created for and that we clean
 # - $(libkobjs) contains objects that need to be included in the 
 #   libk.a kernel library
+#   $(baseServers_objs) contains objects that need to be included in
+#   baseServers
 # - $(lib_includes) include files that need to be installed
 # - $(build_servers) servers that need to be built
 
@@ -183,23 +185,19 @@ include lib/libc/usr/Make.sub
 
 # Include server submakefiles
 
-#include os/servers/baseServers/Make.sub
 include os/servers/dev/Make.sub
 include os/servers/k42Ramfs/Make.sub
 include os/servers/kfs/Make.sub
 include os/servers/mountPoint/Make.sub
+include os/servers/loadImage/Make.sub
 include os/servers/nfs/Make.sub
 include os/servers/pipe/Make.sub
 include os/servers/pty/Make.sub
 include os/servers/sample/Make.sub
 include os/servers/unionfs/Make.sub
+include os/servers/baseServers/Make.sub
 
 libkobjs+= \
-           $(S)/os/servers/baseServers/StubBaseServers.o		   \
-           $(S)/os/servers/baseServers/StubProcessLinuxServer.o		   \
-           $(S)/os/servers/baseServers/StubResMgr.o			   \
-           $(S)/os/servers/baseServers/StubStreamServerSocket.o		   \
-           $(S)/os/servers/baseServers/XBaseServers.o			   \
            $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o		   \
            $(S)/usr/XUsrTst.o
 
@@ -252,64 +250,6 @@ bootServers_iflags = -t gasBE -F $(bootServers_dep1) -F $(bootServers_dep2)
 $(S)/os/servers/bootServers.s: $(bootServers_deps) $(bootServers_tool)
 	$(call status, MKSERV, $@)
 	$(bootServers_tool) $(bootServers_iflags) -o $@
-
-###############################################################################
-
-baseServers_objs1 = baseServer.o fileSystemServices.o FileSystemDev.o	\
-                    DevFSBlk.o XDevFSBlk.o DevFSDir.o XFileSystemDev.o	\
-                    XDevFSDir.o DevFSRemote.o XDevFSRemote.o		\
-                    SysFSAttrFile.o XSysFSAttrFile.o MountPointMgrImp.o	\
-                    XMountPointMgr.o Login.o SysVSharedMem.o		\
-                    SysVSemaphores.o SysVMessages.o Util.o XLogin.o	\
-                    XSysVSharedMem.o XSysVSemaphores.o XSysVMessages.o	\
-                    LinuxPTY.o IOForwarder.o IOForwarderConsole.o	\
-                    printk.o StreamServerPipe.o XStreamServerPipe.o	\
-                    FileSystemNFS.o NFSHandle.o NFSMount.o NFSClient.o	\
-                    ServerFileBlockNFS.o ServerFileDirNFS.o		\
-                    mount_clnt.o mount_xdr.o nfs_clnt.o nfs_xdr.o	\
-                    XFileSystemNFS.o FileSystemK42RamFS.o		\
-                    ServerFileBlockK42RamFS.o ServerFileDirK42RamFS.o	\
-                    FileInfoK42RamFS.o XFileSystemK42RamFS.o		\
-                    loadImage.o KFSDebug.o KFSDisk.o SuperBlock.o	\
-                    PSOBasicRW.o RecordMap.o LSOBasic.o LSOBasicFile.o	\
-                    LSOBasicDir.o LSOBasicSymlink.o ObjToken.o		\
-                    PSODiskBlock.o ServerObject.o FileSystemKFS.o	\
-                    XFileSystemKFS.o FileSystemKFSK42.o			\
-                    ServerFileBlockKFS.o FSFileKFS.o FSFileKFSK42.o	\
-                    KFSGlobals.o PSOPreallocExtent.o PSOSmall.o		\
-                    PSOSmallMeta.o BlockCache.o BlockCacheK42.o		\
-                    KFSDHash.o TimerEventBC.o crtServer.o		\
-                    PrivilegedServiceWrapper.o ResMgr.o XResMgr.o	\
-                    ProcessLinuxServer.o XProcessLinuxServer.o		\
-                    StreamServerSocket.o XStreamServerSocket.o
-
-baseServers_objs2 = $(L)/pty.k42lib.o $(L)/util.k42lib.o
-
-baseServers_objs = $(addprefix $(S)/os/servers/baseServers/, \
-                     $(baseServers_objs1)) $(baseServers_objs2)
-
-baseServers_lflags = -static -Wl,-e,_k42start				\
-                     -L$(O)/install/lib/powerpc/$(D)Deb			\
-                     -L$(IMG)/usr/klib			\
-                     -Wl,--whole-archive -lemu -Wl,--no-whole-archive	\
-                     -llk26 -lvirtfs -lfs -lsrv -lbase -lc
-
-baseServers_ldeps1 = libemu.a liblk26.a libvirtfs.a libfs.a libsrv.a
-
-baseServers_ldeps = $(addprefix $(O)/install/lib/$(HOST)/$(D)Deb/, \
-		      $(baseServers_ldeps1))
-
-$(S)/os/servers/baseServers/baseServers.dbg: $(baseServers_ldeps)
-$(S)/os/servers/baseServers/baseServers.dbg: lflags = $(baseServers_lflags)
-$(S)/os/servers/baseServers/baseServers.dbg: $(baseServers_objs)
-	$(call status, CXX, $@)
-	$(CXX) $(baseServers_objs) $(lflags) -o $@
-
-baseServers_dep = $(S)/os/servers/baseServers/baseServers.dbg
-
-$(S)/os/servers/baseServers/baseServers: $(baseServers_dep)
-	$(call status, STRIP, $@)
-	$(STRIP) -s $< -o $@
 
 ###############################################################################
 

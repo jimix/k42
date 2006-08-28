@@ -2,6 +2,9 @@
 
 srv_k42Ramfs_libk_objs += StubFileSystemK42RamFS.o
 srv_k42Ramfs_misc_objs = main.o FileSystemK42RamFS.o ServerFileBlockK42RamFS.o ServerFileDirK42RamFS.o FileInfoK42RamFS.o XFileSystemK42RamFS.o
+srv_k42Ramfs_baseServers_objs = FileSystemK42RamFS.o ServerFileBlockK42RamFS.o \
+			       ServerFileDirK42RamFS.o FileInfoK42RamFS.o     \
+			       XFileSystemK42RamFS.o
 
 srv_k42Ramfs_stubobjs = $(filter Stub%.o, $(srv_k42Ramfs_libk_objs))
 srv_k42Ramfs_stubnames = $(patsubst Stub%.o, % ,$(srv_k42Ramfs_stubobjs))
@@ -11,9 +14,12 @@ srv_k42Ramfs_stubfiles = $(foreach stubname, $(srv_k42Ramfs_stubnames), $(call s
 
 OBJS += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_libk_objs)) \
 	$(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_misc_objs)) \
+	$(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_baseServers_objs))\
         $(srv_k42Ramfs_stubfiles) 
+
 libkobjs += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_libk_objs))
 build_servers += $(S)/os/servers/k42Ramfs/k42RamfsServer
+baseServers_objs += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_baseServers_objs))
 
 # Rules for building objects
 
@@ -41,7 +47,7 @@ $(S)/os/servers/k42Ramfs/%.o: $(H)/os/servers/k42Ramfs/%.C
 $(S)/os/servers/k42Ramfs/k42RamfsServer.dbg: $(srv_ldeps)
 $(S)/os/servers/k42Ramfs/k42RamfsServer.dbg: $(addprefix $(S)/os/servers/k42Ramfs/,$(srv_k42Ramfs_misc_objs))
 	$(call status, LD, $@)
-	$(CXX) -o $@ $^ $(srv_lflags)
+	$(CXX) -o $@ $^ $(srv_lflags) $(srv_libs)
 
 $(S)/os/servers/k42Ramfs/k42RamfsServer: $(S)/os/servers/k42Ramfs/k42RamfsServer.dbg
 	$(call status, STRIP, $@)
