@@ -13,7 +13,7 @@ OBJS += $(addprefix $(S)/os/servers/sample/, $(srv_sample_libk_objs)) \
 	$(addprefix $(S)/os/servers/sample/, $(srv_sample_misc_objs)) \
         $(srv_sample_stubfiles)
 libkobjs += $(addprefix $(S)/os/servers/sample/, $(srv_sample_libk_objs))
-build_servers += $(S)/os/servers/sample/sampleServer
+build_servers += $(O)/install/$(HOST)/$(D)Deb/kitchroot/kbin/sampleServer
 
 # Rules for building objects
 
@@ -48,3 +48,6 @@ $(S)/os/servers/sample/sampleServer: $(S)/os/servers/sample/sampleServer.dbg
 	$(CP) $< $@
 	$(STRIP) $@
 
+$(O)/install/$(HOST)/$(D)Deb/kitchroot/kbin/sampleServer: $(S)/os/servers/sample/sampleServer
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

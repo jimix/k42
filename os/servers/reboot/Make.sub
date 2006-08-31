@@ -1,0 +1,1 @@
+boot_servers += $(S)/os/servers/reboot/reboot

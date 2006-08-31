@@ -14,7 +14,7 @@ OBJS += $(addprefix $(S)/os/servers/unionfs/, $(srv_unionfs_libk_objs)) \
 	$(addprefix $(S)/os/servers/unionfs/, $(srv_unionfs_misc_objs)) \
         $(srv_unionfs_stubfiles) 
 libkobjs += $(addprefix $(S)/os/servers/unionfs/, $(srv_unionfs_libk_objs))
-build_servers += $(S)/os/servers/unionfs/unionfsServer
+build_servers += $(O)/install/$(HOST)/$(D)Deb/kitchroot/kbin/unionfsServer
 
 # Rules for building objects
 
@@ -47,3 +47,7 @@ $(S)/os/servers/unionfs/unionfsServer: $(S)/os/servers/unionfs/unionfsServer.dbg
 	$(call status, STRIP, $@)
 	$(CP) $< $@
 	$(STRIP) $@
+
+$(O)/install/$(HOST)/$(D)Deb/kitchroot/kbin/unionfsServer: $(S)/os/servers/unionfs/unionfsServer
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

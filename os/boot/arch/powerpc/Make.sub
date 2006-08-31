@@ -54,8 +54,7 @@ $(S)/os/boot2/imagesize.c: $(kimage)
           '{printf "unsigned long vmlinux_filesize = %d;\n", $$5}' > $@
 	$(call status, NM, $@)
 	$(NM) -n $< | tail -n 1 | awk \
-          '{printf "unsigned long vmlinux_memsize = 0x%s;\n", substr($$1,8)}' \            >> $@
-
+          '{printf "unsigned long vmlinux_memsize = 0x%s;\n", substr($$1,8)}'             >> $@ 
 # These are the rules for the new 32-bit Linux zImage boot program.
 $(S)/os/boot2/%.o: $(L)/arch/ppc64/boot/%.S
 	$(call status, AS, $@)

@@ -23,6 +23,7 @@ baseServers_objs += $(addprefix $(S)/os/servers/baseServers/, \
 			        $(srv_baseServers_objs))
 
 build_servers += $(S)/os/servers/baseServers/baseServers
+boot_servers += $(S)/os/servers/baseServers/baseServers
 
 # Rules for building objects
 

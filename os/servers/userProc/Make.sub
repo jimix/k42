@@ -1,0 +1,30 @@
+# Objects and include files from here
+
+srv_userProc_objs = userProc.o
+
+# Top-level variables that use need to know about these objs
+
+OBJS += $(addprefix $(S)/os/servers/userProc/, $(srv_userProc_objs))
+build_servers += $(O)/install/$(HOST)/$(D)Deb/kitchroot/kbin/userProcServer
+
+# Rules for building objects
+
+srv_userProc_iflags = -I$(S)/os/servers/userProc \
+                    -I$(H)/os/servers/userProc
+	
+$(S)/os/servers/userProc/%.o: $(H)/os/servers/userProc/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_userProc_dflags) $(srv_userProc_iflags) -c $< -o $@
+
+$(S)/os/servers/userProc/userProcServer.dbg: $(addprefix $(S)/os/servers/userProc/,$(srv_userProc_objs))
+	$(call status, LD, $@)
+	$(CXX) -o $@ $^ $(srv_lflags) $(srv_libs)
+
+$(S)/os/servers/userProc/userProcServer: $(S)/os/servers/userProc/userProcServer.dbg
+	$(call status, STRIP, $@)
+	$(CP) $< $@
+	$(STRIP) $@
+
+$(O)/install/$(HOST)/$(D)Deb/kitchroot/kbin/userProcServer: $(S)/os/servers/userProc/userProcServer
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

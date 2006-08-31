@@ -140,10 +140,11 @@ clean:
 #   need to be created for and that we clean
 # - $(libkobjs) contains objects that need to be included in the 
 #   libk.a kernel library
-#   $(baseServers_objs) contains objects that need to be included in
+# - $(baseServers_objs) contains objects that need to be included in
 #   baseServers
 # - $(lib_includes) include files that need to be installed
 # - $(build_servers) servers that need to be built
+# - $(boot_servers) servers that need to be packaged for booting
 
 # Rule for how to incrementally link our kernel objects.
 $(S)/os/k%objs.o:
@@ -191,11 +192,18 @@ include os/servers/kfs/Make.sub
 include os/servers/mountPoint/Make.sub
 include os/servers/loadImage/Make.sub
 include os/servers/nfs/Make.sub
+include os/servers/ois/Make.sub
 include os/servers/pipe/Make.sub
 include os/servers/pty/Make.sub
+include os/servers/procfs/Make.sub
+include os/servers/reboot/Make.sub
 include os/servers/sample/Make.sub
+include os/servers/shell/Make.sub
+include os/servers/traced/Make.sub
 include os/servers/unionfs/Make.sub
-include os/servers/baseServers/Make.sub
+include os/servers/userProc/Make.sub
+include os/servers/baseServers/Make.sub		# has to be last of the servers
+include os/servers/Make.sub
 
 libkobjs+= \
            $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o		   \
@@ -224,32 +232,6 @@ os_kernel_linux_flags = -I$(H)/os/kernel \
 $(S)/os/kernel/linux/%.o: $(H)/os/kernel/linux/arch/powerpc/%.C
 	$(call status, CXX, $@)
 	$(CXX) -c $(kflags) $(jflags) $(os_kernel_linux_flags) $< -o $@
-
-
-###############################################################################
-$(S)/os/servers/bootServers.o: cflags = $(CFLAGS)
-
-$(S)/os/servers/bootServers.o: iflags = -I$(O)/os/servers \
-                                        -I$(H)/os/servers $(IFLAGS)
-
-$(S)/os/servers/bootServers.o: $(S)/os/servers/bootServers.s
-	$(call status, CXX, $@)
-	$(CXX) $(cflags) $(iflags) -c $^ -o $@
-
-###############################################################################
-
-bootServers_tool = $(O)/install/tools/Linux_$(BUILD)/$(HOST)/mkserv
-
-bootServers_dep1 = $(S)/os/servers/baseServers/servers.list
-bootServers_dep2 = $(S)/os/servers/reboot/servers.list
-bootServers_deps = $(bootServers_dep1) $(bootServers_dep2) \
-		   $(S)/os/servers/baseServers/baseServers
-
-bootServers_iflags = -t gasBE -F $(bootServers_dep1) -F $(bootServers_dep2)
-
-$(S)/os/servers/bootServers.s: $(bootServers_deps) $(bootServers_tool)
-	$(call status, MKSERV, $@)
-	$(bootServers_tool) $(bootServers_iflags) -o $@
 
 ###############################################################################
 
