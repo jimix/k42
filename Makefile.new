@@ -196,7 +196,7 @@ include os/servers/ois/Make.sub
 include os/servers/pipe/Make.sub
 include os/servers/pty/Make.sub
 include os/servers/procfs/Make.sub
-include os/servers/reboot/Make.sub
+include os/servers/reboot/arch/$(HOST)/Make.sub
 include os/servers/sample/Make.sub
 include os/servers/shell/Make.sub
 include os/servers/traced/Make.sub

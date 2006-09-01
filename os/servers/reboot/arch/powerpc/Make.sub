@@ -1,0 +1,28 @@
+
+srv_reboot_objs = main.o asm_util.o misc.o printf.o
+
+OBJS += $(addprefix $(S)/os/servers/reboot/, $(src_reboot_objs))
+boot_servers += $(S)/os/servers/reboot/reboot
+
+$(S)/os/servers/reboot/main.o: $(H)/os/kernel/bilge/arch/powerpc/BootInfo.H
+
+$(S)/os/servers/reboot/reboot.o: $(addprefix $(S)/os/servers/reboot/, $(srv_reboot_objs))
+	$(call status, LD, $@)
+	$(CC) -Wl,-r -o $@ $^ -nostdlib -lgcc
+
+srv_reboot_ldflags = -e__start  -static
+$(S)/os/servers/reboot/reboot: $(S)/os/servers/reboot/reboot.o
+	$(call status, LD, $@)
+	$(LD) $(src_reboot_ldflags) -Ttext 0x10000 -o $@ $^
+
+srv_reboot_cppflags = -Upowerpc -D__GNU_AS__ -DTARGET_MACHINE="$(HOST)" -I$(O)/install/include -DGCC3
+srv_reboot_cflags32 = $(srv_reboot_cppflags) -msoft-float -mminimal-toc \
+	          -Wa,-strip-local-absolute -Wa,-mppc64
+
+$(S)/os/servers/reboot/%.o: $(H)/os/servers/reboot/arch/$(HOST)/%.S
+	$(call status, AS, $@)
+	$(CC) -c  $(srv_reboot_cflags32) -Wa,-gdwarf2 -Wa,-mppc64 $< -o $@
+
+$(S)/os/servers/reboot/%.o: $(H)/os/servers/reboot/arch/$(HOST)/%.c
+	$(call status, CC, $@)
+	$(CC) -c  $(srv_reboot_cflags32) $< -o $@
