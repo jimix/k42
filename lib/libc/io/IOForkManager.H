@@ -27,5 +27,7 @@ public:
     static SysStatusUval PreFork(XHandle target) {
 	return obj->preFork(target);
     }
+    DEFINE_NOOP_NEW(IOForkManager);
+    virtual ~IOForkManager() { }
 };
 #endif /* #ifndef IO_FORK_MANAGER_DEFH */

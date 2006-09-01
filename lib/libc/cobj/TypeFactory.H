@@ -34,7 +34,8 @@ public:
         entry = e;
         return 0;
     }
-
+    DEFINE_NOOP_NEW(TypeFactory);
+    virtual ~TypeFactory() { }
     // FIXME: interface to track/locate/swap instances created by factory
 };
 

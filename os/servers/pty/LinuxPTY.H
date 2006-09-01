@@ -92,6 +92,8 @@ protected:
 					    (uval)this);
 	    }
 	}
+        DEFINE_NOOP_NEW(TTYEvents);
+        virtual ~TTYEvents() { }
     };
 
     wait_queue_head_t *readQ;
