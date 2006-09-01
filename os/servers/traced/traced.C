@@ -46,7 +46,7 @@ uval verbose;
 FileLinuxRef traceFileRef[MAX_CPUS];
 DiskTrace *diskTrace = NULL;
 
-struct {
+struct traceNetwork_t{
     int sockfd;
     struct sockaddr_in dest; /* REMOVEME: see comment in setUpNetwork() */
     uint64_t seqnum;
