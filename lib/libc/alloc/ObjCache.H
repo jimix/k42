@@ -24,6 +24,8 @@ class ObjCache {
 public:
     struct PageSource {
 	virtual SysStatus getPage(uval &page)=0;
+        DEFINE_NOOP_NEW(PageSource);
+        virtual ~PageSource() { }
     };
 protected:
     uval objSize;
