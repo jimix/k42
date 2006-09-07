@@ -1,0 +1,14 @@
+bootServers_iflags = -I$(O)/os/servers \
+                     -I$(H)/os/servers $(IFLAGS)
+
+MKSERV = $(O)/install/tools/Linux_$(BUILD)/$(HOST)/mkserv
+
+mkserv_flags = -t gasBE # This will need to change for AMD64, etc.
+
+$(S)/os/servers/bootServers.s: $(boot_servers)
+	$(call status, MKSERV, $@)
+	$(MKSERV) $(mkserv_flags) -o $@ $(boot_servers)
+
+$(S)/os/servers/bootServers.o: $(S)/os/servers/bootServers.s
+	$(call status, CXX, $@)
+	$(CXX) $(CFLAGS) $(bootServers_iflags) -c $^ -o $@

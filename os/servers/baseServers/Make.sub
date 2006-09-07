@@ -33,6 +33,7 @@ srv_baseServers_iflags = -I$(S)/os/servers/baseServers \
                          -I$(H)/os/servers/dev         \
                          -I$(H)/os/servers/k42Ramfs    \
                          -I$(H)/os/servers/kfs         \
+                         -I$(H)/os/servers/kfs/os-k42  \
                          -I$(H)/os/servers/loadImage   \
                          -I$(H)/os/servers/mountPoint  \
                          -I$(H)/os/servers/nfs         \

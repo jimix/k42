@@ -59,7 +59,7 @@ STUBGEN = $(TOOLS)/stubgen/stubgen
 CFLAGS = -DTARGET_MACHINE="$(HOST)" -DHOST_MACHINE="$(FULLHOST)" \
          -D__GNU_AS__ -U$(HOST) -DGCC3	    \
          -Wa,-strip-local-absolute -fPIC -mminimal-toc -Wall -Werror -O0 -g \
-         -DK42 -D_REENTRANT -nostdinc $($(HOST)_CFLAGS)
+         -DKFS_ENABLED -DK42 -D_REENTRANT -nostdinc $($(HOST)_CFLAGS)
 
 CXXFLAGS = -fno-rtti -nostdinc++ -fno-exceptions $(CFLAGS)
 
@@ -138,8 +138,6 @@ clean:
 # makefiles. In particular:
 # - $(OBJS) contains targets we build that directories
 #   need to be created for and that we clean
-# - $(libkobjs) contains objects that need to be included in the 
-#   libk.a kernel library
 # - $(baseServers_objs) contains objects that need to be included in
 #   baseServers
 # - $(lib_includes) include files that need to be installed
@@ -170,6 +168,12 @@ include os/kernel/sys/Make.sub
 include os/kernel/linux/Make.sub
 
 # Include library submakefiles (currently just libk.a)
+# This defines the following variables that define hte objects that go in
+# various related libraries:
+# - $(libbase_objs)  - $(libk_objs)
+# - $(libemu_objs)   - $(libnative_objs) 
+# - $(libfs_objs)    - $(libvirt_objs) 
+# - $(liblk_objs)  # - $(libsrv_objs) 
 
 include lib/libc/alloc/Make.sub
 include lib/libc/cobj/Make.sub
@@ -203,7 +207,7 @@ include os/servers/traced/Make.sub
 include os/servers/unionfs/Make.sub
 include os/servers/userProc/Make.sub
 include os/servers/baseServers/Make.sub		# has to be last of the servers
-include os/servers/Make.sub
+include os/servers/Make.sub			# construct bootServers.o
 
 libkobjs+= \
            $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o		   \
@@ -218,7 +222,7 @@ $(O)/install/lib/$(HOST)/$(D)Deb/libk.a: $(libkobjs)
 lflags = -fno-rtti -nostdinc++ -fno-exceptions -DTARGET_MACHINE="$(HOST)" \
         -D__GNU_AS__ -Upowerpc -DGCC3 -MD -Wa,-strip-local-absolute	  \
         -fPIC -mminimal-toc -Wall -Werror -O0 -g			  \
-        -DKFS_ENABLED -DK42 -D_REENTRANT -D__BIG_ENDIAN__ -nostdinc
+        -DK42 -D_REENTRANT -D__BIG_ENDIAN__ -nostdinc
 kflags = $(lflags) -DKERNEL
 iflags = -I$(L)/include						\
          -I$(O)/install/include					\
