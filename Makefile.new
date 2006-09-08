@@ -70,6 +70,9 @@ IFLAGS = -I$(O)/install/include					\
          -I$(O)/install/include/stubgen/arch/$(HOST)		\
 	 $($(HOST)_IFLAGS)
 
+LXIFLAGS = -I$(L)/arch/k42/include				\
+	   -I$(L)/include
+
 # Common flags for building specific parts of K42 
 #
 # Linking servers
@@ -179,7 +182,7 @@ include os/kernel/linux/Make.sub
 
 build_libraries = $(O)/install/lib/$(HOST)/$(D)Deb/libk.a \
 		  $(O)/install/lib/$(HOST)/$(D)Deb/libemu.a \
-#		  $(O)/install/lib/$(HOST)/$(D)Deb/libbase.a \
+		  $(O)/install/lib/$(HOST)/$(D)Deb/libbase.a
 
 include lib/libc/alloc/Make.sub
 include lib/libc/cobj/Make.sub
@@ -190,6 +193,7 @@ include lib/libc/misc/Make.sub
 include lib/libc/scheduler/Make.sub
 include lib/libc/stdlib/Make.sub
 include lib/libc/sync/Make.sub
+include lib/libc/sys/arch/$(HOST)/Make.sub
 include lib/libc/sys/Make.sub
 include lib/libc/trace/Make.sub
 include lib/libc/usr/Make.sub
@@ -224,29 +228,15 @@ include usr/Make.sub
 # Rules for building kernel libraries that span directories
 ################################################################################
 OBJS += $(build_libraries)
-OBJS += $(libk_objs)
+OBJS += $(libk_objs) $(libbase_objs)
 
 $(O)/install/lib/$(HOST)/$(D)Deb/libk.a: $(libk_objs)
 	$(call status, AR, $@)
 	$(AR) crs $@ $?
 
-lflags = -fno-rtti -nostdinc++ -fno-exceptions -DTARGET_MACHINE="$(HOST)" \
-        -D__GNU_AS__ -Upowerpc -DGCC3 -MD -Wa,-strip-local-absolute	  \
-        -fPIC -mminimal-toc -Wall -Werror -O0 -g			  \
-        -DK42 -D_REENTRANT -D__BIG_ENDIAN__ -nostdinc
-kflags = $(lflags) -DKERNEL
-iflags = -I$(L)/include						\
-         -I$(O)/install/include					\
-         -I$(O)/install/gcc-include/arch/$(HOST)		\
-         -I$(O)/install/include/stubgen/arch/$(HOST)		\
-         -I$(IMG)/usr/powerpc64-linux/include
-jflags = -I$(L)/arch/k42/include $(iflags)
-
-os_kernel_linux_flags = -I$(H)/os/kernel \
-                        -I$(H)/os/kernel/linux
-$(S)/os/kernel/linux/%.o: $(H)/os/kernel/linux/arch/powerpc/%.C
-	$(call status, CXX, $@)
-	$(CXX) -c $(kflags) $(jflags) $(os_kernel_linux_flags) $< -o $@
+$(O)/install/lib/$(HOST)/$(D)Deb/libbase.a: $(libbase_objs)
+	$(call status, AR, $@)
+	$(AR) crs $@ $?
 
 ###############################################################################
 
@@ -278,3 +268,6 @@ showdirs:
 
 showobjs:
 	echo $(OBJS)
+
+showlibbase:
+	echo $(libbase_objs)

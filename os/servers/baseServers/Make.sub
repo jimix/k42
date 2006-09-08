@@ -1,6 +1,6 @@
 # Objects and include files from here
 
-srv_baseServers_libk_objs += StubBaseServers.o StubProcessLinuxServer.o    \
+srv_baseServers_lib_objs += StubBaseServers.o StubProcessLinuxServer.o    \
 			    StubResMgr.o StubStreamServerSocket.o 	  \
 			    XBaseServers.o
 
@@ -9,16 +9,17 @@ srv_baseServers_objs = baseServer.o fileSystemServices.o crtServer.o	  \
                       ProcessLinuxServer.o XProcessLinuxServer.o          \
 		      StreamServerSocket.o XStreamServerSocket.o
 
-srv_baseServers_stubobjs = $(filter Stub%.o, $(srv_baseServers_libk_objs))
+srv_baseServers_stubobjs = $(filter Stub%.o, $(srv_baseServers_lib_objs))
 srv_baseServers_stubnames = $(patsubst Stub%.o, % ,$(srv_baseServers_stubobjs))
 srv_baseServers_stubfiles = $(foreach stubname, $(srv_baseServers_stubnames), $(call stubgen_objects, $(S)/os/servers/baseServer,$(stubname)))
 
 # Top-level variables that use need to know about these objs
 
-OBJS += $(addprefix $(S)/os/servers/baseServers/, $(srv_baseServers_libk_objs)) \
+OBJS += $(addprefix $(S)/os/servers/baseServers/, $(srv_baseServers_lib_objs)) \
 	$(addprefix $(S)/os/servers/baseServers/, $(srv_baseServers_objs)) \
         $(srv_baseServers_stubfiles) 
-libk_objs += $(addprefix $(S)/os/servers/baseServers/, $(srv_baseServers_libk_objs))
+libk_objs += $(addprefix $(S)/os/servers/baseServers/, $(srv_baseServers_lib_objs))
+libbase_objs += $(addprefix $(S)/os/servers/baseServers/, $(srv_baseServers_lib_objs))
 baseServers_objs += $(addprefix $(S)/os/servers/baseServers/, \
 			        $(srv_baseServers_objs))
 

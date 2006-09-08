@@ -1,21 +1,22 @@
 # Objects and include files from here
 
-libk_srv_nfs_objs += StubFileSystemNFS.o
+srv_nfs_lib_objs += StubFileSystemNFS.o
 srv_nfs_baseServers_objs += FileSystemNFS.o NFSHandle.o NFSMount.o NFSClient.o \
                            ServerFileBlockNFS.o ServerFileDirNFS.o mount_clnt.o\
 			   mount_xdr.o nfs_clnt.o nfs_xdr.o XFileSystemNFS.o 
 
-srv_nfs_stubobjs = $(filter Stub%.o, $(libk_srv_nfs_objs))
+srv_nfs_stubobjs = $(filter Stub%.o, $(srv_nfs_lib_objs))
 srv_nfs_stubnames = $(patsubst Stub%.o, % ,$(srv_nfs_stubobjs))
 srv_nfs_stubfiles = $(foreach stubname, $(srv_nfs_stubnames), $(call stubgen_objects, $(S)/os/servers/nfs,$(stubname)))
 
 # Top-level variables that use need to know about these objs
 
-OBJS += $(addprefix $(S)/os/servers/nfs/, $(libk_srv_nfs_objs)) \
+OBJS += $(addprefix $(S)/os/servers/nfs/, $(srv_nfs_lib_objs)) \
 	$(addprefix $(S)/os/servers/nfs/, $(srv_nfs_baseServers_objs)) \
         $(srv_nfs_stubfiles)
 baseServers_objs += $(addprefix $(S)/os/servers/nfs/, $(srv_nfs_baseServers_objs))
-libk_objs += $(addprefix $(S)/os/servers/nfs/, $(libk_srv_nfs_objs))
+libk_objs += $(addprefix $(S)/os/servers/nfs/, $(srv_nfs_lib_objs))
+libbase_objs += $(addprefix $(S)/os/servers/nfs/, $(srv_nfs_lib_objs))
 
 # Rules for building objects
 

@@ -5,6 +5,7 @@ $(S)/os/ksysobjs.o: $(addprefix $(S)/os/kernel/sys/, $(ksysobjs))
 # ksysobjs subobjects
 OBJS += $(addprefix $(S)/os/kernel/sys/, $(ksysobjs))
 libk_objs += $(S)/os/kernel/sys/symdefsKern.o
+libbase_objs += $(S)/os/kernel/sys/symdefs.o
 
 # Should these flags be based off of $(kflags), etc?
 kernel_sys_cxxflags = $(CXXFLAGS) -MD -DKERNEL 

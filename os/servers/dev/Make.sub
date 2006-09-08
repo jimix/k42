@@ -1,6 +1,6 @@
 # Objects and include files from here
 
-srv_dev_libk_objs += StubDevFSBlk.o StubDevFSDir.o StubDevFSRemote.o \
+srv_dev_lib_objs += StubDevFSBlk.o StubDevFSDir.o StubDevFSRemote.o \
 		     StubDevOpener.o StubFRProvider.o StubFileSystemDev.o \
 		     StubSysFSAttrFile.o XDevOpener.o XFRProvider.o
 
@@ -8,16 +8,17 @@ srv_dev_baseServers_objs = FileSystemDev.o DevFSBlk.o XDevFSBlk.o DevFSDir.o \
 			  XFileSystemDev.o XDevFSDir.o DevFSRemote.o 	    \
 			  XDevFSRemote.o SysFSAttrFile.o XSysFSAttrFile.o
 
-srv_dev_stubobjs = $(filter Stub%.o, $(srv_dev_libk_objs))
+srv_dev_stubobjs = $(filter Stub%.o, $(srv_dev_lib_objs))
 srv_dev_stubnames = $(patsubst Stub%.o, % ,$(srv_dev_stubobjs))
 srv_dev_stubfiles = $(foreach stubname, $(srv_dev_stubnames), $(call stubgen_objects, $(S)/os/servers/dev,$(stubname)))
 
 # Top-level variables that use need to know about these objs
 
-OBJS += $(addprefix $(S)/os/servers/dev/, $(srv_dev_libk_objs)) \
+OBJS += $(addprefix $(S)/os/servers/dev/, $(srv_dev_lib_objs)) \
 	$(addprefix $(S)/os/servers/dev/, $(srv_dev_baseServers_objs)) \
         $(srv_dev_stubfiles)
-libk_objs += $(addprefix $(S)/os/servers/dev/, $(srv_dev_libk_objs))
+libk_objs += $(addprefix $(S)/os/servers/dev/, $(srv_dev_lib_objs))
+libbase_objs += $(addprefix $(S)/os/servers/dev/, $(srv_dev_lib_objs))
 baseServers_objs += $(addprefix $(S)/os/servers/dev/, $(srv_dev_baseServers_objs))
 
 # Rules for building objects

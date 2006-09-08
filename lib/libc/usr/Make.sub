@@ -1,14 +1,18 @@
 # Objects and include files from here
 
-libkusrobjs = GDBIOKern.o ProgExecArch.o ProgExecCommon.o align.o 	\
+lib_usr_objs = GDBIOKern.o ProgExecArch.o ProgExecCommon.o align.o 	\
 	      gdb-stub.o memoryMap.o runProcessCommon.o	
+
+lib_usr_base_objs = $(filter-out GDBIOKern.o, $(lib_usr_objs)) \
+		    GDBIO.o ProgExec.o userRunProcess.o entry.o
 
 usr_includes = ProgExec.H runProcessCommon.H
 usr_powerpc_includes = ProgExecArch.H
 
 # Top-level variables that use need to know about these objs
-OBJS += $(addprefix $(S)/lib/libc/usr/, $(libkusrobjs))
-libk_objs += $(addprefix $(S)/lib/libc/usr/, $(libkusrobjs))
+OBJS += $(addprefix $(S)/lib/libc/usr/, $(lib_usr_objs))
+libk_objs += $(addprefix $(S)/lib/libc/usr/, $(lib_usr_objs))
+libbase_objs += $(addprefix $(S)/lib/libc/usr/, $(lib_usr_base_objs))
 lib_includes += $(addprefix $(O)/install/include/usr/, $(usr_includes))
 lib_includes +=  $(addprefix $(O)/install/include/usr/arch/$(HOST)/, $(usr_$(HOST)_includes))
 lib_includes += $(O)/install/include/sys/GDBIO.H

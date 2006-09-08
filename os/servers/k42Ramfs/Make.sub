@@ -1,23 +1,24 @@
 # Objects and include files from here
 
-srv_k42Ramfs_libk_objs += StubFileSystemK42RamFS.o
+srv_k42Ramfs_lib_objs += StubFileSystemK42RamFS.o
 srv_k42Ramfs_misc_objs = main.o FileSystemK42RamFS.o ServerFileBlockK42RamFS.o ServerFileDirK42RamFS.o FileInfoK42RamFS.o XFileSystemK42RamFS.o
 srv_k42Ramfs_baseServers_objs = FileSystemK42RamFS.o ServerFileBlockK42RamFS.o \
 			       ServerFileDirK42RamFS.o FileInfoK42RamFS.o     \
 			       XFileSystemK42RamFS.o
 
-srv_k42Ramfs_stubobjs = $(filter Stub%.o, $(srv_k42Ramfs_libk_objs))
+srv_k42Ramfs_stubobjs = $(filter Stub%.o, $(srv_k42Ramfs_lib_objs))
 srv_k42Ramfs_stubnames = $(patsubst Stub%.o, % ,$(srv_k42Ramfs_stubobjs))
 srv_k42Ramfs_stubfiles = $(foreach stubname, $(srv_k42Ramfs_stubnames), $(call stubgen_objects, $(S)/os/servers/k42Ramfs,$(stubname)))
 
 # Top-level variables that use need to know about these objs
 
-OBJS += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_libk_objs)) \
+OBJS += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_lib_objs)) \
 	$(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_misc_objs)) \
 	$(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_baseServers_objs))\
         $(srv_k42Ramfs_stubfiles) 
 
-libk_objs += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_libk_objs))
+libk_objs += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_lib_objs))
+libbase_objs += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_lib_objs))
 build_servers += $(S)/os/servers/k42Ramfs/k42RamfsServer
 baseServers_objs += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_baseServers_objs))
 

@@ -1,10 +1,16 @@
 # Objects and include files from here
 
-libksysobjs = InitStep.o LinuxCreds.o ProcessClient.o ProcessSet.o	   \
-              ResMgrWrapper.o SMTMgr.o StubInitStep.o StubProcessClient.o  \
-              StubProcessLinuxClient.o StubShMemBuf.o SystemMiscWrapper.o  \
-              TAssert.o XInitStep.o XProcessClient.o XProcessLinuxClient.o \
-              XShMemBuf.o g++sup.o ppccore.o 
+lib_sys_objs = InitStep.o LinuxCreds.o ProcessClient.o ProcessSet.o	   \
+               ResMgrWrapper.o SMTMgr.o StubInitStep.o StubProcessClient.o  \
+               StubProcessLinuxClient.o StubShMemBuf.o SystemMiscWrapper.o  \
+               TAssert.o XInitStep.o XProcessClient.o XProcessLinuxClient.o \
+               XShMemBuf.o g++sup.o
+
+lib_sys_base_objs = MountPointMgrClient.o MountPointMgrCommon.o 	\
+		    ProcessLinuxClient.o ProcessSetUser.o 		\
+		    ProcessWrapper.o ShMemBuf.o ShMemClnt.o 		\
+		    StubProcessLinuxClient.o XProcessLinuxClient.o	\
+		    abort.o
 
 sys_includes = systemAccess.H sysTypes.H sysIncs.H BaseProcess.H 	   \
 	       ProcessWrapper.H ProcessSet.H ProcessSetUser.H macdefs.H    \
@@ -14,21 +20,19 @@ sys_includes = systemAccess.H sysTypes.H sysIncs.H BaseProcess.H 	   \
 	       MountPointMgrCommon.H SMTMgr.H ProcessLinuxClient.H 	   \
 	       ShMemBuf.H ShMemClnt.H InitStep.H Initialization.H 	   \
 	       hostSysTypes.H bswap.h extRegs.H
-sys_powerpc_includes = sysTypes.H macdefs.H config.H types.H ppccore.H 	   \
-		       extRegs.H
 
-lib_libc_sys_stubobjs = $(filter Stub%.o, $(libksysobjs))
+lib_libc_sys_stubobjs = $(filter Stub%.o, $(lib_sys_objs) $(lib_sys_base_objs))
 lib_libc_sys_stubnames = $(patsubst Stub%.o, % ,$(lib_libc_sys_stubobjs))
 lib_libc_sys_stubfiles = $(foreach stubname, $(lib_libc_sys_stubnames), $(call stubgen_objects, $(S)/lib/libc/sys,$(stubname)))
 
 # Top-level variables that use need to know about these objs
-OBJS += $(addprefix $(S)/lib/libc/sys/, $(libksysobjs)) \
+OBJS += $(addprefix $(S)/lib/libc/sys/, $(lib_sys_objs) $(lib_sys_base_objs)) \
         $(lib_libc_sys_stubfiles)
 
-libk_objs += $(addprefix $(S)/lib/libc/sys/, $(libksysobjs))
+libk_objs += $(addprefix $(S)/lib/libc/sys/, $(lib_sys_objs))
+libbase_objs += $(addprefix $(S)/lib/libc/sys/, $(lib_sys_objs) $(lib_sys_base_objs))
 
 lib_includes += $(addprefix $(O)/install/include/sys/, $(sys_includes))
-lib_includes += $(addprefix $(O)/install/include/sys/arch/$(HOST)/, $(sys_$(HOST)_includes))
 
 # Rules for building objects and installing include files
 
@@ -37,9 +41,6 @@ $(O)/install/include/sys/%.h: $(H)/lib/libc/sys/%.h
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 $(O)/install/include/sys/%.H: $(H)/lib/libc/sys/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-$(O)/install/include/sys/arch/$(HOST)/%.H: $(H)/lib/libc/sys/arch/$(HOST)/%>H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
@@ -64,7 +65,3 @@ $(S)/lib/libc/sys/%.o: $(S)/lib/libc/sys/%.C
 $(S)/lib/libc/sys/%.o: $(H)/lib/libc/sys/%.C
 	$(call status, CXX, $@)
 	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_sys_iflags) $< -o $@
-
-$(S)/lib/libc/sys/%.o: $(H)/lib/libc/sys/arch/$(HOST)/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(CXXFLAGS) $(IFLAGS) $(lib_libc_sys_iflags) -c $^ -o $@

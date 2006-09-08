@@ -1,18 +1,19 @@
 # Objects and include files from here
 
-srv_mountPoint_libk_objs += StubMountPointMgr.o
+srv_mountPoint_lib_objs += StubMountPointMgr.o
 srv_mountPoint_baseServers_objs = MountPointMgrImp.o XMountPointMgr.o
 
-srv_mountPoint_stubobjs = $(filter Stub%.o, $(srv_mountPoint_libk_objs))
+srv_mountPoint_stubobjs = $(filter Stub%.o, $(srv_mountPoint_lib_objs))
 srv_mountPoint_stubnames = $(patsubst Stub%.o, % ,$(srv_mountPoint_stubobjs))
 srv_mountPoint_stubfiles = $(foreach stubname, $(srv_mountPoint_stubnames), $(call stubgen_objects, $(S)/os/servers/mountPoint,$(stubname)))
 
 # Top-level variables that use need to know about these objs
 
-OBJS += $(addprefix $(S)/os/servers/mountPoint/, $(srv_mountPoint_libk_objs)) \
+OBJS += $(addprefix $(S)/os/servers/mountPoint/, $(srv_mountPoint_lib_objs)) \
 	$(addprefix $(S)/os/servers/mountPoint/, $(srv_mountPoint_baseServers_objs)) \
         $(srv_mountPoint_stubfiles)
-libk_objs += $(addprefix $(S)/os/servers/mountPoint/, $(srv_mountPoint_libk_objs))
+libk_objs += $(addprefix $(S)/os/servers/mountPoint/, $(srv_mountPoint_lib_objs))
+libbase_objs += $(addprefix $(S)/os/servers/mountPoint/, $(srv_mountPoint_lib_objs))
 baseServers_objs += $(addprefix $(S)/os/servers/mountPoint/, $(srv_mountPoint_baseServers_objs))
 
 # Rules for building objects

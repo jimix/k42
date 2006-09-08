@@ -1,19 +1,21 @@
+lib_init_objs = StubAsyncTester.o StubInitServer.o StubServerState.o \
+		XAsyncTester.o
 
-OBJS += $(S)/os/kinitobjs.o
 kinitobjs = StubAsyncTester.o StubServerState.o StubInitServer.o	\
             XAsyncTester.o locore.o MPinit.o KernelInit.o		\
             AsyncTester.o SysFacts.o idt.o memoryMapKern.o kinit.o	\
             initKernelMappings.o KernelExit.o XServerState.o		\
             XInitServer.o ServerState.o InitServer.o
+
 $(S)/os/kinitobjs.o: $(addprefix $(S)/os/kernel/init/, $(kinitobjs))
 
-libk_objs += $(S)/os/kernel/init/StubAsyncTester.o			   \
-            $(S)/os/kernel/init/StubInitServer.o			   \
-            $(S)/os/kernel/init/StubServerState.o			   \
-            $(S)/os/kernel/init/XAsyncTester.o	
+libk_objs += $(addprefix $(S)/os/kernel/init/, $(lib_init_objs))
+libbase_objs += $(addprefix $(S)/os/kernel/init/, $(lib_init_objs))
 
 # kinitobjs.o subobjects
+OBJS += $(S)/os/kinitobjs.o
 OBJS += $(addprefix $(S)/os/kernel/init/, $(kinitobjs))
+OBJS += $(addprefix $(S)/os/kernel/init/, $(lib_init_objs))
 OBJS += $(call stubgen_objects, $(S)/os/kernel/init,AsyncTester)
 OBJS += $(call stubgen_objects, $(S)/os/kernel/init,ServerState)
 OBJS += $(call stubgen_objects, $(S)/os/kernel/init,InitServer)

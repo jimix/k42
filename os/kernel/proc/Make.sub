@@ -12,6 +12,8 @@ OBJS += $(addprefix $(S)/os/kernel/proc/, $(kprocobjs))
 OBJS += $(S)/os/kprocobjs.o
 libk_objs += $(S)/os/kernel/proc/StubProcessSetKern.o \
 	    $(S)/os/kernel/proc/StubProcessServer.o
+libbase_objs += $(S)/os/kernel/proc/StubProcessSetKern.o \
+	    $(S)/os/kernel/proc/StubProcessServer.o
 
 # Add each stub in kprocobjs to the list of objects to make/clean
 kernel_proc_stubobjs = $(filter Stub%.o, $(kprocobjs))

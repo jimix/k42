@@ -1,19 +1,20 @@
 # Objects and include files from here
 
-srv_unionfs_libk_objs += StubFileSystemUnion.o
+srv_unionfs_lib_objs += StubFileSystemUnion.o
 srv_unionfs_misc_objs = main.o FileSystemUnion.o NameTreeLinuxUnion.o 
 #XFileSystemUnion.o
 
-srv_unionfs_stubobjs = $(filter Stub%.o, $(srv_unionfs_libk_objs))
+srv_unionfs_stubobjs = $(filter Stub%.o, $(srv_unionfs_lib_objs))
 srv_unionfs_stubnames = $(patsubst Stub%.o, % ,$(srv_unionfs_stubobjs))
 srv_unionfs_stubfiles = $(foreach stubname, $(srv_unionfs_stubnames), $(call stubgen_objects, $(S)/os/servers/unionfs,$(stubname)))
 
 # Top-level variables that use need to know about these objs
 
-OBJS += $(addprefix $(S)/os/servers/unionfs/, $(srv_unionfs_libk_objs)) \
+OBJS += $(addprefix $(S)/os/servers/unionfs/, $(srv_unionfs_lib_objs)) \
 	$(addprefix $(S)/os/servers/unionfs/, $(srv_unionfs_misc_objs)) \
         $(srv_unionfs_stubfiles) 
-libk_objs += $(addprefix $(S)/os/servers/unionfs/, $(srv_unionfs_libk_objs))
+libk_objs += $(addprefix $(S)/os/servers/unionfs/, $(srv_unionfs_lib_objs))
+libbase_objs += $(addprefix $(S)/os/servers/unionfs/, $(srv_unionfs_lib_objs))
 build_servers += $(O)/install/$(HOST)/$(D)Deb/kitchroot/kbin/unionfsServer
 
 # Rules for building objects

@@ -1,18 +1,18 @@
 # Objects and include files from here
 
-srv_sample_libk_objs += StubSampleService.o
+srv_sample_lib_objs += StubSampleService.o
 
-srv_sample_libk_stubobjs = $(filter Stub%.o, $(srv_sample_libk_objs)) 
-srv_sample_stubnames = $(patsubst Stub%.o, % ,$(srv_sample_libk_stubobjs)) 
+srv_sample_lib_stubobjs = $(filter Stub%.o, $(srv_sample_lib_objs)) 
+srv_sample_stubnames = $(patsubst Stub%.o, % ,$(srv_sample_lib_stubobjs)) 
 srv_sample_stubfiles = $(foreach stubname, $(srv_sample_stubnames), $(call stubgen_objects, $(S)/os/servers/sample,$(stubname)))
 src_sample_misc_objs = sample.o SampleServiceServer.o sampleServer sampleServer.dbg
 
 # Top-level variables that use need to know about these objs
 
-OBJS += $(addprefix $(S)/os/servers/sample/, $(srv_sample_libk_objs)) \
+OBJS += $(addprefix $(S)/os/servers/sample/, $(srv_sample_lib_objs)) \
 	$(addprefix $(S)/os/servers/sample/, $(srv_sample_misc_objs)) \
         $(srv_sample_stubfiles)
-libk_objs += $(addprefix $(S)/os/servers/sample/, $(srv_sample_libk_objs))
+lib_objs += $(addprefix $(S)/os/servers/sample/, $(srv_sample_lib_objs))
 build_servers += $(O)/install/$(HOST)/$(D)Deb/kitchroot/kbin/sampleServer
 
 # Rules for building objects

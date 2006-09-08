@@ -1,11 +1,11 @@
 # The built objects in this directory
-libkbilgeobjs = StubBuildDate.o	StubDiskSwap.o StubFSFRSwap.o \
+lib_bilge_objs = StubBuildDate.o StubDiskSwap.o StubFSFRSwap.o \
                 StubIPSock.o StubKBootParms.o StubKernBogusDisk.o \
                 StubKernSimDisk.o StubKernToyDisk.o StubNetDev.o \
                 StubPrivilegedService.o StubSystemMisc.o \
                 StubTestScheduler.o StubTestSwitch.o StubWire.o				   
 
-kbilgeobjs = $(libkbilgeobjs) \
+kbilgeobjs = $(lib_bilge_objs) \
              openfirm.o openfirmnote.o simos.o thinwireArch.o PerfMon.o	\
              SocketCreate.o HWPerfMon.o HWPerfMonPulsar.o		\
              HWPerfMon630.o HWPerfMonGPUL.o libksup.o thinwire.o	\
@@ -29,7 +29,8 @@ kbilgeobjs = $(libkbilgeobjs) \
 
 OBJS += $(S)/os/kbilgeobjs.o
 OBJS += $(addprefix $(S)/os/kernel/bilge/, $(kbilgeobjs))
-libk_objs += $(addprefix $(S)/os/kernel/bilge/, $(libkbilgeobjs))
+libk_objs += $(addprefix $(S)/os/kernel/bilge/, $(lib_bilge_objs))
+libbase_objs += $(addprefix $(S)/os/kernel/bilge/, $(lib_bilge_objs))
 
 # Rules for building objects in this directory
 $(S)/os/kbilgeobjs.o: $(addprefix $(S)/os/kernel/bilge/, $(kbilgeobjs))

@@ -16,8 +16,9 @@ lib_io_common_objs = IOForkManager.o cprintf.o printfBuf.o PathName.o 	     \
 lib_io_base_objs = Buffer.o DirBuf.o DiskClient.o DiskClientAsync.o   \
 		   FileLinux.o FileLinuxDevNull.o FileLinuxDevRandom.o\
 		   FileLinuxDevZero.o FileLinuxDevRandom.o  	      \
-		   FileLinuxDir.o FileLinuxPacket.o FileLinuxSocket.o \
-		   FileLinuxSocketInet.o FileLinuxSocketUnix.o	      \
+		   FileLinuxDir.o FileLinuxFile.o FileLinuxPacket.o   \
+		   FileLinuxPacketUnix.o FileLinuxSocket.o 	      \
+		   FileLinuxSocketInet.o FileLinuxSocketUnix.o 	      \
 		   FileLinuxStream.o FileLinuxVirtFile.o 	      \
 		   SysVMessagesClient.o thinwire.o
 

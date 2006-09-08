@@ -3,3 +3,13 @@ klinobjs = BootInit.o MemoryArch.o ConfigureArch.o LinuxPIC.o		\
            StdIOKern.o MemoryK.o Configure.o Interrupt.o LinuxSock.o	\
            LinuxBlockDev.o LinuxCharDev.o
 $(S)/os/klinobjs.o: $(addprefix $(S)/os/kernel/linux/, $(klinobjs))
+
+os_kernel_linux_flags = -I$(L)/arch/k42/include 		\
+		        -I$(L)/include 				\
+			$(IFLAGS)				\
+		 	-I$(H)/os/kernel 			\
+                        -I$(H)/os/kernel/linux			
+
+$(S)/os/kernel/linux/%.o: $(H)/os/kernel/linux/arch/powerpc/%.C
+	$(call status, CXX, $@)
+	$(CXX) -c $(CXXFLAGS) -DKERNEL $(os_kernel_linux_flags) $< -o $@

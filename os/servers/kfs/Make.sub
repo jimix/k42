@@ -1,6 +1,6 @@
 # Objects and include files from here
 
-libk_srv_kfs_objs += StubFileSystemKFS.o
+srv_kfs_lib_objs += StubFileSystemKFS.o
 srv_kfs_baseServers_objs += KFSDebug.o KFSDisk.o SuperBlock.o PSOBasicRW.o      \
 			   RecordMap.o LSOBasic.o LSOBasicFile.o LSOBasicDir.o \
 			   LSOBasicSymlink.o ObjToken.o PSODiskBlock.o	       \
@@ -10,16 +10,17 @@ srv_kfs_baseServers_objs += KFSDebug.o KFSDisk.o SuperBlock.o PSOBasicRW.o      
 			   PSOSmall.o PSOSmallMeta.o BlockCache.o 	       \
 			   BlockCacheK42.o KFSDHash.o TimerEventBC.o
 
-srv_kfs_stubobjs = $(filter Stub%.o, $(libk_srv_kfs_objs))
+srv_kfs_stubobjs = $(filter Stub%.o, $(srv_kfs_lib_objs))
 srv_kfs_stubnames = $(patsubst Stub%.o, % ,$(srv_kfs_stubobjs))
 srv_kfs_stubfiles = $(foreach stubname, $(srv_kfs_stubnames), $(call stubgen_objects, $(S)/os/servers/kfs,$(stubname)))
 
 # Top-level variables that use need to know about these objs
 
-OBJS += $(addprefix $(S)/os/servers/kfs/, $(libk_srv_kfs_objs)) \
+OBJS += $(addprefix $(S)/os/servers/kfs/, $(srv_kfs_lib_objs)) \
 	$(addprefix $(S)/os/servers/kfs/, $(srv_kfs_baseServers_objs)) \
         $(srv_kfs_stubfiles)
-libk_objs += $(addprefix $(S)/os/servers/kfs/, $(libk_srv_kfs_objs))
+libk_objs += $(addprefix $(S)/os/servers/kfs/, $(srv_kfs_lib_objs))
+libbase_objs += $(addprefix $(S)/os/servers/kfs/, $(srv_kfs_lib_objs))
 baseServers_objs += $(addprefix $(S)/os/servers/kfs/, $(srv_kfs_baseServers_objs))
 
 # Rules for building objects

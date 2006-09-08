@@ -1,18 +1,19 @@
 # Objects and include files from here
 
-libk_srv_pipe_objs += StubStreamServerPipe.o
+srv_pipe_lib_objs += StubStreamServerPipe.o
 srv_pipe_baseServers_objs += StreamServerPipe.o XStreamServerPipe.o
 
-srv_pipe_stubobjs = $(filter Stub%.o, $(libk_srv_pipe_objs))
+srv_pipe_stubobjs = $(filter Stub%.o, $(srv_pipe_lib_objs))
 srv_pipe_stubnames = $(patsubst Stub%.o, % ,$(srv_pipe_stubobjs))
 srv_pipe_stubfiles = $(foreach stubname, $(srv_pipe_stubnames), $(call stubgen_objects, $(S)/os/servers/pipe,$(stubname)))
 
 # Top-level variables that use need to know about these objs
 
-OBJS += $(addprefix $(S)/os/servers/pipe/, $(libk_srv_pipe_objs)) \
+OBJS += $(addprefix $(S)/os/servers/pipe/, $(srv_pipe_lib_objs)) \
 	$(addprefix $(S)/os/servers/pipe/, $(srv_pipe_baseServers_objs)) \
         $(srv_pipe_stubfiles)
-libk_objs += $(addprefix $(S)/os/servers/pipe/, $(libk_srv_pipe_objs))
+libk_objs += $(addprefix $(S)/os/servers/pipe/, $(srv_pipe_lib_objs))
+libbase_objs += $(addprefix $(S)/os/servers/pipe/, $(srv_pipe_lib_objs))
 baseServers_objs += $(addprefix $(S)/os/servers/pipe/, $(srv_pipe_baseServers_objs))
 
 # Rules for building objects

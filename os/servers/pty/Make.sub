@@ -1,21 +1,22 @@
 # Objects and include files from here
 
-srv_pty_libk_objs += StubLogin.o StubSysVMessages.o StubSysVSemaphores.o StubSysVSharedMem.o
+srv_pty_lib_objs += StubLogin.o StubSysVMessages.o StubSysVSemaphores.o StubSysVSharedMem.o
 srv_pty_baseServers_objs = Login.o SysVSharedMem.o SysVSemaphores.o  	    \
 			  SysVMessages.o Util.o XLogin.o XSysVSharedMem.o   \
 			  XSysVSemaphores.o XSysVMessages.o LinuxPTY.o 	    \
 			  IOForwarder.o IOForwarderConsole.o printk.o
 
-srv_pty_stubobjs = $(filter Stub%.o, $(srv_pty_libk_objs))
+srv_pty_stubobjs = $(filter Stub%.o, $(srv_pty_lib_objs))
 srv_pty_stubnames = $(patsubst Stub%.o, % ,$(srv_pty_stubobjs))
 srv_pty_stubfiles = $(foreach stubname, $(srv_pty_stubnames), $(call stubgen_objects, $(S)/os/servers/pty,$(stubname)))
 
 # Top-level variables that use need to know about these objs
 
-OBJS += $(addprefix $(S)/os/servers/pty/, $(srv_pty_libk_objs)) \
+OBJS += $(addprefix $(S)/os/servers/pty/, $(srv_pty_lib_objs)) \
 	$(addprefix $(S)/os/servers/pty/, $(srv_pty_baseServers_objs)) \
         $(srv_pty_stubfiles)
-libk_objs += $(addprefix $(S)/os/servers/pty/, $(srv_pty_libk_objs))
+libk_objs += $(addprefix $(S)/os/servers/pty/, $(srv_pty_lib_objs))
+libbase_objs += $(addprefix $(S)/os/servers/pty/, $(srv_pty_lib_objs))
 baseServers_objs += $(addprefix $(S)/os/servers/pty/, $(srv_pty_baseServers_objs))
 
 # Rules for building objects

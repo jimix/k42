@@ -1,6 +1,9 @@
 libk_objs +=  $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o               \
               $(S)/usr/XUsrTst.o
 
+libbase_objs +=  $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o            \
+              $(S)/usr/XUsrTst.o
+
 usr_stubobjs = $(S)/usr/StubIPCTst.o $(S)/usr/StubUsrTst.o
 usr_stubnames = $(patsubst Stub%.o, % ,$(usr_stubobjs))
 usr_stubfiles = $(foreach stubname, $(lib_libc_cobj_stubnames), $(call stubgen_objects, $(S)/usr,$(stubname)))

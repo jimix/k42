@@ -6,6 +6,7 @@ $(S)/os/kstubobjs.o: $(addprefix $(S)/os/kernel/stubtest/, $(kstubobjs))
 OBJS += $(S)/os/kstubobjs.o
 OBJS += $(addprefix $(S)/os/kernel/stubtest/, $(kstubobjs))
 libk_objs += $(S)/os/kernel/stubtest/StubBonnie.o
+libbase_objs += $(S)/os/kernel/stubtest/StubBonnie.o
 
 # Add each stub in kprocobjs to the list of objects to make/clean
 OBJS += $(call stubgen_objects, $(S)/os/kernel/stubtest,Bonnie)))

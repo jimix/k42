@@ -1,0 +1,34 @@
+# Objects and include files from here
+
+lib_sys_arch_common_objs = ppccore.o
+lib_sys_arch_user_objs = ppccoreusr.o
+
+sys_arch_includes = sysTypes.H macdefs.H config.H types.H ppccore.H 	   \
+		       extRegs.H
+
+# Top-level variables that use need to know about these objs
+libk_objs += $(addprefix $(S)/lib/libc/sys/, $(lib_sys_arch_common_objs))
+libbase_objs += $(addprefix $(S)/lib/libc/sys/, $(lib_sys_arch_common_objs)) \
+		$(addprefix $(S)/lib/libc/sys/, $(lib_sys_arch_user_objs))
+OBJS += $(addprefix $(S)/lib/libc/sys/, $(lib_sys_arch_common_objs))\
+	$(addprefix $(S)/lib/libc/sys/, $(lib_sys_arch_user_objs))\
+
+lib_includes += $(addprefix $(O)/install/include/sys/arch/$(HOST)/, $(sys_arch_includes))
+
+# Rules for building objects and installing include files
+
+# Include files
+$(O)/install/include/sys/arch/$(HOST)/%.H: $(H)/lib/libc/sys/arch/$(HOST)/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+# Stub source files
+lib_libc_sys_iflags = -I$(S)/lib/libc/sys	\
+                      -I$(H)/lib/libc		\
+                      -I$(H)/lib/libc/sys
+
+# Object files
+
+$(S)/lib/libc/sys/%.o: $(H)/lib/libc/sys/arch/$(HOST)/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(CXXFLAGS) $(IFLAGS) $(lib_libc_sys_iflags) -c $^ -o $@
