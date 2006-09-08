@@ -3,15 +3,18 @@
 lib_stdlib_objs = baseAtoi.o baseFgets.o baseSprintf.o baseStrtol.o chario.o \
 		  isctype.o memccpy.o memcmp.o string.o
 lib_stdlib_libbase_objs = baseSprintf.o chario.o
-lib_stdlib_libk_objs = $(filter-out chario.o, $(lib_stdlib_objs))
+lib_stdlib_libnative_objs = $(filter-out chario.o baseSprintf.o, $(lib_stdlib_objs))
+lib_stdlib_libk_objs =  $(filter-out chario.o, $(lib_stdlib_objs))
 
 stdlib_includes = ctype.h float.h limits.h string.h 
 
 # Top-level variables that use need to know about these objs
-OBJS += $(addprefix $(S)/lib/libc/stdlib/, $(lib_stdlib_objs))
+OBJS += $(addprefix $(S)/lib/libc/stdlib/, $(lib_stdlib_objs)) \
+	$(O)/install/lib/$(HOST)/$(D)Deb/libnative.a
 libk_objs += $(addprefix $(S)/lib/libc/stdlib/, $(lib_stdlib_libk_objs))
 libbase_objs += $(addprefix $(S)/lib/libc/stdlib/, $(lib_stdlib_libbase_objs))
 lib_includes += $(addprefix $(O)/install/include/, $(stdlib_includes))
+build_libraries += $(O)/install/lib/$(HOST)/$(D)Deb/libnative.a
 
 # Rules for building objects and installing include files
 
@@ -33,3 +36,7 @@ $(S)/lib/libc/stdlib/%.o: $(H)/lib/libc/stdlib/%.C
 $(S)/lib/libc/stdlib/%.o: $(H)/lib/libc/stdlib/%.c
 	$(call status, CC, $@)
 	$(CC) -c $(CFLAGS) $(IFLAGS) $(lib_libc_stdlib_iflags) $< -o $@
+
+$(O)/install/lib/$(HOST)/$(D)Deb/libnative.a: $(addprefix $(S)/lib/libc/stdlib/, $(lib_stdlib_libnative_objs))
+	$(call status, AR, $@)
+	$(AR) crs $@ $?
