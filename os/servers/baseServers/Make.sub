@@ -18,7 +18,7 @@ srv_baseServers_stubfiles = $(foreach stubname, $(srv_baseServers_stubnames), $(
 OBJS += $(addprefix $(S)/os/servers/baseServers/, $(srv_baseServers_libk_objs)) \
 	$(addprefix $(S)/os/servers/baseServers/, $(srv_baseServers_objs)) \
         $(srv_baseServers_stubfiles) 
-libkobjs += $(addprefix $(S)/os/servers/baseServers/, $(srv_baseServers_libk_objs))
+libk_objs += $(addprefix $(S)/os/servers/baseServers/, $(srv_baseServers_libk_objs))
 baseServers_objs += $(addprefix $(S)/os/servers/baseServers/, \
 			        $(srv_baseServers_objs))
 

@@ -15,7 +15,7 @@ OBJS += $(addprefix $(S)/os/servers/nfs/, $(libk_srv_nfs_objs)) \
 	$(addprefix $(S)/os/servers/nfs/, $(srv_nfs_baseServers_objs)) \
         $(srv_nfs_stubfiles)
 baseServers_objs += $(addprefix $(S)/os/servers/nfs/, $(srv_nfs_baseServers_objs))
-libkobjs += $(addprefix $(S)/os/servers/nfs/, $(libk_srv_nfs_objs))
+libk_objs += $(addprefix $(S)/os/servers/nfs/, $(libk_srv_nfs_objs))
 
 # Rules for building objects
 

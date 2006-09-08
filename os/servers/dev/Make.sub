@@ -17,7 +17,7 @@ srv_dev_stubfiles = $(foreach stubname, $(srv_dev_stubnames), $(call stubgen_obj
 OBJS += $(addprefix $(S)/os/servers/dev/, $(srv_dev_libk_objs)) \
 	$(addprefix $(S)/os/servers/dev/, $(srv_dev_baseServers_objs)) \
         $(srv_dev_stubfiles)
-libkobjs += $(addprefix $(S)/os/servers/dev/, $(srv_dev_libk_objs))
+libk_objs += $(addprefix $(S)/os/servers/dev/, $(srv_dev_libk_objs))
 baseServers_objs += $(addprefix $(S)/os/servers/dev/, $(srv_dev_baseServers_objs))
 
 # Rules for building objects

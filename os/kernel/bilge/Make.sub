@@ -29,7 +29,7 @@ kbilgeobjs = $(libkbilgeobjs) \
 
 OBJS += $(S)/os/kbilgeobjs.o
 OBJS += $(addprefix $(S)/os/kernel/bilge/, $(kbilgeobjs))
-libkobjs += $(addprefix $(S)/os/kernel/bilge/, $(libkbilgeobjs))
+libk_objs += $(addprefix $(S)/os/kernel/bilge/, $(libkbilgeobjs))
 
 # Rules for building objects in this directory
 $(S)/os/kbilgeobjs.o: $(addprefix $(S)/os/kernel/bilge/, $(kbilgeobjs))

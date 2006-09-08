@@ -12,7 +12,7 @@ srv_pipe_stubfiles = $(foreach stubname, $(srv_pipe_stubnames), $(call stubgen_o
 OBJS += $(addprefix $(S)/os/servers/pipe/, $(libk_srv_pipe_objs)) \
 	$(addprefix $(S)/os/servers/pipe/, $(srv_pipe_baseServers_objs)) \
         $(srv_pipe_stubfiles)
-libkobjs += $(addprefix $(S)/os/servers/pipe/, $(libk_srv_pipe_objs))
+libk_objs += $(addprefix $(S)/os/servers/pipe/, $(libk_srv_pipe_objs))
 baseServers_objs += $(addprefix $(S)/os/servers/pipe/, $(srv_pipe_baseServers_objs))
 
 # Rules for building objects

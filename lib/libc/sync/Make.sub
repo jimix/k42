@@ -1,9 +1,9 @@
 # Objects and include files from here
 
-libksyncobjs = BLockAsm.o BLockGeneric.o BLockImp.o Barrier.o 		   \
-	       BlockedThreadQueues.o FairBLock.o MPMsgMgr.o		   \
-               MPMsgMgrDisabled.o MPMsgMgrEnabled.o RequestCount.o	   \
-               SLock.o atomic.o
+lib_sync_objs = BLockAsm.o BLockGeneric.o BLockImp.o Barrier.o 		   \
+	        BlockedThreadQueues.o FairBLock.o MPMsgMgr.o		   \
+                MPMsgMgrDisabled.o MPMsgMgrEnabled.o RequestCount.o	   \
+                SLock.o atomic.o
 
 sync_includes = atomic.h Barrier.H BlockedThreadQueues.H BLockGeneric.H	   \
 	    BLock.H FairBLock.H Lock.H MPMsgMgrDisabled.H MPMsgMgrEnabled.H\
@@ -13,8 +13,9 @@ sync_includes = atomic.h Barrier.H BlockedThreadQueues.H BLockGeneric.H	   \
 sync_powerpc_includes = atomic.h BLock.H FairBLock.H
 
 # Top-level variables that use need to know about these objs
-OBJS += $(addprefix $(S)/lib/libc/sync/, $(libksyncobjs))
-libkobjs += $(addprefix $(S)/lib/libc/sync/, $(libksyncobjs))
+OBJS += $(addprefix $(S)/lib/libc/sync/, $(lib_sync_objs))
+libk_objs += $(addprefix $(S)/lib/libc/sync/, $(lib_sync_objs))
+libbase_objs += $(addprefix $(S)/lib/libc/sync/, $(lib_sync_objs))
 lib_includes += $(addprefix $(O)/install/include/sync/, $(sync_includes))
 lib_includes += $(addprefix $(O)/install/include/sync/arch/$(HOST)/, $(sync_$(HOST)_includes))
 

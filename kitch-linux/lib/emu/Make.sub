@@ -1,0 +1,41 @@
+libemu_includes = FD.H SignalUtils.H sandbox.H stat.H
+
+libemu_srcs +=  getdents64.C ftruncate64.C truncate64.C FD.C   		     \
+  		linuxLibInit.C linuxSpawn.C linuxEmul.C linuxFileIO.C 	     \
+  		linuxSocket.C _llseek.C accept.C access.C alarm.C 	     \
+  		bind.C brk.C chdir.C chmod.C chown.C chroot.C clone.C 	     \
+  		close.C connect.C dup.C dup2.C execve.C exit.C  fchdir.C     \
+  		fchmod.C fchown.C fcntl.C fdatasync.C flock.C 		     \
+  		fork.C fsync.C ftruncate.C getcwd.C getpagesize.C	     \
+  		getpeername.C getpid.C getrlimit.C getsockname.C	     \
+  		gettimeofday.C ioctl.C ipc.C kill.C lchown.C link.C	     \
+  		listen.C lseek.C mkdir.C mknod.C mmap.C msg.C nanosleep.C    \
+  		setrlimit.C open.C personality.C pipe.C poll.C		     \
+  		pread.C ptrace.C pwrite.C read.C readlink.C readv.C 	     \
+  		recv.C recvfrom.C recvmsg.C rename.C rmdir.C sched_yield.C   \
+  		select.C semctl.C semget.C semop.C send.C sendfile.C	     \
+  		sendto.C sendmsg.C sethostname.C setsockopt.C settimeofday.C \
+  		setuid.C shmat.C shmctl.C shmdt.C shmget.C shutdown.C 	     \
+		socket.C socketcall.C statfs.C stime.C symlink.C sync.C      \
+		sysctl.C time.C times.C truncate.C umask.C uname.C unlink.C  \
+		utimes.C utime.C vfork.C wait4.C write.C writev.C dostat.C   \
+		dofstat.C dolstat.C stat.C getpmsg.C clock_gettime.C mount.C
+libemu_objs += $(addprefix $(S)/kitch-linux/lib/emu/, $(libemu_srcs:.C=.o))
+
+COMPILE_DATE='"$(shell date)"'
+libemu_cxxflags = -DCOMPILE_DATE=$(COMPILE_DATE) $(CXXFLAGS)
+
+OBJS += $(libemu_objs)
+lib_includes += $(addprefix $(O)/install/include/emu/, $(libemu_includes))
+
+$(S)/kitch-linux/lib/emu/%.o: $(H)/kitch-linux/lib/emu/%.C
+	$(call status, CXX, $@)
+	$(CXX) -c $(libemu_cxxflags) $(IFLAGS) $< -o $@
+
+$(O)/install/include/emu/%.H: $(H)/kitch-linux/lib/emu/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/lib/$(HOST)/$(D)Deb/libemu.a: $(libemu_objs)
+	$(call status, AR, $@)
+	$(AR) crs $@ $?

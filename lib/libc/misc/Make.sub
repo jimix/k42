@@ -18,7 +18,7 @@ misc_powerpc_includes = asm.h asmdef.h alloca.H hardware.H expedient.H      \
 
 # Objects and include files from here
 
-libkmiscobjs = BaseRandom.o BlockSet.o DiskMountInfoList.o          \
+lib_misc_objs = BaseRandom.o BlockSet.o DiskMountInfoList.o          \
                HashSimple.o ListSimple.o ListSimpleKey.o            \
                SharedBufferConsumer.o SharedBufferProducer.o        \
                SharedBufferProducerUser.o expedient.o               \
@@ -26,8 +26,9 @@ libkmiscobjs = BaseRandom.o BlockSet.o DiskMountInfoList.o          \
                testSupport.o volatileFrame.o
 
 # Top-level variables that use need to know about these objs
-OBJS += $(addprefix $(S)/lib/libc/misc/, $(libkmiscobjs))
-libkobjs += $(addprefix $(S)/lib/libc/misc/, $(libkmiscobjs))
+OBJS += $(addprefix $(S)/lib/libc/misc/, $(lib_misc_objs))
+libk_objs += $(addprefix $(S)/lib/libc/misc/, $(lib_misc_objs))
+libbase_objs += $(addprefix $(S)/lib/libc/misc/, $(lib_misc_objs))
 lib_includes += $(addprefix $(O)/install/include/misc/, $(misc_includes))
 lib_includes += $(addprefix $(O)/install/include/misc/arch/$(HOST)/, \
 			    $(misc_$(HOST)_includes))

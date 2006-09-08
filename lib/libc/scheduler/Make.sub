@@ -1,9 +1,13 @@
 # Objects and include files from here
 
-libkschedulerobjs = DispatcherDefault.o DispatcherDefaultAsm.o                \
-                    DispatcherDefaultExp.o DispatcherMgr.o Scheduler.o        \
-		    SchedulerService.o SchedulerTimer.o StubSchedulerService.o\
-		    Thread.o TimerEvent.o TimerRequest.o XSchedulerService.o
+lib_scheduler_objs = DispatcherDefault.o DispatcherDefaultAsm.o       \
+		     DispatcherDefaultAsmUser.o DispatcherDefaultExp.o \
+		     DispatcherMgr.o Scheduler.o SchedulerService.o   \
+		     SchedulerTimer.o StubSchedulerService.o Thread.o \
+		     TimerEvent.o TimerRequest.o XSchedulerService.o
+
+lib_scheduler_libk_objs = $(filter-out DispatcherDefaultAsmUser.o, $(lib_scheduler_objs))
+lib_scheduler_libbase_objs = $(lib_scheduler_objs)
 
 scheduler_includes = Thread.H Scheduler.H DispatcherDefault.H \
                      DispatcherDefaultExp.H SchedulerTimer.H \
@@ -12,14 +16,15 @@ scheduler_includes = Thread.H Scheduler.H DispatcherDefault.H \
 
 scheduler_powerpc_includes = DispatcherDefault.H DispatcherDefaultExp.H
 
-lib_libc_scheduler_stubobjs = $(filter Stub%.o, $(libkschedulerobjs))
+lib_libc_scheduler_stubobjs = $(filter Stub%.o, $(lib_scheduler_objs))
 lib_libc_scheduler_stubnames = $(patsubst Stub%.o, % ,$(lib_libc_scheduler_stubobjs))
 lib_libc_scheduler_stubfiles = $(foreach stubname, $(lib_libc_scheduler_stubnames), $(call stubgen_objects, $(S)/lib/libc/scheduler,$(stubname)))
 
 # Top-level variables that use need to know about these objs
-OBJS += $(addprefix $(S)/lib/libc/scheduler/, $(libkschedulerobjs)) \
+OBJS += $(addprefix $(S)/lib/libc/scheduler/, $(lib_scheduler_objs)) \
         $(lib_libc_scheduler_stubfiles)
-libkobjs += $(addprefix $(S)/lib/libc/scheduler/, $(libkschedulerobjs))
+libk_objs += $(addprefix $(S)/lib/libc/scheduler/, $(lib_scheduler_libk_objs))
+libbase_objs += $(addprefix $(S)/lib/libc/scheduler/, $(lib_scheduler_libbase_objs))
 
 lib_includes += $(addprefix $(O)/install/include/scheduler/, \
 			    $(scheduler_includes))

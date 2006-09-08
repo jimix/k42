@@ -25,7 +25,7 @@ lib_libc_sys_stubfiles = $(foreach stubname, $(lib_libc_sys_stubnames), $(call s
 OBJS += $(addprefix $(S)/lib/libc/sys/, $(libksysobjs)) \
         $(lib_libc_sys_stubfiles)
 
-libkobjs += $(addprefix $(S)/lib/libc/sys/, $(libksysobjs))
+libk_objs += $(addprefix $(S)/lib/libc/sys/, $(libksysobjs))
 
 lib_includes += $(addprefix $(O)/install/include/sys/, $(sys_includes))
 lib_includes += $(addprefix $(O)/install/include/sys/arch/$(HOST)/, $(sys_$(HOST)_includes))

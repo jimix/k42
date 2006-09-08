@@ -1,0 +1,24 @@
+libk_objs +=  $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o               \
+              $(S)/usr/XUsrTst.o
+
+usr_stubobjs = $(S)/usr/StubIPCTst.o $(S)/usr/StubUsrTst.o
+usr_stubnames = $(patsubst Stub%.o, % ,$(usr_stubobjs))
+usr_stubfiles = $(foreach stubname, $(lib_libc_cobj_stubnames), $(call stubgen_objects, $(S)/usr,$(stubname)))
+
+usr_iflags = -I$(H)/usr $(IFLAGS)
+
+$(call stubgen_targets, $(S)/lib/libc/cobj): $(H)/lib/libc/cobj/%.H
+	$(call status, STUBGEN, $@)
+	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
+	        $(filter-out -MD, $(CXXFLAGS)) \
+	        -w -I. $(IFLAGS) $(usr_iflags) -D_IN_STUBGEN
+	$(RM) -f $(shell basename $< .H).stubgen.d
+
+$(S)/usr/%.o: $(H)/usr/%.C
+	$(call status, CXX, $@)
+	$(CXX) -c $(CXXFLAGS) $(usr_iflags) $< -o $@
+
+$(S)/usr/%.o: $(S)/usr/%.C
+	$(call status, CXX, $@)
+	$(CXX) -c $(CXXFLAGS) $(usr_iflags) $< -o $@
+

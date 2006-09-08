@@ -6,7 +6,7 @@ trace_powerpc_includes = traceReserve.H
 
 # Top-level variables that use need to know about these objs
 OBJS += $(addprefix $(S)/lib/libc/trace/, $(libktraceobjs))
-libkobjs += $(addprefix $(S)/lib/libc/trace/, $(libktraceobjs))
+libk_objs += $(addprefix $(S)/lib/libc/trace/, $(libktraceobjs))
 lib_includes += $(addprefix $(O)/install/include/trace/, $(trace_includes))
 lib_includes += $(addprefix $(O)/install/include/trace/arch/$(HOST)/, $(trace_$(HOST)_includes))
 

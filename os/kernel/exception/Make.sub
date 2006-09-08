@@ -11,7 +11,7 @@ $(S)/os/kexceptobjs.o: $(addprefix $(S)/os/kernel/exception/, $(kexceptobjs))
 OBJS += $(S)/os/kexceptobjs.o
 OBJS += $(addprefix $(S)/os/kernel/exception/, $(kexceptobjs))
 OBJS += $(call stubgen_objects, $(S)/os/kernel/exception,CPUContainer)
-libkobjs += $(S)/os/kernel/exception/StubCPUContainer.o			   \
+libk_objs += $(S)/os/kernel/exception/StubCPUContainer.o
 
 # Should these flags be based off of $(kflags), etc?
 kernel_except_cxxflags = $(CXXFLAGS) -MD -DKERNEL 

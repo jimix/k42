@@ -44,7 +44,7 @@ libkmemobjs += StubFR.o StubFRCRW.o StubFRComputation.o StubFRKernelPinned.o \
 
 # kmemobjs.o subobjects
 OBJS += $(addprefix $(S)/os/kernel/mem/, $(kmemobjs))
-libkobjs += $(addprefix $(S)/os/kernel/mem/, $(libkmemobjs))
+libk_objs += $(addprefix $(S)/os/kernel/mem/, $(libkmemobjs))
 
 # Add each stub in kmemobjs to the list of objects to make/clean
 kernel_mem_stubobjs = $(filter Stub%.o, $(kmemobjs))

@@ -1,5 +1,5 @@
 # Objects and include files from here
-libkcallocobjs = AllocCell.o AllocPool.o AllocRegionManager.o \
+lib_alloc_objs = AllocCell.o AllocPool.o AllocRegionManager.o \
                  AllocStats.o DataChunk.o GMalloc.o LMalloc.o \
                  LMallocOpt.o LeakProof.o MemDesc.o	      \
                  MemoryMgrPrimitive.o ObjCache.o PMalloc.o    \
@@ -13,8 +13,9 @@ alloc_includes = alloc.H AllocPool.H LMalloc.H AllocCell.H      \
             AllocStats.H PMalloc.H ObjCache.H
 
 # Top-level variables that use need to know about these objs
-OBJS += $(addprefix $(S)/lib/libc/alloc/, $(libkcallocobjs))
-libkobjs += $(addprefix $(S)/lib/libc/alloc/, $(libkcallocobjs))
+OBJS += $(addprefix $(S)/lib/libc/alloc/, $(lib_alloc_objs))
+libk_objs += $(addprefix $(S)/lib/libc/alloc/, $(lib_alloc_objs))
+libbase_objs += $(addprefix $(S)/lib/libc/alloc/, $(lib_alloc_objs))
 lib_includes += $(addprefix $(O)/install/include/alloc/, $(alloc_includes))
 lib_includes += $(O)/install/include/sys/PageAllocator.H \
 		$(O)/install/include/sys/LeakProof.H

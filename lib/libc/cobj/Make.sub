@@ -1,6 +1,6 @@
 # Objects and include files from here
 
-libkcobjobjs = BaseObj.o COList.o COListServer.o CObjRep.o           \
+lib_cobj_objs = BaseObj.o COList.o COListServer.o CObjRep.o           \
                CObjRepArbiter.o CObjRepArbiterCallCounter.o          \
                CObjRepArbiterTarget.o CObjRepMediator.o              \
                CObjRoot.o CObjRootArbiter.o CObjRootMediator.o       \
@@ -10,6 +10,9 @@ libkcobjobjs = BaseObj.o COList.o COListServer.o CObjRep.o           \
                TypeMgr.o TypeMgrServer.o XCOListServer.o             \
                XHandleTrans.o XObj.o XObjectList.o XTypeMgrServer.o  \
                arbiterMethods.o missHandlingtest.o
+	       
+libk_cobj_objs = $(lib_cobj_objs)
+libbase_cobj_objs = $(filter-out TypeMgrServer.o, $(lib_cobj_objs))
 
 cobj_includes = CObjRep.H CObjRoot.H CObjRootSingleRep.H CObjRootMultiRep.H \
            ObjectRefs.H XHandleTrans.H XObjectList.H BaseObj.H Obj.H   \
@@ -18,14 +21,15 @@ cobj_includes = CObjRep.H CObjRoot.H CObjRootSingleRep.H CObjRootMultiRep.H \
            CObjRootArbiter.H DataTransfer.H DTType.H CObjGlobals.H     \
            Factory.H COListServer.H COList.H
 
-lib_libc_cobj_stubobjs = $(filter Stub%.o, $(libkcobjobjs))
+lib_libc_cobj_stubobjs = $(filter Stub%.o, $(lib_cobj_objs))
 lib_libc_cobj_stubnames = $(patsubst Stub%.o, % ,$(lib_libc_cobj_stubobjs))
 lib_libc_cobj_stubfiles = $(foreach stubname, $(lib_libc_cobj_stubnames), $(call stubgen_objects, $(S)/lib/libc/cobj,$(stubname)))
 
 # Top-level variables that use need to know about these objs
-OBJS += $(addprefix $(S)/lib/libc/cobj/, $(libkcobjobjs)) \
+OBJS += $(addprefix $(S)/lib/libc/cobj/, $(lib_cobj_objs)) \
         $(lib_libc_cobj_stubfiles)
-libkobjs += $(addprefix $(S)/lib/libc/cobj/, $(libkcobjobjs))
+libk_objs += $(addprefix $(S)/lib/libc/cobj/, $(libk_cobj_objs))
+libbase_objs += $(addprefix $(S)/lib/libc/cobj/, $(libbase_cobj_objs))
 lib_includes += $(addprefix $(O)/install/include/cobj/, $(cobj_includes))
 
 # Rules for building objects and installing include files

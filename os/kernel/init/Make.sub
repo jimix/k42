@@ -7,7 +7,7 @@ kinitobjs = StubAsyncTester.o StubServerState.o StubInitServer.o	\
             XInitServer.o ServerState.o InitServer.o
 $(S)/os/kinitobjs.o: $(addprefix $(S)/os/kernel/init/, $(kinitobjs))
 
-libkobjs += $(S)/os/kernel/init/StubAsyncTester.o			   \
+libk_objs += $(S)/os/kernel/init/StubAsyncTester.o			   \
             $(S)/os/kernel/init/StubInitServer.o			   \
             $(S)/os/kernel/init/StubServerState.o			   \
             $(S)/os/kernel/init/XAsyncTester.o	

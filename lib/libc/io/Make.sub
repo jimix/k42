@@ -1,17 +1,25 @@
 # Objects and include files from here
 
-libkioobjs += DirBuf.o IO.o IOForkManager.o IORingBuffer.o MemTrans.o \
-              PathName.o StubBlockDev.o StubCallBackObj.o             \
-              StubFileLinuxClientStream.o StubFileLinuxServer.o       \
-              StubMemTrans.o StubNameTreeLinux.o StubPAPageServer.o   \
-              StubPacketServer.o StubSocketServer.o StubStreamServer.o\
-              StubStreamServerTTY.o StubSysVMessagesClient.o          \
-              StubVAPageServer.o StubVirtFile.o XBlockDev.o           \
-              XCallBackObj.o XFileLinuxClientStream.o                 \
-              XFileLinuxServer.o XMemTrans.o XNameTreeLinux.o         \
-              XPAPageServer.o XStreamServer.o XStreamServerTTY.o      \
-              XSysVMessagesClient.o XVAPageServer.o XVirtFile.o       \
-              cprintf.o printfBuf.o
+lib_io_common_objs = IOForkManager.o cprintf.o printfBuf.o PathName.o 	     \
+		     IO.o DirBuf.o MemTrans.o IORingBuffer.o 	             \
+	             StubBlockDev.o StubCallBackObj.o                        \
+                     StubFileLinuxClientStream.o StubFileLinuxServer.o       \
+                     StubMemTrans.o StubNameTreeLinux.o StubPAPageServer.o   \
+                     StubPacketServer.o StubSocketServer.o StubStreamServer.o\
+                     StubStreamServerTTY.o StubSysVMessagesClient.o          \
+                     StubVAPageServer.o StubVirtFile.o XBlockDev.o           \
+                     XCallBackObj.o XFileLinuxClientStream.o                 \
+                     XFileLinuxServer.o XMemTrans.o XNameTreeLinux.o         \
+                     XPAPageServer.o XStreamServer.o XStreamServerTTY.o      \
+                     XSysVMessagesClient.o XVAPageServer.o XVirtFile.o       \
+
+lib_io_base_objs = Buffer.o DirBuf.o DiskClient.o DiskClientAsync.o   \
+		   FileLinux.o FileLinuxDevNull.o FileLinuxDevRandom.o\
+		   FileLinuxDevZero.o FileLinuxDevRandom.o  	      \
+		   FileLinuxDir.o FileLinuxPacket.o FileLinuxSocket.o \
+		   FileLinuxSocketInet.o FileLinuxSocketUnix.o	      \
+		   FileLinuxStream.o FileLinuxVirtFile.o 	      \
+		   SysVMessagesClient.o thinwire.o
 
 libio_includes = BlockDev.H Buffer.H CallBackObj.H DirBuf.H DiskClientAsync.H \
 	    DiskClientAsyncRO.H DiskClient.H DiskClientRO.H  		    \
@@ -25,15 +33,17 @@ libio_includes = BlockDev.H Buffer.H CallBackObj.H DirBuf.H DiskClientAsync.H \
 	    PacketServer.H PAPageServer.H PathName.H Socket.H SocketServer.H\
 	    StreamServer.H SysVMessagesClient.H VAPageServer.H VirtFile.H
 
-lib_libc_io_stubobjs = $(filter Stub%.o, $(libkioobjs))
+lib_libc_io_stubobjs = $(filter Stub%.o, $(lib_io_common_objs))
 lib_libc_io_stubnames = $(patsubst Stub%.o, % ,$(lib_libc_io_stubobjs))
 lib_libc_io_stubfiles = $(foreach stubname, $(lib_libc_io_stubnames), $(call stubgen_objects, $(S)/lib/libc/io,$(stubname)))
 
 # Top-level variables that use need to know about these objs
 
-OBJS += $(addprefix $(S)/lib/libc/io/, $(libkioobjs)) \
-        $(lib_libc_io_stubfiles)
-libkobjs += $(addprefix $(S)/lib/libc/io/, $(libkioobjs))
+OBJS += $(addprefix $(S)/lib/libc/io/, $(lib_io_common_objs) \
+	            $(lib_io_base_objs)) $(lib_libc_io_stubfiles)
+libk_objs += $(addprefix $(S)/lib/libc/io/, $(lib_io_common_objs))
+libbase_objs += $(addprefix $(S)/lib/libc/io/, $(lib_io_base_objs) \
+					       $(lib_io_common_objs))
 lib_includes += $(addprefix $(O)/install/include/io/, $(libio_includes)) 
 
 # Rules for building objects and installing include files

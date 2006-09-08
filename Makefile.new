@@ -64,7 +64,7 @@ CFLAGS = -DTARGET_MACHINE="$(HOST)" -DHOST_MACHINE="$(FULLHOST)" \
 CXXFLAGS = -fno-rtti -nostdinc++ -fno-exceptions $(CFLAGS)
 
 IFLAGS = -I$(O)/install/include					\
-         -I$(IMG)/usr/$(FULLHOST)-linux/include	\
+	 -I$(IMG)/usr/$(FULLHOST)-linux/include			\
          -I$(L)/include						\
          -I$(O)/install/gcc-include/arch/$(HOST)		\
          -I$(O)/install/include/stubgen/arch/$(HOST)		\
@@ -115,7 +115,7 @@ endif
 .PHONY: k42-vmlinux k42-zImage includes servers dirs config all clean FORCE
 
 # Default target is just the directory skeleton and our bootable kernel.
-k42-vmlinux: dirs includes $(S)/os/servers/baseServers/baseServers $(S)/os/k42-vmlinux
+k42-vmlinux: dirs includes libraries $(S)/os/servers/baseServers/baseServers $(S)/os/k42-vmlinux
 
 # For some machines we need a compressed kernel.
 k42-zImage: dirs $(S)/os/servers/baseServers/baseServers $(S)/os/k42-zImage
@@ -169,11 +169,17 @@ include os/kernel/linux/Make.sub
 
 # Include library submakefiles (currently just libk.a)
 # This defines the following variables that define hte objects that go in
-# various related libraries:
+# various related libraries that span multiple directories
 # - $(libbase_objs)  - $(libk_objs)
-# - $(libemu_objs)   - $(libnative_objs) 
+# - $(libnative_objs)- $(libemu_objs) 
 # - $(libfs_objs)    - $(libvirt_objs) 
-# - $(liblk_objs)  # - $(libsrv_objs) 
+# - $(liblk_objs)    - $(libsrv_objs) 
+# Libraries that should be built before building servers and the kernel are
+# listed in the variable $(build_libraries)
+
+build_libraries = $(O)/install/lib/$(HOST)/$(D)Deb/libk.a \
+		  $(O)/install/lib/$(HOST)/$(D)Deb/libemu.a \
+#		  $(O)/install/lib/$(HOST)/$(D)Deb/libbase.a \
 
 include lib/libc/alloc/Make.sub
 include lib/libc/cobj/Make.sub
@@ -187,6 +193,9 @@ include lib/libc/sync/Make.sub
 include lib/libc/sys/Make.sub
 include lib/libc/trace/Make.sub
 include lib/libc/usr/Make.sub
+
+include kitch-linux/lib/emu/arch/$(HOST)/Make.sub
+include kitch-linux/lib/emu/Make.sub
 
 # Include server submakefiles
 
@@ -209,15 +218,17 @@ include os/servers/userProc/Make.sub
 include os/servers/baseServers/Make.sub		# has to be last of the servers
 include os/servers/Make.sub			# construct bootServers.o
 
-libkobjs+= \
-           $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o		   \
-           $(S)/usr/XUsrTst.o
+include usr/Make.sub
 
-OBJS += $(O)/install/lib/$(HOST)/$(D)Deb/libk.a
-$(O)/install/lib/$(HOST)/$(D)Deb/libk.a: $(libkobjs)
+################################################################################
+# Rules for building kernel libraries that span directories
+################################################################################
+OBJS += $(build_libraries)
+OBJS += $(libk_objs)
+
+$(O)/install/lib/$(HOST)/$(D)Deb/libk.a: $(libk_objs)
 	$(call status, AR, $@)
 	$(AR) crs $@ $?
-
 
 lflags = -fno-rtti -nostdinc++ -fno-exceptions -DTARGET_MACHINE="$(HOST)" \
         -D__GNU_AS__ -Upowerpc -DGCC3 -MD -Wa,-strip-local-absolute	  \
@@ -246,9 +257,12 @@ OBJS += $(lib_includes)
 ###############################################################################
 # Phony targets expanded from rules defined above
 
-servers: $(build_servers)
+servers: $(build_servers) libraries
+
+libraries: $(build_libraries) includes
 
 includes: $(lib_includes)
+
 
 # Now that OBJS is totally expanded, generate our directory list from it.
 DIRS = $(sort $(foreach obj, $(OBJS), $(dir $(obj))))

@@ -17,7 +17,7 @@ OBJS += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_libk_objs)) \
 	$(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_baseServers_objs))\
         $(srv_k42Ramfs_stubfiles) 
 
-libkobjs += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_libk_objs))
+libk_objs += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_libk_objs))
 build_servers += $(S)/os/servers/k42Ramfs/k42RamfsServer
 baseServers_objs += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_baseServers_objs))
 

@@ -10,7 +10,7 @@ $(S)/os/kprocobjs.o: $(addprefix $(S)/os/kernel/proc/, $(kprocobjs))
 
 OBJS += $(addprefix $(S)/os/kernel/proc/, $(kprocobjs))
 OBJS += $(S)/os/kprocobjs.o
-libkobjs += $(S)/os/kernel/proc/StubProcessSetKern.o \
+libk_objs += $(S)/os/kernel/proc/StubProcessSetKern.o \
 	    $(S)/os/kernel/proc/StubProcessServer.o
 
 # Add each stub in kprocobjs to the list of objects to make/clean

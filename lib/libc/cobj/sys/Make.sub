@@ -1,4 +1,4 @@
-libkcobjsysobjs = ActiveThrdCnt.o COSDefaultObject.o COSMgrObject.o  \
+lib_cobj_sys_objs = ActiveThrdCnt.o COSDefaultObject.o COSMgrObject.o  \
                   TransPageDesc.o TransPageDescHash.o                \
                   TransPageDescList.o defaultFuncs.o mediateMethods.o
 
@@ -9,8 +9,9 @@ cobjsysincs = COSMgr.H COSMgrObject.H COSMissHandler.H             \
               TransPageDesc.H ActiveThrdCnt.H CODesc.H
 
 # Top-level variables that use need to know about these objs
-OBJS += $(addprefix $(S)/lib/libc/cobj/sys/, $(libkcobjsysobjs))
-libkobjs += $(addprefix $(S)/lib/libc/cobj/sys/, $(libkcobjsysobjs))
+OBJS += $(addprefix $(S)/lib/libc/cobj/sys/, $(lib_cobj_sys_objs))
+libk_objs += $(addprefix $(S)/lib/libc/cobj/sys/, $(lib_cobj_sys_objs))
+libbase_objs += $(addprefix $(S)/lib/libc/cobj/sys/, $(lib_cobj_sys_objs))
 lib_includes += $(addprefix $(O)/install/include/cobj/sys/, $(cobjsysincs))
 
 $(O)/install/include/cobj/sys/%.H: $(H)/lib/libc/cobj/sys/%.H
