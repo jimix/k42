@@ -22,6 +22,8 @@ lib_io_base_objs = Buffer.o DirBuf.o DiskClient.o DiskClientAsync.o   \
 		   FileLinuxStream.o FileLinuxVirtFile.o 	      \
 		   SysVMessagesClient.o thinwire.o
 
+lib_io_srv_objs = StreamServer.o XPacketServer.o XStreamServer.o
+
 libio_includes = BlockDev.H Buffer.H CallBackObj.H DirBuf.H DiskClientAsync.H \
 	    DiskClientAsyncRO.H DiskClient.H DiskClientRO.H  		    \
 	    FileLinuxClientStream.H FileLinuxDevNull.H FileLinuxDevRandom.H \
@@ -41,11 +43,13 @@ lib_libc_io_stubfiles = $(foreach stubname, $(lib_libc_io_stubnames), $(call stu
 # Top-level variables that use need to know about these objs
 
 OBJS += $(addprefix $(S)/lib/libc/io/, $(lib_io_common_objs) \
-	            $(lib_io_base_objs)) $(lib_libc_io_stubfiles)
+	            $(lib_io_base_objs) $(lib_io_srv_objs))  \
+	$(lib_libc_io_stubfiles)
 libk_objs += $(addprefix $(S)/lib/libc/io/, $(lib_io_common_objs))
 libbase_objs += $(addprefix $(S)/lib/libc/io/, $(lib_io_base_objs) \
 					       $(lib_io_common_objs))
 lib_includes += $(addprefix $(O)/install/include/io/, $(libio_includes)) 
+build_libraries += $(O)/install/lib/$(HOST)/$(D)Deb/libsrv.a
 
 # Rules for building objects and installing include files
 
@@ -79,3 +83,7 @@ $(S)/lib/libc/io/%.o: $(H)/lib/libc/io/%.C
 $(S)/lib/libc/io/%.o: $(H)/lib/libc/io/arch/$(HOST)/%.S
 	$(call status, AS, $@)
 	$(CXX) $(CFLAGS) -D__ASSEMBLEY_ $(IFLAGS) $(lib_libc_io_iflags) -c $^ -o $@
+
+$(O)/install/lib/$(HOST)/$(D)Deb/libsrv.o: $(addprefix $(S)/lib/libc/io/, $(lib_io_srv_objs))
+	$(call status, AR, $@)
+	$(AR) crs $@ $<

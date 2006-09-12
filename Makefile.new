@@ -188,6 +188,7 @@ include lib/libc/alloc/Make.sub
 include lib/libc/cobj/Make.sub
 include lib/libc/cobj/sys/Make.sub
 include lib/libc/fslib/Make.sub
+include lib/libc/fslib/virtfs/Make.sub
 include lib/libc/io/Make.sub
 include lib/libc/misc/Make.sub
 include lib/libc/scheduler/Make.sub
@@ -197,6 +198,8 @@ include lib/libc/sys/arch/$(HOST)/Make.sub
 include lib/libc/sys/Make.sub
 include lib/libc/trace/Make.sub
 include lib/libc/usr/Make.sub
+
+include lib/lk/Make.sub
 
 include kitch-linux/lib/emu/arch/$(HOST)/Make.sub
 include kitch-linux/lib/emu/Make.sub
