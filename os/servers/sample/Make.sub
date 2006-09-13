@@ -12,7 +12,8 @@ src_sample_misc_objs = sample.o SampleServiceServer.o sampleServer sampleServer.
 OBJS += $(addprefix $(S)/os/servers/sample/, $(srv_sample_lib_objs)) \
 	$(addprefix $(S)/os/servers/sample/, $(srv_sample_misc_objs)) \
         $(srv_sample_stubfiles)
-lib_objs += $(addprefix $(S)/os/servers/sample/, $(srv_sample_lib_objs))
+libbase_objs += $(addprefix $(S)/os/servers/sample/, StubSampleService.o SampleServiceWrapper.o)
+libk_objs += $(addprefix $(S)/os/servers/sample/, StubSampleService.o)
 build_servers += $(O)/install/$(HOST)/$(D)Deb/kitchroot/kbin/sampleServer
 
 # Rules for building objects

@@ -20,10 +20,14 @@ O = ..
 H = .
 S = $(O)/$(HOST)/$(D)Deb
 B = $(S)/os/kexec
+L = ../linux-030
+# Install directories, including top level, libraries, and root image
+I = $(O)/install/$(HOST)/$(D)Deb
+ILIB = $(O)/install/lib/$(HOST)/$(D)Deb
+IROOT = $(I)/kitchroot
+TOOLS = $(O)/install/tools/$(OS)_$(BUILD)/$(HOST)
 U = /u/kitchawa/k42-packages
 IMG = $(U)/$(D)Deb.Img.4
-L = ../linux-030
-TOOLS = $(O)/install/tools/$(OS)_$(BUILD)/$(HOST)
 
 # Include makefile that defines host-specific information
 include Make-$(HOST).sub
@@ -36,6 +40,7 @@ LD = $(CROSS_COMPILE)ld
 STRIP = $(CROSS_COMPILE)strip
 NM = $(CROSS_COMPILE)nm
 AR = $(CROSS_COMPILE)ar
+OBJDUMP = $(CROSS_COMPILE)objdump
 
 # 32-bit cross-compile tools.
 CC32 = $(CROSS32_COMPILE)gcc
@@ -50,6 +55,8 @@ BUILDCFLAGS = -g -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer
 BUILDCXXFALGS = $(BUILDCFLAGS)
 MKDIR = mkdir
 GZIP = gzip
+MV = mv
+RM = rm -f
 CP = cp
 PERL = perl
 AWK = awk
@@ -119,7 +126,7 @@ endif
 
 ################################################################################
 # Our non-file targets that don't depend on later variable definitions
-.PHONY: k42-vmlinux k42-zImage includes servers dirs config all clean FORCE
+.PHONY: k42-vmlinux k42-zImage includes servers libraries dirs config all clean FORCE
 
 # Default target is just the directory skeleton and our bootable kernel.
 k42-vmlinux: dirs includes libraries $(S)/os/servers/baseServers/baseServers $(S)/os/k42-vmlinux
@@ -208,6 +215,8 @@ include lib/lk/Make.sub
 include kitch-linux/lib/emu/arch/$(HOST)/Make.sub
 include kitch-linux/lib/emu/Make.sub
 
+include lib/Make.sub
+
 # Include server submakefiles
 
 include os/servers/dev/Make.sub
@@ -254,9 +263,9 @@ OBJS += $(lib_includes)
 ###############################################################################
 # Phony targets expanded from rules defined above
 
-servers: $(build_servers) libraries
+servers: libraries $(build_servers)
 
-libraries: $(build_libraries) includes
+libraries: includes $(build_libraries)
 
 includes: $(lib_includes)
 

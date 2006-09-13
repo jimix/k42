@@ -1,0 +1,130 @@
+# Submakefile to generate K42 shared libraries used by user-level applications
+# loaded into K42. Portions of the targets and variables used in this 
+# submakefile are defined in $(H)/lib/arch/$(HOST)/Make.sub which defines
+# the architecture-specific parts of this shared library. This submakefile is
+# included by the top-level makefile *prior* to including this one so that 
+# this inforamtion is already defined.
+
+K42LIB_ADDR=0x100070000000
+K42ALIAS_ADDR=0x100050000000
+KITCH_GLIBC=$(IMG)/usr/klib/libc.a
+RELOCATE=$(TOOLS)/relocate
+
+#OBJS += crt0s.o crt0c.o
+OBJS += $(IROOT)/klib/exec.so 
+OBJS += $(IROOT)/klib/libk42sys.so.1 $(IROOT)/klib/libk42sys.so
+OBJS += $(S)/lib/exec.so $(S)/lib/libk42sys.so.1
+
+build_libraries += $(IROOT)/klib/exec.so $(IROOT)/klib/libk42sys.so.1 \
+	           $(IROOT)/klib/libk42sys.so
+
+$(IROOT)/klib/libk42sys.so.1: $(S)/lib/libk42sys.so.1 
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(IROOT)/klib/libk42sys.so: $(S)/lib/libk42sys.so.1
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(IROOT)/klib/exec.so: $(S)/lib/exec.so 
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(S)/lib/_%.map: $(ILIB)/%.a
+	$(call status, OBJDUMP, $@)
+	$(OBJDUMP)  -w  -t $^ | \
+	  egrep ' [gwO] '| egrep -v 'UND' | egrep -v '@@' | egrep -v 'savef' |\
+	  sed -e 's/^.*[[:space:]][[:space:]]*\([@\._a-zA-Z0-9]*\)$$/  \1;/g'>$@
+
+$(S)/lib/k42sys.map: $(S)/lib/_libemu.map $(S)/lib/_libbase.map
+	echo 'K42_0.0.1 {' >$@
+	echo '	global:' >>$@
+	cat $^ |sort >>$@
+	echo '  local:' >>$@
+	echo '	*;' >>$@
+	echo '};' >>$@
+	echo 'GLIBC_2.2.5 { _sys_nerr; };' >>$@
+
+#This object file, when linked in last, forces the plt section to have
+#space allocated for it in the library file
+$(S)/lib/plt.o:
+	echo '.section .plt,"a"' | $(AS) - -o plt.o
+
+# XXX This should move into an architecture-dependent makefile
+# Generate the linker script from one of ld's default scripts
+$(S)/lib/k42sys.scp: $(H)/lib/elf64ppc.xsc
+	sed -e 's:\. = 0 + SIZEOF:\. = $(K42LIB_ADDR) + SIZEOF:' \
+	    -e  's/ALIGN (0x10000)/ALIGN (0x10000000)/' < $< > $@
+
+$(S)/lib/glibc_subset_symbols.list: $(H)/lib/glibc_subset.symbols
+	$(call status, SED, $@)
+	sed -e 's/[[:space:]]*#.*$$//' -e '/^$$/d' $< | sort > $@
+
+$(S)/lib/glibc_objfiles.list: $(S)/lib/glibc_subset_symbols.list $(KITCH_GLIBC)
+	$(call status, NM, $@) 
+	$(NM) -a $(KITCH_GLIBC) | \
+	    $(AWK) '/^.*:$$/ {file = $$1} / [WD] / {print $$3, file}' | \
+	    egrep -v '^(\.|__).*$$' | \
+	    sort | \
+	    join $(S)/lib/glibc_subset_symbols.list - | \
+	    sed -e 's/.* \(.*\):$$/\1/' | \
+	    sort -u > $@
+
+$(S)/lib/glibc_subset.a: $(S)/lib/glibc_objfiles.list $(KITCH_GLIBC)
+	$(call status, AR, $@) 
+	mkdir $(S)/lib/glibc_tmp
+	(cd $(S)/lib/glibc_tmp; \
+	    $(AR) xv $(KITCH_GLIBC) $$(cat ../glibc_objfiles.list); \
+	    $(AR) rv glibc_subset.a $$(cat ../glibc_objfiles.list); \
+	)
+	$(MV) $(S)/lib/glibc_tmp/glibc_subset.a $@
+	$(RM) -rf $(S)/lib/glibc_tmp
+
+$(S)/lib/k42sys.o: $(ILIB)/libbase.a $(ILIB)/libemu.a \
+		   $(S)/lib/libc/usr/ProgExecUsr.o $(S)/lib/glibc_subset.a
+	$(call status, CC, $@)
+	$(CC) -nostdlib -nostartfiles -r -o $@		\
+	    -Wl,--whole-archive $(ILIB)/libbase.a $(ILIB)/libemu.a \
+	    $(S)/lib/libc/usr/ProgExecUsr.o \
+	    -Wl,--no-whole-archive $(S)/lib/glibc_subset.a
+	@if $(NM) -p $@ | egrep -w U; then \
+	    echo "Error:  undefined symbols found in $@"; \
+	    echo "$(RM) $@"; \
+	    $(RM) $@; \
+	    false; \
+	fi
+
+.INTERMEDIATE: $(S)/lib/libk42sys.so.1.tmp
+
+# Create a library and then relocate it to the known load address
+# runProcessCommon will load this library for all apps 
+# (except resMgrServer and baseServers)
+$(S)/lib/exec.so $(S)/lib/exec.so.dbg: $(S)/lib/k42sys.o $(S)/lib/k42sys.scp $(S)/lib/k42sys.map \
+	          $(S)/lib/plt.o
+	$(call status, CC, $(S)/lib/exec.so)
+	$(CC) -nostdlib -nostartfiles -shared			\
+	    -o $(S)/lib/libk42sys.so.1.tmp			\
+ 	    $(S)/lib/k42sys.o $(S)/lib/plt.o			\
+	    -Wl,-e,_k42start					\
+	    -Wl,-Bsymbolic					\
+	    -Wl,-z,combreloc					\
+	    -Wl,--version-script=$(S)/lib/k42sys.map		\
+	    -Wl,-T,$(S)/lib/k42sys.scp				\
+	    -Wl,-Map,$(S)/lib/k42sys.loadmap			\
+	    -Wl,-soname=libk42sys.so.1
+	$(call status, RELOCATE, $(S)/lib/exec.so)
+	$(RELOCATE) -i $(S)/lib/libk42sys.so.1.tmp -o $(S)/lib/exec.so -l $(K42LIB_ADDR)
+	$(call status, CP, $(S)/lib/exec.so.dbg)
+	$(CP) $(S)/lib/exec.so $(S)/lib/exec.so.dbg
+	$(call status, STRIP, $(S)/lib/exec.so)
+	$(STRIP) $(S)/lib/exec.so
+
+# XXX Is this machine-dependent?
+# This creates the library to be loaded by ld.so to access k42 interfaces
+# When this library is loaded, it will actually make ld.so link to the already
+# loaded exec.so, so only 4K of data from this file is actually loaded into
+# the application.  mkreflib does magic on the elf headers to make this work.
+$(S)/lib/libk42sys.so.1: $(S)/lib/exec.so
+	$(call status, RELOCATE, $@)
+	$(RELOCATE) -i $< -o $@ -r -l $(K42ALIAS_ADDR)
+	$(RELOCATE) -i $<.dbg -o $@.dbg -r -l $(K42ALIAS_ADDR)
