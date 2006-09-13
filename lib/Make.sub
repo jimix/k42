@@ -112,7 +112,7 @@ $(S)/lib/exec.so $(S)/lib/exec.so.dbg: $(S)/lib/k42sys.o $(S)/lib/k42sys.scp $(S
 	    -Wl,-T,$(S)/lib/k42sys.scp				\
 	    -Wl,-Map,$(S)/lib/k42sys.loadmap			\
 	    -Wl,-soname=libk42sys.so.1
-	$(call status, RELOCATE, $(S)/lib/exec.so)
+	$(call status, RELOC, $(S)/lib/exec.so)
 	$(RELOCATE) -i $(S)/lib/libk42sys.so.1.tmp -o $(S)/lib/exec.so -l $(K42LIB_ADDR)
 	$(call status, CP, $(S)/lib/exec.so.dbg)
 	$(CP) $(S)/lib/exec.so $(S)/lib/exec.so.dbg
@@ -125,6 +125,6 @@ $(S)/lib/exec.so $(S)/lib/exec.so.dbg: $(S)/lib/k42sys.o $(S)/lib/k42sys.scp $(S
 # loaded exec.so, so only 4K of data from this file is actually loaded into
 # the application.  mkreflib does magic on the elf headers to make this work.
 $(S)/lib/libk42sys.so.1: $(S)/lib/exec.so
-	$(call status, RELOCATE, $@)
+	$(call status, RELOC, $@)
 	$(RELOCATE) -i $< -o $@ -r -l $(K42ALIAS_ADDR)
 	$(RELOCATE) -i $<.dbg -o $@.dbg -r -l $(K42ALIAS_ADDR)

@@ -64,15 +64,13 @@ baseServers_lflags = -static -Wl,-e,_k42start                          \
 	             -Wl,--whole-archive -lemu -Wl,--no-whole-archive   \
 		     -llk26 -lvirtfs -lfs -lsrv -lbase -lc
 
-baseServers_ldeps1 = libemu.a liblk26.a libvirtfs.a libfs.a libsrv.a
-
 baseServers_ldeps = $(addprefix $(O)/install/lib/$(HOST)/$(D)Deb/, \
                    $(baseServers_ldeps1))
 
-#$(S)/os/servers/baseServers/baseServers.dbg: $(baseServers_ldeps)
+$(S)/os/servers/baseServers/baseServers.dbg: $(build_libraries)
 $(S)/os/servers/baseServers/baseServers.dbg: $(baseServers_objs) $(L)/pty.k42lib.o $(L)/util.k42lib.o
 	$(call status, LD, $@)
-	$(CXX) -o $@ $^ $(baseServers_lflags)
+	$(CXX) -o $@ $(baseServers_objs) $(L)/pty.k42lib.o $(L)/util.k42lib.o $(baseServers_lflags)
 
 $(S)/os/servers/baseServers/baseServers: $(S)/os/servers/baseServers/baseServers.dbg
 	$(call status, STRIP, $@)

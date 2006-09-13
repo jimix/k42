@@ -31,11 +31,11 @@ $(S)/os/kernel/sys/arch/$(HOST)/symdefs%.S: $(S)/os/kernel/sys/arch/$(HOST)/symd
 	$(AWK) -f $(H)/os/kernel/sys/arch/$(HOST)/symdefs.awk < $< > $@
 
 $(S)/os/kernel/sys/arch/$(HOST)/symdefsUser.raw: $(S)/os/kernel/sys/genSymdefs
-	$(call status, GENSYMDEFS, $@)
+	$(call status, SYMDEFS, $@)
 	$(S)/os/kernel/sys/genSymdefs -user > $@
 
 $(S)/os/kernel/sys/arch/$(HOST)/symdefsKern.raw: $(S)/os/kernel/sys/genSymdefs
-	$(call status, GENSYMDEFS, $@)
+	$(call status, SYMDEFS, $@)
 	$(S)/os/kernel/sys/genSymdefs -kernel > $@
 
 $(S)/os/kernel/sys/genSymdefs: $(H)/os/kernel/sys/genSymdefs.C

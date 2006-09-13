@@ -16,9 +16,11 @@ $(S)/os/servers/shell/%.o: $(H)/os/servers/shell/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_shell_dflags) $(srv_shell_iflags) -c $< -o $@
 
-$(S)/os/servers/shell/shellServer.dbg: $(addprefix $(S)/os/servers/shell/,$(srv_shell_objs))
+srv_shell_fullobjs = $(addprefix $(S)/os/servers/shell/,$(srv_shell_objs))
+$(S)/os/servers/shell/shellServer.dbg: $(build_libraries)
+$(S)/os/servers/shell/shellServer.dbg: $(srv_shell_fullobjs)
 	$(call status, LD, $@)
-	$(CXX) -o $@ $^ $(srv_lflags) $(srv_libs)
+	$(CXX) -o $@ $(srv_shell_fullobjs) $(srv_lflags) $(srv_libs)
 
 $(S)/os/servers/shell/shellServer: $(S)/os/servers/shell/shellServer.dbg
 	$(call status, STRIP, $@)

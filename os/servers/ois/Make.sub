@@ -16,9 +16,11 @@ $(S)/os/servers/ois/%.o: $(H)/os/servers/ois/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_ois_dflags) $(srv_ois_iflags) -c $< -o $@
 
-$(S)/os/servers/ois/oisServer.dbg: $(addprefix $(S)/os/servers/ois/,$(srv_ois_objs))
+srv_ois_fullobjs = $(addprefix $(S)/os/servers/ois/,$(srv_ois_objs))
+$(S)/os/servers/ois/oisServer.dbg: $(build_libraries)
+$(S)/os/servers/ois/oisServer.dbg: $(srv_ois_fullobjs)
 	$(call status, LD, $@)
-	$(CXX) -o $@ $^ $(srv_lflags) $(srv_libs)
+	$(CXX) -o $@ $(srv_ois_fullobjs) $(srv_lflags) $(srv_libs)
 
 $(S)/os/servers/ois/oisServer: $(S)/os/servers/ois/oisServer.dbg
 	$(call status, STRIP, $@)

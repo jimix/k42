@@ -169,20 +169,6 @@ $(S)/os/k%objs.o:
 #         ktraceobjs.o ksysobjs.o klinobjs.o
 include os/Make.sub
 
-# Makefiles from kernel objects 
-include os/boot/arch/$(HOST)/Make.sub
-include os/kernel/init/Make.sub
-include os/kernel/exception/Make.sub
-include os/kernel/mem/Make.sub
-include os/kernel/proc/Make.sub
-include os/kernel/stubtest/Make.sub
-include os/kernel/bilge/Make.sub
-include os/kernel/trace/Make.sub
-include os/kernel/sys/Make.sub
-include os/kernel/linux/Make.sub
-
-# Include library submakefiles (currently just libk.a)
-# This defines the following variables that define hte objects that go in
 # various related libraries that span multiple directories
 # - $(libbase_objs)  - $(libk_objs)
 # - $(libnative_objs)- $(libemu_objs) 
@@ -217,6 +203,20 @@ include kitch-linux/lib/emu/Make.sub
 
 include lib/Make.sub
 
+# Makefiles from kernel objects 
+include os/boot/arch/$(HOST)/Make.sub
+include os/kernel/init/Make.sub
+include os/kernel/exception/Make.sub
+include os/kernel/mem/Make.sub
+include os/kernel/proc/Make.sub
+include os/kernel/stubtest/Make.sub
+include os/kernel/bilge/Make.sub
+include os/kernel/trace/Make.sub
+include os/kernel/sys/Make.sub
+include os/kernel/linux/Make.sub
+
+# Include library submakefiles (currently just libk.a)
+# This defines the following variables that define hte objects that go in
 # Include server submakefiles
 
 include os/servers/dev/Make.sub
@@ -262,6 +262,8 @@ OBJS += $(lib_includes)
 
 ###############################################################################
 # Phony targets expanded from rules defined above
+
+$(build_servers): $(build_libraries)
 
 servers: libraries $(build_servers)
 

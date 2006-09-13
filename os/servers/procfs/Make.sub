@@ -44,9 +44,11 @@ $(S)/os/servers/procfs/%.o: $(H)/os/servers/procfs/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_procfs_dflags) $(srv_procfs_iflags) -c $< -o $@
 
-$(S)/os/servers/procfs/procfsServer.dbg: $(addprefix $(S)/os/servers/procfs/,$(srv_procfs_objs))
+srv_procfs_fullobjs = $(addprefix $(S)/os/servers/procfs/,$(srv_procfs_objs))
+$(S)/os/servers/procfs/procfsServer.dbg: $(build_libraries)
+$(S)/os/servers/procfs/procfsServer.dbg: $(srv_procfs_fullobjs)
 	$(call status, LD, $@)
-	$(CXX) -o $@ $^ $(srv_lflags) $(srv_libs)
+	$(CXX) -o $@ $(srv_procfs_fullobjs) $(srv_lflags) $(srv_libs)
 
 $(S)/os/servers/procfs/procfsServer: $(S)/os/servers/procfs/procfsServer.dbg
 	$(call status, STRIP, $@)
