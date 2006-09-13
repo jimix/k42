@@ -25,6 +25,6 @@ $(O)/install/include/emu/%.H: $(H)/kitch-linux/lib/emu/arch/$(HOST)/%.H
 $(H)/kitch-linux/lib/emu/arch/$(HOST)/SysCallInit.C: $(S)/kitch-linux/lib/emu/SysCallTable.H
 
 $(S)/kitch-linux/lib/emu/SysCallTable.H: $(H)/kitch-linux/lib/emu/arch/$(HOST)/SysCallTable 
-	(call status, PERL, $@)
+	$(call status, PERL, $@)
 	$(PERL) $(H)/kitch-linux/lib/emu/arch/$(HOST)/genSysCallTable.pl \
 	        $< $@ || rm $@

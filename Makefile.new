@@ -45,10 +45,14 @@ STRIP32 = $(CROSS32_COMPILE)strip
 
 # Build machine native-compile tools.
 BUILDCC = gcc
+BUILDCXX = g++
 BUILDCFLAGS = -g -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer
+BUILDCXXFALGS = $(BUILDCFLAGS)
 MKDIR = mkdir
 GZIP = gzip
 CP = cp
+PERL = perl
+AWK = awk
 STUBGEN = $(TOOLS)/stubgen/stubgen
 
 # Target machine flags

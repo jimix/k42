@@ -7,13 +7,14 @@ OBJS += $(addprefix $(S)/lib/lk, $(lib_lk_objs))
 build_libraries += $(O)/install/lib/$(HOST)/$(D)Deb/liblk26.a
 
 # Stub source files
-lib_lk_iflags = -I$(H)/lib/lk
+lib_lk_cxxflags = $(CXXFLAGS) -D__KERNEL__ -D__linux__ -D__$(HOST)__ -O -w
+lib_lk_iflags = -I$(L)/arch/k42/include -I$(L)/include -I$(H)/lib/lk
 
 # Object files
 
 $(S)/lib/lk/%.o: $(H)/lib/lk/%.C
 	$(call status, CXX, $@)
-	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_fslib_iflags) $< -o $@
+	$(CXX) -c $(lib_lk_cxxflags) $(lib_lk_iflags) $(IFLAGS) $< -o $@
 
 $(O)/install/lib/$(HOST)/$(D)Deb/liblk26.a: $(addprefix $(S)/lib/lk/, $(lib_lk_objs))
 	$(call status, AR, $@)

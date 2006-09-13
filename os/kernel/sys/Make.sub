@@ -1,16 +1,18 @@
-OBJS += $(S)/os/ksysobjs.o
-ksysobjs = KernelInfo.o hcall.o
+ksysobjs = KernelInfo.o hcall.o 
+ksys_arch_stuff = symdefsKern.S symdefsUser.S symdefsUser.raw symdefsKern.raw
 $(S)/os/ksysobjs.o: $(addprefix $(S)/os/kernel/sys/, $(ksysobjs))
 
 # ksysobjs subobjects
-OBJS += $(addprefix $(S)/os/kernel/sys/, $(ksysobjs))
+OBJS += $(S)/os/ksysobjs.o symdefsKern.o symdefsUser.o
+OBJS += $(addprefix $(S)/os/kernel/sys/, $(ksysobjs) genSymdefs)
+OBJS += $(addprefix $(S)/os/kernel/sys/arch/$(HOST)/, $(ksys_arch_stuff))
 libk_objs += $(S)/os/kernel/sys/symdefsKern.o
-libbase_objs += $(S)/os/kernel/sys/symdefs.o
+libbase_objs += $(S)/os/kernel/sys/symdefsUser.o
 
 # Should these flags be based off of $(kflags), etc?
 kernel_sys_cxxflags = $(CXXFLAGS) -MD -DKERNEL 
 kernel_sys_cflags = $(CFLAGS) -DKERNEL 
-kernel_sys_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/sys $(IFLAGS)
+kernel_sys_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/sys $(IFLAGS) -I$(O)/install/include/sys/arch/$(HOST)
 
 $(S)/os/kernel/sys/%.o: $(H)/os/kernel/sys/%.C
 	$(call status, CXX, $@)
@@ -18,4 +20,24 @@ $(S)/os/kernel/sys/%.o: $(H)/os/kernel/sys/%.C
 
 $(S)/os/kernel/sys/%.o: $(H)/os/kernel/sys/arch/$(HOST)/%.S
 	$(call status, AS, $@)
-	$(CXX) $(kernel_sys_cflags) $(CFLAGS) -D__ASSEMBLEY_ $(kernel_sys_iflags) -c $^ -o $@
+	$(CC) $(kernel_sys_cflags) -D__ASSEMBLEY_ $(kernel_sys_iflags) -c $^ -o $@
+
+$(S)/os/kernel/sys/%.o: $(S)/os/kernel/sys/arch/$(HOST)/%.S
+	$(call status, AS, $@)
+	$(CC) $(kernel_sys_cflags) -D__ASSEMBLEY_ $(kernel_sys_iflags) -c $^ -o $@
+
+$(S)/os/kernel/sys/arch/$(HOST)/symdefs%.S: $(S)/os/kernel/sys/arch/$(HOST)/symdefs%.raw
+	$(call status, AWK, $@)
+	$(AWK) -f $(H)/os/kernel/sys/arch/$(HOST)/symdefs.awk < $< > $@
+
+$(S)/os/kernel/sys/arch/$(HOST)/symdefsUser.raw: $(S)/os/kernel/sys/genSymdefs
+	$(call status, GENSYMDEFS, $@)
+	$(S)/os/kernel/sys/genSymdefs -user > $@
+
+$(S)/os/kernel/sys/arch/$(HOST)/symdefsKern.raw: $(S)/os/kernel/sys/genSymdefs
+	$(call status, GENSYMDEFS, $@)
+	$(S)/os/kernel/sys/genSymdefs -kernel > $@
+
+$(S)/os/kernel/sys/genSymdefs: $(H)/os/kernel/sys/genSymdefs.C
+	$(call status, CXX, $@)
+	$(BUILDCXX) $(BUILDCXXFLAGS) -I$(O)/install/include/sys/arch/$(HOST) -I$(H)/os/kernel/sys -DTARGET_$(HOST) -DTARGET_MACHINE=$(HOST) -o $@ $<
