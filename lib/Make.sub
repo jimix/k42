@@ -48,7 +48,7 @@ $(S)/lib/k42sys.map: $(S)/lib/_libemu.map $(S)/lib/_libbase.map
 #This object file, when linked in last, forces the plt section to have
 #space allocated for it in the library file
 $(S)/lib/plt.o:
-	echo '.section .plt,"a"' | $(AS) - -o plt.o
+	echo '.section .plt,"a"' | $(AS) - -o $(S)/lib/plt.o
 
 # XXX This should move into an architecture-dependent makefile
 # Generate the linker script from one of ld's default scripts
