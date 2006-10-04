@@ -2,6 +2,7 @@ OBJS += $(S)/os/klinobjs.o
 klinobjs = BootInit.o MemoryArch.o ConfigureArch.o LinuxPIC.o		\
            StdIOKern.o MemoryK.o Configure.o Interrupt.o LinuxSock.o	\
            LinuxBlockDev.o LinuxCharDev.o
+OBJS += $(addprefix $(S)/os/kernel/linux/, $(klinobjs))
 $(S)/os/klinobjs.o: $(addprefix $(S)/os/kernel/linux/, $(klinobjs))
 
 os_kernel_linux_flags = -I$(L)/arch/k42/include 		\

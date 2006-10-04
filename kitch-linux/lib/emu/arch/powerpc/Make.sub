@@ -2,6 +2,7 @@ libemu_includes = FD.H SignalUtils.H sandbox.H stat.H
 
 libemu_arch_srcs = SysCallInit.C ppc32.C SignalUtils.C
 libemu_objs += $(addprefix $(S)/kitch-linux/lib/emu/, $(libemu_arch_srcs:.C=.o))
+OBJS += $(S)/kitch-linux/lib/emu/SysCallTable.H 
 
 libemu_arch_include = -I$(S)/kitch-linux/lib/emu
 libemu_arch_iflags = $(LXIFLAGS) $(libemu_arch_include) $(IFLAGS)

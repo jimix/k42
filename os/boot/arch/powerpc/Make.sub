@@ -1,7 +1,7 @@
 # ##########################-*-Make.sub-*- ###################################
 
 # The final kernel, wrapped by a 32-bit boot program.
-OBJS  = $(S)/os/k42-zImage
+OBJS += $(S)/os/k42-zImage
 zobjs = $(S)/os/boot2/crt0.o $(S)/os/boot2/string.o $(S)/os/boot2/prom.o \
         $(S)/os/boot2/main.o $(S)/os/boot2/zlib.o $(S)/os/boot2/div64.o \
         $(S)/os/boot2/imagesize.o

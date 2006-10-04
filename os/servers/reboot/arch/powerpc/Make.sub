@@ -1,7 +1,7 @@
 
 srv_reboot_objs = main.o asm_util.o misc.o printf.o
 
-OBJS += $(addprefix $(S)/os/servers/reboot/, $(src_reboot_objs))
+OBJS += $(addprefix $(S)/os/servers/reboot/, $(srv_reboot_objs))
 boot_servers += $(S)/os/servers/reboot/reboot
 
 $(S)/os/servers/reboot/main.o: $(H)/os/kernel/bilge/arch/powerpc/BootInfo.H

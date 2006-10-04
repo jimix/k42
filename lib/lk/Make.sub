@@ -3,7 +3,7 @@ lib_lk_objs = Bug.o Configure.o InitCalls.o LinuxDevFS.o LinuxEnv.o	\
 	      Semaphore.o SysFS.o Timer.o Utils.o Wait.o workqueue.o
 
 # Top-level variables that use need to know about these objs
-OBJS += $(addprefix $(S)/lib/lk, $(lib_lk_objs))
+OBJS += $(addprefix $(S)/lib/lk/, $(lib_lk_objs))
 build_libraries += $(O)/install/lib/$(HOST)/$(D)Deb/liblk26.a
 
 # Stub source files
