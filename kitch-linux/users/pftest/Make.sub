@@ -1,0 +1,9 @@
+install_users += $(addprefix $(IROOT)/home/pftest/, .profile runTest grepdata testbody.sh testdriver.sh)
+
+$(IROOT)/home/pftest/.profile: $(H)/kitch-linux/users/pftest/profile
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(IROOT)/home/pftest/%: $(H)/kitch-linux/users/pftest/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

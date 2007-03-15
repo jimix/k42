@@ -1,0 +1,9 @@
+install_users += $(addprefix $(IROOT)/home/mysql/, .profile cleanall.sh clean.sql listen_server.pl reboot.sh setup.sh startall.sh stopall.sh )
+
+$(IROOT)/home/mysql/.profile: $(H)/kitch-linux/users/mysql/profile
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(IROOT)/home/mysql/%: $(H)/kitch-linux/users/mysql/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

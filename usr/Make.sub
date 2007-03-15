@@ -10,9 +10,6 @@ usr_stubfiles = $(foreach stubname, $(usr_stubnames), $(call stubgen_objects, $(
 
 usr_iflags = -I$(H)/usr $(IFLAGS)
 
-printfoo:
-	echo $(call stubgen_targets, $(S)/usr)
-
 $(call stubgen_targets, $(S)/usr): $(H)/usr/%.H
 	$(call status, STUBGEN, $@)
 	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \

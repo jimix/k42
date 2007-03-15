@@ -1,0 +1,45 @@
+gcc_hdr_dir := $(shell $(CC) $(CFLAGS) --print-file-name=include)
+
+#
+# Get a list of all the files in the standard GCC header directory
+# Do we really want all of them?
+#
+generic64_headers := $(notdir $(wildcard $(GCC_HDR_DIR)/*.h))
+amd64_headers = $(generic64_HDRS_0)
+mips64_headers = $(generic64_HDRS_0)
+powerpc_headers = $(generic64_HDRS_0)
+
+lib_includes += $(addprefix $(O)/install/gcc-include/arch/$(HOST)/, $($(HOST)_headers))
+
+ifeq ($(GCC34),1)
+$(O)/install/gcc-include/arch/$(HOST)/stddef.h: $(gcc_hdr_dir)/stddef.h
+	$(call status, INSTALL, $@)
+	$(SED) \
+ 's,#ifdef _STDDEF_H,#if defined(_STDDEF_H) \&\& !defined(offsetof),' < $< > $@
+endif
+
+$(O)/install/gcc-include/arch/$(HOST)/%.h: $(gcc_hdr_dir)/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+#
+# Replace these objects in our copy of libgcc.a
+#
+
+
+replace_srcs = _bb.C
+replace_objs = $(addprefix $(S)/lib/gcc/, $(addsuffix .o, $(basename $(replace_srcs))))
+OBJS += $(replace_objs)
+build_libraries += $(ILIB)/libgcc.a
+
+orig_lib_gcc := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+
+$(S)/lib/gcc/%.o: $(H)/lib/gcc/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(CXXFLAGS) $(IFLAGS) -c $< -o $@
+	
+$(ILIB)/libgcc.a: $(orig_lib_gcc) $(replace_objs)
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+	$(call status, AR, $@)
+	$(AR) ruv $@ $(replace_objs)

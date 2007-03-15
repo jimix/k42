@@ -1,0 +1,5 @@
+install_configs += $(IROOT)/ketc/k42nfs
+
+$(IROOT)/ketc/k42nfs: $(H)/kitch-linux/ketc/k42nfs
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

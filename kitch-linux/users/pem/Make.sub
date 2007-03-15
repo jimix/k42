@@ -1,0 +1,9 @@
+install_users += $(addprefix $(IROOT)/home/pem/, .profile sysinit)
+
+$(IROOT)/home/pem/.profile: $(H)/kitch-linux/users/pem/profile
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(IROOT)/home/pem/sysinit: $(H)/kitch-linux/users/pem/sysinit
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

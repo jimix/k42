@@ -86,17 +86,22 @@ LXIFLAGS = -I$(L)/arch/k42/include				\
 
 # Common flags for building specific parts of K42 
 #
-# Linking servers
-srv_lflags = -Wl,-dynamic-linker,/usr/klib/ld64.so.1 \
+# Linking user-level K42 binaries
+bin_lflags = -Wl,-dynamic-linker,/usr/klib/ld64.so.1 \
              -Wl,-rpath,/klib:/usr/klib \
 	     -L$(O)/install/lib/$(HOST)/$(D)Deb \
 	     -L$(O)/install/$(HOST)/$(D)Deb/kitchroot/klib \
 	     -L$(IMG)/usr/klib
+bin_libs = -lk42sys -lc
+bin_lib_deps = $(O)/install/$(HOST)/$(D)Deb/kitchroot/klib/libk42sys.so
+
+# Linking servers
+srv_lflags = $(bin_lflags)
 srv_libs = -llk26 -lvirtfs -lfs -lsrv -lk42sys -lc
 
 srv_ldeps1 = liblk26.a libvirtfs.a libfs.a libsrv.a
 srv_lib_deps = $(addprefix $(O)/install/lib/$(HOST)/$(D)Deb/, $(srv_ldeps1)) \
-	       $(O)/install/$(HOST)/$(D)Deb/kitchroot/klib/libk42sys.so
+	       $(bin_lib_deps)
 
 ################################################################################
 # Functions for supporting later targets in included makefiles
@@ -126,7 +131,7 @@ endif
 
 ################################################################################
 # Our non-file targets that don't depend on later variable definitions
-.PHONY: k42-vmlinux k42-zImage includes servers libraries dirs config all clean FORCE
+.PHONY: k42-vmlinux k42-zImage includes servers binaries libraries dirs config all clean FORCE
 
 # Default target is just the directory skeleton and our bootable kernel.
 k42-vmlinux: dirs includes libraries $(S)/os/servers/baseServers/baseServers $(S)/os/k42-vmlinux
@@ -156,6 +161,7 @@ clean:
 #   baseServers
 # - $(lib_includes) include files that need to be installed
 # - $(build_servers) servers that need to be built
+# - $(install_binaries) user-level binaries that need to be built
 # - $(boot_servers) servers that need to be packaged for booting
 
 # Rule for how to incrementally link our kernel objects.
@@ -240,6 +246,15 @@ include os/servers/Make.sub			# construct bootServers.o
 
 include usr/Make.sub
 
+include bin/sysctl/Make.sub			# build host user-land tools
+include bin/Make.sub
+
+include kitch-linux/etc/Make.sub		# install configs in kitchroot
+include kitch-linux/ketc/Make.sub
+include kitch-linux/users/regress/Make.sub
+include kitch-linux/users/root/Make.sub
+
+
 ################################################################################
 # Rules for building kernel libraries that span directories
 ################################################################################
@@ -271,6 +286,13 @@ libraries: includes $(build_libraries)
 
 includes: $(lib_includes)
 
+binaries: $(install_binaries)
+
+configs: $(install_configs)
+
+users: $(install_users)
+
+kitchroot: servers binaries configs users
 
 # Now that OBJS is totally expanded, generate our directory list from it.
 DIRS = $(sort $(foreach obj, $(OBJS), $(dir $(obj))))

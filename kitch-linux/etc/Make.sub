@@ -1,0 +1,22 @@
+etc_configs = bashrc csh.cshrc csh.login exports group host.conf hosts	\
+	      hosts.allow hosts.deny inputrc motd nsswitch.conf passwd	\
+	      printcap	profile protocols resolv.conf services \
+	      ld.so.conf groff terminfo
+
+install_configs += $(addprefix $(IROOT)/etc/, $(etc_configs))
+
+$(IROOT)/etc/ld.so.conf: $(H)/Makefile.new $(H)/kitch-linux/etc/Make.sub
+	$(call status, ECHO, $@)
+	echo "/usr/lib /klib" > $@
+
+$(IROOT)/etc/groff: $(H)/Makefile.new $(H)/kitch-linux/etc/Make.sub
+	$(call status, LN, $@)
+	ln -sf /nfs/etc/groff $@
+
+$(IROOT)/etc/terminfo: $(H)/Makefile.new $(H)/kitch-linux/etc/Make.sub
+	$(call status, LN, $@)
+	ln -sf /nfs/etc/terminfo $@
+
+$(IROOT)/etc/%: $(H)/kitch-linux/etc/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

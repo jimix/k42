@@ -1,0 +1,5 @@
+install_users += $(addprefix $(IROOT)/home/postmark/, input.txt input.txt.old runPostmark runtest.sh)
+
+$(IROOT)/home/postmark/%: $(H)/kitch-linux/users/postmark/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

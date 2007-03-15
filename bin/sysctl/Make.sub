@@ -1,0 +1,43 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000, 2005.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Makefile,v 1.31 2005/07/21 13:57:06 dilma Exp $
+# ############################################################################
+
+
+host_binaries += $(S)/bin/sysctl/sysctl
+install_binaries += $(IROOT)/kbin/sysctl
+
+host_bin_sysctl_ops = console.o swapdevs.o breakpoint.o proccount.o
+host_bin_sysctl_objects = $(addprefix $(S)/bin/sysctl/, $(host_bin_sysctl_ops) sysctl.o)
+
+OBJS += $(S)/bin/sysctl/sysctl $(host_bin_sysctl_objects)
+
+bin_sysctl_iflags = -I$(H)/bin/systcl
+sysctl_INIT_DECLS = ${host_bin_sysctl_ops:%.o=DECLARE_INIT(%_init);}
+sysctl_INIT_FUNCS = $(host_bin_sysctl_ops:%.o=%_init,) NULL
+sysctl_CXXFLAGS = -DINIT_FUNCS='$(sysctl_INIT_FUNCS)' \
+                  -DINIT_DECLS='$(sysctl_INIT_DECLS)'
+
+bin_sysctl_cxxflags = $(CXXFLAGS) $(sysctl_CXXFLAGS)
+bin_sysctl_libs = -lvirtfs -lfs $(bin_libs)
+
+$(S)/bin/sysctl/%.o: $(H)/bin/sysctl/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(bin_sysctl_cxxflags) $(IFLAGS) $(bin_sysctl_iflags) -c $< -o $@
+
+$(S)/bin/sysctl/sysctl: $(host_bin_sysctl_objects)
+	$(call status, LD, $@)
+	$(CXX) -o $@ $(host_bin_sysctl_objects) $(bin_lflags) $(bin_sysctl_libs)
+	$(call status, STRIP, $@)
+	$(STRIP) $@
+$(S)/bin/sysctl/sysctl: $(bin_lib_deps) $(addprefix $(O)/install/lib/$(HOST)/$(D)Deb/, libvirtfs.a libfs.a)
+
+$(IROOT)/kbin/sysctl: $(S)/bin/sysctl/sysctl
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

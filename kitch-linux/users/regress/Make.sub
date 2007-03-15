@@ -1,0 +1,9 @@
+install_users += $(addprefix $(IROOT)/home/regress/, .profile sysinit)
+
+$(IROOT)/home/regress/.profile: $(H)/kitch-linux/users/regress/profile
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(IROOT)/home/regress/sysinit: $(H)/kitch-linux/users/regress/sysinit
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
