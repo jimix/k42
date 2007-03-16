@@ -1,0 +1,24 @@
+pthread_srcs =	ex1.c ex3.c ex5.c syntheticLock.c test2.c \
+                ex2.c ex4.c ex6.c test1.c timeSlice.c
+
+pthread_targets = $(basename $(pthread_srcs)) $(addsuffix _32, $(basename $(pthread_srcs)))
+
+install_binaries += $(addprefix $(IROOT)/tests/pthread/, $(pthread_targets))
+
+OBJS += $(addprefix $(S)/kitch-linux/tests/pthread/, $(pthread_targets))
+
+$(S)/kitch-linux/tests/pthread/%: $(H)/kitch-linux/tests/pthread/%.c
+	$(call status, CC, $@)
+	$(CC) $< -MD -lpthread -o $@
+	$(call status, STRIP, $@)
+	$(STRIP) $@
+
+$(S)/kitch-linux/tests/pthread/%_32: $(H)/kitch-linux/tests/pthread/%.c
+	$(call status, CC, $@)
+	$(CC32) $< -MD -lpthread -o $@
+	$(call status, STRIP, $@)
+	$(STRIP32) $@
+
+$(IROOT)/tests/pthread/%: $(S)/kitch-linux/tests/pthread/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

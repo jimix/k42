@@ -1,0 +1,70 @@
+SRCS=		copy.c	dev.c zval.c hello.c forktest.c jmptest.c \
+		stat.c args.c socket.c dir.c select.c pipe_select.c chmod.c \
+		chown.c truncate.c pipepoll.c segv.c traptest.c access.c \
+		readModFile.c link.c unlink.c appendLseek.c openUnlink.c \
+		openUnlink2.c netperf.c openFlags.c openWriteFork.c \
+		openReadForkRead.c disktest.c shmop.c fcntl.c mmap.c \
+		rename.c nfsCaching.c fileSharing.c smallFiles.c marc.c \
+		shmattest.c fileStream.c memScan.c rmdir.c staticSyscall.c \
+		preadwrite.c utime.c nanosleep.c daytime-client.c \
+		daytime-server.c echo-client.c echo-server-udp.c \
+		echo-client-udp.c statfs.c sethostname.c pwrite.c ptrace.c \
+		lstat.c readwritev.c select_simple.c truncate_largefile.c \
+		socket2.c clock_gettime.c faults.c daemon.c \
+		simple_sendrecvmesg.c send_socket_test.c alarm.c \
+		send_file_socket_test.c select_files_devices.c	\
+		send_socket_test2.c gettimeofday.c fsync.c
+SRCS32=		access.c nanosleep.c preadwrite.c
+CXXSRCS=	netperf2.C memtouch.C
+SCRIPTS=	regress.sh virtfs-regress.sh fileutils-test.sh unionfs.sh \
+		zemit zemit-start zemit-stop ltp.sh micro_bench.sh
+
+CTARGETS = $(basename $(SRCS))
+CTARGETS32 = $(SRCS32:%.c=%32)
+CXXTARGETS = $(basename $(CXXSRCS))
+
+# Targets that need pthreads
+LINK_PTHREAD = $(addprefix $(S)/kitch-linux/tests/linux/, select pipe_select pipepoll netperf netperf2)
+
+install_binaries += $(addprefix $(IROOT)/tests/linux/, \
+		                $(CTARGETS) $(CXXTARGETS) $(CTARGETS32)\
+				    $(SCRIPTS) multiseg)
+
+OBJS += $(addprefix $(S)/kitch-linux/tests/linux/, \
+		    $(CTARGETS) $(CXXTARGETS) $(CTARGETS32) multiseg)
+
+$(LINK_PTHREAD): test_libs += -lpthread
+
+$(S)/kitch-linux/tests/linux/clock_gettime: test_libs += -lrt
+$(S)/kitch-linux/tests/linux/clock_gettime32: test_libs += -lrt
+$(S)/kitch-linux/tests/linux/traptest: test_libs += -lm
+
+$(S)/kitch-linux/tests/linux/%: $(H)/kitch-linux/tests/linux/%.c
+	$(call status, CC, $@)
+	$(CC) $< -MD $(test_libs) -o $@
+	$(call status, STRIP, $@)
+	$(STRIP) $@
+
+$(S)/kitch-linux/tests/linux/%32: $(H)/kitch-linux/tests/linux/%.c
+	$(call status, CC32, $@)
+	$(CC32) $< -MD -static $(test_libs) -o $@
+	$(call status, STRIP32, $@)
+	$(STRIP32) $@
+
+$(S)/kitch-linux/tests/linux/%: $(H)/kitch-linux/tests/linux/%.C
+	$(call status, CXX, $@)
+	$(CXX) $< -MD $(test_libs) -o $@
+	$(call status, STRIP, $@)
+	$(STRIP) $@
+
+$(S)/kitch-linux/tests/linux/multiseg: $(H)/kitch-linux/tests/linux/multiseg.c
+	$(call status, CC, $@)
+	$(CC) $< -MD -Wl,-Tdata,0x20000000 $(test_libs) -o $@
+
+$(IROOT)/tests/linux/%: $(S)/kitch-linux/tests/linux/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(IROOT)/tests/linux/%: $(H)/kitch-linux/tests/linux/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

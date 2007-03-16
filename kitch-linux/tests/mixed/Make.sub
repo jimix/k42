@@ -1,0 +1,21 @@
+mixed_srcs = contend.C IOCPUMigTst.C micro2.C micro3.C micro3_child.C micro.C \
+	     migrate.C multiProc.C multiProcForkJoin.C multiProcMigrate.C \
+	     newmemclone.C nullProg.C runchild.C spin.C
+
+mixed_tests = $(basename $(mixed_srcs))
+mixed_targets = $(addprefix $(S)/kitch-linux/tests/mixed/, $(mixed_tests))
+
+install_binaries += $(addprefix $(IROOT)/tests/mixed/, $(mixed_tests))
+
+OBJS += $(mixed_targets)
+
+$(S)/kitch-linux/tests/mixed/%: $(H)/kitch-linux/tests/mixed/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(CXXFLAGS) $< $(IFLAGS) -I$(H)/kitch-linux/tests/mixed -Wl,-rpath,/klib \
+	       -L$(IROOT)/klib -lk42sys -lpthread -o $@
+	$(call status, STRIP, $@)
+	$(STRIP) $@
+
+$(IROOT)/tests/mixed/%: $(S)/kitch-linux/tests/mixed/% 
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
