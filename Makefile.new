@@ -213,6 +213,7 @@ include lib/Make.sub
 # Makefiles from kernel objects 
 include os/boot/arch/$(HOST)/Make.sub
 include os/kernel/init/Make.sub
+include os/kernel/defines/Make.sub
 include os/kernel/exception/Make.sub
 include os/kernel/mem/Make.sub
 include os/kernel/proc/Make.sub

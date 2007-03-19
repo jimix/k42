@@ -22,7 +22,7 @@ kbilgeobjs = $(lib_bilge_objs) \
              XKernBogusDisk.o XNetDev.o XPrivilegedService.o		\
              XSystemMisc.o XFSFRSwap.o XDiskSwap.o XIPSock.o		\
              XKBootParms.o XBuildDate.o
-
+kernel_bilge_includes = ComPort.H IOChan.H HVChan.H
 
 # Define variables used by the top-level makefile for building the
 # kernel library and cleaning built objects
@@ -31,6 +31,7 @@ OBJS += $(S)/os/kbilgeobjs.o
 OBJS += $(addprefix $(S)/os/kernel/bilge/, $(kbilgeobjs))
 libk_objs += $(addprefix $(S)/os/kernel/bilge/, $(lib_bilge_objs))
 libbase_objs += $(addprefix $(S)/os/kernel/bilge/, $(lib_bilge_objs))
+lib_includes += $(addprefix $(O)/install/include/sys/, $(kernel_bilge_includes))
 
 # Rules for building objects in this directory
 $(S)/os/kbilgeobjs.o: $(addprefix $(S)/os/kernel/bilge/, $(kbilgeobjs))
@@ -91,3 +92,6 @@ $(S)/os/kernel/bilge/%.o: $(H)/os/kernel/bilge/arch/$(HOST)/%.S
 	$(call status, AS, $@)
 	$(CXX) $(kernel_bilge_cflags) $(CFLAGS) -D__ASSEMBLEY_ $(kernel_bilge_iflags) -c $< -o $@
 
+$(O)/install/include/sys/%.H: $(H)/os/kernel/bilge/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

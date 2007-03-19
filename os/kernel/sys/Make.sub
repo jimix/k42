@@ -1,5 +1,9 @@
 ksysobjs = KernelInfo.o hcall.o 
 ksys_arch_stuff = symdefsKern.S symdefsUser.S symdefsUser.raw symdefsKern.raw
+ksys_includes = syscalls.H thinwire.H entryPoints.H Dispatcher.H VolatileState.H \
+		memoryMap.H SoftIntr.H KernelInfo.H KernelScheduler.H
+ksys_arch_includes = syscalls.H VolatileState.H memoryMap.H asmConstants.H
+
 $(S)/os/ksysobjs.o: $(addprefix $(S)/os/kernel/sys/, $(ksysobjs))
 
 # ksysobjs subobjects
@@ -8,6 +12,9 @@ OBJS += $(addprefix $(S)/os/kernel/sys/, $(ksysobjs) genSymdefs)
 OBJS += $(addprefix $(S)/os/kernel/sys/arch/$(HOST)/, $(ksys_arch_stuff))
 libk_objs += $(S)/os/kernel/sys/symdefsKern.o
 libbase_objs += $(S)/os/kernel/sys/symdefsUser.o
+lib_includes += $(addprefix $(O)/install/include/sys/, $(ksys_includes)) \
+		$(addprefix $(O)/install/include/sys/arch/$(HOST)/, $(ksys_arch_includes))
+
 
 # Should these flags be based off of $(kflags), etc?
 kernel_sys_cxxflags = $(CXXFLAGS) -MD -DKERNEL 
@@ -41,3 +48,19 @@ $(S)/os/kernel/sys/arch/$(HOST)/symdefsKern.raw: $(S)/os/kernel/sys/genSymdefs
 $(S)/os/kernel/sys/genSymdefs: $(H)/os/kernel/sys/genSymdefs.C
 	$(call status, CXX, $@)
 	$(BUILDCXX) $(BUILDCXXFLAGS) -I$(O)/install/include/sys/arch/$(HOST) -I$(H)/os/kernel/sys -DTARGET_$(HOST) -DTARGET_MACHINE=$(HOST) -o $@ $<
+
+$(O)/install/include/sys/%: $(H)/os/kernel/sys/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/sys/arch/$(HOST): $(H)/os/kernel/sys/arch/$(HOST)/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(S)/os/kernel/sys/arch/$(HOST)/genConstants.s: $(H)/os/kernel/sys/genConstants.C $(H)/os/kernel/sys/arch/$(HOST)/genConstantsArch.C
+	$(call status, CXX, $@)
+	$(CXX) -S $(kernel_sys_cxxflags) $(kernel_sys_iflags) -Wno-unused $< -o $@
+
+$(O)/install/include/sys/arch/$(HOST)/asmConstants.H: $(S)/os/kernel/sys/arch/$(HOST)/genConstants.s
+	$(call status, AWK, $@)
+	$(AWK) -f $(TOOLS)/stubgen/xcoff_type.awk $< > $@

@@ -25,6 +25,7 @@ baseServers_objs += $(addprefix $(S)/os/servers/baseServers/, \
 
 build_servers += $(S)/os/servers/baseServers/baseServers
 boot_servers += $(S)/os/servers/baseServers/baseServers
+lib_includes += $(addprefix $(O)/install/include/sys/, baseBootServers.H bootServers.H)
 
 # Rules for building objects
 
@@ -76,3 +77,7 @@ $(S)/os/servers/baseServers/baseServers: $(S)/os/servers/baseServers/baseServers
 	$(call status, STRIP, $@)
 	$(CP) $< $@
 	$(STRIP) $@
+
+$(O)/install/include/sys/%.H: $(H)/os/servers/baseServers/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

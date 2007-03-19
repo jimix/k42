@@ -41,11 +41,15 @@ lib_mem_objs += StubFR.o StubFRCRW.o StubFRComputation.o StubFRKernelPinned.o \
            StubKernelPagingTransportVA.o StubRegionDefault.o 		     \
 	   StubRegionFSComm.o StubRegionPerProcessor.o StubRegionRedZone.o   \
            StubRegionReplicated.o XFR.o					   
+lib_mem_includes = Access.H RegionType.H FR.H KernelPagingTransport.H \
+           SharedBufferProducerKernel.H SharedBufferConsumerKernel.H
 
 # kmemobjs.o subobjects
 OBJS += $(addprefix $(S)/os/kernel/mem/, $(kmemobjs))
 libk_objs += $(addprefix $(S)/os/kernel/mem/, $(lib_mem_objs))
 libbase_objs += $(addprefix $(S)/os/kernel/mem/, $(lib_mem_objs))
+lib_includes += $(addprefix $(O)/install/include/mem/, $(lib_mem_includes))
+lib_includes += $(O)/install/include/mem/arch/$(HOST)/Access.H
 
 # Add each stub in kmemobjs to the list of objects to make/clean
 kernel_mem_stubobjs = $(filter Stub%.o, $(kmemobjs))
@@ -83,3 +87,11 @@ $(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(HOST)/%.C
 $(S)/os/kernel/mem/%.o: $(H)/os/kernel/mem/arch/$(HOST)/%.S
 	$(call status, AS, $@)
 	$(CXX) $(kernel_mem_cflags) $(CFLAGS) -D__ASSEMBLEY_ $(kernel_mem_iflags) -c $^ -o $@
+
+$(O)/install/include/mem/%.H: $(H)/os/kernel/mem/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/mem/arch/$(HOST)/%.H: $(H)/os/kernel/mem/arch/$(HOST)/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

@@ -31,11 +31,16 @@ OBJS += $(addprefix $(S)/lib/libc/cobj/, $(lib_cobj_objs)) \
 libk_objs += $(addprefix $(S)/lib/libc/cobj/, $(libk_cobj_objs))
 libbase_objs += $(addprefix $(S)/lib/libc/cobj/, $(libbase_cobj_objs))
 lib_includes += $(addprefix $(O)/install/include/cobj/, $(cobj_includes))
+lib_includes += $(O)/install/include/cobj/arch/$(HOST)/CallDescriptor.H
 
 # Rules for building objects and installing include files
 
 # Include files
 $(O)/install/include/cobj/%.H: $(H)/lib/libc/cobj/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/cobj/arch/$(HOST)/%.H: $(H)/lib/libc/cobj/arch/$(HOST)/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 

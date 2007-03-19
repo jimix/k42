@@ -30,6 +30,7 @@ lib_includes += $(addprefix $(O)/install/include/scheduler/, \
 			    $(scheduler_includes))
 lib_includes += $(addprefix $(O)/install/include/scheduler/arch/$(HOST)/, \
 			    $(scheduler_$(HOST)_includes))
+lib_includes += $(O)/install/include/sys/TimerEvent.H
 
 # Rules for building objects and installing include files
 
@@ -39,6 +40,10 @@ $(O)/install/include/scheduler/%.h: $(H)/lib/libc/scheduler/%.h
 	$(CP) $< $@
 
 $(O)/install/include/scheduler/%.H: $(H)/lib/libc/scheduler/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/sys/%.H: $(H)/lib/libc/scheduler/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 

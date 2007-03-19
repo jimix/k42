@@ -2,13 +2,20 @@ lib_lk_objs = Bug.o Configure.o InitCalls.o LinuxDevFS.o LinuxEnv.o	\
 	      Locks.o Memory.o MultiProc.o RCUCollector.o Scheduler.o	\
 	      Semaphore.o SysFS.o Timer.o Utils.o Wait.o workqueue.o
 
+lib_lk_includes = fixup.H lkIncs.H LinuxEnv.H Memory.H LinuxGlue.H InitCalls.H Wait.H
 # Top-level variables that use need to know about these objs
 OBJS += $(addprefix $(S)/lib/lk/, $(lib_lk_objs))
 build_libraries += $(O)/install/lib/$(HOST)/$(D)Deb/liblk26.a
+lib_includes += $(addprefix $(O)/install/include/lk/, $(lib_lk_includes))
 
 # Stub source files
 lib_lk_cxxflags = $(CXXFLAGS) -D__KERNEL__ -D__linux__ -D__$(HOST)__ -O -w
 lib_lk_iflags = -I$(L)/arch/k42/include -I$(L)/include -I$(H)/lib/lk
+
+# Include files
+$(O)/install/include/lk/%.H: $(H)/lib/lk/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
 
 # Object files
 

@@ -14,6 +14,7 @@ libk_objs += $(S)/os/kernel/proc/StubProcessSetKern.o \
 	    $(S)/os/kernel/proc/StubProcessServer.o
 libbase_objs += $(S)/os/kernel/proc/StubProcessSetKern.o \
 	    $(S)/os/kernel/proc/StubProcessServer.o
+lib_includes += $(O)/install/include/sys/ProcessServer.H
 
 # Add each stub in kprocobjs to the list of objects to make/clean
 kernel_proc_stubobjs = $(filter Stub%.o, $(kprocobjs))
@@ -43,3 +44,7 @@ $(S)/os/kernel/proc/%.o: $(H)/os/kernel/proc/%.C
 $(S)/os/kernel/proc/%.o: $(H)/os/kernel/proc/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
 	$(CXX) $(kernel_proc_cxxflags) $(kernel_proc_iflags) -c $^ -o $@
+
+$(O)/install/include/sys/%.H: $(H)/os/kernel/proc/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

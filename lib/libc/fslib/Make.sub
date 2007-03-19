@@ -11,6 +11,12 @@ lib_libc_fslib_stubobjs = $(filter Stub%.o, $(lib_fslib_objs) $(lib_fslib_common
 lib_libc_fslib_stubnames = $(patsubst Stub%.o, % ,$(lib_libc_fslib_stubobjs))
 lib_libc_fslib_stubfiles = $(foreach stubname, $(lib_libc_fslib_stubnames), $(call stubgen_objects, $(S)/lib/libc/fslib,$(stubname)))
 
+lib_libc_fslib_includes = NameTreeLinuxFS.H NameTreeLinuxFSVirtFile.H DirLinuxFS.H \
+           ServerFile.H MultiLinkManager.H FileSystemGlobal.H FSFile.H \
+           FSStats.H FreeList.H DirLinuxFSVolatile.H FSCreds.H FSNode.H \
+           ServerFileBlock.H fs_defines.H direntk42.H DentryList.H FileSystemList.H \
+           PagingTransport.H PagingTransportPA.H PagingTransportVA.H
+
 # Top-level variables that use need to know about these objs
 OBJS += $(addprefix $(S)/lib/libc/fslib/, $(lib_fslib_objs)) \
 	$(addprefix $(S)/lib/libc/fslib/, $(lib_fslib_common_objs)) \
@@ -18,6 +24,7 @@ OBJS += $(addprefix $(S)/lib/libc/fslib/, $(lib_fslib_objs)) \
 libk_objs += $(addprefix $(S)/lib/libc/fslib/, $(lib_fslib_libk_objs))
 libbase_objs += $(addprefix $(S)/lib/libc/fslib/, $(lib_fslib_libbase_objs))
 build_libraries += $(O)/install/lib/$(HOST)/$(D)Deb/libfs.a
+lib_includes += $(addprefix $(O)/install/include/fslib/, $(lib_libc_fslib_includes))
 
 # Stub source files
 lib_libc_fslib_iflags = -I$(S)/lib/libc/fslib	\
@@ -44,3 +51,7 @@ $(S)/lib/libc/fslib/%.o: $(H)/lib/libc/fslib/%.C
 $(O)/install/lib/$(HOST)/$(D)Deb/libfs.a: $(addprefix $(S)/lib/libc/fslib/, $(lib_fslib_objs))
 	$(call status, AR, $@)
 	$(AR) crs $@ $?
+
+$(O)/install/include/fslib/%: $(H)/lib/libc/fslib/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

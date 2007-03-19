@@ -1,8 +1,10 @@
 lib_virtfs_objs = FIVFAccessOH.o FileInfoVirtFS.o ServerFileVirtFS.o
+lib_virtfs_includes = FileInfoVirtFS.H FIVFAccessOH.H ServerFileVirtFS.H
 
 # Top-level variables that use need to know about these objs
 OBJS += $(addprefix $(S)/lib/libc/fslib/virtfs/, $(lib_virtfs_objs))
 build_libraries += $(O)/install/lib/$(HOST)/$(D)Deb/libvirtfs.a
+lib_includes += $(addprefix $(O)/install/include/fslib/virtfs/, $(lib_virtfs_includes))
 
 # Stub source files
 lib_libc_virtfs_iflags = -I$(H)/lib/libc		\
@@ -18,3 +20,7 @@ $(S)/lib/libc/fslib/virtfs/%.o: $(H)/lib/libc/fslib/virtfs/%.C
 $(O)/install/lib/$(HOST)/$(D)Deb/libvirtfs.a: $(addprefix $(S)/lib/libc/fslib/virtfs/, $(lib_virtfs_objs)) $(S)/lib/libc/fslib/FSStats.o
 	$(call status, AR, $@)
 	$(AR) crs $@ $?
+
+$(O)/install/include/fslib/virtfs/%.H: $(H)/lib/libc/fslib/virtfs/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
