@@ -131,7 +131,7 @@ endif
 
 ################################################################################
 # Our non-file targets that don't depend on later variable definitions
-.PHONY: k42-vmlinux k42-zImage includes servers binaries libraries dirs config all clean FORCE
+.PHONY: k42-vmlinux k42-zImage includes servers binaries libraries dirs config all clean configs users FORCE
 
 # Default target is just the directory skeleton and our bootable kernel.
 k42-vmlinux: dirs includes libraries $(S)/os/servers/baseServers/baseServers $(S)/os/k42-vmlinux
@@ -139,7 +139,7 @@ k42-vmlinux: dirs includes libraries $(S)/os/servers/baseServers/baseServers $(S
 # For some machines we need a compressed kernel.
 k42-zImage: dirs $(S)/os/servers/baseServers/baseServers $(S)/os/k42-zImage
 
-all: k42-vmlinux servers
+all: k42-vmlinux libraries servers binaries
 
 # Just print some debug information and exit.
 config:
@@ -206,6 +206,7 @@ include lib/lk/Make.sub
 
 include kitch-linux/lib/emu/arch/$(HOST)/Make.sub
 include kitch-linux/lib/emu/Make.sub
+include lib/gcc/Make.sub
 
 include lib/Make.sub
 
@@ -248,12 +249,19 @@ include usr/Make.sub
 
 include bin/sysctl/Make.sub			# build host user-land tools
 include bin/Make.sub
+include kitch-linux/tests/linux/Make.sub
+include kitch-linux/tests/mixed/Make.sub
+include kitch-linux/tests/pthread/Make.sub
 
 include kitch-linux/etc/Make.sub		# install configs in kitchroot
 include kitch-linux/ketc/Make.sub
+include kitch-linux/users/mysql/Make.sub
+include kitch-linux/users/pem/Make.sub
+include kitch-linux/users/pftest/Make.sub
+include kitch-linux/users/postmark/Make.sub
 include kitch-linux/users/regress/Make.sub
+include kitch-linux/users/regress-hw/Make.sub
 include kitch-linux/users/root/Make.sub
-
 
 ################################################################################
 # Rules for building kernel libraries that span directories
@@ -284,9 +292,9 @@ servers: libraries $(build_servers)
 
 libraries: includes $(build_libraries)
 
-includes: $(lib_includes)
+binaries: $(install_binaries) $(build_libraries)
 
-binaries: $(install_binaries)
+includes: $(lib_includes)
 
 configs: $(install_configs)
 
@@ -295,7 +303,7 @@ users: $(install_users)
 kitchroot: servers binaries configs users
 
 # Now that OBJS is totally expanded, generate our directory list from it.
-DIRS = $(sort $(foreach obj, $(OBJS), $(dir $(obj))))
+DIRS = $(sort $(foreach obj, $(OBJS) $(install_configs) $(install_users) $(install_binaries) $(install_servers), $(dir $(obj))))
 dirs: $(DIRS)
 
 # This is always the last rule: it needs OBJS to be totally expanded.

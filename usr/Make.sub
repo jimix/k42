@@ -1,3 +1,15 @@
+usr_test_targets = abin awaittime craig dcofcm \
+		   dcotest dcotestl diskTest echosrv hello hithere \
+		   hwPerf mmap-ex mtprog multiDispatcher pmu_run.sh pmu.sh \
+		   printStat printtime regression-script resMgrStats semTest \
+		   sockTestSrv spread sysCmd test testAlignment  \
+		   testDisabledIPC testIOMapping testMigrateVP \
+		   testMountPointMgr testPageOut testRemoteIPC testSymLink \
+		   testTrace threadtest traceAddEvent UDPTest vptest \
+		   while1 yieldtest test/atest
+
+install_binaries += $(addprefix $(IROOT)/tests/native/, $(usr_test_targets))
+install_binaries += $(addprefix $(IROOT)/, /tmp /usr/tmp)
 libk_objs +=  $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o               \
               $(S)/usr/XUsrTst.o
 
@@ -17,6 +29,47 @@ $(call stubgen_targets, $(S)/usr): $(H)/usr/%.H
 	        -w -I. $(IFLAGS) $(usr_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
 
+# Specific rules for dcotest/dcotestl
+dcotest_objs = $(addprefix $(S)/usr/, intctr.o intctrSharedNotLocked.o dcotest.o)
+dcotestl_objs = $(addprefix $(S)/usr/, intctr.o intctrSharedLocked.o dcotest.o)
+OBJS += $(dcotest_objs) $(dcotestl_objs)
+
+$(S)/usr/dcotest: $(dcotest_objs)
+	$(call status, CXX, $@)
+	$(CXX) $(CXXFLAGS) $(usr_iflags) $(bin_lflags) $(bin_libs) $(dcotest_objs) -o $@
+
+$(S)/usr/dcotestl: $(dcotestl_objs)
+	$(call status, CXX, $@)
+	$(CXX) $(CXXFLAGS) $(usr_iflags) $(bin_lflags) $(bin_libs) $(dcotestl_objs) -o $@
+
+# Specific rules for testDisabledIPC
+testDisabledIPC_objs = $(addprefix $(S)/usr/, testDisabledIPC.o UsrTst.o)
+OBJS += $(testDisabledIPC_objs)
+
+$(S)/usr/testDisabledIPC: $(testDisabledIPC_objs)
+	$(call status, CXX, $@)
+	$(CXX) $(CXXFLAGS) $(usr_iflags) $(bin_lflags) $(bin_libs) $(testDisabledIPC_objs) -o $@
+
+# Specific rules for testRemoteIPC
+testRemoteIPC_objs = $(addprefix $(S)/usr/, testRemoteIPC.o XRemoteIPCTst.o)
+OBJS += $(testRemoteIPC_objs)
+
+$(S)/usr/testRemoteIPC: $(testRemoteIPC_objs)
+	$(call status, CXX, $@)
+	$(CXX) $(CXXFLAGS) $(usr_iflags) $(bin_lflags) $(bin_libs) $(testRemoteIPC_objs) -o $@
+
+# Specific rules for some kitchroot directories
+$(IROOT)/tmp: $(H)/usr/Make.sub
+	$(call status, INSTALL, $@)
+	mkdir -p $@
+	chmod 0777 $@
+
+$(IROOT)/usr/tmp: $(H)/usr/Make.sub
+	$(call status, INSTALL, $@)
+	mkdir -p $@
+	chmod 0777 $@
+
+# General build rules for these tests
 $(S)/usr/%.o: $(H)/usr/%.C
 	$(call status, CXX, $@)
 	$(CXX) -c $(CXXFLAGS) $(usr_iflags) $< -o $@
@@ -25,3 +78,19 @@ $(S)/usr/%.o: $(S)/usr/%.C
 	$(call status, CXX, $@)
 	$(CXX) -c $(CXXFLAGS) $(usr_iflags) $< -o $@
 
+$(S)/usr/%: $(H)/usr/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(CXXFLAGS) $(usr_iflags) $(bin_lflags) $(bin_libs) $< -o $@
+	
+$(IROOT)/tests/native/%: $(S)/usr/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+	
+$(IROOT)/tests/native/%: $(H)/usr/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(IROOT)/tests/native/test/atest: $(H)/usr/atest
+	$(call status, INSTALL, $@)
+	$(MKDIR) -p $(IROOT)/tests/native/test
+	$(CP) -f $< $@
