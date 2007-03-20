@@ -6,8 +6,56 @@
 # 3. Object/executables go into separate tree from sourcea
 # 4. Included makefiles use pattern rules 
 # 5. Included makefiles included directly from top-level makefile
+# 6. Generic pattern rules at the end of this makefile provide basic targets
 # ############################################################################
-
+# Basic Strategy of this makefile
+# 1. A "bootstrap" phase installs basic include files, builds basic tools
+#    needed for later compilation, and generates include files using 
+#    these  tools
+# 2. A "depend" phase which generates dependencies between sources, headers,
+#    objects, and targets
+# 3. A "all" phase, the normal build phase which covers all of the first two
+#    phases once they've been done and build a kernel, servers, host binaries,
+#    etc.
+# 
+# + "bootstrap" targets build and install basic include files
+#   tools for standard making. 
+#   * Targets *
+#   - bootstrap_includes
+#   - bootstrap_tools
+#   - bootstrap_gen
+#   - bootstrap
+#   - bootstrap_clean
+#  * Variables *
+#   - $(bootstrap_incs): a list of all include files that can
+#     be installed directly without additional generation
+#   - $(bootstrap_tools): a list of scripts and binaries that need
+#     can be built and installed once the base includes are in place
+#   - $(bootstrap_generate): a list of files to generate for bootstrapping
+#     using the bootstrap tools
+#   - $(bootstrap_objs): a list of all targets and intermediates 
+#     built for the base bootstrapping system
+#
+# + "depend" builds all of the dependencies between targets once the bootstrap
+#   includes and bootstrap generates are done and installed.
+#
+# + "all" builds the complete system once all of the bootstrapping and
+#   dependencies are in place
+#
+#   * Targets *
+#   includes: rebuild as necessary and install all include files
+#   libraries: rebuild as necessary and install all libraries
+#   servers: rebuild as necessary and install all servers
+#   kernel: rebuild as necessary the kernel zimage
+#   clean: remove all non-bootstrap targets
+#
+#   * Variables *
+#   $(host_libraries) - 
+#   $(host_servers) - 
+#   $(host_includes) - 
+#
+# ##############################################################################
+#
 # Basic build configuration.
 D = full
 OS = $(shell uname -s)
@@ -21,6 +69,7 @@ H = .
 S = $(O)/$(HOST)/$(D)Deb
 B = $(S)/os/kexec
 L = ../linux-030
+
 # Install directories, including top level, libraries, and root image
 I = $(O)/install/$(HOST)/$(D)Deb
 ILIB = $(O)/install/lib/$(HOST)/$(D)Deb
