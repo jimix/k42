@@ -29,57 +29,24 @@ lib_misc_objs = BaseRandom.o BlockSet.o DiskMountInfoList.o          \
 OBJS += $(addprefix $(S)/lib/libc/misc/, $(lib_misc_objs))
 libk_objs += $(addprefix $(S)/lib/libc/misc/, $(lib_misc_objs))
 libbase_objs += $(addprefix $(S)/lib/libc/misc/, $(lib_misc_objs))
-lib_includes += $(addprefix $(O)/install/include/misc/, $(misc_includes))
-lib_includes += $(addprefix $(O)/install/include/misc/arch/$(HOST)/, \
+bootstrap_incs += $(addprefix $(O)/install/include/misc/, $(misc_includes))
+bootstrap_incs += $(addprefix $(O)/install/include/misc/arch/$(HOST)/, \
 			    $(misc_$(HOST)_includes))
 
 # Rules for building objects and installing include files
 
-# Include files
-$(O)/install/include/misc/%.h: $(H)/lib/libc/misc/%.h
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-$(O)/install/include/misc/%.H: $(H)/lib/libc/misc/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-$(O)/install/include/misc/%.I: $(H)/lib/libc/misc/%.I
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-$(O)/install/include/misc/%.C: $(H)/lib/libc/misc/%.C
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-$(O)/install/include/misc/arch/$(HOST)/%.h: $(H)/lib/libc/misc/arch/$(HOST)/%.h
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-$(O)/install/include/misc/arch/$(HOST)/%.H: $(H)/lib/libc/misc/arch/$(HOST)/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-
-# Stub source files
 # Object files
 
 lib_libc_misc_iflags = -I$(S)/lib/libc/misc	\
                        -I$(H)/lib/libc		\
                        -I$(H)/lib/libc/misc
 
-$(S)/lib/libc/misc/%.o: $(S)/lib/libc/misc/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(CXXFLAGS) $(IFLAGS) $(lib_libc_misc_iflags) -c $< -o $@
-
-$(S)/lib/libc/misc/%.o: $(H)/lib/libc/misc/%.C
-	$(call status, CXX, $@)
-	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_misc_iflags) $< -o $@
+$(S)/lib/libc/misc/%.o: IFLAGS += $(lib_libc_misc_iflags)
 
 $(S)/lib/libc/misc/%.o: $(H)/lib/libc/misc/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
-	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_misc_iflags) $< -o $@
+	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $< -o $@
 
 $(S)/lib/libc/misc/%.o: $(H)/lib/libc/misc/arch/$(HOST)/%.S
 	$(call status, AS, $@)
-	$(CXX) $(CFLAGS) -D__ASSEMBLEY_ $(IFLAGS) $(lib_libc_misc_iflags) -c $^ -o $@
+	$(CXX) $(CFLAGS) -D__ASSEMBLEY_ $(IFLAGS) -c $^ -o $@

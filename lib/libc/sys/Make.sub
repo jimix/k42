@@ -24,6 +24,7 @@ sys_includes = systemAccess.H sysTypes.H sysIncs.H BaseProcess.H 	   \
 lib_libc_sys_stubobjs = $(filter Stub%.o, $(lib_sys_objs) $(lib_sys_base_objs))
 lib_libc_sys_stubnames = $(patsubst Stub%.o, % ,$(lib_libc_sys_stubobjs))
 lib_libc_sys_stubfiles = $(foreach stubname, $(lib_libc_sys_stubnames), $(call stubgen_objects, $(S)/lib/libc/sys,$(stubname)))
+lib_libc_sys_stubincs = $(foreach stubname, $(lib_libc_sys_stubnames), $(call stubgen_headers,$(stubname)))
 
 # Top-level variables that use need to know about these objs
 OBJS += $(addprefix $(S)/lib/libc/sys/, $(lib_sys_objs) $(lib_sys_base_objs)) \
@@ -32,17 +33,14 @@ OBJS += $(addprefix $(S)/lib/libc/sys/, $(lib_sys_objs) $(lib_sys_base_objs)) \
 libk_objs += $(addprefix $(S)/lib/libc/sys/, $(lib_sys_objs))
 libbase_objs += $(addprefix $(S)/lib/libc/sys/, $(lib_sys_objs) $(lib_sys_base_objs))
 
-lib_includes += $(addprefix $(O)/install/include/sys/, $(sys_includes))
+bootstrap_incs += $(addprefix $(O)/install/include/sys/, $(sys_includes))
+bootstrap_gens += $(lib_libc_sys_stubincs)
 
 # Rules for building objects and installing include files
+$(STUBGEN_INC)/%: $(S)/lib/libc/sys/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
 
-# Include files
-$(O)/install/include/sys/%.h: $(H)/lib/libc/sys/%.h
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-$(O)/install/include/sys/%.H: $(H)/lib/libc/sys/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
 
 # Stub source files
 lib_libc_sys_iflags = -I$(S)/lib/libc/sys	\
@@ -51,17 +49,10 @@ lib_libc_sys_iflags = -I$(S)/lib/libc/sys	\
 
 $(call stubgen_targets, $(S)/lib/libc/sys): $(H)/lib/libc/sys/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
+	$(STUBGEN) $(HOST) $< -o $(S)/lib/libc/sys \
 		$(filter-out -MD, $(CXXFLAGS)) \
 		-w -I. $(IFLAGS) $(lib_libc_sys_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
 
 # Object files
-
-$(S)/lib/libc/sys/%.o: $(S)/lib/libc/sys/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(CXXFLAGS) $(IFLAGS) $(lib_libc_sys_iflags) -c $< -o $@
-
-$(S)/lib/libc/sys/%.o: $(H)/lib/libc/sys/%.C
-	$(call status, CXX, $@)
-	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_sys_iflags) $< -o $@
+$(S)/lib/libc/sys/%.o: IFLAGS += $(lib_libc_sys_iflags)

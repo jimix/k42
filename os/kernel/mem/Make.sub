@@ -48,8 +48,8 @@ lib_mem_includes = Access.H RegionType.H FR.H KernelPagingTransport.H \
 OBJS += $(addprefix $(S)/os/kernel/mem/, $(kmemobjs))
 libk_objs += $(addprefix $(S)/os/kernel/mem/, $(lib_mem_objs))
 libbase_objs += $(addprefix $(S)/os/kernel/mem/, $(lib_mem_objs))
-lib_includes += $(addprefix $(O)/install/include/mem/, $(lib_mem_includes))
-lib_includes += $(O)/install/include/mem/arch/$(HOST)/Access.H
+bootstrap_incs += $(addprefix $(O)/install/include/mem/, $(lib_mem_includes))
+bootstrap_incs += $(O)/install/include/mem/arch/$(HOST)/Access.H
 
 # Add each stub in kmemobjs to the list of objects to make/clean
 kernel_mem_stubobjs = $(filter Stub%.o, $(kmemobjs))

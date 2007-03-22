@@ -17,20 +17,12 @@ alloc_arch_includes = AllocCell.H LMalloc.H
 OBJS += $(addprefix $(S)/lib/libc/alloc/, $(lib_alloc_objs))
 libk_objs += $(addprefix $(S)/lib/libc/alloc/, $(lib_alloc_objs))
 libbase_objs += $(addprefix $(S)/lib/libc/alloc/, $(lib_alloc_objs))
-lib_includes += $(addprefix $(O)/install/include/alloc/, $(alloc_includes))
-lib_includes += $(O)/install/include/sys/PageAllocator.H \
-		$(O)/install/include/sys/LeakProof.H
-lib_includes += $(addprefix $(O)/install/include/alloc/arch/$(HOST)/, $(alloc_arch_includes))
+bootstrap_incs += $(addprefix $(O)/install/include/alloc/, $(alloc_includes))
+bootstrap_incs += $(O)/install/include/sys/PageAllocator.H \
+		  $(O)/install/include/sys/LeakProof.H
+bootstrap_incs += $(addprefix $(O)/install/include/alloc/arch/$(HOST)/, $(alloc_arch_includes))
 
 # Rules for building objects and installing include files
-
-$(O)/install/include/alloc/%.H: $(H)/lib/libc/alloc/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-$(O)/install/include/alloc/arch/$(HOST)/%.H: $(H)/lib/libc/alloc/arch/$(HOST)/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
 
 $(O)/install/include/sys/%.H: $(H)/lib/libc/alloc/%.H
 	$(call status, INSTALL, $@)
@@ -41,11 +33,7 @@ $(O)/install/include/sys/%.H: $(H)/lib/libc/alloc/%.H
 lib_libc_alloc_flags = -I$(S)/lib/libc/alloc	\
                        -I$(H)/lib/libc		\
                        -I$(H)/lib/libc/alloc
-$(S)/lib/libc/alloc/%.o: $(H)/lib/libc/alloc/%.C
-	$(call status, CXX, $@)
-	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_alloc_flags) $< -o $@
-
+$(S)/lib/libc/alloc/%.o: IFLAGS += $(lib_libc_alloc_flags)
 $(S)/lib/libc/alloc/%.o: $(H)/lib/libc/alloc/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
 	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_alloc_flags) $< -o $@
-

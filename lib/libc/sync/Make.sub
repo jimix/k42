@@ -16,27 +16,8 @@ sync_powerpc_includes = atomic.h BLock.H FairBLock.H
 OBJS += $(addprefix $(S)/lib/libc/sync/, $(lib_sync_objs))
 libk_objs += $(addprefix $(S)/lib/libc/sync/, $(lib_sync_objs))
 libbase_objs += $(addprefix $(S)/lib/libc/sync/, $(lib_sync_objs))
-lib_includes += $(addprefix $(O)/install/include/sync/, $(sync_includes))
-lib_includes += $(addprefix $(O)/install/include/sync/arch/$(HOST)/, $(sync_$(HOST)_includes))
-
-# Rules for building objects and installing include files
-
-# Include files
-$(O)/install/include/sync/%.H: $(H)/lib/libc/sync/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-$(O)/install/include/sync/%.h: $(H)/lib/libc/sync/%.h
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-$(O)/install/include/sync/arch/$(HOST)/%.H: $(H)/lib/libc/sync/arch/$(HOST)%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-
-$(O)/install/include/sync/arch/$(HOST)/%.h: $(H)/lib/libc/sync/arch/$(HOST)%.h
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
+bootstrap_incs += $(addprefix $(O)/install/include/sync/, $(sync_includes))
+bootstrap_incs += $(addprefix $(O)/install/include/sync/arch/$(HOST)/, $(sync_$(HOST)_includes))
 
 # Stub source files
 lib_libc_sync_iflags = -I$(S)/lib/libc/sync	\
@@ -45,10 +26,7 @@ lib_libc_sync_iflags = -I$(S)/lib/libc/sync	\
 
 # Object files
 
-$(S)/lib/libc/sync/%.o: $(H)/lib/libc/sync/%.C
-	$(call status, CXX, $@)
-	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_sync_iflags) $< -o $@
-
+$(S)/lib/libc/sync/%.o: IFLAGS += $(lib_libc_sync_iflags)
 $(S)/lib/libc/sync/%.o: $(H)/lib/libc/sync/arch/$(HOST)/%.S
 	$(call status, AS, $@)
-	$(CXX) $(CFLAGS) -D__ASSEMBLEY_ $(IFLAGS) $(lib_libc_sync_iflags) -c $^ -o $@
+	$(CXX) $(CFLAGS) -D__ASSEMBLEY_ $(IFLAGS) -c $^ -o $@

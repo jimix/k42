@@ -26,7 +26,7 @@ COMPILE_DATE='"$(shell date)"'
 libemu_cxxflags = -DCOMPILE_DATE=$(COMPILE_DATE) $(CXXFLAGS)
 OBJS += $(libemu_objs)
 
-lib_includes += $(addprefix $(O)/install/include/emu/, $(libemu_includes))
+bootstrap_incs += $(addprefix $(O)/install/include/emu/, $(libemu_includes))
 
 $(S)/kitch-linux/lib/emu/%.o: $(H)/kitch-linux/lib/emu/%.C
 	$(call status, CXX, $@)

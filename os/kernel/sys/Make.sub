@@ -12,7 +12,7 @@ OBJS += $(addprefix $(S)/os/kernel/sys/, $(ksysobjs) genSymdefs)
 OBJS += $(addprefix $(S)/os/kernel/sys/arch/$(HOST)/, $(ksys_arch_stuff))
 libk_objs += $(S)/os/kernel/sys/symdefsKern.o
 libbase_objs += $(S)/os/kernel/sys/symdefsUser.o
-lib_includes += $(addprefix $(O)/install/include/sys/, $(ksys_includes)) \
+bootstrap_incs += $(addprefix $(O)/install/include/sys/, $(ksys_includes)) \
 		$(addprefix $(O)/install/include/sys/arch/$(HOST)/, $(ksys_arch_includes))
 
 

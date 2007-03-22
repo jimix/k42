@@ -17,13 +17,15 @@
 # 3. A "all" phase, the normal build phase which covers all of the first two
 #    phases once they've been done and build a kernel, servers, host binaries,
 #    etc.
-# 
+# 4. An "install" phase, which moves generated libraries and such into the
+#    install directory
+#
 # + "bootstrap" targets build and install basic include files
 #   tools for standard making. 
 #   * Targets *
 #   - bootstrap_includes
 #   - bootstrap_tools
-#   - bootstrap_gen
+#   - bootstrap_generate
 #   - bootstrap
 #   - bootstrap_clean
 #  * Variables *
@@ -31,7 +33,7 @@
 #     be installed directly without additional generation
 #   - $(bootstrap_tools): a list of scripts and binaries that need
 #     can be built and installed once the base includes are in place
-#   - $(bootstrap_generate): a list of files to generate for bootstrapping
+#   - $(bootstrap_gens): a list of files to generate for bootstrapping
 #     using the bootstrap tools
 #   - $(bootstrap_objs): a list of all targets and intermediates 
 #     built for the base bootstrapping system
@@ -47,6 +49,9 @@
 #   libraries: rebuild as necessary and install all libraries
 #   servers: rebuild as necessary and install all servers
 #   kernel: rebuild as necessary the kernel zimage
+#   binaries: rebuild as necessary and install test binaries
+#   users: install user home directories 
+#   config-files: install system config files
 #   clean: remove all non-bootstrap targets
 #
 #   * Variables *
@@ -74,6 +79,7 @@ L = ../linux-030
 I = $(O)/install/$(HOST)/$(D)Deb
 ILIB = $(O)/install/lib/$(HOST)/$(D)Deb
 IROOT = $(I)/kitchroot
+STUBGEN_INC = $(O)/install/include/stubgen/arch/$(HOST)
 TOOLS = $(O)/install/tools/$(OS)_$(BUILD)/$(HOST)
 U = /u/kitchawa/k42-packages
 IMG = $(U)/$(D)Deb.Img.4
@@ -164,6 +170,11 @@ stubgen_objects = $(1)/stub/Stub$(2).H $(1)/meta/Meta$(2).H \
     $(1)/meta/TplMeta$(2).H $(1)/xobj/X$(2).H $(1)/xobj/TplX$(2).H \
     $(1)/Stub$(2).C $(1)/X$(2).C $(1)/tmpl/TplX$(2).I
 
+stubgen_headers = $(STUBGEN_INC)/stub/Stub$(1).H \
+	$(STUBGEN_INC)/meta/Meta$(1).H  $(STUBGEN_INC)/meta/TplMeta$(1).H \
+	$(STUBGEN_INC)/xobj/X$(1).H $(STUBGEN_INC)/xobj/TplX$(1).H \
+        $(STUBGEN_INC)/tmpl/TplX$(1).I
+
 # Call for printing status of commands in different forms
 # If V=1, we echo the commands as normal, if V=2, show out-of-date depends.
 V = 0
@@ -180,15 +191,19 @@ endif
 
 ################################################################################
 # Our non-file targets that don't depend on later variable definitions
-.PHONY: k42-vmlinux k42-zImage includes servers binaries libraries dirs config all clean configs users FORCE
+.PHONY: k42-vmlinux k42-zImage 
+.PHONY: includes libraries servers binaries kernel config-files users dirs
+.PHONY: config all clean FORCE bootstrap
+.PHONY: bootstrap_includes bootstrap_gen bootstrap_tools bootstrap_clean
 
 # Default target is just the directory skeleton and our bootable kernel.
-k42-vmlinux: dirs includes libraries $(S)/os/servers/baseServers/baseServers $(S)/os/k42-vmlinux
+kernel: dirs k42-vmlinux
 
+k42-vmlinux: dirs includes libraries $(S)/os/servers/baseServers/baseServers $(S)/os/k42-vmlinux
 # For some machines we need a compressed kernel.
 k42-zImage: dirs $(S)/os/servers/baseServers/baseServers $(S)/os/k42-zImage
 
-all: k42-vmlinux libraries servers binaries
+all: dirs includes libraries servers binaries users config-filesk42-vmlinux
 
 # Just print some debug information and exit.
 config:
@@ -201,7 +216,13 @@ clean:
 
 ################################################################################
 # Real Rules begin here
-# 
+################################################################################
+# Start by initializating some key variables that are added to as 
+# submakefiles are included.
+
+################################################################################
+# Normal Rules
+#
 # A number of special variables are used over the course of the included
 # makefiles. In particular:
 # - $(OBJS) contains targets we build that directories
@@ -236,12 +257,13 @@ build_libraries = $(O)/install/lib/$(HOST)/$(D)Deb/libk.a \
 		  $(O)/install/lib/$(HOST)/$(D)Deb/libemu.a \
 		  $(O)/install/lib/$(HOST)/$(D)Deb/libbase.a
 
-include lib/libc/alloc/Make.sub
-include lib/libc/cobj/Make.sub
+
+include lib/libc/cobj/Make.sub # Cobj stubgen firs
 include lib/libc/cobj/sys/Make.sub
+include lib/libc/io/Make.sub   # IO stubgen before fslib stubgen
+include lib/libc/alloc/Make.sub
 include lib/libc/fslib/Make.sub
 include lib/libc/fslib/virtfs/Make.sub
-include lib/libc/io/Make.sub
 include lib/libc/misc/Make.sub
 include lib/libc/scheduler/Make.sub
 include lib/libc/stdlib/Make.sub
@@ -326,6 +348,25 @@ $(O)/install/lib/$(HOST)/$(D)Deb/libk.a: $(libk_objs)
 $(O)/install/lib/$(HOST)/$(D)Deb/libbase.a: $(libbase_objs)
 	$(call status, AR, $@)
 	$(AR) crs $@ $?
+################################################################################
+# Bootstrapping Rules
+# ##############################################################################
+
+bootstrap_objs += $(boostrap_incs) $(bootstrap_gens)
+
+bootstrap_includes: $(bootstrap_incs)
+
+bootstrap_tools:
+
+bootstrap_generate: bootstrap_tools $
+bootstrap_generate: $(call stubgen_headers,Obj)
+bootstrap_generate: $(bootstrap_gens)
+
+bootstrap_clean: 
+	$(call status, RM, $(wildcard $(bootstrap_objs)))
+	$(RM) $(wildcard $(bootstrap_objs))
+
+bootstrap: bootstrap_includes bootstrap_tools bootstrap_generate
 
 ###############################################################################
 
@@ -369,3 +410,54 @@ showobjs:
 
 showlibbase:
 	echo $(libbase_objs)
+
+################################################################################
+# Default pattern rules
+#
+# These pattern rules are sufficient to generate many simple targets, especially
+# by customizing a dependency with a customization of a cflag or include. Many
+# targets still need custom pattern rules, however, and those are declared in
+# makefiles that are included prior to these rules
+
+# Basic C and C++ compilation includes
+$(S)/%.o: $(H)/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(CXXFLAGS) $(IFLAGS) -c $< -o $@
+
+$(S)/%.o: $(S)/%.C
+	$(call status, CXX, $@)
+	$(CXX) $(CXXFLAGS) $(IFLAGS) -c $< -o $@
+
+$(S)/%.o: $(H)/%.c
+	$(call status, CXX, $@)
+	$(CXX) $(CFLAGS) $(IFLAGS) -c $< -o $@
+
+$(S)/%.o: $(S)/%.c
+	$(call status, CXX, $@)
+	$(CXX) $(CFLAGS) $(IFLAGS) -c $< -o $@
+
+# Basic include file installation
+$(O)/install/include/%.H: $(H)/lib/libc/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/%.h: $(H)/lib/libc/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/%.I: $(H)/lib/libc/%.I
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/%.C: $(H)/lib/libc/%.C
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+# Many stubgen include file installations
+$(O)/install/include/%.H: $(S)/lib/libc/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/%.H: $(S)/lib/libc/%.I
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
