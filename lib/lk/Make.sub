@@ -6,7 +6,7 @@ lib_lk_includes = fixup.H lkIncs.H LinuxEnv.H Memory.H LinuxGlue.H InitCalls.H W
 # Top-level variables that use need to know about these objs
 OBJS += $(addprefix $(S)/lib/lk/, $(lib_lk_objs))
 build_libraries += $(O)/install/lib/$(HOST)/$(D)Deb/liblk26.a
-lib_includes += $(addprefix $(O)/install/include/lk/, $(lib_lk_includes))
+bootstrap_incs += $(addprefix $(O)/install/include/lk/, $(lib_lk_includes))
 
 # Stub source files
 lib_lk_cxxflags = $(CXXFLAGS) -D__KERNEL__ -D__linux__ -D__$(HOST)__ -O -w
@@ -17,11 +17,12 @@ $(O)/install/include/lk/%.H: $(H)/lib/lk/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
-# Object files
+# Object files - include file order is important here, so we have custom rules
 
+$(S)/lib/lk/%.o: CXXFLAGS += -D__KERNEL__ -D__linux__ -D__$(HOST)__ -O -w
 $(S)/lib/lk/%.o: $(H)/lib/lk/%.C
 	$(call status, CXX, $@)
-	$(CXX) -c $(lib_lk_cxxflags) $(lib_lk_iflags) $(IFLAGS) $< -o $@
+	$(CXX) -c $(CXXFLAGS) $(lib_lk_iflags) $(IFLAGS) -o $@ $<
 
 $(O)/install/lib/$(HOST)/$(D)Deb/liblk26.a: $(addprefix $(S)/lib/lk/, $(lib_lk_objs))
 	$(call status, AR, $@)

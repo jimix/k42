@@ -13,19 +13,13 @@ usr_powerpc_includes = ProgExecArch.H
 OBJS += $(addprefix $(S)/lib/libc/usr/, $(lib_usr_objs) ProgExecUsr.o)
 libk_objs += $(addprefix $(S)/lib/libc/usr/, $(lib_usr_objs))
 libbase_objs += $(addprefix $(S)/lib/libc/usr/, $(lib_usr_base_objs))
-lib_includes += $(addprefix $(O)/install/include/usr/, $(usr_includes))
-lib_includes +=  $(addprefix $(O)/install/include/usr/arch/$(HOST)/, $(usr_$(HOST)_includes))
-lib_includes += $(O)/install/include/sys/GDBIO.H
+bootstrap_incs += $(addprefix $(O)/install/include/usr/, $(usr_includes))
+bootstrap_incs +=  $(addprefix $(O)/install/include/usr/arch/$(HOST)/, $(usr_$(HOST)_includes))
+bootstrap_incs += $(O)/install/include/sys/GDBIO.H
 
 # Rules for building objects and installing include files
 
 # Include files
-$(O)/install/include/usr/%.H: $(H)/lib/libc/usr/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
-$(O)/install/include/usr/arch/$(HOST)/%.H: $(H)/lib/libc/usr/arch/$(HOST)/%.H
-	$(call status, INSTALL, $@)
-	$(CP) $< $@
 $(O)/install/include/sys/%.H: $(H)/lib/libc/usr/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
@@ -36,14 +30,12 @@ lib_libc_usr_iflags = -I$(S)/lib/libc/usr	\
                        -I$(H)/lib/libc		\
                        -I$(H)/lib/libc/usr
 
-$(S)/lib/libc/usr/%.o: $(H)/lib/libc/usr/%.C
-	$(call status, CXX, $@)
-	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_usr_iflags) $< -o $@
+$(S)/lib/libc/usr/%.o: IFLAGS += $(lib_libc_usr_iflags)
 
 $(S)/lib/libc/usr/%.o: $(H)/lib/libc/usr/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
-	$(CXX) $(CXXFLAGS) $(IFLAGS) $(lib_libc_usr_iflags) -c $^ -o $@
+	$(CXX) $(CXXFLAGS) $(IFLAGS) -c $^ -o $@
 
 $(S)/lib/libc/usr/%.o: $(H)/lib/libc/usr/arch/$(HOST)/%.S
 	$(call status, AS, $@)
-	$(CXX) $(CFLAGS) -D__ASSEMBLEY_ $(IFLAGS) $(lib_libc_usr_iflags) -c $^ -o $@
+	$(CXX) $(CFLAGS) -D__ASSEMBLEY_ $(IFLAGS) -c $^ -o $@

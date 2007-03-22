@@ -25,7 +25,7 @@ baseServers_objs += $(addprefix $(S)/os/servers/baseServers/, \
 
 build_servers += $(S)/os/servers/baseServers/baseServers
 boot_servers += $(S)/os/servers/baseServers/baseServers
-lib_includes += $(addprefix $(O)/install/include/sys/, baseBootServers.H bootServers.H)
+bootstrap_incs += $(addprefix $(O)/install/include/sys/, baseBootServers.H bootServers.H)
 
 # Rules for building objects
 
@@ -51,13 +51,7 @@ $(call stubgen_targets, $(S)/os/servers/baseServers): $(H)/os/servers/baseServer
 
 # Object files
 
-$(S)/os/servers/baseServers/%.o: $(S)/os/servers/baseServers/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_baseServers_iflags) -c $< -o $@
-
-$(S)/os/servers/baseServers/%.o: $(H)/os/servers/baseServers/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_baseServers_iflags) -c $< -o $@
+$(S)/os/servers/baseServers/%.o: IFLAGS += $(srv_baseServers_iflags)
 
 baseServers_lflags = -static -Wl,-e,_k42start                          \
                      -L$(O)/install/lib/powerpc/$(D)Deb                 \

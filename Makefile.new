@@ -203,7 +203,7 @@ k42-vmlinux: dirs includes libraries $(S)/os/servers/baseServers/baseServers $(S
 # For some machines we need a compressed kernel.
 k42-zImage: dirs $(S)/os/servers/baseServers/baseServers $(S)/os/k42-zImage
 
-all: dirs includes libraries servers binaries users config-filesk42-vmlinux
+all: dirs includes libraries servers binaries users config-files k42-vmlinux
 
 # Just print some debug information and exit.
 config:
@@ -258,10 +258,10 @@ build_libraries = $(O)/install/lib/$(HOST)/$(D)Deb/libk.a \
 		  $(O)/install/lib/$(HOST)/$(D)Deb/libbase.a
 
 
-include lib/libc/cobj/Make.sub # Cobj stubgen firs
+include lib/libc/cobj/Make.sub # Cobj stubgen first
 include lib/libc/cobj/sys/Make.sub
-include lib/libc/io/Make.sub   # IO stubgen before fslib stubgen
 include lib/libc/alloc/Make.sub
+include lib/libc/io/Make.sub   # IO stubgen before fslib stubgen
 include lib/libc/fslib/Make.sub
 include lib/libc/fslib/virtfs/Make.sub
 include lib/libc/misc/Make.sub
@@ -352,13 +352,16 @@ $(O)/install/lib/$(HOST)/$(D)Deb/libbase.a: $(libbase_objs)
 # Bootstrapping Rules
 # ##############################################################################
 
-bootstrap_objs += $(boostrap_incs) $(bootstrap_gens)
+bootstrap_objs += $(bootstrap_incs) $(bootstrap_gens)
 
 bootstrap_includes: $(bootstrap_incs)
 
+bootstrap_print:
+	echo $(bootstrap_incs)
+
 bootstrap_tools:
 
-bootstrap_generate: bootstrap_tools $
+bootstrap_generate: bootstrap_tools
 bootstrap_generate: $(call stubgen_headers,Obj)
 bootstrap_generate: $(bootstrap_gens)
 
@@ -429,12 +432,12 @@ $(S)/%.o: $(S)/%.C
 	$(CXX) $(CXXFLAGS) $(IFLAGS) -c $< -o $@
 
 $(S)/%.o: $(H)/%.c
-	$(call status, CXX, $@)
-	$(CXX) $(CFLAGS) $(IFLAGS) -c $< -o $@
+	$(call status, CC, $@)
+	$(CC) $(CFLAGS) $(IFLAGS) -c $< -o $@
 
 $(S)/%.o: $(S)/%.c
-	$(call status, CXX, $@)
-	$(CXX) $(CFLAGS) $(IFLAGS) -c $< -o $@
+	$(call status, CC, $@)
+	$(CC) $(CFLAGS) $(IFLAGS) -c $< -o $@
 
 # Basic include file installation
 $(O)/install/include/%.H: $(H)/lib/libc/%.H
@@ -458,6 +461,6 @@ $(O)/install/include/%.H: $(S)/lib/libc/%.H
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
-$(O)/install/include/%.H: $(S)/lib/libc/%.I
+$(O)/install/include/%.I: $(S)/lib/libc/%.I
 	$(call status, INSTALL, $@)
 	$(CP) $< $@

@@ -13,8 +13,8 @@ OBJS += $(addprefix $(S)/lib/libc/stdlib/, $(lib_stdlib_objs)) \
 	$(O)/install/lib/$(HOST)/$(D)Deb/libnative.a
 libk_objs += $(addprefix $(S)/lib/libc/stdlib/, $(lib_stdlib_libk_objs))
 libbase_objs += $(addprefix $(S)/lib/libc/stdlib/, $(lib_stdlib_libbase_objs))
-lib_includes += $(addprefix $(O)/install/include/, $(stdlib_includes))
 build_libraries += $(O)/install/lib/$(HOST)/$(D)Deb/libnative.a
+bootstrap_incs += $(addprefix $(O)/install/include/, $(stdlib_includes))
 
 # Rules for building objects and installing include files
 
@@ -29,13 +29,7 @@ lib_libc_stdlib_iflags = -I$(S)/lib/libc/stdlib \
 			 -I$(H)/lib/libc        \
 			 -I$(H)/lib/libc/stdlib
 
-$(S)/lib/libc/stdlib/%.o: $(H)/lib/libc/stdlib/%.C
-	$(call status, CXX, $@)
-	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_stdlib_iflags) $< -o $@
-
-$(S)/lib/libc/stdlib/%.o: $(H)/lib/libc/stdlib/%.c
-	$(call status, CC, $@)
-	$(CC) -c $(CFLAGS) $(IFLAGS) $(lib_libc_stdlib_iflags) $< -o $@
+$(S)/lib/libc/stdlib/%.o: IFLAGS += $(lib_libc_stdlib_iflags)
 
 $(O)/install/lib/$(HOST)/$(D)Deb/libnative.a: $(addprefix $(S)/lib/libc/stdlib/, $(lib_stdlib_libnative_objs))
 	$(call status, AR, $@)

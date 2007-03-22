@@ -12,7 +12,7 @@ cobjsysincs = COSMgr.H COSMgrObject.H COSMissHandler.H             \
 OBJS += $(addprefix $(S)/lib/libc/cobj/sys/, $(lib_cobj_sys_objs))
 libk_objs += $(addprefix $(S)/lib/libc/cobj/sys/, $(lib_cobj_sys_objs))
 libbase_objs += $(addprefix $(S)/lib/libc/cobj/sys/, $(lib_cobj_sys_objs))
-lib_includes += $(addprefix $(O)/install/include/cobj/sys/, $(cobjsysincs))
+bootstrap_incs += $(addprefix $(O)/install/include/cobj/sys/, $(cobjsysincs))
 
 $(O)/install/include/cobj/sys/%.H: $(H)/lib/libc/cobj/sys/%.H
 	$(call status, INSTALL, $@)
@@ -26,10 +26,8 @@ lib_libc_cobj_sys_iflags = -I$(S)/lib/libc/cobj/sys	\
                            -I$(H)/lib/libc	        \
                            -I$(H)/lib/libc/cobj/sys
 
-$(S)/lib/libc/cobj/sys/%.o: $(H)/lib/libc/cobj/sys/%.C
-	$(call status, CXX, $@)
-	$(CXX) -c $(CXXFLAGS) $(IFLAGS) $(lib_libc_cobj_sys_iflags) $< -o $@
+$(S)/lib/libc/cobj/sys/%.o: IFLAGS += $(lib_libc_cobj_sys_iflags)
 
 $(S)/lib/libc/cobj/sys/%.o: $(H)/lib/libc/cobj/sys/arch/$(HOST)/%.S
 	$(call status, AS, $@)
-	$(CXX) $(CFLAGS) -D__ASSEMBLEY_ $(lib_libc_cobj_sys_iflags) -c $^ -o $@
+	$(CXX) $(CFLAGS) $(IFLAGS) -D__ASSEMBLEY_ -c $^ -o $@
