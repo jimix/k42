@@ -16,15 +16,20 @@ libk_objs +=  $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o               \
 libbase_objs +=  $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o            \
               $(S)/usr/XUsrTst.o
 
-usr_stubobjs = $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o
-usr_stubnames = $(patsubst Stub%.o, %,$(usr_stubobjs))
+usr_stubnames = RemoteIPCTst UsrTst
 usr_stubfiles = $(foreach stubname, $(usr_stubnames), $(call stubgen_objects, $(S)/usr,$(stubname)))
+usr_stubincs = $(foreach stubname, $(usr_stubnames), $(call stubgen_headers,$(stubname)))
+
+foo:
+	echo $(usr_stubincs)
+
+bootstrap_gens += $(usr_stubincs)
 
 usr_iflags = -I$(H)/usr $(IFLAGS)
 
 $(call stubgen_targets, $(S)/usr): $(H)/usr/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
+	$(STUBGEN) $(HOST) $< -o $(S)/usr \
 	        $(filter-out -MD, $(CXXFLAGS)) \
 	        -w -I. $(IFLAGS) $(usr_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
@@ -94,3 +99,7 @@ $(IROOT)/tests/native/test/atest: $(H)/usr/atest
 	$(call status, INSTALL, $@)
 	$(MKDIR) -p $(IROOT)/tests/native/test
 	$(CP) -f $< $@
+
+$(STUBGEN_INC)/%: $(S)/usr/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
