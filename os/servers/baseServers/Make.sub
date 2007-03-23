@@ -12,6 +12,7 @@ srv_baseServers_objs = baseServer.o fileSystemServices.o crtServer.o	  \
 srv_baseServers_stubobjs = $(filter Stub%.o, $(srv_baseServers_lib_objs))
 srv_baseServers_stubnames = $(patsubst Stub%.o, % ,$(srv_baseServers_stubobjs))
 srv_baseServers_stubfiles = $(foreach stubname, $(srv_baseServers_stubnames), $(call stubgen_objects, $(S)/os/servers/baseServer,$(stubname)))
+srv_baseServers_incs = $(foreach stubname, $(srv_baseServers_stubnames), $(call stubgen_headers,$(stubname)))
 
 # Top-level variables that use need to know about these objs
 
@@ -26,6 +27,7 @@ baseServers_objs += $(addprefix $(S)/os/servers/baseServers/, \
 build_servers += $(S)/os/servers/baseServers/baseServers
 boot_servers += $(S)/os/servers/baseServers/baseServers
 bootstrap_incs += $(addprefix $(O)/install/include/sys/, baseBootServers.H bootServers.H)
+bootstrap_gens += $(srv_baseServers_incs)
 
 # Rules for building objects
 
@@ -44,7 +46,7 @@ srv_baseServers_iflags = -I$(S)/os/servers/baseServers \
 
 $(call stubgen_targets, $(S)/os/servers/baseServers): $(H)/os/servers/baseServers/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
+	$(STUBGEN) $(HOST) $< -o $(S)/os/servers/baseServers \
 		$(filter-out -MD, $(CXXFLAGS)) \
 		-w -I. $(IFLAGS) $(srv_baseServers_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
@@ -73,5 +75,9 @@ $(S)/os/servers/baseServers/baseServers: $(S)/os/servers/baseServers/baseServers
 	$(STRIP) $@
 
 $(O)/install/include/sys/%.H: $(H)/os/servers/baseServers/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(STUBGEN_INC)/%: $(S)/os/servers/baseServers/%
 	$(call status, INSTALL, $@)
 	$(CP) $< $@

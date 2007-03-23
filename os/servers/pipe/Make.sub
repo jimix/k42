@@ -15,6 +15,7 @@ OBJS += $(addprefix $(S)/os/servers/pipe/, $(srv_pipe_lib_objs)) \
 libk_objs += $(addprefix $(S)/os/servers/pipe/, $(srv_pipe_lib_objs))
 libbase_objs += $(addprefix $(S)/os/servers/pipe/, $(srv_pipe_lib_objs))
 baseServers_objs += $(addprefix $(S)/os/servers/pipe/, $(srv_pipe_baseServers_objs))
+bootstrap_gens += $(call stubgen_headers,StreamServerPipe)
 
 # Rules for building objects
 
@@ -24,17 +25,15 @@ srv_pipe_iflags = -I$(S)/os/servers/pipe \
 
 $(call stubgen_targets, $(S)/os/servers/pipe): $(H)/os/servers/pipe/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
+	$(STUBGEN) $(HOST) $< -o $(S)/os/servers/pipe \
 		$(filter-out -MD, $(CXXFLAGS)) \
 		-w -I. $(IFLAGS) $(srv_pipe_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
 
 # Object files
 
-$(S)/os/servers/pipe/%.o: $(S)/os/servers/pipe/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_pipe_iflags) -c $< -o $@
+$(S)/os/servers/pipe/%.o: IFLAGS += $(srv_pipe_iflags)
 
-$(S)/os/servers/pipe/%.o: $(H)/os/servers/pipe/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_pipe_iflags) -c $< -o $@
+$(STUBGEN_INC)/%: $(S)/os/servers/pipe/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

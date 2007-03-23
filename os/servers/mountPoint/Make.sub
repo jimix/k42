@@ -6,6 +6,7 @@ srv_mountPoint_baseServers_objs = MountPointMgrImp.o XMountPointMgr.o
 srv_mountPoint_stubobjs = $(filter Stub%.o, $(srv_mountPoint_lib_objs))
 srv_mountPoint_stubnames = $(patsubst Stub%.o, % ,$(srv_mountPoint_stubobjs))
 srv_mountPoint_stubfiles = $(foreach stubname, $(srv_mountPoint_stubnames), $(call stubgen_objects, $(S)/os/servers/mountPoint,$(stubname)))
+srv_mountPoint_stubincs = $(foreach stubname, $(srv_mountPoint_stubnames), $(call stubgen_headers,$(stubname)))
 
 # Top-level variables that use need to know about these objs
 
@@ -15,6 +16,7 @@ OBJS += $(addprefix $(S)/os/servers/mountPoint/, $(srv_mountPoint_lib_objs)) \
 libk_objs += $(addprefix $(S)/os/servers/mountPoint/, $(srv_mountPoint_lib_objs))
 libbase_objs += $(addprefix $(S)/os/servers/mountPoint/, $(srv_mountPoint_lib_objs))
 baseServers_objs += $(addprefix $(S)/os/servers/mountPoint/, $(srv_mountPoint_baseServers_objs))
+bootstrap_gens += $(srv_mountPoint_stubincs)
 
 # Rules for building objects
 
@@ -24,17 +26,15 @@ srv_mountPoint_iflags = -I$(S)/os/servers/mountPoint \
 
 $(call stubgen_targets, $(S)/os/servers/mountPoint): $(H)/os/servers/mountPoint/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
+	$(STUBGEN) $(HOST) $< -o $(S)/os/servers/mountPoint \
 		$(filter-out -MD, $(CXXFLAGS)) \
 		-w -I. $(IFLAGS) $(srv_mountPoint_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
 
 # Object files
 
-$(S)/os/servers/mountPoint/%.o: $(S)/os/servers/mountPoint/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_mountPoint_iflags) -c $< -o $@
+$(S)/os/servers/mountPoint/%.o: IFLAGS += $(srv_mountPoint_iflags)
 
-$(S)/os/servers/mountPoint/%.o: $(H)/os/servers/mountPoint/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_mountPoint_iflags) -c $< -o $@
+$(STUBGEN_INC)/%: $(S)/os/servers/mountPoint/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

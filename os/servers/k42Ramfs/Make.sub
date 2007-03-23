@@ -9,6 +9,7 @@ srv_k42Ramfs_baseServers_objs = FileSystemK42RamFS.o ServerFileBlockK42RamFS.o \
 srv_k42Ramfs_stubobjs = $(filter Stub%.o, $(srv_k42Ramfs_lib_objs))
 srv_k42Ramfs_stubnames = $(patsubst Stub%.o, % ,$(srv_k42Ramfs_stubobjs))
 srv_k42Ramfs_stubfiles = $(foreach stubname, $(srv_k42Ramfs_stubnames), $(call stubgen_objects, $(S)/os/servers/k42Ramfs,$(stubname)))
+srv_k42Ramfs_stubincs = $(foreach stubname, $(srv_k42Ramfs_stubnames), $(call stubgen_headers,$(stubname)))
 
 # Top-level variables that use need to know about these objs
 
@@ -21,6 +22,7 @@ libk_objs += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_lib_objs))
 libbase_objs += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_lib_objs))
 build_servers += $(S)/os/servers/k42Ramfs/k42RamfsServer
 baseServers_objs += $(addprefix $(S)/os/servers/k42Ramfs/, $(srv_k42Ramfs_baseServers_objs))
+bootstrap_gens += $(srv_k42Ramfs_stubincs)
 
 # Rules for building objects
 
@@ -30,20 +32,14 @@ srv_k42Ramfs_iflags = -I$(S)/os/servers/k42Ramfs \
 
 $(call stubgen_targets, $(S)/os/servers/k42Ramfs): $(H)/os/servers/k42Ramfs/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
+	$(STUBGEN) $(HOST) $< -o $(S)/os/servers/k42Ramfs \
 		$(filter-out -MD, $(CXXFLAGS)) \
 		-w -I. $(IFLAGS) $(srv_k42Ramfs_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
 
 # Object files
 
-$(S)/os/servers/k42Ramfs/%.o: $(S)/os/servers/k42Ramfs/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_k42Ramfs_iflags) -c $< -o $@
-
-$(S)/os/servers/k42Ramfs/%.o: $(H)/os/servers/k42Ramfs/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_k42Ramfs_iflags) -c $< -o $@
+$(S)/os/servers/k42Ramfs/%.o: IFLAGS += $(srv_k42Ramfs_iflags)
 
 srv_k42Ramfs_fullobjs = $(addprefix $(S)/os/servers/k42Ramfs/,$(srv_k42Ramfs_misc_objs))
 $(S)/os/servers/k42Ramfs/k42RamfsServer.dbg: $(build_libraries)
@@ -55,3 +51,7 @@ $(S)/os/servers/k42Ramfs/k42RamfsServer: $(S)/os/servers/k42Ramfs/k42RamfsServer
 	$(call status, STRIP, $@)
 	$(CP) $< $@
 	$(STRIP) $@
+
+$(STUBGEN_INC)/%: $(S)/os/servers/k42Ramfs/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

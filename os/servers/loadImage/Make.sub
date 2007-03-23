@@ -18,9 +18,7 @@ srv_loadImage_iflags = -I$(S)/os/servers/loadImage \
 
 # Object files
 
-$(S)/os/servers/loadImage/%.o: $(H)/os/servers/loadImage/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(CXXFLAGS) $(IFLAGS) $(srv_loadImage_iflags) -c $< -o $@
+$(S)/os/servers/loadImage/%.o: IFLAGS += $(srv_loadImage_iflags)
 
 $(S)/os/servers/loadImage/loadImage.dbg: $(srv_loadImage_fullobjs)
 	$(call status, LD, $@)
