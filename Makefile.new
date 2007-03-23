@@ -456,6 +456,14 @@ $(O)/install/include/%.C: $(H)/lib/libc/%.C
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
 
+$(O)/install/include/%.H: $(H)/os/kernel/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(O)/install/include/%.h: $(H)/os/kernel/%.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
 # Many stubgen include file installations
 $(O)/install/include/%.H: $(S)/lib/libc/%.H
 	$(call status, INSTALL, $@)

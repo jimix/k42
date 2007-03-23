@@ -64,7 +64,7 @@ $(call stubgen_targets, $(S)/lib/libc/scheduler): $(H)/lib/libc/scheduler/%.H
 
 # Object files
 
-$(S)/lib/libc/scheduler/%.o: IFLAGS = $(lib_libc_scheduler_iflags) $(IFLAGS)
+$(S)/lib/libc/scheduler/%.o: IFLAGS += $(lib_libc_scheduler_iflags)
 
 $(S)/lib/libc/scheduler/%.o: $(H)/lib/libc/scheduler/arch/$(HOST)/%.S
 	$(call status, AS, $@)

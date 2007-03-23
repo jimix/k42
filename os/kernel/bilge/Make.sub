@@ -48,9 +48,8 @@ kernel_bilge_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/bilge
 
 $(call stubgen_targets, $(S)/os/kernel/bilge): $(H)/os/kernel/bilge/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(S)/os/kernel/bilge \
-		$(filter-out -MD, $(kernel_bilge_cxxflags)) $(CXXFLAGS) \
-		-w -I. $(kernel_bilge_iflags) $(IFLAGS) -D_IN_STUBGEN
+	$(STUBGEN) $(HOST) $< -o $(S)/os/kernel/bilge $(CXXFLAGS) -DKERNEL \
+		-w -I. $(IFLAGS) $(kernel_bilge_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
 
 # Dependencies to order stub generation

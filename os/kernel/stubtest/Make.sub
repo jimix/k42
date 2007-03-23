@@ -10,22 +10,21 @@ libbase_objs += $(S)/os/kernel/stubtest/StubBonnie.o
 
 # Add each stub in kprocobjs to the list of objects to make/clean
 OBJS += $(call stubgen_objects, $(S)/os/kernel/stubtest,Bonnie)))
+bootstrap_gens += $(call stubgen_headers,Bonnie)
 
 # Should these flags be based off of $(kflags), etc?
-kernel_stub_cxxflags = $(CXXFLAGS) -MD -DKERNEL 
-kernel_stub_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/stubtest $(IFLAGS)
+kernel_stub_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/stubtest
 
 $(call stubgen_targets, $(S)/os/kernel/stubtest): $(H)/os/kernel/stubtest/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
-		$(filter-out -MD, $(kernel_stub_cxxflags)) \
-		-w -I. $(kernel_stub_iflags) -D_IN_STUBGEN
+	$(STUBGEN) $(HOST) $< -o $(S)/os/kernel/stubtest $(CXXFLAGS) -DKERNEL \
+		-w -I. $(IFLAGS) $(kernel_stub_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
 
-$(S)/os/kernel/stubtest/%.o: $(S)/os/kernel/stubtest/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(kernel_stub_cxxflags) $(kernel_stub_iflags) -c $^ -o $@
+$(S)/os/kernel/stubtest/%.o: CFLAGS += -DKERNEL
+$(S)/os/kernel/stubtest/%.o: CXXFLAGS += -MD -DKERNEL
+$(S)/os/kernel/stubtest/%.o: IFLAGS += $(kernel_stub_iflags)
 
-$(S)/os/kernel/stubtest/%.o: $(H)/os/kernel/stubtest/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(kernel_stub_cxxflags) $(kernel_stub_iflags) -c $^ -o $@
+$(STUBGEN_INC)/%: $(S)/os/kernel/stubtest/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

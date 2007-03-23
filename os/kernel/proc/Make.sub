@@ -19,32 +19,32 @@ bootstrap_incs += $(O)/install/include/sys/ProcessServer.H
 # Add each stub in kprocobjs to the list of objects to make/clean
 kernel_proc_stubobjs = $(filter Stub%.o, $(kprocobjs))
 kernel_proc_stubnames = $(patsubst Stub%.o, % ,$(kernel_proc_stubobjs))
+kernel_proc_stubincs = $(foreach stubname, $(kernel_proc_stubnames), $(call stubgen_headers,$(stubname)))
+
 OBJS += $(foreach stubname, $(kernel_proc_stubnames), $(call stubgen_objects, $(S)/os/kernel/proc,$(stubname)))
+bootstrap_gens += $(kernel_proc_stubincs)
 
 # Should these flags be based off of $(kflags), etc?
-kernel_proc_cxxflags = $(CXXFLAGS) -MD -DKERNEL 
-kernel_proc_cflags = $(CFLAGS) -DKERNEL 
-kernel_proc_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/proc $(IFLAGS)
+kernel_proc_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/proc
 
 $(call stubgen_targets, $(S)/os/kernel/proc): $(H)/os/kernel/proc/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(shell dirname $@) \
-		$(filter-out -MD, $(kernel_proc_cxxflags)) \
-		-w -I. $(kernel_proc_iflags) -D_IN_STUBGEN
+	$(STUBGEN) $(HOST) $< -o $(S)/os/kernel/proc $(CXXFLAGS) -DKERNEL \
+		-w -I. $(IFLAGS) $(kernel_proc_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
 
-$(S)/os/kernel/proc/%.o: $(S)/os/kernel/proc/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(kernel_proc_cxxflags) $(kernel_proc_iflags) -c $^ -o $@
-
-$(S)/os/kernel/proc/%.o: $(H)/os/kernel/proc/%.C
-	$(call status, CXX, $@)
-	$(CXX) $(kernel_proc_cxxflags) $(kernel_proc_iflags) -c $^ -o $@
+$(S)/os/kernel/proc/%.o: CFLAGS += -DKERNEL
+$(S)/os/kernel/proc/%.o: CXXFLAGS += -DKERNEL -MD
+$(S)/os/kernel/proc/%.o: IFLAGS += $(kernel_proc_iflags)
 
 $(S)/os/kernel/proc/%.o: $(H)/os/kernel/proc/arch/$(HOST)/%.C
 	$(call status, CXX, $@)
-	$(CXX) $(kernel_proc_cxxflags) $(kernel_proc_iflags) -c $^ -o $@
+	$(CXX) $(CXXFLAGS) $(IFLAGS) -c $^ -o $@
 
 $(O)/install/include/sys/%.H: $(H)/os/kernel/proc/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(STUBGEN_INC)/%: $(S)/os/kernel/proc/%
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
