@@ -1,0 +1,10 @@
+kern_defines_includes = sim_bugs.H bugs.H mem_debug.H use_expedient.H \
+	     optimizations.H template_bugs.H linux_support.H \
+             experimental.H debug_soft_intrs.H paging.H traceCompile.H \
+	     pgflt_stats.H lock_options.H
+
+bootstrap_incs += $(addprefix $(O)/install/include/defines/, $(kern_defines_includes))
+
+$(O)/install/include/defines/%.H: $(H)/os/kernel/defines/%.H
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

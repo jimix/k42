@@ -2,8 +2,12 @@ OBJS += $(S)/os/ktraceobjs.o
 ktraceobjs = trace.o tracePrint.o traceUtils.o
 $(S)/os/ktraceobjs.o: $(addprefix $(S)/os/kernel/trace/, $(ktraceobjs))
 
+kernel_trace_includes = traceBase.H trace.H traceUnified.H traceCtr.H \
+	traceIncs.H  traceUtils.H
+
 # ktraceobjs subobjects
 OBJS += $(addprefix $(S)/os/kernel/trace/, $(ktraceobjs))
+bootstrap_incs += $(addprefix $(O)/install/include/trace/, $(kernel_trace_includes))
 
 # Should these flags be based off of $(kflags), etc?
 kernel_trace_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/trace

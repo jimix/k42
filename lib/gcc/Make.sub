@@ -4,12 +4,12 @@ gcc_hdr_dir := $(shell $(CC) $(CFLAGS) --print-file-name=include)
 # Get a list of all the files in the standard GCC header directory
 # Do we really want all of them?
 #
-generic64_headers := $(notdir $(wildcard $(GCC_HDR_DIR)/*.h))
-amd64_headers = $(generic64_HDRS_0)
-mips64_headers = $(generic64_HDRS_0)
-powerpc_headers = $(generic64_HDRS_0)
+generic64_headers := $(notdir $(wildcard $(gcc_hdr_dir)/*.h))
+amd64_headers = $(generic64_headers)
+mips64_headers = $(generic64_headers)
+powerpc_headers = $(generic64_headers)
 
-lib_includes += $(addprefix $(O)/install/gcc-include/arch/$(HOST)/, $($(HOST)_headers))
+bootstrap_incs += $(addprefix $(O)/install/gcc-include/arch/$(HOST)/, $($(HOST)_headers))
 
 ifeq ($(GCC34),1)
 $(O)/install/gcc-include/arch/$(HOST)/stddef.h: $(gcc_hdr_dir)/stddef.h

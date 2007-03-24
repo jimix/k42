@@ -1,0 +1,8 @@
+trace_pem_scripts = pemEvent.py pemGenCPP.py pemGenHdrs.py pemGenPE.py \
+         pemGenC.py pemGenFortran.py pemGenJava.py pemGlobals.py \
+	 pemGenPEMAPI.py pemTypes.py
+bootstrap_scrs += $(addprefix $(TOOLS)/, $(trace_pem_scripts))
+
+$(TOOLS)/%.py: $(H)/tools/misc/pem/%.py
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

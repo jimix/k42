@@ -3,6 +3,13 @@
 lib_trace_objs = traceLib.o
 trace_includes = traceCore.H traceReserve.H traceLib.H tracePack.H traceK42.h
 trace_powerpc_includes = traceReserve.H
+trace_xml_includes =  traceUser.xml traceIO.xml traceAlloc.xml traceMisc.xml \
+        traceClustObj.xml traceLock.xml traceScheduler.xml \
+        traceFS.xml traceLinux.xml traceResMgr.xml traceApp.xml \
+        traceDbg.xml traceOSClasses.xml traceMem.xml traceMiscKern.xml \
+	traceProc.xml traceTest.xml  traceException.xml traceDefault.xml \
+	traceControl.xml traceHWPerfMon.xml traceSwap.xml traceMemColor.xml \
+        traceInfo.xml traceOMP.xml traceLibC.xml traceMPI.xml traceDisk.xml
 
 # Top-level variables that use need to know about these objs
 OBJS += $(addprefix $(S)/lib/libc/trace/, $(lib_trace_objs))
@@ -10,6 +17,10 @@ libk_objs += $(addprefix $(S)/lib/libc/trace/, $(lib_trace_objs))
 libbase_objs += $(addprefix $(S)/lib/libc/trace/, $(lib_trace_objs))
 bootstrap_incs += $(addprefix $(O)/install/include/trace/, $(trace_includes))
 bootstrap_incs += $(addprefix $(O)/install/include/trace/arch/$(HOST)/, $(trace_$(HOST)_includes))
+bootstrap_incs += $(addprefix $(O)/install/include/trace/.install_xml/, $(trace_xml_includes))
+
+trace_gen_includes = $(addprefix $(O)/install/include/trace/, $(patsubst trace%.xml, trace%.h, $(trace_xml_includes)))
+bootstrap_incs += $(trace_gen_includes)
 
 # Rules for building objects and installing include files
 
@@ -19,3 +30,12 @@ lib_libc_trace_iflags = -I$(S)/lib/libc/trace	\
                         -I$(H)/lib/libc/trace
 
 $(S)/lib/libc/trace/%.o: IFLAGS += $(lib_libc_trace_iflags)
+
+$(trace_gen_includes): $(addprefix $(H)/lib/libc/trace/k42-trace-xml/, $(trace_xml_includes))
+	$(call status, GENHDR, $@)
+	$(TOOLS)/pemGenHdrs.py --outputDir $(shell dirname $@) --language C -s K42 $^
+	$(TOOLS)/pemGenHdrs.py -n -l Java -o /dev/null $< > /dev/null
+
+$(O)/install/include/trace/.install_xml/%.xml: $(H)/lib/libc/trace/k42-trace-xml/%.xml
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
