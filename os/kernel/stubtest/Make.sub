@@ -17,7 +17,8 @@ kernel_stub_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/stubtest
 
 $(call stubgen_targets, $(S)/os/kernel/stubtest): $(H)/os/kernel/stubtest/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(S)/os/kernel/stubtest $(CXXFLAGS) -DKERNEL \
+	$(STUBGEN) $(HOST) $< -o $(S)/os/kernel/stubtest \
+		$(filter-out -MD, $(CXXFLAGS)) -DKERNEL \
 		-w -I. $(IFLAGS) $(kernel_stub_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
 

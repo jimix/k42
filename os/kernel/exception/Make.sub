@@ -20,7 +20,8 @@ kernel_except_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/exception
 
 $(call stubgen_targets, $(S)/os/kernel/exception): $(H)/os/kernel/exception/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(S)/os/kernel/exception $(CXXFLAGS) -DKERNEL \
+	$(STUBGEN) $(HOST) $< -o $(S)/os/kernel/exception \
+		$(filter-out -MD, $(CXXFLAGS)) -DKERNEL \
 		-w -I. $(IFLAGS) $(kernel_except_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
 

@@ -27,7 +27,8 @@ kernel_init_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/init -I$(IMG)/usr/powerpc
 
 $(call stubgen_targets, $(S)/os/kernel/init): $(H)/os/kernel/init/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(S)/os/kernel/init $(CXXFLAGS) -DKERNEL \
+	$(STUBGEN) $(HOST) $< -o $(S)/os/kernel/init \
+		$(filter-out -MD, $(CXXFLAGS)) -DKERNEL \
 		-w -I. $(kernel_init_iflags) $(IFLAGS) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
 

@@ -62,7 +62,8 @@ kernel_mem_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/mem
 
 $(call stubgen_targets, $(S)/os/kernel/mem): $(H)/os/kernel/mem/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(S)/os/kernel/mem $(CXXFLAGS) -DKERNEL \
+	$(STUBGEN) $(HOST) $< -o $(S)/os/kernel/mem \
+		$(filter-out -MD, $(CXXFLAGS)) -DKERNEL \
 		-w -I. $(IFLAGS) $(kernel_mem_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
 

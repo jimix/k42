@@ -29,7 +29,8 @@ kernel_proc_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/proc
 
 $(call stubgen_targets, $(S)/os/kernel/proc): $(H)/os/kernel/proc/%.H
 	$(call status, STUBGEN, $@)
-	$(STUBGEN) $(HOST) $< -o $(S)/os/kernel/proc $(CXXFLAGS) -DKERNEL \
+	$(STUBGEN) $(HOST) $< -o $(S)/os/kernel/proc \
+		$(filter-out -MD, $(CXXFLAGS)) -DKERNEL \
 		-w -I. $(IFLAGS) $(kernel_proc_iflags) -D_IN_STUBGEN
 	$(RM) -f $(shell basename $< .H).stubgen.d
 
