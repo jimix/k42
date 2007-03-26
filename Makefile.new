@@ -27,6 +27,7 @@
 #   - bootstrap_includes
 #   - bootstrap_tools
 #   - bootstrap_generate
+#   - bootstrap_tools2 (has to run after generate)
 #   - bootstrap
 #   - bootstrap_clean
 #  * Variables *
@@ -68,6 +69,7 @@ OS = $(shell uname -s)
 BUILD = $(shell uname -m)
 HOST = powerpc
 TARGET = $(BUILD)
+SITE = unm
 
 # Build our source and output paths from above.
 O = ..
@@ -108,7 +110,7 @@ STRIP32 = $(CROSS32_COMPILE)strip
 BUILDCC = gcc
 BUILDCXX = g++
 BUILDCFLAGS = -g -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer
-BUILDCXXFALGS = $(BUILDCFLAGS)
+BUILDCXXFLAGS = $(BUILDCFLAGS)
 MKDIR = mkdir -p
 GZIP = gzip
 MV = mv
@@ -117,6 +119,8 @@ CP = cp
 PERL = perl
 AWK = awk
 STUBGEN = $(TOOLS)/stubgen/stubgen
+CHMOD = chmod
+SED = sed
 
 # Target machine flags
 #
@@ -195,7 +199,7 @@ endif
 .PHONY: k42-vmlinux k42-zImage 
 .PHONY: includes libraries servers binaries kernel config-files users dirs
 .PHONY: config all clean FORCE bootstrap
-.PHONY: bootstrap_includes bootstrap_gen bootstrap_tools bootstrap_clean
+.PHONY: bootstrap_includes bootstrap_gen bootstrap_tools bootstrap_tools2 bootstrap_clean
 
 # Default target is just the directory skeleton and our bootable kernel.
 kernel: dirs k42-vmlinux
@@ -225,6 +229,10 @@ clean:
 ################################################################################
 # Tools bootstrap rules
 #
+include tools/build/shared/Make.sub
+include tools/hwtools/Make.sub
+include tools/misc/Make.sub
+include tools/misc/kmon/Make.sub
 include tools/misc/pem/Make.sub
 
 ################################################################################
@@ -359,21 +367,23 @@ $(O)/install/lib/$(HOST)/$(D)Deb/libbase.a: $(libbase_objs)
 # Bootstrapping Rules
 # ##############################################################################
 
-bootstrap_objs += $(bootstrap_scrs) $(bootstrap_incs) $(bootstrap_binaries) $(bootstrap_gens)
+bootstrap_objs += $(bootstrap_scrs) $(bootstrap_incs) $(bootstrap_binaries) $(bootstrap_gens) $(bootstrap_binaries2)
 
 bootstrap_scripts: dirs $(bootstrap_scrs)
 bootstrap_includes: dirs bootstrap_scripts $(bootstrap_incs)
-bootstrap_tools: dirs $(bootstrap_binaries)
+bootstrap_tools: dirs bootstrap_includes $(bootstrap_binaries)
 
 bootstrap_generate: dirs bootstrap_scripts bootstrap_includes bootstrap_tools
 bootstrap_generate: $(call stubgen_headers,Obj)
 bootstrap_generate: $(bootstrap_gens)
 
+bootstrap_tools2: dirs bootstrap_generate $(bootstrap_binaries2)
+
 bootstrap_clean: 
 	$(call status, RM, $(wildcard $(bootstrap_objs)))
 	$(RM) $(wildcard $(bootstrap_objs))
 
-bootstrap: bootstrap_scripts bootstrap_includes bootstrap_tools bootstrap_generate
+bootstrap: bootstrap_scripts bootstrap_includes bootstrap_tools bootstrap_generate bootstrap_tools2
 
 ###############################################################################
 

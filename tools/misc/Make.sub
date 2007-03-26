@@ -1,0 +1,37 @@
+tools_misc_scripts = kmaketags makepatch mkspec kanchor knfsroot kuservalues \
+		kgdbsimos ksconsoles klogin knightly k42-2-linux sdetPrep \
+		dezig traddr kfsimage jiggy k42console daylog send-cvs-logs
+
+tools_misc_files = k42.tcl k42_env_desc.txt
+
+bootstrap_scrs += $(addprefix $(TOOLS)/, $(tools_misc_scripts))
+bootstrap_scrs += $(addprefix $(O)/install/tools/lib/, $(tools_misc_files))
+bootstrap_binaries += $(addprefix $(TOOLS)/, cvsdiffs nextErrNumber serrorParse perfMon gdb2trc addnote build_kern_parms)
+
+$(addprefix $(TOOLS)/, $(tools_misc_scripts)): $(TOOLS)/script.sed
+
+$(TOOLS)/script.sed: $(H)/Makefile.new
+
+$(TOOLS)/%: $(H)/tools/misc/%.sh
+	$(call status, GENSCRIPT, $@)
+	$(SED) -f $(TOOLS)/script.sed < $< > $@
+	$(CHMOD) 0555 $@
+	
+$(TOOLS)/%: $(H)/tools/misc/%.pl
+	$(call status, GENSCRIPT, $@)
+	$(SED) -f $(TOOLS)/script.sed < $< > $@
+	$(CHMOD) 0555 $@
+
+# install the support files
+$(O)/install/tools/lib/%: $(H)/tools/misc/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+	$(CHMOD) 0444 $@
+
+$(TOOLS)/%: $(H)/tools/misc/%.C
+	$(call status, BUILDCXX, $@)
+	$(BUILDCXX) $(BUILDCXXFLAGS) -MD -I$(H)/include $< -o $@
+
+$(TOOLS)/%: $(H)/tools/misc/%.c
+	$(call status, BUILDCXX, $@)
+	$(BUILDCC) $(BUILDCFLAGS) -I$(H)/include $< -o $@

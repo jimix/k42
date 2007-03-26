@@ -20,9 +20,6 @@ usr_stubnames = RemoteIPCTst UsrTst
 usr_stubfiles = $(foreach stubname, $(usr_stubnames), $(call stubgen_objects, $(S)/usr,$(stubname)))
 usr_stubincs = $(foreach stubname, $(usr_stubnames), $(call stubgen_headers,$(stubname)))
 
-foo:
-	echo $(usr_stubincs)
-
 bootstrap_gens += $(usr_stubincs)
 
 usr_iflags = -I$(H)/usr $(IFLAGS)

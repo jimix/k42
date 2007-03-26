@@ -1,0 +1,39 @@
+# ############################################################################
+# K42: (C) Copyright IBM Corp. 2000.
+# All Rights Reserved
+#
+# This file is distributed under the GNU LGPL. You should have
+# received a copy of the License along with K42; see the file LICENSE.html
+# in the top-level directory for more details.
+#
+#  $Id: Makefile,v 1.26 2005/01/27 20:48:14 bob Exp $
+# ############################################################################
+
+trace_tool_targets = traceTool traceProfile traceParse traceNetClient
+trace_tool_scripts = runkmon tracePostProc runtraceProfile
+trace_tool_common_objs = $(addprefix $(S)/tools/misc/kmon/, traceUtils.o traceCommon.o)
+
+bootstrap_binaries2 += $(addprefix $(TOOLS)/, $(trace_tool_targets))
+bootstrap_objs += $(trace_tool_common_objs) $(addprefix $(S)/tools/misc/kmon/, $(trace_tool_targets))
+bootstrap_scrs += $(addprefix $(TOOLS)/, $(trace_tool_scripts))
+
+$(TOOLS)/%: $(H)/tools/misc/kmon/%.sh $(TOOLS)/script.sed
+	$(call status, GENSCRIPT, $@)
+	$(SED) -f $(TOOLS)/script.sed < $< > $@
+	$(CHMOD) 0555 $@
+
+TARGETS += $(CXXTARGETS) traceNetClient
+
+$(S)/tools/misc/kmon/%.o: $(H)/os/kernel/trace/%.C
+	$(BUILDCXX) -c $(BUILDCXXFLAGS) -I$(O)/install/include $< -o $@
+
+$(S)/tools/misc/kmon/%.o: $(H)/tools/misc/kmon/%.C
+	$(BUILDCXX) -c $(BUILDCXXFLAGS) -I$(O)/install/include $< -o $@
+
+$(S)/tools/misc/kmon/%: $(S)/tools/misc/kmon/%.o $(trace_tool_common_objs)
+	$(BUILDCXX) $(BUILDCXXFLAGS) $< $(trace_tool_common_objs) -o $@ 
+
+$(TOOLS)/%: $(S)/tools/misc/kmon/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+	$(CHMOD) 0755 $@

@@ -1,0 +1,10 @@
+tools_shared_scripts = knewest cvsimport kinstall
+
+bootstrap_scrs += $(addprefix $(TOOLS)/, $(tools_shared_scripts))
+
+$(addprefix $(TOOLS)/, $(tools_shared_scripts)): $(TOOLS)/script.sed
+
+$(TOOLS)/%: $(H)/tools/build/shared/%.sh
+	$(call status, GENSCRIPT, $@)
+	$(SED) -f $(TOOLS)/script.sed < $< > $@
+	$(CHMOD) 0555 $@

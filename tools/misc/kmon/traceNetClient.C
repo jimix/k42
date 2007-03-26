@@ -27,15 +27,8 @@
 #include <errno.h>
 #include <sys/hostSysTypes.H>
 
-/* yuck! why isn't there a 64-bit ntoh*() ? */
-#if defined(PLATFORM_OS_Linux)
 # include <endian.h>
 # define BYTE_ORDER __BYTE_ORDER
-#elif defined(PLATFORM_OS_AIX)
-# include <sys/machine.h>
-#else
-# error "don't know how to work out endianess of this host"
-#endif
 
 #if BYTE_ORDER == BIG_ENDIAN
 # define ntoh64(x) (x)
