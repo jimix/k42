@@ -2,19 +2,22 @@ ksysobjs = KernelInfo.o hcall.o
 ksys_arch_stuff = symdefsKern.S symdefsUser.S symdefsUser.raw symdefsKern.raw
 ksys_includes = syscalls.H thinwire.H entryPoints.H Dispatcher.H VolatileState.H \
 		memoryMap.H SoftIntr.H KernelInfo.H KernelScheduler.H
-ksys_arch_includes = syscalls.H VolatileState.H memoryMap.H asmConstants.H
+ksys_arch_includes = syscalls.H VolatileState.H memoryMap.H
 
 $(S)/os/ksysobjs.o: $(addprefix $(S)/os/kernel/sys/, $(ksysobjs))
 
 # ksysobjs subobjects
-OBJS += $(S)/os/ksysobjs.o symdefsKern.o symdefsUser.o
+OBJS += $(S)/os/ksysobjs.o 
+OBJS += $(S)/os/kernel/sys/symdefsKern.o $(S)/os/kernel/sys/symdefsUser.o
 OBJS += $(addprefix $(S)/os/kernel/sys/, $(ksysobjs) genSymdefs)
 OBJS += $(addprefix $(S)/os/kernel/sys/arch/$(HOST)/, $(ksys_arch_stuff))
 libk_objs += $(S)/os/kernel/sys/symdefsKern.o
 libbase_objs += $(S)/os/kernel/sys/symdefsUser.o
 bootstrap_incs += $(addprefix $(O)/install/include/sys/, $(ksys_includes)) \
 		$(addprefix $(O)/install/include/sys/arch/$(HOST)/, $(ksys_arch_includes))
+bootstrap_gens += $(O)/install/include/sys/arch/$(HOST)/asmConstants.H
 
+$(O)/install/include/sys/arch/$(HOST)/asmConstants.H: $(call stubgen_headers,Obj)
 
 # Should these flags be based off of $(kflags), etc?
 kernel_sys_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/sys -I$(O)/install/include/sys/arch/$(HOST)
@@ -22,6 +25,8 @@ kernel_sys_iflags = -I$(H)/os/kernel -I$(H)/os/kernel/sys -I$(O)/install/include
 $(S)/os/kernel/sys/%.o: CFLAGS += -DKERNEL
 $(S)/os/kernel/sys/%.o: CXXFLAGS += -MD -DKERNEL
 $(S)/os/kernel/sys/%.o: IFLAGS += $(kernel_sys_iflags) 
+$(S)/os/kernel/sys/%.s: IFLAGS += $(kernel_sys_iflags) 
+$(S)/os/kernel/sys/%.S: IFLAGS += $(kernel_sys_iflags) 
 
 $(S)/os/kernel/sys/%.o: $(H)/os/kernel/sys/arch/$(HOST)/%.S
 	$(call status, AS, $@)

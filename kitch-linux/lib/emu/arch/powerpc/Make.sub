@@ -9,7 +9,7 @@ libemu_arch_iflags = $(LXIFLAGS) $(libemu_arch_include) $(IFLAGS)
 libemu_arch_cxxflags = $(CXXFLAGS) -D__KERNEL__
 
 libemu_syscallinit_iflags = $(IFLAGS) -I$(S)/ki
-lib_includes += $(O)/install/include/emu/SysCallTableMacros.H
+bootstrap_incs += $(O)/install/include/emu/SysCallTableMacros.H
 
 $(S)/kitch-linux/lib/emu/SysCallInit.o: $(H)/kitch-linux/lib/emu/arch/$(HOST)/SysCallInit.C
 	$(call status, CXX, $@)

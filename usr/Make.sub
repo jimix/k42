@@ -9,7 +9,7 @@ usr_test_targets = abin awaittime craig dcofcm \
 		   while1 yieldtest test/atest
 
 install_binaries += $(addprefix $(IROOT)/tests/native/, $(usr_test_targets))
-install_binaries += $(addprefix $(IROOT)/, /tmp /usr/tmp)
+install_binaries += $(addprefix $(IROOT)/, tmp usr/tmp)
 libk_objs +=  $(S)/usr/StubRemoteIPCTst.o $(S)/usr/StubUsrTst.o               \
               $(S)/usr/XUsrTst.o
 
