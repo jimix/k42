@@ -1,0 +1,32 @@
+bootstrap_binaries = $(TOOLS)/stubgen/cpp5.exe
+
+cpp_exe_objs = $(addprefix $(S)/tools/build/shared/stubgen/grammar/, y.tab.o lex.yy.o)
+
+$(S)/tools/build/shared/stubgen/grammar/%.o: $(S)/tools/build/shared/stubgen/grammar/%.c
+	$(call status, CC, $@)
+	$(BUILDCC) $(BUILDCFLAGS) -I$(H)/tools/build/shared/stubgen/grammar -Wno-implicit -Wno-unused -c $< -o $@
+
+# the yacc error is known so only report the error if it is different.
+YACC_ERR=byacc: 290 shift/reduce conflicts, 100 reduce/reduce conflicts.
+
+# this fancy rule is here because we need make to consider the
+# exit status of $(YACC) NOT the sed, which is always true.
+#
+$(S)/tools/build/shared/stubgen/grammar/y.tab.c : $(H)/tools/build/shared/stubgen/grammar/cpp5.y
+	$(call status, YACC, $@)
+	(exec 3>&1; status=`(( \
+	  $(YACC) -dl  $< \
+	  2>&1 1>&3 3>&- 4>&-; $(ECHO) "$$?" >&4 ) | \
+	  $(SED) -e '\?$(YACC_ERR)?d' 1>&2 3>&- 4>&-) 4>&1`; $(EXIT) $$status)
+
+$(S)/tools/build/shared/stubgen/grammer/lex.yy.c : $(S)/tools/build/shared/stubgen/grammar/cpp5.l
+	$(call status, LEX, $@)
+	$(LEX) -o $@ $<
+
+$(S)/tools/build/shared/stubgen/grammar/cpp5.exe: $(cpp_exe_objs)
+	$(call status, LD, $@)
+	$(BUILDCC) $(BUILDCFLAGS) -o $@ $^ -lfl
+
+$(TOOLS)/stubgen/cpp5.exe: $(S)/tools/build/shared/stubgen/grammar/cpp5.exe
+	$(call status, INSTALL, $@)
+	$(CP) $< $@

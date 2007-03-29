@@ -1,0 +1,11 @@
+libelf64_objs = $(addprefix $(S)/tools/build/shared/stubgen/elf/, elflib64.c)
+
+bootstrap_objs += $(libelf64_objs)
+
+$(S)/tools/build/shared/stubgen/elf/libelf64.a: $(libelf64_objs)
+	$(call status, AR, $@)
+	$(AR) cruvs $@ $^
+
+$(S)/tools/build/shared/stubgen/elf/elflib64.o: $(S)/tools/build/shared/stubgen/elf/elflib64.c
+	$(call status, CC, $@)
+	$(BUILDCC) $(BUILDCFLAGS) -I$(H)/tools/build/shared/stubgen/elf -c $< -o $@ 

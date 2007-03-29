@@ -1,0 +1,20 @@
+
+stubgen_awk_scripts = fixupname.awk genprog.awk genhdr.awk genmangle.awk \
+	gentmp.awk xcoff_type.awk
+
+bootstrap_binaries += $(addprefix $(TOOLS)/stubgen/, $(stubgen_awk_scripts))
+bootstrap_binaries += $(TOOLS)/stubgen/stubgen
+
+# run the script.sh thru the sed file to instantiate a working script
+$(TOOLS)/stubgen/stubgen: $(TOOLS)/script.sed
+$(TOOLS)/stubgen/stubgen: $(H)/tools/build/shared/stubgen/scripts/stubgen.sh
+	$(call status, GENSCRIPT, $@)
+	$(SED) -f $(TOOLS)/script.sed < $< > $@
+	$(CHMOD) 0755 $@
+
+$(TOOLS)/stubgen/%.awk: $(H)/tools/build/shared/stubgen/scripts/%.awk
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+	$(CHMOD) 0555 $@
+
+install_includes:: $(MKTOOLBIN)/stubgen $(MKTOOLBIN)/stubgen/stubgen
