@@ -238,6 +238,7 @@ include tools/hwtools/Make.sub
 include tools/misc/Make.sub
 include tools/misc/kmon/Make.sub
 include tools/misc/pem/Make.sub
+include os/servers/kfs/tools/Make.sub
 
 ################################################################################
 # Normal Rules
@@ -390,12 +391,6 @@ bootstrap_clean:
 bootstrap: dirs bootstrap_scripts bootstrap_includes bootstrap_tools bootstrap_generate bootstrap_tools2
 
 ###############################################################################
-
-# Rules for moving include files into place
-
-OBJS += $(lib_includes)
-
-###############################################################################
 # Phony targets expanded from rules defined above
 
 $(build_servers): $(build_libraries)
@@ -415,7 +410,7 @@ users: $(install_users)
 kitchroot: servers binaries configs users
 
 # Now that OBJS is totally expanded, generate our directory list from it.
-DIRS = $(sort $(foreach obj, $(OBJS) $(install_configs) $(install_users) $(install_binaries) $(install_servers) $(bootstrap_incs) $(bootstrap_gens) $(bootstrap_scrs) $(bootstrap_tools) $(bootstrap_tools2), $(dir $(obj))))
+DIRS = $(sort $(foreach obj, $(OBJS) $(install_configs) $(install_users) $(install_binaries) $(install_servers) $(bootstrap_incs) $(bootstrap_gens) $(bootstrap_scrs) $(bootstrap_tools) $(bootstrap_tools2) $(bootstrap_objs), $(dir $(obj))))
 dirs: $(DIRS)
 
 # This is always the last rule: it needs OBJS to be totally expanded.

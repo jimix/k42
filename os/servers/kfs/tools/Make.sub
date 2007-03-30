@@ -1,0 +1,61 @@
+BITS = -DLINUX_OS
+
+kfs_tools = mkfs.kfs fscp kfsToolTest kfsList kfsgetversion
+
+bootstrap_binaries2 += $(addprefix $(TOOLS)/, $(kfs_tools))
+
+kfs_generic_objs = $(addprefix $(S)/os/servers/kfs/tools/, HashSimple.o \
+		DataBlock.o LSOBasic.o LSOBasicDir.o LSOBasicFile.o \
+		LSOBasicSymlink.o PSOBasicRW.o RecordMap.o PSODiskBlock.o \
+		PSOPreallocExtent.o ServerObject.o SuperBlock.o ListSimple.o \
+		KFSGlobals.o BlockCacheTools.o PSOSmall.o PSOSmallMeta.o \
+		KFSDebug.o ObjToken.o FileDisk.o KFS.o)
+
+bootstrap_objs += $(kfs_generic_objs)
+bootstrap_objs += $(addprefix $(S)/os/servers/kfs/tools/, mkfs.o fscp.o ToolTest.o List.o kfsgetversion.o)
+
+kfs_tools_iflags =  -I$(H)/os/servers/kfs/tools -I$(H)/os/servers/kfs \
+		    -I$(H)/os/servers/kfs/os-k42 -I$(H)/lib/libc
+
+$(S)/os/servers/kfs/tools/%.o: BUILDCXXFLAGS += -g -Wall -DTOOLSIDE $(BITS) -DTARGET_MACHINE="powerpc" -DKFS_TOOLS
+$(S)/os/servers/kfs/tools/%.o: $(H)/os/servers/kfs/tools/%.C
+	$(call status, CXX, $@)
+	$(BUILDCXX) -c $(BUILDCXXFLAGS) $(kfs_tools_iflags) $< -o $@
+
+$(S)/os/servers/kfs/tools/%.o: $(H)/os/servers/kfs/%.C
+	$(call status, CXX, $@)
+	$(BUILDCXX) -c $(BUILDCXXFLAGS) $(kfs_tools_iflags) $< -o $@
+
+$(S)/os/servers/kfs/tools/%.o: $(H)/os/servers/kfs/os-k42/%.C
+	$(call status, CXX, $@)
+	$(BUILDCXX) -c $(BUILDCXXFLAGS) $(kfs_tools_iflags) $< -o $@
+
+$(S)/os/servers/kfs/tools/%.o: $(H)/lib/libc/misc/%.C
+	$(call status, CXX, $@)
+	$(BUILDCXX) -c $(BUILDCXXFLAGS) $(kfs_tools_iflags) $< -o $@
+
+$(S)/os/servers/kfs/tools/kfsgetversion: $(S)/os/servers/kfs/tools/getversion.o
+	$(call status, LD, $@)
+	$(BUILDCXX) $(BUILDCXXFLAGS) $^ -o $@
+
+$(S)/os/servers/kfs/tools/%: $(S)/os/servers/kfs/tools/%.o $(kfs_generic_objs)
+	$(call status, LD, $@)
+	$(BUILDCXX) $(BUILDCXXFLAGS) $^ -o $@
+
+$(S)/os/servers/kfs/tools/kfsToolTest: $(S)/os/servers/kfs/tools/test.o $(kfs_generic_objs)
+	$(call status, LD, $@)
+	$(BUILDCXX) $(BUILDCXXFLAGS) $^ -o $@
+
+$(S)/os/servers/kfs/tools/kfsList: $(S)/os/servers/kfs/tools/list.o $(kfs_generic_objs)
+	$(call status, LD, $@)
+	$(BUILDCXX) $(BUILDCXXFLAGS) $^ -o $@
+
+$(TOOLS)/%: $(S)/os/servers/kfs/tools/%
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+	$(CHMOD) 0755 $@
+
+$(TOOLS)/mkfs.kfs: $(S)/os/servers/kfs/tools/mkfs
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+	$(CHMOD) 0755 $@
