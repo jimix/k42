@@ -1,0 +1,16 @@
+bootstrap_binaries += $(TOOLS)/ktrace2ltt
+ktrace2ltt_objdir = $(S)/tools/misc/ktrace2ltt
+
+$(TOOLS)/ktrace2ltt: $(S)/tools/misc/ktrace2ltt/ktrace2ltt
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+	$(CHMOD) 0755 $@
+
+$(S)/tools/misc/ktrace2ltt/ktrace2ltt: $(addprefix $(S)/tools/misc/kmon/, traceUtils.o traceCommon.o)
+$(S)/tools/misc/ktrace2ltt/ktrace2ltt: $(S)/tools/misc/ktrace2ltt/ktrace2ltt.o
+	$(call status, LD, $@)
+	$(BUILDCXX) $(BUILDCXXFLAGS) -o $@ $^
+
+$(S)/tools/misc/ktrace2ltt/ktrace2ltt.o: $(H)/tools/misc/ktrace2ltt/ktrace2ltt.C
+	$(call status, CXX, $@)
+	$(BUILDCXX) -c $(BUILDCXXFLAGS) -I$(O)/install/include -I$(H)/tools/misc/kmon -I$(H)/tools/misc/ktrace2ltt -o $@ $<

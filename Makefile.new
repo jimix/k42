@@ -234,9 +234,12 @@ include tools/build/shared/stubgen/elf/Make.sub
 include tools/build/shared/stubgen/extract/Make.sub
 include tools/build/shared/stubgen/grammar/Make.sub
 include tools/build/shared/stubgen/scripts/Make.sub
+include tools/build/shared/thinwire/Make.sub
+include tools/etc/Make.sub
 include tools/hwtools/Make.sub
 include tools/misc/Make.sub
 include tools/misc/kmon/Make.sub
+include tools/misc/ktrace2ltt/Make.sub
 include tools/misc/pem/Make.sub
 include os/servers/kfs/tools/Make.sub
 

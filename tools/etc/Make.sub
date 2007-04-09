@@ -1,0 +1,14 @@
+bootstrap_scrs += $(addprefix $(O)/install/etc/, stdhdr.c++ stdhdr.c stdhdr.make)
+
+
+$(O)/install/etc/stdhdr.c: $(H)/tools/etc/stdhdr.c++
+	$(call status, INSTALL, $@)
+	$(RM) -f $@
+	$(CP) $< $@
+	$(CHMOD) 0444 $@
+
+$(O)/install/etc/%: $(H)/tools/etc/%
+	$(call status, INSTALL, $@)
+	$(RM) -f $@
+	$(CP) $< $@
+	$(CHMOD) 0444 $@

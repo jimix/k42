@@ -1,0 +1,18 @@
+bootstrap_binaries += $(addprefix $(TOOLS)/, thinwire thinwire2 thinwire3 console ttywire simip)
+bootstrap_incs += $(O)/install/include/sys/simip.h
+
+$(TOOLS)/%: $(S)/tools/build/shared/thinwire/%
+	$(call status, INSTALL, $@)
+	$(CP) -f $< $@
+	$(CHMOD) 0555 $@
+
+$(O)/install/include/sys/simip.h: $(H)/tools/build/shared/thinwire/thinwire-src/simip.h
+	$(call status, INSTALL, $@)
+	$(CP) $< $@
+
+$(S)/tools/build/shared/thinwire/%: $(H)/tools/build/shared/thinwire/thinwire-src/%.c
+	$(BUILDCC) -Wall -O -g $(BUILDCFLAGS) $< -o $@
+
+$(S)/tools/build/shared/thinwire/thinwire2: $(S)/tools/build/shared/thinwire/thinwire
+	$(call status, CP, $@)
+	cp $< $@

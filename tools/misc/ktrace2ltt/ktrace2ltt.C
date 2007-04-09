@@ -21,10 +21,10 @@
 #include <fcntl.h>
 #include <assert.h>
 
-#ifdef PLATFORM_OS_Linux /* need this to get UINT32_MAX, ugh */
-# define __STDC_LIMIT_MACROS
+
+# define __STDC_LIMIT_MACROS /* need this to get UINT32_MAX on Linux, ugh */
 # define _ALL_SOURCE
-#endif
+
 #include <inttypes.h>
 
 #include "sys/hostSysTypes.H"
