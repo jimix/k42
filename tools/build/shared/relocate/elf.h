@@ -40,7 +40,7 @@
 #include <inttypes.h>
 #endif
 
-#ifdef PLATFORM_OS_Linux
+#ifdef linux
 #include <features.h>
 __BEGIN_DECLS
 
@@ -2220,7 +2220,7 @@ typedef Elf32_Addr Elf32_Conflict;
 
 #define R_X86_64_NUM		16
 
-#ifdef PLATFORM_OS_Linux
+#ifdef linux
 __END_DECLS
 #endif
 

@@ -1,0 +1,11 @@
+bootstrap_binaries += $(TOOLS)/relocate 
+bootstrap_objs += $(S)/tools/build/shared/relocate/relocate
+
+$(TOOLS)/relocate: $(S)/tools/build/shared/relocate/relocate
+	$(call status, INSTALL, $@)
+	$(CP) -f $< $@
+	$(CHMOD) 0555 $@
+
+$(S)/tools/build/shared/relocate/relocate: $(H)/tools/build/shared/relocate/relocate.C
+	$(call status, CXX, $@)
+	$(BUILDCXX) $(BUILDCXXFLAGS) -I$(H)/tools/build/shared/relocate $< -o $@

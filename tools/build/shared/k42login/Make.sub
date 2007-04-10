@@ -1,0 +1,12 @@
+bootstrap_binaries += $(TOOLS)/k42login 
+bootstrap_objs += $(S)/tools/build/shared/k42login/k42login
+
+$(TOOLS)/k42login: $(S)/tools/build/shared/k42login/k42login
+	$(call status, INSTALL, $@)
+	$(CP) -f $< $@
+	$(CHMOD) 0444 $@
+
+$(S)/tools/build/shared/k42login/k42login: $(H)/tools/build/shared/k42login/err.h
+$(S)/tools/build/shared/k42login/k42login: $(H)/tools/build/shared/k42login/k42login.c
+	$(call status, CC, $@)
+	$(BUILDCC) $(BUILDCFLAGS) -I$(H)/tools/build/shared/k42login $< -o $@

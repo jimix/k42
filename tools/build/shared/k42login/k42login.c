@@ -32,7 +32,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#ifndef PLATFORM_OS_Linux
+#ifndef __linux
 #include <sys/cdefs.h>
 
 #define __P(x) x

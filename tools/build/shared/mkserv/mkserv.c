@@ -16,7 +16,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#if defined(PLATFORM_OS_Linux) || defined(PLATFORM_OS_Darwin)
+#if defined(PLATFORM_OS_Linux) || defined(PLATFORM_OS_Darwin) || defined(__linux)
 #include <stdint.h>
 #include <string.h>
 #include <gelf.h>

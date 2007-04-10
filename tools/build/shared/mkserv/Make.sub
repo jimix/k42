@@ -1,0 +1,11 @@
+bootstrap_binaries += $(TOOLS)/mkserv 
+bootstrap_objs += $(S)/tools/build/shared/mkserv/mkserv
+
+$(TOOLS)/mkserv: $(S)/tools/build/shared/mkserv/mkserv
+	$(call status, INSTALL, $@)
+	$(CP) -f $< $@
+	$(CHMOD) 0775 $@
+
+$(S)/tools/build/shared/mkserv/mkserv: $(H)/tools/build/shared/mkserv/mkserv.c
+	$(call status, CXX, $@)
+	$(BUILDCXX) $(BUILDCXXFLAGS) -I$(H)/tools/build/shared/stubgen/elf -I$(H)/tools/build/shared/mkserv $< -o $@

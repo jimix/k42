@@ -230,6 +230,10 @@ clean:
 # Tools bootstrap rules
 #
 include tools/build/shared/Make.sub
+include tools/build/shared/genmap/Make.sub
+include tools/build/shared/k42login/Make.sub
+include tools/build/shared/mkserv/Make.sub
+include tools/build/shared/relocate/Make.sub
 include tools/build/shared/stubgen/elf/Make.sub
 include tools/build/shared/stubgen/extract/Make.sub
 include tools/build/shared/stubgen/grammar/Make.sub
@@ -389,7 +393,7 @@ bootstrap_tools2: dirs bootstrap_generate $(bootstrap_binaries2)
 
 bootstrap_clean: 
 	$(call status, RM, $(wildcard $(bootstrap_objs)))
-	$(RM) $(wildcard $(bootstrap_objs))
+	$(RM) -f $(wildcard $(bootstrap_objs))
 
 bootstrap: dirs bootstrap_scripts bootstrap_includes bootstrap_tools bootstrap_generate bootstrap_tools2
 

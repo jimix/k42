@@ -1,4 +1,4 @@
-bootstrap_binaries = $(TOOLS)/stubgen/cpp5.exe
+bootstrap_binaries += $(TOOLS)/stubgen/cpp5.exe
 
 cpp_exe_objs = $(addprefix $(S)/tools/build/shared/stubgen/grammar/, y.tab.o lex.yy.o)
 

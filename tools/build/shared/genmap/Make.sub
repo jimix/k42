@@ -1,0 +1,11 @@
+bootstrap_binaries += $(TOOLS)/genmap 
+bootstrap_objs += $(S)/tools/build/shared/genmap/genmap
+
+$(TOOLS)/genmap: $(S)/tools/build/shared/genmap/genmap
+	$(call status, INSTALL, $@)
+	$(CP) -f $< $@
+	$(CHMOD) 0555 $@
+
+$(S)/tools/build/shared/genmap/genmap: $(H)/tools/build/shared/genmap/genmap.c
+	$(call status, CC, $@)
+	$(BUILDCC) $(BUILDCFLAGS) -I$(H)/tools/build/shared/relocate $< -o $@

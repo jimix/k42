@@ -34,7 +34,7 @@
 #define __GELF_H_ 1
 
 
-#if defined(PLATFORM_OS_Linux) || defined(PLATFORM_OS_Darwin)
+#if defined(PLATFORM_OS_Linux) || defined(PLATFORM_OS_Darwin) || defined(linux)
 #include <stdint.h>
 #endif /* #ifdef PLATFORM_OS_Linux || PLATFORM_OS_Darwin */
 
