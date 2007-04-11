@@ -1,5 +1,6 @@
 bootstrap_binaries += $(TOOLS)/ktrace2ltt
 ktrace2ltt_objdir = $(S)/tools/misc/ktrace2ltt
+bootstrap_objs += $(ktrace2ltt_objdir)/ktrace2ltt $(ktrace2ltt_objdir)/ktrace2ltt.o
 
 $(TOOLS)/ktrace2ltt: $(S)/tools/misc/ktrace2ltt/ktrace2ltt
 	$(call status, INSTALL, $@)

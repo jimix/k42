@@ -1,4 +1,5 @@
 bootstrap_binaries += $(addprefix $(TOOLS)/, thinwire thinwire2 thinwire3 console ttywire simip)
+bootstrap_objs += $(addprefix $(S)/tools/build/shared/thinwire/, thinwire thinwire2 thinwire3 console ttywire simip)
 bootstrap_incs += $(O)/install/include/sys/simip.h
 
 $(TOOLS)/%: $(S)/tools/build/shared/thinwire/%

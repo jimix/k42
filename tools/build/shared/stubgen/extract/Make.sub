@@ -1,7 +1,8 @@
 SG_PREFIX=tools/build/shared/stubgen
 
 bootstrap_binaries += $(TOOLS)/stubgen/ext_elf64
-bootstrap_objs += $(S)/$(SG_PREFIX)/ext_elf64.o
+bootstrap_objs += $(S)/$(SG_PREFIX)/extract/ext_elf64.o
+bootstrap_objs += $(S)/$(SG_PREFIX)/extract/ext_elf64
 
 $(S)/$(SG_PREFIX)/extract/%.o: BUILDCFLAGS += -DGCC_CLASS_VERSION=3
 $(S)/$(SG_PREFIX)/extract/%.o: BUILDCFLAGS += -I$(H)/$(SG_PREFIX)/elf

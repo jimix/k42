@@ -1,4 +1,9 @@
 bootstrap_binaries += $(TOOLS)/stubgen/cpp5.exe
+bootstrap_objs += $(S)/tools/build/shared/stubgen/grammar/y.tab.c
+bootstrap_objs += $(S)/tools/build/shared/stubgen/grammar/y.tab.h
+bootstrap_objs += $(S)/tools/build/shared/stubgen/grammar/y.tab.o
+bootstrap_objs += $(S)/tools/build/shared/stubgen/grammar/lex.yy.o
+bootstrap_objs += $(S)/tools/build/shared/stubgen/grammar/cpp5.exe
 
 cpp_exe_objs = $(addprefix $(S)/tools/build/shared/stubgen/grammar/, y.tab.o lex.yy.o)
 
