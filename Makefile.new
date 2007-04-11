@@ -98,6 +98,7 @@ LD = $(CROSS_COMPILE)ld
 STRIP = $(CROSS_COMPILE)strip
 NM = $(CROSS_COMPILE)nm
 AR = $(CROSS_COMPILE)ar
+AS = $(CROSS_COMPILE)as
 OBJDUMP = $(CROSS_COMPILE)objdump
 
 # 32-bit cross-compile tools.
@@ -121,6 +122,9 @@ AWK = awk
 STUBGEN = $(TOOLS)/stubgen/stubgen
 CHMOD = chmod
 SED = sed
+ECHO = echo
+YACC = byacc
+EXIT = exit
 
 # Target machine flags
 #

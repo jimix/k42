@@ -37,6 +37,7 @@ $(S)/lib/_%.map: $(ILIB)/%.a
 	  sed -e 's/^.*[[:space:]][[:space:]]*\([@\._a-zA-Z0-9]*\)$$/  \1;/g'>$@
 
 $(S)/lib/k42sys.map: $(S)/lib/_libemu.map $(S)/lib/_libbase.map
+	$(call status, ECHO, $@)
 	echo 'K42_0.0.1 {' >$@
 	echo '	global:' >>$@
 	cat $^ |sort >>$@
@@ -48,11 +49,13 @@ $(S)/lib/k42sys.map: $(S)/lib/_libemu.map $(S)/lib/_libbase.map
 #This object file, when linked in last, forces the plt section to have
 #space allocated for it in the library file
 $(S)/lib/plt.o:
+	$(call status, AS, $@)
 	echo '.section .plt,"a"' | $(AS) - -o $(S)/lib/plt.o
 
 # XXX This should move into an architecture-dependent makefile
 # Generate the linker script from one of ld's default scripts
 $(S)/lib/k42sys.scp: $(H)/lib/elf64ppc.xsc
+	$(call status, SED, $@)
 	sed -e 's:\. = 0 + SIZEOF:\. = $(K42LIB_ADDR) + SIZEOF:' \
 	    -e  's/ALIGN (0x10000)/ALIGN (0x10000000)/' < $< > $@
 
