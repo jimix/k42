@@ -3,7 +3,9 @@ install_users += $(addprefix $(IROOT)/home/mysql/, .profile cleanall.sh clean.sq
 $(IROOT)/home/mysql/.profile: $(H)/kitch-linux/users/mysql/profile
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
+	$(CHMOD) 0644 $@
 
 $(IROOT)/home/mysql/%: $(H)/kitch-linux/users/mysql/%
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
+	$(CHMOD) 0755 $@

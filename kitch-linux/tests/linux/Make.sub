@@ -68,3 +68,4 @@ $(IROOT)/tests/linux/%: $(S)/kitch-linux/tests/linux/%
 $(IROOT)/tests/linux/%: $(H)/kitch-linux/tests/linux/%
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
+	$(CHMOD) 0755 $@

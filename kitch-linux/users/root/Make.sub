@@ -3,3 +3,4 @@ install_users += $(addprefix $(IROOT)/root/, .bashrc .bash_profile)
 $(IROOT)/root/.%: $(H)/kitch-linux/users/root/%
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
+	$(CHMOD) 0644 $@

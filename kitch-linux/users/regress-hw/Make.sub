@@ -3,7 +3,9 @@ install_users += $(addprefix $(IROOT)/home/regress-hw/, .profile sysinit)
 $(IROOT)/home/regress-hw/.profile: $(H)/kitch-linux/users/regress-hw/profile
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
+	$(CHMOD) 0644 $@
 
 $(IROOT)/home/regress-hw/sysinit: $(H)/kitch-linux/users/regress-hw/sysinit
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
+	$(CHMOD) 0755 $@

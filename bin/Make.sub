@@ -65,7 +65,8 @@ $(S)/bin/%: $(S)/bin/%.o
 $(IROOT)/kbin/%: $(S)/bin/%
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
-
+	
 $(IROOT)/kbin/%: $(H)/bin/%
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
+	$(CHMOD) 0755 $@

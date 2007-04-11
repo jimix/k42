@@ -3,7 +3,9 @@ install_users += $(addprefix $(IROOT)/home/pftest/, .profile runTest grepdata te
 $(IROOT)/home/pftest/.profile: $(H)/kitch-linux/users/pftest/profile
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
+	$(CHMOD) 0644 $@
 
 $(IROOT)/home/pftest/%: $(H)/kitch-linux/users/pftest/%
 	$(call status, INSTALL, $@)
 	$(CP) $< $@
+	$(CHMOD) 0755 $@
