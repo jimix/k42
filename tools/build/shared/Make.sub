@@ -1,6 +1,22 @@
 tools_shared_scripts = knewest cvsimport kinstall
 
-bootstrap_scrs += $(addprefix $(TOOLS)/, $(tools_shared_scripts))
+bootstrap_scrs += $(addprefix $(TOOLS)/, $(tools_shared_scripts) script.sed) 
+
+ALL_TOOLS = CC \
+	    NM \
+	    AWK \
+	    INSTALL \
+	    MKANCHOR \
+	    MKTOOLBIN \
+	    EXTRACTPROG
+
+ALL_TOOLS_SED = $(foreach tool, $(ALL_TOOLS), "s;@$(tool)@;$($(tool));g|")
+
+$(TOOLS)/script.sed: $(H)/Makefile.new
+	$(ECHO) $(ALL_TOOLS_SED) | tr '|' '\012' | $(SED) "s/^  *//" > sed.tmp
+	cmp -s sed.tmp $(TOOLS)/script.sed \
+		|| ($(CP) sed.tmp $(TOOLS)/script.sed && chmod 0555 $(TOOLS)/script.sed)
+	$(RM) sed.tmp
 
 $(addprefix $(TOOLS)/, $(tools_shared_scripts)): $(TOOLS)/script.sed
 

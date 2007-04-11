@@ -126,6 +126,12 @@ ECHO = echo
 YACC = byacc
 EXIT = exit
 
+# For script.sed generated scripts AND NOTHING ELSE
+INSTALL = install
+EXTRACTPROG = ext_elf64
+MKANCHOR = $(strip $(shell cd ..; /bin/pwd))
+MKTOOLBIN = $(strip $(shell cd $(TOOLS); /bin/pwd))
+
 # Target machine flags
 #
 # XXX Note that where the code refers to TARGET_MACHINE, it should instead

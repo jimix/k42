@@ -50,8 +50,8 @@ CPP5=$dir/cpp5.exe
 
 
 # define the compiler, awk, and nm commands for this platform
-CRCC="@TARGET_CC@"
-CRNM="@TARGET_NM@"
+CRCC="@CC@"
+CRNM="@NM@"
 AWK=@AWK@
 EXTRACTIT=$dir/@EXTRACTPROG@
 
