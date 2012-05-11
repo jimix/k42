@@ -1,0 +1,8 @@
+This repository of the K42 Project is provided for research and
+educational purposes.  It is not supported nor is it expected to build
+or run without some effort.
+
+There are two branches:
+  - kitchsrc: Initial snapshot of a K42 checkout of 2005-09-08 from
+              IBM supplied by Amos Waterland.
+  - master:   Some additional work from various non-IBMers
